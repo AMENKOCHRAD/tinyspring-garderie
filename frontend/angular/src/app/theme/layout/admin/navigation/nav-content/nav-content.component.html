@@ -1,0 +1,14 @@
+<ng-scrollbar (clickOutside)="navMob()" style="height: calc(100vh - 56px)">
+  <div class="navbar-content">
+    <ul class="nav pcoded-inner-navbar" (clickOutside)="fireOutClick()">
+      @for (items of navigation; track items) {
+        @if (items.type === 'group') {
+          <app-nav-group [item]="items" />
+        }
+      }
+    </ul>
+    <div class="version">
+      <label disabled class="pe-auto">v{{ currentApplicationVersion }}</label>
+    </div>
+  </div>
+</ng-scrollbar>

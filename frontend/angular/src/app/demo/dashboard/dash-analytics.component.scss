@@ -1,0 +1,31 @@
+::ng-deep .hover-scale {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  }
+
+  .feather {
+    font-size: 3rem;
+    opacity: 0.9;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .feather {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+::ng-deep .bg-gradient-blue { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; border:none; }
+::ng-deep .bg-gradient-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; border:none; }
+::ng-deep .bg-gradient-yellow { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%) !important; border:none; }
+::ng-deep .bg-gradient-orange { background: linear-gradient(135deg, #f12711 0%, #f5af19 100%) !important; border:none; }
+::ng-deep .bg-gradient-purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border:none; }
+::ng-deep .bg-gradient-teal { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; border:none; }
+::ng-deep .bg-gradient-pink { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%) !important; border:none; }
+::ng-deep .bg-gradient-dark { background: linear-gradient(135deg, #434343 0%, #000000 100%) !important; border:none; }
