@@ -1,6 +1,7 @@
-package com.tinyspring.garderie.entity;
+package com.tinyspring.garderie.entity.transport;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tinyspring.garderie.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

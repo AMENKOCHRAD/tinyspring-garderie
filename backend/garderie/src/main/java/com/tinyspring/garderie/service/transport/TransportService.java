@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.service;
+package com.tinyspring.garderie.service.transport;
 
 import com.tinyspring.garderie.dto.transport.CreateDemandeTransportRequest;
 import com.tinyspring.garderie.dto.transport.DemandeTransportResponse;

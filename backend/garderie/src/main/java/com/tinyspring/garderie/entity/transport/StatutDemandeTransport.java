@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.entity;
+package com.tinyspring.garderie.entity.transport;
 
 public enum StatutDemandeTransport {
     EN_ATTENTE,

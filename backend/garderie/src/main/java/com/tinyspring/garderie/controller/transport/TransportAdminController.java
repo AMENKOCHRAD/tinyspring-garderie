@@ -1,11 +1,11 @@
-package com.tinyspring.garderie.controller;
+package com.tinyspring.garderie.controller.transport;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
 import com.tinyspring.garderie.dto.transport.admin.TrajetResponse;
 import com.tinyspring.garderie.dto.transport.admin.TransportRequest;
 import com.tinyspring.garderie.dto.transport.admin.TransportResponse;
-import com.tinyspring.garderie.service.admin.TransportAdminService;
+import com.tinyspring.garderie.service.transport.admin.TransportAdminService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;

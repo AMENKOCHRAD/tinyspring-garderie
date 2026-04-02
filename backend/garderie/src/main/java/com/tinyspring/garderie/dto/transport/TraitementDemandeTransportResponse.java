@@ -1,6 +1,6 @@
 package com.tinyspring.garderie.dto.transport;
 
-import com.tinyspring.garderie.entity.StatutDemandeTransport;
+import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 
 public record TraitementDemandeTransportResponse(
         Long demandeId,

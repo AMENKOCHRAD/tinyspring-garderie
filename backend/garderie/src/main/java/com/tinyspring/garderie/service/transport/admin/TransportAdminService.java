@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.service.admin;
+package com.tinyspring.garderie.service.transport.admin;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;

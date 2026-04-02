@@ -1,6 +1,6 @@
-package com.tinyspring.garderie.repository;
+package com.tinyspring.garderie.repository.transport;
 
-import com.tinyspring.garderie.entity.AffectationTransport;
+import com.tinyspring.garderie.entity.transport.AffectationTransport;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

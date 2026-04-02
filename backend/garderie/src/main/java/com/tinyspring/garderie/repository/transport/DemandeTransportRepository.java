@@ -1,7 +1,7 @@
-package com.tinyspring.garderie.repository;
+package com.tinyspring.garderie.repository.transport;
 
-import com.tinyspring.garderie.entity.DemandeTransport;
-import com.tinyspring.garderie.entity.StatutDemandeTransport;
+import com.tinyspring.garderie.entity.transport.DemandeTransport;
+import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

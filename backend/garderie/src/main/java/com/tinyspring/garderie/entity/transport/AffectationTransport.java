@@ -1,9 +1,7 @@
-package com.tinyspring.garderie.entity;
+package com.tinyspring.garderie.entity.transport;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,8 +11,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "demandes_transport")
-public class DemandeTransport {
+@Table(name = "affectations_transport")
+public class AffectationTransport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,28 +23,23 @@ public class DemandeTransport {
     private Enfant enfant;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id", nullable = false)
-    private User parent;
+    @JoinColumn(name = "transport_id", nullable = false)
+    private Transport transport;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trajet_id", nullable = false)
     private Trajet trajet;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatutDemandeTransport statut = StatutDemandeTransport.EN_ATTENTE;
-
     @Column(nullable = false)
     private String pointRamassage;
 
-    public DemandeTransport() {
+    public AffectationTransport() {
     }
 
-    public DemandeTransport(Enfant enfant, User parent, Trajet trajet, StatutDemandeTransport statut, String pointRamassage) {
+    public AffectationTransport(Enfant enfant, Transport transport, Trajet trajet, String pointRamassage) {
         this.enfant = enfant;
-        this.parent = parent;
+        this.transport = transport;
         this.trajet = trajet;
-        this.statut = statut;
         this.pointRamassage = pointRamassage;
     }
 
@@ -62,12 +55,12 @@ public class DemandeTransport {
         this.enfant = enfant;
     }
 
-    public User getParent() {
-        return parent;
+    public Transport getTransport() {
+        return transport;
     }
 
-    public void setParent(User parent) {
-        this.parent = parent;
+    public void setTransport(Transport transport) {
+        this.transport = transport;
     }
 
     public Trajet getTrajet() {
@@ -76,14 +69,6 @@ public class DemandeTransport {
 
     public void setTrajet(Trajet trajet) {
         this.trajet = trajet;
-    }
-
-    public StatutDemandeTransport getStatut() {
-        return statut;
-    }
-
-    public void setStatut(StatutDemandeTransport statut) {
-        this.statut = statut;
     }
 
     public String getPointRamassage() {

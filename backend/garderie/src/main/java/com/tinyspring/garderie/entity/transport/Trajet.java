@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.entity;
+package com.tinyspring.garderie.entity.transport;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

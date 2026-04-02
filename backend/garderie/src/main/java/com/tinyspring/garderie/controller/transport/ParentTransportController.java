@@ -1,14 +1,14 @@
-package com.tinyspring.garderie.controller;
+package com.tinyspring.garderie.controller.transport;
 
 import com.tinyspring.garderie.dto.transport.CreateDemandeTransportRequest;
 import com.tinyspring.garderie.dto.transport.parent.ParentDemandeTransportForm;
-import com.tinyspring.garderie.entity.Enfant;
-import com.tinyspring.garderie.entity.Trajet;
+import com.tinyspring.garderie.entity.transport.Enfant;
+import com.tinyspring.garderie.entity.transport.Trajet;
 import com.tinyspring.garderie.entity.User;
-import com.tinyspring.garderie.repository.EnfantRepository;
-import com.tinyspring.garderie.repository.TrajetRepository;
+import com.tinyspring.garderie.repository.transport.EnfantRepository;
+import com.tinyspring.garderie.repository.transport.TrajetRepository;
 import com.tinyspring.garderie.repository.UserRepository;
-import com.tinyspring.garderie.service.TransportService;
+import com.tinyspring.garderie.service.transport.TransportService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

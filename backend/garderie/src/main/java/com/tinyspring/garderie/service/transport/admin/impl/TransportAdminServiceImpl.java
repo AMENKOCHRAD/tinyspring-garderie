@@ -1,22 +1,22 @@
-package com.tinyspring.garderie.service.admin.impl;
+package com.tinyspring.garderie.service.transport.admin.impl;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
 import com.tinyspring.garderie.dto.transport.admin.TrajetResponse;
 import com.tinyspring.garderie.dto.transport.admin.TransportRequest;
 import com.tinyspring.garderie.dto.transport.admin.TransportResponse;
-import com.tinyspring.garderie.entity.AffectationTransport;
-import com.tinyspring.garderie.entity.Enfant;
-import com.tinyspring.garderie.entity.Trajet;
-import com.tinyspring.garderie.entity.Transport;
+import com.tinyspring.garderie.entity.transport.AffectationTransport;
+import com.tinyspring.garderie.entity.transport.Enfant;
+import com.tinyspring.garderie.entity.transport.Trajet;
+import com.tinyspring.garderie.entity.transport.Transport;
 import com.tinyspring.garderie.exception.BusinessException;
 import com.tinyspring.garderie.exception.ResourceNotFoundException;
-import com.tinyspring.garderie.repository.AffectationTransportRepository;
-import com.tinyspring.garderie.repository.DemandeTransportRepository;
-import com.tinyspring.garderie.repository.TrajetRepository;
-import com.tinyspring.garderie.repository.TransportRepository;
-import com.tinyspring.garderie.service.TransportService;
-import com.tinyspring.garderie.service.admin.TransportAdminService;
+import com.tinyspring.garderie.repository.transport.AffectationTransportRepository;
+import com.tinyspring.garderie.repository.transport.DemandeTransportRepository;
+import com.tinyspring.garderie.repository.transport.TrajetRepository;
+import com.tinyspring.garderie.repository.transport.TransportRepository;
+import com.tinyspring.garderie.service.transport.TransportService;
+import com.tinyspring.garderie.service.transport.admin.TransportAdminService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 

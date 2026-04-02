@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.entity;
+package com.tinyspring.garderie.entity.transport;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
