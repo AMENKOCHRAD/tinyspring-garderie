@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "weekly_menu")
+@Getter
+@Setter
 @Data
 @Builder
 @NoArgsConstructor

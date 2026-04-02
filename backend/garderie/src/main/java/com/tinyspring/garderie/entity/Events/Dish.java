@@ -3,8 +3,11 @@ package com.tinyspring.garderie.entity.Events;
 import jakarta.persistence.*;
 import lombok.*;
 
+
 @Entity
 @Table(name = "dish")
+@Getter
+@Setter
 @Data
 @Builder
 @NoArgsConstructor
