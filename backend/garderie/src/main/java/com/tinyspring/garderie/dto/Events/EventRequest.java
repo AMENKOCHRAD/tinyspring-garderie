@@ -42,7 +42,7 @@ public class EventRequest {
     private Integer maxCapacity;
 
     @NotNull(message = "Le champ requiresAuthorization est obligatoire")
-    private Boolean requiresAuthorization;
+    private Boolean  requiresAuthorization;
 
     @NotNull(message = "La classe ciblée est obligatoire")
     private Long classroomId;
