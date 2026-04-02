@@ -48,7 +48,7 @@ export class SignInComponent {
 
     this.authService.login(credentials).subscribe({
       next: (response) => {
-        this.authService.saveUser(response);
+        this.authService.saveUser(response, credentials);
 
         if (response.role === 'ADMIN') {
           this.router.navigate(['/analytics']);

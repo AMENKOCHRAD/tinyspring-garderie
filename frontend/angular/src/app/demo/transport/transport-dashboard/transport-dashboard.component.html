@@ -1,0 +1,386 @@
+<div class="row">
+  @for (card of demandeStatsCards; track card.label) {
+    <div class="col-md-6 col-xl-4">
+      <app-card [hidHeader]="true" [cardClass]="card.cardClass + ' order-card demand-summary-card'">
+        <div class="demand-summary-content">
+          <div>
+            <h6 class="text-white">{{ card.label }}</h6>
+            <h2 class="text-white m-b-0">{{ card.total }}</h2>
+          </div>
+          <i class="{{ card.icon }} text-white demand-summary-icon"></i>
+        </div>
+      </app-card>
+    </div>
+  }
+</div>
+
+<div class="row">
+  <div class="col-xl-12">
+    <app-card cardTitle="Gestion de transport">
+      @if (messages.error) {
+        <div class="alert alert-danger">{{ messages.error }}</div>
+      }
+
+      @if (messages.success) {
+        <div class="alert alert-success">{{ messages.success }}</div>
+      }
+
+      <ul ngbNav #nav="ngbNav" [(activeId)]="activeTabId" class="nav-tabs">
+        <li [ngbNavItem]="1">
+          <button ngbNavLink>Transports</button>
+          <ng-template ngbNavContent>
+            <div class="row tab-section">
+              <div class="col-lg-4">
+                <form [formGroup]="transportForm" (ngSubmit)="submitTransport()" class="simple-form">
+                  <h5>{{ editingTransportId ? 'Modifier transport' : 'Ajouter transport' }}</h5>
+
+                  <label>Nom</label>
+                  <input class="form-control" formControlName="nom" type="text" maxlength="60" />
+                  @if (hasTransportError('nom', 'required')) {
+                    <small class="text-danger">Le nom est obligatoire.</small>
+                  }
+                  @if (hasTransportError('nom', 'trimmedRequired')) {
+                    <small class="text-danger">Le nom ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTransportError('nom', 'edgeSpaces')) {
+                    <small class="text-danger">Le nom ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTransportError('nom', 'minlength')) {
+                    <small class="text-danger">Le nom doit contenir au moins 3 caracteres.</small>
+                  }
+                  @if (hasTransportError('nom', 'maxlength')) {
+                    <small class="text-danger">Le nom ne doit pas depasser 60 caracteres.</small>
+                  }
+                  @if (hasTransportError('nom', 'pattern')) {
+                    <small class="text-danger">Le nom contient des caracteres non autorises.</small>
+                  }
+
+                  <label>Matricule</label>
+                  <input class="form-control" formControlName="matricule" type="text" maxlength="20" />
+                  @if (hasTransportError('matricule', 'required')) {
+                    <small class="text-danger">Le matricule est obligatoire.</small>
+                  }
+                  @if (hasTransportError('matricule', 'trimmedRequired')) {
+                    <small class="text-danger">Le matricule ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTransportError('matricule', 'edgeSpaces')) {
+                    <small class="text-danger">Le matricule ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTransportError('matricule', 'minlength')) {
+                    <small class="text-danger">Le matricule doit contenir au moins 4 caracteres.</small>
+                  }
+                  @if (hasTransportError('matricule', 'maxlength')) {
+                    <small class="text-danger">Le matricule ne doit pas depasser 20 caracteres.</small>
+                  }
+                  @if (hasTransportError('matricule', 'pattern')) {
+                    <small class="text-danger">Le matricule doit contenir uniquement lettres, chiffres ou tirets.</small>
+                  }
+
+                  <label>Capacite</label>
+                  <input class="form-control" formControlName="capacite" type="number" min="1" max="100" />
+                  @if (hasTransportError('capacite', 'required')) {
+                    <small class="text-danger">La capacite est obligatoire.</small>
+                  }
+                  @if (hasTransportError('capacite', 'min')) {
+                    <small class="text-danger">La capacite minimale est 1.</small>
+                  }
+                  @if (hasTransportError('capacite', 'max')) {
+                    <small class="text-danger">La capacite maximale autorisee est 100.</small>
+                  }
+
+                  <div class="form-actions">
+                    <button class="btn btn-primary" type="submit" [disabled]="loading.transports">
+                      {{ editingTransportId ? 'Mettre a jour' : 'Ajouter' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" (click)="resetTransportForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="col-lg-8">
+                @if (loading.transports) {
+                  <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+                } @else {
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Nom</th>
+                          <th>Matricule</th>
+                          <th>Capacite</th>
+                          <th>Taux</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (transport of transports; track transport.id) {
+                          <tr>
+                            <td>{{ transport.nom }}</td>
+                            <td>{{ transport.matricule }}</td>
+                            <td>{{ transport.capacite }}</td>
+                            <td>{{ transport.tauxRemplissage | number: '1.0-0' }}%</td>
+                            <td class="actions-cell">
+                              <button class="btn btn-sm btn-info" type="button" (click)="editTransport(transport)">Modifier</button>
+                              <button class="btn btn-sm btn-danger" type="button" (click)="deleteTransport(transport.id)">Supprimer</button>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="5" class="text-center">Aucun transport disponible.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="2">
+          <button ngbNavLink>Trajets</button>
+          <ng-template ngbNavContent>
+            <div class="row tab-section">
+              <div class="col-lg-4">
+                <form [formGroup]="trajetForm" (ngSubmit)="submitTrajet()" class="simple-form">
+                  <h5>{{ editingTrajetId ? 'Modifier trajet' : 'Ajouter trajet' }}</h5>
+
+                  <label>Point de depart</label>
+                  <input class="form-control" formControlName="pointDepart" type="text" maxlength="80" />
+                  @if (hasTrajetError('pointDepart')) {
+                    <small class="text-danger">Le point de depart est obligatoire.</small>
+                  }
+                  @if (hasTrajetError('pointDepart', 'trimmedRequired')) {
+                    <small class="text-danger">Le point de depart ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTrajetError('pointDepart', 'edgeSpaces')) {
+                    <small class="text-danger">Le point de depart ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTrajetError('pointDepart', 'minlength')) {
+                    <small class="text-danger">Le point de depart doit contenir au moins 3 caracteres.</small>
+                  }
+                  @if (hasTrajetError('pointDepart', 'maxlength')) {
+                    <small class="text-danger">Le point de depart ne doit pas depasser 80 caracteres.</small>
+                  }
+                  @if (hasTrajetError('pointDepart', 'pattern')) {
+                    <small class="text-danger">Le point de depart contient des caracteres non autorises.</small>
+                  }
+
+                  <label>Destination</label>
+                  <input class="form-control" formControlName="destination" type="text" maxlength="80" />
+                  @if (hasTrajetError('destination')) {
+                    <small class="text-danger">La destination est obligatoire.</small>
+                  }
+                  @if (hasTrajetError('destination', 'trimmedRequired')) {
+                    <small class="text-danger">La destination ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTrajetError('destination', 'edgeSpaces')) {
+                    <small class="text-danger">La destination ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTrajetError('destination', 'minlength')) {
+                    <small class="text-danger">La destination doit contenir au moins 3 caracteres.</small>
+                  }
+                  @if (hasTrajetError('destination', 'maxlength')) {
+                    <small class="text-danger">La destination ne doit pas depasser 80 caracteres.</small>
+                  }
+                  @if (hasTrajetError('destination', 'pattern')) {
+                    <small class="text-danger">La destination contient des caracteres non autorises.</small>
+                  }
+
+                  <label>Date du trajet</label>
+                  <input class="form-control" formControlName="dateTrajet" type="date" [min]="tomorrowDate" />
+                  @if (hasTrajetError('dateTrajet')) {
+                    <small class="text-danger">La date du trajet est obligatoire.</small>
+                  }
+
+                  <label>Heure de depart</label>
+                  <input class="form-control" formControlName="heureDepart" type="time" />
+                  @if (hasTrajetError('heureDepart')) {
+                    <small class="text-danger">L heure de depart est obligatoire.</small>
+                  }
+
+                  <label>Transport</label>
+                  <select class="form-select" formControlName="transportId">
+                    <option [ngValue]="null">Selectionner un transport</option>
+                    @for (transport of transports; track transport.id) {
+                      <option [ngValue]="transport.id">{{ transport.nom }} ({{ transport.matricule }})</option>
+                    }
+                  </select>
+                  @if (hasTrajetError('transportId')) {
+                    <small class="text-danger">Le transport est obligatoire.</small>
+                  }
+
+                  <div class="form-actions">
+                    <button class="btn btn-primary" type="submit" [disabled]="loading.trajets">
+                      {{ editingTrajetId ? 'Mettre a jour' : 'Ajouter' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" (click)="resetTrajetForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="col-lg-8">
+                @if (loading.trajets) {
+                  <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+                } @else {
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Point de depart</th>
+                          <th>Destination</th>
+                          <th>Date</th>
+                          <th>Heure</th>
+                          <th>Transport</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (trajet of trajets; track trajet.id) {
+                          <tr>
+                            <td>{{ trajet.pointDepart }}</td>
+                            <td>{{ trajet.destination }}</td>
+                            <td>{{ trajet.dateTrajet }}</td>
+                            <td>{{ trajet.heureDepart }}</td>
+                            <td>{{ trajet.transportNom }}</td>
+                            <td class="actions-cell">
+                              <button class="btn btn-sm btn-info" type="button" (click)="editTrajet(trajet)">Modifier</button>
+                              <button class="btn btn-sm btn-danger" type="button" (click)="deleteTrajet(trajet.id)">Supprimer</button>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="6" class="text-center">Aucun trajet disponible.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="3">
+          <button ngbNavLink>Demandes</button>
+          <ng-template ngbNavContent>
+            <div class="filter-bar">
+              <div>
+                <label>Filtrer par trajet</label>
+                <select class="form-select" [(ngModel)]="filtreTrajetId">
+                  <option [ngValue]="null">Tous les trajets</option>
+                  @for (trajet of trajets; track trajet.id) {
+                    <option [ngValue]="trajet.id">{{ trajet.pointDepart }} -> {{ trajet.destination }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label>Filtrer par heure</label>
+                <input class="form-control" type="time" [(ngModel)]="filtreHeure" />
+              </div>
+            </div>
+
+            @if (loading.demandes) {
+              <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Enfant</th>
+                      <th>Parent</th>
+                      <th>Trajet</th>
+                      <th>Date</th>
+                      <th>Heure</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (demande of filteredDemandes; track demande.id) {
+                      <tr>
+                        <td>{{ demande.enfantNomComplet }}</td>
+                        <td>{{ demande.parentNom }}</td>
+                        <td>{{ demande.pointDepart }} -> {{ demande.destination }}</td>
+                        <td>{{ demande.dateTrajet }}</td>
+                        <td>{{ demande.heureDepart }}</td>
+                        <td>
+                          <span class="badge transport-badge" [ngClass]="getStatutBadgeClass(demande.statut)">{{ demande.statut }}</span>
+                        </td>
+                        <td>
+                          @if (demande.statut === 'EN_ATTENTE') {
+                            <div class="demand-actions">
+                              <select class="form-select form-select-sm" [formControl]="getTransportControl(demande.id)">
+                                <option [ngValue]="null">Choisir un transport</option>
+                                @for (transport of transports; track transport.id) {
+                                  <option [ngValue]="transport.id">{{ transport.nom }}</option>
+                                }
+                              </select>
+                              @if (getTransportControl(demande.id).invalid && getTransportControl(demande.id).touched) {
+                                <small class="text-danger">Choisissez un transport.</small>
+                              }
+                              <div class="actions-cell">
+                                <button class="btn btn-sm btn-success" type="button" [disabled]="actionDemandeId === demande.id" (click)="accepterDemande(demande)">
+                                  Accepter
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="refuserDemande(demande)">
+                                  Refuser
+                                </button>
+                              </div>
+                            </div>
+                          } @else {
+                            <span class="text-muted">Aucune action</span>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="7" class="text-center">Aucune demande pour ce filtre.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="4">
+          <button ngbNavLink>Affectations</button>
+          <ng-template ngbNavContent>
+            @if (loading.affectations) {
+              <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Enfant</th>
+                      <th>Transport</th>
+                      <th>Trajet</th>
+                      <th>Date</th>
+                      <th>Heure</th>
+                      <th>Point de ramassage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (affectation of affectations; track affectation.id) {
+                      <tr>
+                        <td>{{ affectation.enfantNomComplet }}</td>
+                        <td>{{ affectation.transportNom }} ({{ affectation.matriculeTransport }})</td>
+                        <td>{{ affectation.pointDepart }} -> {{ affectation.destination }}</td>
+                        <td>{{ affectation.dateTrajet }}</td>
+                        <td>{{ affectation.heureDepart }}</td>
+                        <td>{{ affectation.pointRamassage }}</td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="6" class="text-center">Aucune affectation disponible.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </ng-template>
+        </li>
+      </ul>
+
+      <div [ngbNavOutlet]="nav" class="mt-4"></div>
+    </app-card>
+  </div>
+</div>

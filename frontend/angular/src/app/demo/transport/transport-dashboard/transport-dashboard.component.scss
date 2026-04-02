@@ -1,0 +1,100 @@
+.tab-section {
+  row-gap: 24px;
+}
+
+.demand-summary-row {
+  margin-bottom: 8px;
+}
+
+.demand-summary-card {
+  margin-bottom: 24px;
+}
+
+.demand-summary-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.demand-summary-icon {
+  font-size: 28px;
+  opacity: 0.9;
+}
+
+.simple-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #f8faff;
+  border: 1px solid #edf2ff;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.loading-state {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-bar label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.demand-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 210px;
+}
+
+.transport-badge {
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-light-warning {
+  background: rgba(255, 193, 7, 0.15);
+  color: #c88700;
+}
+
+.badge-light-success {
+  background: rgba(40, 167, 69, 0.15);
+  color: #1e7e34;
+}
+
+.badge-light-danger {
+  background: rgba(220, 53, 69, 0.15);
+  color: #b02a37;
+}
+
+@media (max-width: 768px) {
+  .demand-actions {
+    min-width: 100%;
+  }
+}

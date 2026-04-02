@@ -13,6 +13,10 @@ export interface LoginResponse {
   role: string;
 }
 
+export interface StoredUser extends LoginResponse {
+  authToken: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,13 +29,31 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data);
   }
 
-  saveUser(user: LoginResponse): void {
-    localStorage.setItem('user', JSON.stringify(user));
+  saveUser(user: LoginResponse, credentials: LoginRequest): void {
+    const authToken = btoa(`${credentials.email}:${credentials.password}`);
+    const storedUser: StoredUser = {
+      ...user,
+      authToken
+    };
+    localStorage.setItem('user', JSON.stringify(storedUser));
   }
 
-  getUser(): LoginResponse | null {
+  getUser(): StoredUser | null {
     const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    if (!user) {
+      return null;
+    }
+
+    const parsedUser = JSON.parse(user) as Partial<StoredUser>;
+    if (!parsedUser.email || !parsedUser.role || !parsedUser.authToken) {
+      return null;
+    }
+
+    return parsedUser as StoredUser;
+  }
+
+  getAuthToken(): string | null {
+    return this.getUser()?.authToken ?? null;
   }
 
   logout(): void {

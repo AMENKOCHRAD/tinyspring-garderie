@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demande Transport</title>
+    <link rel="stylesheet" th:href="@{/css/parent.css}">
+</head>
+<body>
+<div class="container">
+    <header class="page-header">
+        <div>
+            <h1>Faire une demande de transport</h1>
+            <p th:text="'Parent simule : ' + ${parent.nom}"></p>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/parent/trajets}">Trajets</a>
+            <a th:href="@{/parent/demandes}">Mes demandes</a>
+        </nav>
+    </header>
+
+    <section class="card form-card">
+        <form th:action="@{/parent/demande}" th:object="${demandeForm}" method="post">
+            <div class="form-group">
+                <label for="enfantId">Enfant</label>
+                <select id="enfantId" th:field="*{enfantId}">
+                    <option value="">Selectionner un enfant</option>
+                    <option th:each="enfant : ${enfants}" th:value="${enfant.id}"
+                            th:text="${enfant.prenom + ' ' + enfant.nom}"></option>
+                </select>
+                <p class="error" th:if="${#fields.hasErrors('enfantId')}" th:errors="*{enfantId}"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="trajetId">Trajet</label>
+                <select id="trajetId" th:field="*{trajetId}">
+                    <option value="">Selectionner un trajet</option>
+                    <option th:each="trajet : ${trajets}" th:value="${trajet.id}"
+                            th:text="${trajet.pointDepart + ' -> ' + trajet.destination + ' (' + trajet.dateTrajet + ' ' + trajet.heureDepart + ')'}"></option>
+                </select>
+                <p class="error" th:if="${#fields.hasErrors('trajetId')}" th:errors="*{trajetId}"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="pointRamassage">Point de ramassage</label>
+                <input id="pointRamassage" type="text" th:field="*{pointRamassage}" placeholder="Ex: Rue des Fleurs">
+                <p class="error" th:if="${#fields.hasErrors('pointRamassage')}" th:errors="*{pointRamassage}"></p>
+            </div>
+
+            <button class="button" type="submit">Envoyer la demande</button>
+        </form>
+    </section>
+</div>
+</body>
+</html>

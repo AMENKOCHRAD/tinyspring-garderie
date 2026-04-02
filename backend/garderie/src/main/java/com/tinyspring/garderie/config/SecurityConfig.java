@@ -42,7 +42,9 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/parent/**", "/css/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/transport/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")

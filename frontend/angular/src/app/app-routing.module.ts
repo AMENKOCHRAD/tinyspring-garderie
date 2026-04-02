@@ -24,6 +24,13 @@ const routes: Routes = [
           )
       },
       {
+        path: 'transport',
+        loadComponent: () =>
+          import('./demo/transport/transport-dashboard/transport-dashboard.component').then(
+            (c) => c.TransportDashboardComponent
+          )
+      },
+      {
         path: 'component',
         loadChildren: () =>
           import('./demo/ui-element/ui-basic.module').then(

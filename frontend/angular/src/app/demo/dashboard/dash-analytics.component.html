@@ -1,7 +1,7 @@
 <div class="row">
   @for (card of cards; track card) {
     <div class="col-md-6 col-xl-3 m-b-20">
-      <a [href]="card.route" class="card-link" style="text-decoration: none;">
+      <a [routerLink]="card.route" class="card-link" style="text-decoration: none;">
         <app-card [hidHeader]="true" cardClass="{{ card.background }} order-card hover-scale" style="cursor: pointer; display: block;">
           <h6 class="text-white text-center font-weight-bold p-t-10">{{ card.title }}</h6>
           <h2 class="text-center text-white m-b-0 m-t-20 p-b-20">

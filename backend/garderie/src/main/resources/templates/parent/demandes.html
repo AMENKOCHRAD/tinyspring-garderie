@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Demandes</title>
+    <link rel="stylesheet" th:href="@{/css/parent.css}">
+</head>
+<body>
+<div class="container">
+    <header class="page-header">
+        <div>
+            <h1>Mes demandes de transport</h1>
+            <p th:text="'Parent simule : ' + ${parent.nom}"></p>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/parent/trajets}">Trajets</a>
+            <a th:href="@{/parent/demandes}">Mes demandes</a>
+        </nav>
+    </header>
+
+    <div class="success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+    <section class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Enfant</th>
+                <th>Trajet</th>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Statut</th>
+                <th>Point de ramassage</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(demandes)}">
+                <td colspan="6">Aucune demande enregistree.</td>
+            </tr>
+            <tr th:each="demande : ${demandes}">
+                <td th:text="${demande.enfantNomComplet}"></td>
+                <td th:text="${demande.pointDepart + ' -> ' + demande.destination}"></td>
+                <td th:text="${demande.dateTrajet}"></td>
+                <td th:text="${demande.heureDepart}"></td>
+                <td>
+                    <span class="badge waiting" th:if="${demande.statut.name() == 'EN_ATTENTE'}" th:text="${demande.statut}"></span>
+                    <span class="badge accepted" th:if="${demande.statut.name() == 'ACCEPTEE'}" th:text="${demande.statut}"></span>
+                    <span class="badge refused" th:if="${demande.statut.name() == 'REFUSEE'}" th:text="${demande.statut}"></span>
+                </td>
+                <td th:text="${demande.pointRamassage}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+</body>
+</html>

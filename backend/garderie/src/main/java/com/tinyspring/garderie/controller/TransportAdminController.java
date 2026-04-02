@@ -1,0 +1,77 @@
+package com.tinyspring.garderie.controller;
+
+import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
+import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
+import com.tinyspring.garderie.dto.transport.admin.TrajetResponse;
+import com.tinyspring.garderie.dto.transport.admin.TransportRequest;
+import com.tinyspring.garderie.dto.transport.admin.TransportResponse;
+import com.tinyspring.garderie.service.admin.TransportAdminService;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/transport")
+@CrossOrigin(origins = "http://localhost:4200")
+public class TransportAdminController {
+
+    private final TransportAdminService transportAdminService;
+
+    public TransportAdminController(TransportAdminService transportAdminService) {
+        this.transportAdminService = transportAdminService;
+    }
+
+    @GetMapping("/transports")
+    public List<TransportResponse> getTransports() {
+        return transportAdminService.listerTransports();
+    }
+
+    @PostMapping("/transports")
+    public TransportResponse createTransport(@Valid @RequestBody TransportRequest request) {
+        return transportAdminService.creerTransport(request);
+    }
+
+    @PutMapping("/transports/{id}")
+    public TransportResponse updateTransport(@PathVariable Long id, @Valid @RequestBody TransportRequest request) {
+        return transportAdminService.modifierTransport(id, request);
+    }
+
+    @DeleteMapping("/transports/{id}")
+    public void deleteTransport(@PathVariable Long id) {
+        transportAdminService.supprimerTransport(id);
+    }
+
+    @GetMapping("/trajets")
+    public List<TrajetResponse> getTrajets() {
+        return transportAdminService.listerTrajets();
+    }
+
+    @PostMapping("/trajets")
+    public TrajetResponse createTrajet(@Valid @RequestBody TrajetRequest request) {
+        return transportAdminService.creerTrajet(request);
+    }
+
+    @PutMapping("/trajets/{id}")
+    public TrajetResponse updateTrajet(@PathVariable Long id, @Valid @RequestBody TrajetRequest request) {
+        return transportAdminService.modifierTrajet(id, request);
+    }
+
+    @DeleteMapping("/trajets/{id}")
+    public void deleteTrajet(@PathVariable Long id) {
+        transportAdminService.supprimerTrajet(id);
+    }
+
+    @GetMapping("/affectations")
+    public List<AffectationTransportResponse> getAffectations() {
+        return transportAdminService.listerAffectations();
+    }
+}
