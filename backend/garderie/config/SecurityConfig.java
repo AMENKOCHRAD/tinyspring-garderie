@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
+                        .requestMatchers("/api/users/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
 
                         .requestMatchers("/api/conversations/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
                         .requestMatchers("/api/messages/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
