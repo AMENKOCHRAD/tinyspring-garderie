@@ -9,6 +9,7 @@ import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Event, EventStatus } from '../../models/event.model';
 import { EventNotificationService, EventToastMessage } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
+import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
 
 @Component({
   selector: 'app-event-list',
@@ -153,6 +154,10 @@ export class EventListComponent implements OnInit, OnDestroy {
 
   formatStatus(status: EventStatus): string {
     return status.replace(/_/g, ' ');
+  }
+
+  getEventPhotoUrl(photoEvent: string | undefined): string | null {
+    return getSafeEventPhotoUrl(photoEvent);
   }
 
   private getErrorMessage(

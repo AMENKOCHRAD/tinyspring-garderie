@@ -30,7 +30,6 @@ public class EventResponse {
     private LocalDateTime updatedAt;
 
     private Double eventPrice;
-    private Double photoPrice;
     private String photoEvent;
 
 }

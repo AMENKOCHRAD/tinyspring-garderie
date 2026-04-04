@@ -51,7 +51,7 @@ public class EventRequest {
     private Long createdBy;
 
     @Min(value = 0, message = "Le prix doit être positif")
-    private Double priceEvent;
+    private Double eventPrice;
 
     @Size(max = 500, message = "URL photo trop longue")
     private String photoEvent;

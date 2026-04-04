@@ -2,6 +2,7 @@ package com.tinyspring.garderie.service.Events;
 
 import com.tinyspring.garderie.dto.Events.EventRequest;
 import com.tinyspring.garderie.entity.Events.Event;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,4 +18,6 @@ public interface EventService {
     void delete(Long id);
 
     Event publish(Long id);
+
+    Event uploadPhoto(Long id, MultipartFile file);
 }

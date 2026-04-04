@@ -18,6 +18,10 @@ export class EventNotificationService {
     this.messageSubject.next({ kind: 'success', text });
   }
 
+  showError(text: string): void {
+    this.messageSubject.next({ kind: 'error', text });
+  }
+
   clear(): void {
     this.messageSubject.next(null);
   }

@@ -1,14 +1,18 @@
 import { DatePipe, NgClass } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject,ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject, forkJoin, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 
+
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Event, EventStatus } from '../../models/event.model';
 import { EventRegistration } from '../../models/event-registration.model';
+import { EventNotificationService } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
+import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
+
 
 @Component({
   selector: 'app-event-detail',
@@ -21,7 +25,9 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventService = inject(EventService);
+  private readonly notificationService = inject(EventNotificationService);
   private readonly destroy$ = new Subject<void>();
+  private readonly cdr = inject(ChangeDetectorRef);
 
   event: Event | null = null;
   registrations: EventRegistration[] = [];
@@ -35,7 +41,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
         const id = Number(params.get('id'));
 
         if (!id || Number.isNaN(id)) {
-          this.errorMessage = "L'identifiant de l'événement est invalide.";
+          this.errorMessage = "L'identifiant de l'evenement est invalide.";
           this.event = null;
           this.registrations = [];
           this.loading = false;
@@ -62,15 +68,19 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
     this.eventService
       .publishEvent(this.event.id)
-      .pipe(finalize(() => (this.publishing = false)))
+      .pipe(
+        finalize(() => (this.publishing = false)),
+        takeUntil(this.destroy$)
+      )
       .subscribe({
         next: (event) => {
           this.event = event;
+          this.notificationService.showSuccess("L'evenement a ete publie avec succes.");
         },
         error: (error: HttpErrorResponse) => {
           this.errorMessage = this.getErrorMessage(
             error,
-            "La publication de l'événement a échoué."
+            "La publication de l'evenement a echoue."
           );
         }
       });
@@ -105,33 +115,46 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadEventDetails(id: number): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.event = null;
-    this.registrations = [];
+  formatStatus(status: EventStatus): string {
+    return status.replaceAll('_', ' ');
+  }
 
-    forkJoin({
-      event: this.eventService.getEventById(id),
-      registrations: this.eventService
-        .getRegistrationsByEventId(id)
-        .pipe(catchError(() => of([])))
-    })
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe({
-        next: ({ event, registrations }) => {
-          this.event = event;
-          this.registrations = registrations;
-        },
-        error: (error: HttpErrorResponse) => {
-          this.event = null;
-          this.registrations = [];
-          this.errorMessage = this.getErrorMessage(
-            error,
-            "Impossible de charger l'événement."
-          );
-        }
-      });
+  getEventPhotoUrl(photoEvent: string | undefined): string | null {
+    return getSafeEventPhotoUrl(photoEvent);
+  }
+
+  private loadEventDetails(id: number): void {
+   this.loading = true;
+  this.errorMessage = '';
+  this.event = null;
+  this.registrations = [];
+
+  forkJoin({
+    event: this.eventService.getEventById(id),
+    registrations: this.eventService
+      .getRegistrationsByEventId(id)
+      .pipe(catchError(() => of([])))
+  })
+    .pipe(finalize(() => {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }))
+    .subscribe({
+      next: ({ event, registrations }) => {
+        this.event = event;
+        this.registrations = registrations;
+        this.cdr.detectChanges();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.event = null;
+        this.registrations = [];
+        this.errorMessage = this.getErrorMessage(
+          error,
+          "Impossible de charger l'événement."
+        );
+        this.cdr.detectChanges();
+      }
+    });;
   }
 
   private getErrorMessage(
@@ -139,7 +162,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     fallbackMessage: string
   ): string {
     if (error.status === 404) {
-      return "L'événement demandé est introuvable.";
+      return "L'evenement demande est introuvable.";
     }
 
     if (typeof error.error === 'string' && error.error.trim()) {

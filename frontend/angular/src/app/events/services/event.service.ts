@@ -76,6 +76,16 @@ export class EventService {
       .pipe(tap(() => this.refreshEvents()));
   }
 
+  uploadEventPhoto(id: number, file: File): Observable<Event> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http
+      .post<EventApiResponse>(`${this.apiUrl}/events/${id}/photo`, formData)
+      .pipe(map((event) => this.mapEventResponse(event)))
+      .pipe(tap(() => this.refreshEvents()));
+  }
+
   publishEvent(id: number): Observable<Event> {
     return this.http
       .put<EventApiResponse>(`${this.apiUrl}/events/${id}/publish`, {})

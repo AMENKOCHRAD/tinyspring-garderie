@@ -1,13 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subject, combineLatest } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { Subject, combineLatest, of } from 'rxjs';
+import { catchError, finalize, switchMap, takeUntil, timeout } from 'rxjs/operators';
+
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { EventFormComponent } from '../../components/event-form/event-form.component';
 import { Event } from '../../models/event.model';
-import { EventRequest } from '../../models/event-request.model';
+import { EventFormSubmission } from '../../models/event-form-submission.model';
 import { EventNotificationService } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
 
@@ -24,6 +25,7 @@ export class EventCreateComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroy$ = new Subject<void>();
+  private readonly cdr = inject(ChangeDetectorRef);
 
   event: Event | null = null;
   isEditMode = false;
@@ -68,26 +70,44 @@ export class EventCreateComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  saveEvent(payload: EventRequest): void {
+  saveEvent(submission: EventFormSubmission): void {
     this.submitting = true;
     this.errorMessage = null;
 
-    const request$ =
+    const saveRequest$ =
       this.isEditMode && this.eventId
-        ? this.eventService.updateEvent(this.eventId, payload)
-        : this.eventService.createEvent(payload);
+        ? this.eventService.updateEvent(this.eventId, submission.payload)
+        : this.eventService.createEvent(submission.payload);
 
-    request$
-      .pipe(finalize(() => (this.submitting = false)))
-      .subscribe({
-        next: () => {
-          if (!this.isEditMode) {
-            this.notificationService.showSuccess("L'evenement a ete cree avec succes.");
-            this.router.navigate(['/events']);
-            return;
+    saveRequest$
+      .pipe(
+        switchMap((event) => {
+          if (!submission.photoFile) {
+            return of(event);
           }
 
-          this.notificationService.showSuccess("L'evenement a ete mis a jour avec succes.");
+          return this.eventService.uploadEventPhoto(event.id, submission.photoFile).pipe(
+            timeout(10000),
+            catchError(() => {
+              this.notificationService.showError(
+                "L'evenement a ete enregistre, mais l'image n'a pas pu etre envoyee."
+              );
+              return of(event);
+            })
+          );
+        }),
+        finalize(() => {
+          this.submitting = false;
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(
+            this.isEditMode
+              ? "L'evenement a ete mis a jour avec succes."
+              : "L'evenement a ete cree avec succes."
+          );
           this.router.navigate(['/events']);
         },
         error: (error: HttpErrorResponse) => {
@@ -121,30 +141,29 @@ export class EventCreateComponent implements OnInit, OnDestroy {
 
   private loadEvent(id: number): void {
     this.loading = true;
-    this.pageErrorMessage = null;
-    this.errorMessage = null;
-    this.event = null;
+  this.pageErrorMessage = null;
+  this.errorMessage = null;
 
-    this.eventService
-      .getEventById(id)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe({
-        next: (event) => {
-          this.event = event;
-          this.loading = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          this.event = null;
-          this.loading = false;
-          this.pageErrorMessage = this.getErrorMessage(
-            error,
-            "Impossible de charger l'evenement a modifier."
-          );
-        }
-      });
+  this.eventService
+    .getEventById(id)
+    .pipe(finalize(() => {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }))
+    .subscribe({
+      next: (event) => {
+        this.event = event;
+        this.cdr.detectChanges();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.event = null;
+        this.pageErrorMessage = this.getErrorMessage(
+          error,
+          "Impossible de charger l'événement à modifier."
+        );
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private getErrorMessage(

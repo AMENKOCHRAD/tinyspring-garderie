@@ -142,7 +142,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
                         waitlisted.setStatus(RegistrationStatus.PENDING);
                         eventRegistrationRepository.save(waitlisted);
 
-                        // Ici on pourra brancher la notification plus tard.
+
                     });
         }
 

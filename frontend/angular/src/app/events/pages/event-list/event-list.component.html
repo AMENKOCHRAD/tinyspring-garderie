@@ -76,8 +76,8 @@
               @for (event of vm.events; track event.id) {
                 <tr>
                   <td>
-                    @if (event.photoEvent) {
-                      <img class="event-thumb" [src]="event.photoEvent" alt="Photo de l'événement" />
+                    @if (getEventPhotoUrl(event.photoEvent); as photoUrl) {
+                      <img class="event-thumb" [src]="photoUrl" alt="Photo de l'événement" />
                     } @else {
                       <div class="event-thumb placeholder">Aucune photo</div>
                     }

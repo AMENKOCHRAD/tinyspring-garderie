@@ -13,6 +13,5 @@ export interface EventRequest {
   classroomId: number;
   createdBy: number;
   eventPrice: number;
-  photoPrice: number;
   photoEvent?: string;
 }

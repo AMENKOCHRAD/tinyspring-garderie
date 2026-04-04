@@ -41,16 +41,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/parent/**").hasRole("PARENT")
-                        .requestMatchers("/api/events/**").permitAll()
-                        .requestMatchers("/api/registrations/**").permitAll()
-                        .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
-                        .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
     }

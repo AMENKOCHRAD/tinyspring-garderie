@@ -8,17 +8,17 @@
   @if (loading) {
     <div class="state-card">
       <div class="spinner-border text-primary" role="status"></div>
-      <p class="m-t-15 m-b-0">Chargement de l'événement...</p>
+      <p class="m-t-15 m-b-0">Chargement de l'evenement...</p>
     </div>
   } @else if (event) {
     <div class="section-toolbar">
       <div>
         <h2>{{ event.title }}</h2>
-        <p>Détails de l'événement et aperçu des participations.</p>
+        <p>Details de l'evenement et apercu des participations.</p>
       </div>
 
       <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
-        Retour à la liste
+        Retour a la liste
       </button>
     </div>
 
@@ -27,7 +27,7 @@
         <div class="event-topbar">
           <div class="event-identity">
             <span class="status-badge" [ngClass]="getStatusClass(event.status)">
-              {{ event.status.replaceAll('_', ' ') }}
+              {{ formatStatus(event.status) }}
             </span>
             <h2>{{ event.title }}</h2>
             <p>{{ event.type.replaceAll('_', ' ') }}</p>
@@ -35,7 +35,7 @@
 
           <div class="action-row">
             <button type="button" class="btn btn-outline-primary" (click)="goToEdit()">
-              Éditer
+              Editer
             </button>
             <button
               type="button"
@@ -56,8 +56,8 @@
 
         <div class="hero-grid">
           <div class="photo-panel">
-            @if (event.photoEvent) {
-              <img class="event-photo" [src]="event.photoEvent" alt="Photo de l'événement" />
+            @if (getEventPhotoUrl(event.photoEvent); as photoUrl) {
+              <img class="event-photo" [src]="photoUrl" alt="Photo de l'evenement" />
             } @else {
               <div class="photo-placeholder">Aucune photo</div>
             }
@@ -69,7 +69,7 @@
               <p>{{ event.location || '-' }}</p>
             </div>
             <div>
-              <span class="label">Début</span>
+              <span class="label">Debut</span>
               <p>{{ event.startDatetime | date: 'dd/MM/yyyy HH:mm' }}</p>
             </div>
             <div>
@@ -77,11 +77,11 @@
               <p>{{ event.endDatetime | date: 'dd/MM/yyyy HH:mm' }}</p>
             </div>
             <div>
-              <span class="label">Capacité</span>
+              <span class="label">Capacite</span>
               <p>{{ event.maxCapacity }}</p>
             </div>
             <div>
-              <span class="label">Autorisation</span>
+              <span class="label">Autorisation parentale</span>
               <p>{{ event.requiresAuthorization ? 'Oui' : 'Non' }}</p>
             </div>
             <div>
@@ -89,27 +89,31 @@
               <p>{{ event.classroomId }}</p>
             </div>
             <div>
-              <span class="label">Créé par</span>
+              <span class="label">Cree par</span>
               <p>{{ event.createdBy }}</p>
             </div>
             <div>
-              <span class="label">Prix événement</span>
+              <span class="label">Tarif evenement</span>
               <p>{{ event.eventPrice }}</p>
             </div>
             <div>
-              <span class="label">Prix photo</span>
-              <p>{{ event.photoPrice }}</p>
+              <span class="label">Cree le</span>
+              <p>{{ event.createdAt ? (event.createdAt | date: 'dd/MM/yyyy HH:mm') : '-' }}</p>
+            </div>
+            <div>
+              <span class="label">Mis a jour le</span>
+              <p>{{ event.updatedAt ? (event.updatedAt | date: 'dd/MM/yyyy HH:mm') : '-' }}</p>
             </div>
             <div>
               <span class="label">Lien photo</span>
-              <p>{{ event.photoEvent || 'Aucune photo' }}</p>
+              <p>{{ getEventPhotoUrl(event.photoEvent) || 'Aucune photo' }}</p>
             </div>
           </div>
         </div>
 
         <div class="description-block">
           <span class="label">Description</span>
-          <p>{{ event.description || 'Aucune description renseignée.' }}</p>
+          <p>{{ event.description || 'Aucune description renseignee.' }}</p>
         </div>
       </app-card>
 
@@ -148,7 +152,7 @@
             </table>
           </div>
         } @else {
-          <div class="empty-inline">Aucune participation enregistrée pour le moment.</div>
+          <div class="empty-inline">Aucune participation enregistree pour le moment.</div>
         }
       </app-card>
     </div>

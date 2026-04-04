@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,6 +49,12 @@ public class EventRestController {
     @PutMapping("/{id}/publish")
     public ResponseEntity<Event> publish(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.publish(id));
+    }
+
+    @PostMapping("/{id}/photo")
+    public ResponseEntity<Event> uploadPhoto(@PathVariable Long id,
+                                             @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(eventService.uploadPhoto(id, file));
     }
 
 }

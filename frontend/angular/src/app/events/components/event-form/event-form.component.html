@@ -38,7 +38,7 @@
                 }
               </select>
               @if (hasError('type', 'required')) {
-                <small class="text-danger">Le type d'événement est obligatoire.</small>
+                <small class="text-danger">Le type d'evenement est obligatoire.</small>
               }
             </div>
           </div>
@@ -76,8 +76,8 @@
               @if (hasError('endDatetime', 'required')) {
                 <small class="text-danger">La date de fin est obligatoire.</small>
               }
-              @if (isDateRangeInvalid()) {
-                <small class="text-danger">La date de fin doit étre posterieure à la date de début.</small>
+              @if (isDateRangeInvalid) {
+                <small class="text-danger">La date de fin doit etre posterieure a la date de debut.</small>
               }
             </div>
           </div>
@@ -132,22 +132,45 @@
             </div>
           </div>
 
-    
-
           <div class="col-12">
             <div class="form-group">
-              <label class="form-label" for="photoEvent">Photo de l'evenement</label>
+              <label class="form-label">Image de l'evenement</label>
+
               <input
-                id="photoEvent"
-                type="text"
-                class="form-control"
-                formControlName="photoEvent"
-                maxlength="2048"
-                placeholder="URL ou chemin de l'image"
+                #photoInput
+                hidden
+                type="file"
+                accept="image/*"
+                (change)="onPhotoSelected(photoInput)"
               />
-              @if (hasError('photoEvent', 'maxlength')) {
-                <small class="text-danger">L'URL de la photo est trop longue.</small>
-              }
+
+              <div class="upload-row">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  (click)="photoInput.click()"
+                  [disabled]="submitting()"
+                >
+                  Ajouter image
+                </button>
+
+                @if (displayedFileName) {
+                  <span class="selected-file-name">{{ displayedFileName }}</span>
+                } @else {
+                  <span class="selected-file-name muted">Aucun fichier selectionne</span>
+                }
+
+                @if (selectedPhotoFile) {
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm remove-file-button"
+                    (click)="removeSelectedPhoto(photoInput)"
+                    [disabled]="submitting()"
+                  >
+                    Retirer
+                  </button>
+                }
+              </div>
             </div>
           </div>
 
@@ -173,9 +196,9 @@
         <div class="photo-preview-card">
           <span class="preview-label">Apercu photo</span>
 
-          @if (photoPreview()) {
-            <img class="photo-preview" [src]="photoPreview()" alt="Apercu de l'evenement" />
-            <p class="preview-caption">{{ photoPreview() }}</p>
+          @if (currentPhotoPreview) {
+            <img class="photo-preview" [src]="currentPhotoPreview" alt="Apercu de l'evenement" />
+            <p class="preview-caption">{{ displayedFileName || 'Image actuelle' }}</p>
           } @else {
             <div class="photo-placeholder">Aucune photo</div>
           }

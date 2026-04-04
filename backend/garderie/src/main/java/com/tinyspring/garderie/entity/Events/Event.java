@@ -41,8 +41,8 @@ public class Event {
 
     private boolean requiresAuthorization;
 
-    @Column(name = "price_event")
-    private Double priceEvent;
+    @Column(name = "event_price")
+    private Double eventPrice;
 
     @Column(name = "photo_event", length = 500)
     private String photoEvent;
