@@ -1,0 +1,156 @@
+<section class="events-page">
+  @if (errorMessage) {
+    <div class="alert alert-danger" role="alert">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="state-card">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="m-t-15 m-b-0">Chargement de l'événement...</p>
+    </div>
+  } @else if (event) {
+    <div class="section-toolbar">
+      <div>
+        <h2>{{ event.title }}</h2>
+        <p>Détails de l'événement et aperçu des participations.</p>
+      </div>
+
+      <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
+        Retour à la liste
+      </button>
+    </div>
+
+    <div class="content-grid">
+      <app-card>
+        <div class="event-topbar">
+          <div class="event-identity">
+            <span class="status-badge" [ngClass]="getStatusClass(event.status)">
+              {{ event.status.replaceAll('_', ' ') }}
+            </span>
+            <h2>{{ event.title }}</h2>
+            <p>{{ event.type.replaceAll('_', ' ') }}</p>
+          </div>
+
+          <div class="action-row">
+            <button type="button" class="btn btn-outline-primary" (click)="goToEdit()">
+              Éditer
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              (click)="publishEvent()"
+              [disabled]="publishing || event.status === 'PUBLISHED'"
+            >
+              @if (publishing) {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              }
+              Publier
+            </button>
+            <button type="button" class="btn btn-outline-secondary" (click)="goToRegistrations()">
+              Voir les participations
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-grid">
+          <div class="photo-panel">
+            @if (event.photoEvent) {
+              <img class="event-photo" [src]="event.photoEvent" alt="Photo de l'événement" />
+            } @else {
+              <div class="photo-placeholder">Aucune photo</div>
+            }
+          </div>
+
+          <div class="detail-grid">
+            <div>
+              <span class="label">Lieu</span>
+              <p>{{ event.location || '-' }}</p>
+            </div>
+            <div>
+              <span class="label">Début</span>
+              <p>{{ event.startDatetime | date: 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <div>
+              <span class="label">Fin</span>
+              <p>{{ event.endDatetime | date: 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <div>
+              <span class="label">Capacité</span>
+              <p>{{ event.maxCapacity }}</p>
+            </div>
+            <div>
+              <span class="label">Autorisation</span>
+              <p>{{ event.requiresAuthorization ? 'Oui' : 'Non' }}</p>
+            </div>
+            <div>
+              <span class="label">Classe</span>
+              <p>{{ event.classroomId }}</p>
+            </div>
+            <div>
+              <span class="label">Créé par</span>
+              <p>{{ event.createdBy }}</p>
+            </div>
+            <div>
+              <span class="label">Prix événement</span>
+              <p>{{ event.eventPrice }}</p>
+            </div>
+            <div>
+              <span class="label">Prix photo</span>
+              <p>{{ event.photoPrice }}</p>
+            </div>
+            <div>
+              <span class="label">Lien photo</span>
+              <p>{{ event.photoEvent || 'Aucune photo' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="description-block">
+          <span class="label">Description</span>
+          <p>{{ event.description || 'Aucune description renseignée.' }}</p>
+        </div>
+      </app-card>
+
+      <app-card>
+        <div class="side-card-header">
+          <div>
+            <span class="label">Participations</span>
+            <h3>{{ registrations.length }}</h3>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="goToRegistrations()">
+            Ouvrir
+          </button>
+        </div>
+
+        @if (registrations.length) {
+          <div class="table-responsive">
+            <table class="table table-sm participation-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Enfant</th>
+                  <th>Parent</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (registration of registrations.slice(0, 5); track registration.id) {
+                  <tr>
+                    <td>{{ registration.id }}</td>
+                    <td>{{ registration.childId }}</td>
+                    <td>{{ registration.parentId }}</td>
+                    <td>{{ registration.status.replaceAll('_', ' ') }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty-inline">Aucune participation enregistrée pour le moment.</div>
+        }
+      </app-card>
+    </div>
+  }
+</section>

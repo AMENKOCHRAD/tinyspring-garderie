@@ -41,7 +41,12 @@ public class Event {
 
     private boolean requiresAuthorization;
 
-    // FK simples (on ne map pas l'entité complète ici volontairement)
+    @Column(name = "price_event")
+    private Double priceEvent;
+
+    @Column(name = "photo_event", length = 500)
+    private String photoEvent;
+
     private Long classroomId;
     private Long createdBy;
 

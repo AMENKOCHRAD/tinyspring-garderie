@@ -1,0 +1,32 @@
+<section class="events-page">
+  @if (pageErrorMessage) {
+    <div class="alert alert-danger" role="alert">
+      {{ pageErrorMessage }}
+    </div>
+  } @else if (loading) {
+    <div class="state-card">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="m-t-15 m-b-0">Chargement du formulaire...</p>
+    </div>
+  } @else {
+    <div class="section-toolbar">
+      <div>
+        <h2>{{ pageTitle }}</h2>
+        <p>{{ pageDescription }}</p>
+      </div>
+
+      <button type="button" class="btn btn-outline-secondary" (click)="goBack()">
+        Retour
+      </button>
+    </div>
+
+    <app-event-form
+      [submitting]="submitting"
+      [errorMessage]="errorMessage"
+      [submitLabel]="submitLabel"
+      [initialEvent]="event"
+      (submitted)="saveEvent($event)"
+      (cancelled)="goBack()"
+    />
+  }
+</section>

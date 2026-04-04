@@ -1,0 +1,144 @@
+@if (vm$ | async; as vm) {
+  <section class="events-dashboard">
+    @if (vm.toast) {
+      <div class="event-toast" [ngClass]="vm.toast.kind">
+        <span>{{ vm.toast.text }}</span>
+        <button type="button" class="toast-close" (click)="dismissToast()">×</button>
+      </div>
+    }
+
+    <div class="section-toolbar">
+      <div>
+        <h2>Gestion des événements</h2>
+        <p>Suivez vos activités, leurs statuts et les prochaines échéances.</p>
+      </div>
+
+      <button type="button" class="btn btn-primary add-button" (click)="goToNewEvent()">
+        Ajouter un événement
+      </button>
+    </div>
+
+    <div class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-label">Total</span>
+        <strong class="stat-value">{{ vm.totalEvents }}</strong>
+        <small class="stat-hint">Tous les événements enregistrés</small>
+      </article>
+
+      <article class="stat-card accent-green">
+        <span class="stat-label">Publiés</span>
+        <strong class="stat-value">{{ vm.publishedEvents }}</strong>
+        <small class="stat-hint">Visibles pour les familles</small>
+      </article>
+
+      <article class="stat-card accent-blue">
+        <span class="stat-label">À venir</span>
+        <strong class="stat-value">{{ vm.upcomingEvents }}</strong>
+        <small class="stat-hint">Événements futurs planifiés</small>
+      </article>
+    </div>
+
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger dashboard-alert" role="alert">
+        {{ vm.errorMessage }}
+      </div>
+    }
+
+    <div class="events-panel">
+      @if (vm.loading) {
+        <div class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="m-t-15 m-b-0">Chargement des événements...</p>
+        </div>
+      } @else if (!vm.events.length) {
+        <div class="state-container empty-state">
+          <p class="m-b-15">Aucun événement disponible pour le moment.</p>
+          <button type="button" class="btn btn-outline-primary" (click)="goToNewEvent()">
+            Créer le premier événement
+          </button>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table events-table align-middle">
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Événement</th>
+                <th>Statut</th>
+                <th>Date</th>
+                <th>Lieu</th>
+                <th>Capacité</th>
+                <th>Tarifs</th>
+                <th class="actions-heading">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (event of vm.events; track event.id) {
+                <tr>
+                  <td>
+                    @if (event.photoEvent) {
+                      <img class="event-thumb" [src]="event.photoEvent" alt="Photo de l'événement" />
+                    } @else {
+                      <div class="event-thumb placeholder">Aucune photo</div>
+                    }
+                  </td>
+                  <td>
+                    <div class="event-main">
+                      <strong>{{ event.title || 'Événement sans titre' }}</strong>
+                      <span>#{{ event.id }} • {{ event.type.replaceAll('_', ' ') }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(event.status)">
+                      {{ formatStatus(event.status) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="event-dates">
+                      <strong>{{ event.startDatetime | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                      <span>Fin : {{ event.endDatetime | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                  </td>
+                  <td>{{ event.location || '-' }}</td>
+                  <td>{{ event.maxCapacity }}</td>
+                  <td>
+                    <div class="price-stack">
+                      <span> {{ event.eventPrice }}</span>
+                    </div>
+                  </td>
+                  <td class="actions-column">
+                    <button type="button" class="icon-button" (click)="goToDetails(event.id)">
+                      Voir
+                    </button>
+                    <a class="icon-button" [routerLink]="['/events', event.id, 'edit']">
+                      Éditer
+                    </a>
+                    <button
+                      type="button"
+                      class="icon-button success"
+                      (click)="publishEvent(event)"
+                      [disabled]="actionInProgressId === event.id || event.status === 'PUBLISHED'"
+                    >
+                      Publier
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-button danger"
+                      (click)="deleteEvent(event)"
+                      [disabled]="actionInProgressId === event.id"
+                    >
+                      Supprimer
+                    </button>
+                    <button type="button" class="icon-button" (click)="goToRegistrations(event.id)">
+                      Participations
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </section>
+}

@@ -24,6 +24,43 @@ const routes: Routes = [
           )
       },
       {
+        path: 'events',
+        loadComponent: () =>
+          import('./events/pages/event-list/event-list.component').then(
+            (c) => c.EventListComponent
+          )
+      },
+      {
+        path: 'events/new',
+        data: { mode: 'create' },
+        loadComponent: () =>
+          import('./events/pages/event-create/event-create.component').then(
+            (c) => c.EventCreateComponent
+          )
+      },
+      {
+        path: 'events/:id/edit',
+        data: { mode: 'edit' },
+        loadComponent: () =>
+          import('./events/pages/event-create/event-create.component').then(
+            (c) => c.EventCreateComponent
+          )
+      },
+      {
+        path: 'events/:id/registrations',
+        loadComponent: () =>
+          import(
+            './events/pages/event-registrations/event-registrations.component'
+          ).then((c) => c.EventRegistrationsComponent)
+      },
+      {
+        path: 'events/:id',
+        loadComponent: () =>
+          import('./events/pages/event-detail/event-detail.component').then(
+            (c) => c.EventDetailComponent
+          )
+      },
+      {
         path: 'component',
         loadChildren: () =>
           import('./demo/ui-element/ui-basic.module').then(

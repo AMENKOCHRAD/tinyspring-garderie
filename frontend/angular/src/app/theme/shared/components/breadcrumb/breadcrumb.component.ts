@@ -52,7 +52,11 @@ export class BreadcrumbComponent {
 
   filterNavigation(navItems: NavigationItem[], activeLink: string): titleType[] {
     for (const navItem of navItems) {
-      if (navItem.type === 'item' && 'url' in navItem && navItem.url === activeLink) {
+      if (
+        navItem.type === 'item' &&
+        'url' in navItem &&
+        this.matchesRoute(navItem.url, activeLink)
+      ) {
         return [
           {
             url: 'url' in navItem ? navItem.url : false,
@@ -76,5 +80,13 @@ export class BreadcrumbComponent {
       }
     }
     return [];
+  }
+
+  private matchesRoute(navUrl: string | undefined, activeLink: string): boolean {
+    if (!navUrl) {
+      return false;
+    }
+
+    return activeLink === navUrl || activeLink.startsWith(`${navUrl}/`);
   }
 }

@@ -1,0 +1,68 @@
+.form-label {
+  font-weight: 600;
+}
+
+.photo-preview-card {
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+  border: 1px solid #dbe6f3;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 280px;
+  padding: 1rem;
+}
+
+.preview-label {
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.photo-preview {
+  border-radius: 16px;
+  height: 220px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.preview-caption {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin: 0;
+  word-break: break-all;
+}
+
+.photo-placeholder {
+  align-items: center;
+  background: #fff;
+  border: 1px dashed #c9d8ea;
+  border-radius: 16px;
+  color: #6b7280;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 220px;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.custom-switch {
+  padding-left: 2.25rem;
+}
+
+@media (max-width: 991.98px) {
+  .photo-preview-card {
+    margin-top: 1rem;
+    min-height: auto;
+  }
+}

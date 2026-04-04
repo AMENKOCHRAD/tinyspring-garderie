@@ -1,0 +1,198 @@
+<app-card>
+  @if (errorMessage()) {
+    <div class="alert alert-danger" role="alert">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (validationMessage) {
+    <div class="alert alert-warning" role="alert">
+      {{ validationMessage }}
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="title">Titre</label>
+              <input id="title" type="text" class="form-control" formControlName="title" maxlength="255" />
+              @if (hasError('title', 'required')) {
+                <small class="text-danger">Le titre est obligatoire.</small>
+              }
+              @if (hasError('title', 'maxlength')) {
+                <small class="text-danger">Le titre ne doit pas depasser 255 caracteres.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="type">Type</label>
+              <select id="type" class="form-control" formControlName="type">
+                <option value="">Selectionner un type</option>
+                @for (type of eventTypes; track type) {
+                  <option [value]="type">{{ formatEventType(type) }}</option>
+                }
+              </select>
+              @if (hasError('type', 'required')) {
+                <small class="text-danger">Le type d'événement est obligatoire.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="form-group">
+              <label class="form-label" for="description">Description</label>
+              <textarea
+                id="description"
+                rows="4"
+                class="form-control"
+                formControlName="description"
+                maxlength="5000"
+              ></textarea>
+              @if (hasError('description', 'maxlength')) {
+                <small class="text-danger">La description est trop longue.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="startDatetime">Debut</label>
+              <input id="startDatetime" type="datetime-local" class="form-control" formControlName="startDatetime" />
+              @if (hasError('startDatetime', 'required')) {
+                <small class="text-danger">La date de debut est obligatoire.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="endDatetime">Fin</label>
+              <input id="endDatetime" type="datetime-local" class="form-control" formControlName="endDatetime" />
+              @if (hasError('endDatetime', 'required')) {
+                <small class="text-danger">La date de fin est obligatoire.</small>
+              }
+              @if (isDateRangeInvalid()) {
+                <small class="text-danger">La date de fin doit étre posterieure à la date de début.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="location">Lieu</label>
+              <input id="location" type="text" class="form-control" formControlName="location" maxlength="255" />
+              @if (hasError('location', 'maxlength')) {
+                <small class="text-danger">Le lieu ne doit pas depasser 255 caracteres.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="maxCapacity">Capacite maximale</label>
+              <input id="maxCapacity" type="number" class="form-control" formControlName="maxCapacity" min="1" />
+              @if (hasError('maxCapacity', 'required') || hasError('maxCapacity', 'min')) {
+                <small class="text-danger">La capacite maximale doit etre superieure a 0.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="classroomId">Classe ciblee</label>
+              <input id="classroomId" type="number" class="form-control" formControlName="classroomId" min="1" />
+              @if (hasError('classroomId', 'required') || hasError('classroomId', 'min')) {
+                <small class="text-danger">La classe ciblee est obligatoire.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="createdBy">Cree par</label>
+              <input id="createdBy" type="number" class="form-control" formControlName="createdBy" min="1" />
+              @if (hasError('createdBy', 'required') || hasError('createdBy', 'min')) {
+                <small class="text-danger">Le createur est obligatoire.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label" for="eventPrice">Tarif evenement</label>
+              <input id="eventPrice" type="number" class="form-control" formControlName="eventPrice" min="0" step="0.01" />
+              @if (hasError('eventPrice', 'required') || hasError('eventPrice', 'min')) {
+                <small class="text-danger">Le tarif evenement doit etre superieur ou egal a 0.</small>
+              }
+            </div>
+          </div>
+
+    
+
+          <div class="col-12">
+            <div class="form-group">
+              <label class="form-label" for="photoEvent">Photo de l'evenement</label>
+              <input
+                id="photoEvent"
+                type="text"
+                class="form-control"
+                formControlName="photoEvent"
+                maxlength="2048"
+                placeholder="URL ou chemin de l'image"
+              />
+              @if (hasError('photoEvent', 'maxlength')) {
+                <small class="text-danger">L'URL de la photo est trop longue.</small>
+              }
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="form-group m-b-0">
+              <div class="custom-control custom-switch">
+                <input
+                  id="requiresAuthorization"
+                  type="checkbox"
+                  class="custom-control-input"
+                  formControlName="requiresAuthorization"
+                />
+                <label class="custom-control-label" for="requiresAuthorization">
+                  Autorisation parentale requise
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="photo-preview-card">
+          <span class="preview-label">Apercu photo</span>
+
+          @if (photoPreview()) {
+            <img class="photo-preview" [src]="photoPreview()" alt="Apercu de l'evenement" />
+            <p class="preview-caption">{{ photoPreview() }}</p>
+          } @else {
+            <div class="photo-placeholder">Aucune photo</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        }
+        {{ submitLabel() }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()" [disabled]="submitting()">
+        Annuler
+      </button>
+    </div>
+  </form>
+</app-card>

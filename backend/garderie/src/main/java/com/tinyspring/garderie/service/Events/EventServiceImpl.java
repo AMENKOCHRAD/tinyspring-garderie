@@ -30,6 +30,8 @@ public class EventServiceImpl implements EventService{
                 .location(request.getLocation())
                 .maxCapacity(request.getMaxCapacity())
                 .requiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()))
+                .priceEvent(request.getPriceEvent())
+                .photoEvent(request.getPhotoEvent())
                 .classroomId(request.getClassroomId())
                 .createdBy(request.getCreatedBy())
                 .build();
@@ -68,6 +70,8 @@ public class EventServiceImpl implements EventService{
         existing.setLocation(request.getLocation());
         existing.setMaxCapacity(request.getMaxCapacity());
         existing.setRequiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()));
+        existing.setPriceEvent(request.getPriceEvent());
+        existing.setPhotoEvent(request.getPhotoEvent());
         existing.setClassroomId(request.getClassroomId());
         existing.setCreatedBy(request.getCreatedBy());
 

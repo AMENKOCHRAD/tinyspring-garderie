@@ -1,0 +1,85 @@
+.events-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.page-header h1 {
+  color: #1f2a44;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.page-header p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.state-container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 220px;
+  text-align: center;
+}
+
+.empty-state {
+  border: 1px dashed #dfe5ef;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.registrations-table {
+  margin-bottom: 0;
+}
+
+.actions-column {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 180px;
+}
+
+.status-badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.45rem 0.8rem;
+}
+
+.status-confirmed {
+  background: rgba(25, 135, 84, 0.14);
+  color: #0f8a52;
+}
+
+.status-pending {
+  background: rgba(255, 193, 7, 0.18);
+  color: #9a7300;
+}
+
+.status-cancelled {
+  background: rgba(220, 53, 69, 0.14);
+  color: #d63b4a;
+}
+
+@media (max-width: 767.98px) {
+  .page-header {
+    flex-direction: column;
+  }
+}

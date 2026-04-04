@@ -49,4 +49,10 @@ public class EventRequest {
 
     @NotNull(message = "Le créateur est obligatoire")
     private Long createdBy;
+
+    @Min(value = 0, message = "Le prix doit être positif")
+    private Double priceEvent;
+
+    @Size(max = 500, message = "URL photo trop longue")
+    private String photoEvent;
 }
