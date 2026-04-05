@@ -7,7 +7,7 @@
     }
 
     @if (vm.loading) {
-      <div class="state-card">
+      <div class="state-card" style="text-align: center; padding: 40px;">
         <div class="spinner-border text-primary" role="status"></div>
         <p class="m-t-15 m-b-0">Chargement de l'événement...</p>
       </div>
@@ -23,10 +23,10 @@
         </button>
       </div>
 
-      <div class="content-grid">
+      <div class="content-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;" con>
         <app-card>
-          <div class="event-topbar">
-            <div class="event-identity">
+          <div class="event-topbar" style="display: flex; justify-content: space-between; align-items: center;" >
+            <div class="event-identity" style="display: flex; flex-direction: column;">
               <span class="status-badge" [ngClass]="getStatusClass(getDisplayStatus(vm.event))">
                 {{ formatStatus(getDisplayStatus(vm.event)) }}
               </span>
