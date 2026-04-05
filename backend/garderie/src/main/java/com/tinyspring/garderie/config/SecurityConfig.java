@@ -3,6 +3,7 @@ package com.tinyspring.garderie.config;
 import com.tinyspring.garderie.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,8 +30,9 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider auth = new DaoAuthenticationProvider(userDetailsService);
-        auth.setPasswordEncoder(passwordEncoder);
+        DaoAuthenticationProvider auth = new DaoAuthenticationProvider(); // ✅ constructeur vide
+        auth.setUserDetailsService(userDetailsService);                    // ✅ setter séparé
+        auth.setPasswordEncoder(passwordEncoder);                          // ✅ setter séparé
         return auth;
     }
 
@@ -41,11 +43,24 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
+
+                        // ── Auth ───────────────────────────────────────────
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // ── Boutique front-office ──────────────────────────
+                        .requestMatchers(HttpMethod.GET, "/api/boutique/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/boutique/produits/**").permitAll()
+                        .requestMatchers("/api/boutique/commandes/**").authenticated()
+
+                        // ── Boutique back-office → ADMIN uniquement ────────
+                        .requestMatchers("/api/admin/boutique/**").hasRole("ADMIN")
+
+                        // ── Autres routes existantes ───────────────────────
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
+
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
@@ -57,7 +72,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
