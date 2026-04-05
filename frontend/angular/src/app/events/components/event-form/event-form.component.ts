@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
-import { Event, EventType } from '../../models/event.model';
+import { Event as EventModel, EventType } from '../../models/event.model';
 import { EventFormSubmission } from '../../models/event-form-submission.model';
 import { EventRequest } from '../../models/event-request.model';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
@@ -27,7 +27,7 @@ export class EventFormComponent {
   readonly submitting = input(false);
   readonly errorMessage = input<string | null>(null);
   readonly submitLabel = input('Enregistrer');
-  readonly initialEvent = input<Event | null>(null);
+  readonly initialEvent = input<EventModel | null>(null);
   readonly submitted = output<EventFormSubmission>();
   readonly cancelled = output<void>();
 
@@ -140,7 +140,8 @@ export class EventFormComponent {
     });
   }
 
-  onPhotoSelected(input: HTMLInputElement | null): void {
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
     const file = input?.files?.item(0) ?? null;
 
     this.clearSelectedPhoto(false);

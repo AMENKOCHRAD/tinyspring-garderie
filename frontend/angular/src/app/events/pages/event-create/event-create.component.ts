@@ -1,9 +1,18 @@
+import { AsyncPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subject, combineLatest, of } from 'rxjs';
-import { catchError, finalize, switchMap, takeUntil, timeout } from 'rxjs/operators';
-
+import { combineLatest, of } from 'rxjs';
+import {
+  catchError,
+  distinctUntilChanged,
+  finalize,
+  map,
+  shareReplay,
+  startWith,
+  switchMap,
+  timeout
+} from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { EventFormComponent } from '../../components/event-form/event-form.component';
@@ -12,63 +21,86 @@ import { EventFormSubmission } from '../../models/event-form-submission.model';
 import { EventNotificationService } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
 
+interface EventCreateViewModel {
+  loading: boolean;
+  event: Event | null;
+  pageErrorMessage: string | null;
+}
+
 @Component({
   selector: 'app-event-create',
   standalone: true,
-  imports: [SharedModule, RouterModule, EventFormComponent],
+  imports: [SharedModule, RouterModule, EventFormComponent, AsyncPipe],
   templateUrl: './event-create.component.html',
   styleUrls: ['./event-create.component.scss']
 })
-export class EventCreateComponent implements OnInit, OnDestroy {
+export class EventCreateComponent {
   private readonly eventService = inject(EventService);
   private readonly notificationService = inject(EventNotificationService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly destroy$ = new Subject<void>();
-  private readonly cdr = inject(ChangeDetectorRef);
 
-  event: Event | null = null;
   isEditMode = false;
   eventId: number | null = null;
-  loading = false;
   submitting = false;
   errorMessage: string | null = null;
-  pageErrorMessage: string | null = null;
 
-  ngOnInit(): void {
-    combineLatest([this.route.data, this.route.paramMap])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: ([data, params]) => {
-          this.isEditMode = data['mode'] === 'edit';
-          this.errorMessage = null;
-          this.pageErrorMessage = null;
+  readonly vm$ = combineLatest([this.route.data, this.route.paramMap]).pipe(
+    map(([data, params]) => ({
+      isEditMode: data['mode'] === 'edit',
+      eventId: Number(params.get('id'))
+    })),
+    distinctUntilChanged(
+      (previous, current) =>
+        previous.isEditMode === current.isEditMode && previous.eventId === current.eventId
+    ),
+    switchMap(({ isEditMode, eventId }) => {
+      this.isEditMode = isEditMode;
+      this.eventId = Number.isNaN(eventId) ? null : eventId;
+      this.errorMessage = null;
 
-          const idParam = params.get('id');
-          this.eventId = idParam ? Number(idParam) : null;
+      if (!isEditMode) {
+        return of<EventCreateViewModel>({
+          loading: false,
+          event: null,
+          pageErrorMessage: null
+        });
+      }
 
-          if (!this.isEditMode) {
-            this.event = null;
-            this.loading = false;
-            return;
-          }
+      if (!eventId || Number.isNaN(eventId)) {
+        return of<EventCreateViewModel>({
+          loading: false,
+          event: null,
+          pageErrorMessage: "L'identifiant de l'evenement est invalide."
+        });
+      }
 
-          if (!this.eventId || Number.isNaN(this.eventId)) {
-            this.event = null;
-            this.loading = false;
-            this.pageErrorMessage = "L'identifiant de l'evenement est invalide.";
-            return;
-          }
-
-          this.loadEvent(this.eventId);
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+      return this.eventService.getEventById(eventId).pipe(
+        timeout(10000),
+        map((event) => ({
+          loading: false,
+          event,
+          pageErrorMessage: null
+        })),
+        catchError((error: HttpErrorResponse) =>
+          of<EventCreateViewModel>({
+            loading: false,
+            event: null,
+            pageErrorMessage: this.getErrorMessage(
+              error,
+              "Impossible de charger l'evenement a modifier."
+            )
+          })
+        ),
+        startWith<EventCreateViewModel>({
+          loading: true,
+          event: null,
+          pageErrorMessage: null
+        })
+      );
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   saveEvent(submission: EventFormSubmission): void {
     this.submitting = true;
@@ -98,8 +130,7 @@ export class EventCreateComponent implements OnInit, OnDestroy {
         }),
         finalize(() => {
           this.submitting = false;
-        }),
-        takeUntil(this.destroy$)
+        })
       )
       .subscribe({
         next: () => {
@@ -139,37 +170,7 @@ export class EventCreateComponent implements OnInit, OnDestroy {
     return this.isEditMode ? 'Enregistrer les modifications' : "Creer l'evenement";
   }
 
-  private loadEvent(id: number): void {
-    this.loading = true;
-  this.pageErrorMessage = null;
-  this.errorMessage = null;
-
-  this.eventService
-    .getEventById(id)
-    .pipe(finalize(() => {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }))
-    .subscribe({
-      next: (event) => {
-        this.event = event;
-        this.cdr.detectChanges();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.event = null;
-        this.pageErrorMessage = this.getErrorMessage(
-          error,
-          "Impossible de charger l'événement à modifier."
-        );
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  private getErrorMessage(
-    error: HttpErrorResponse,
-    fallbackMessage: string
-  ): string {
+  private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {
     if (error.status === 404) {
       return "L'evenement demande est introuvable.";
     }

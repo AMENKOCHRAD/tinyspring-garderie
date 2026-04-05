@@ -7,6 +7,7 @@ import { catchError, finalize, map, shareReplay, startWith, takeUntil, tap } fro
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Event, EventStatus } from '../../models/event.model';
+import { EventRequest } from '../../models/event-request.model';
 import { EventNotificationService, EventToastMessage } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
@@ -57,8 +58,11 @@ export class EventListComponent implements OnInit, OnDestroy {
       errorMessage,
       toast,
       totalEvents: events.length,
-      publishedEvents: events.filter((event) => event.status === 'PUBLISHED').length,
-      upcomingEvents: events.filter((event) => new Date(event.startDatetime) > new Date()).length
+      publishedEvents: events.filter((event) => this.getDisplayStatus(event) === 'PUBLISHED').length,
+      upcomingEvents: events.filter((event) => {
+        const displayStatus = this.getDisplayStatus(event);
+        return displayStatus !== 'CANCELLED' && new Date(event.startDatetime) > new Date();
+      }).length
     }))
   );
 
@@ -90,7 +94,9 @@ export class EventListComponent implements OnInit, OnDestroy {
   }
 
   publishEvent(event: Event): void {
-    if (event.status === 'PUBLISHED') {
+    const displayStatus = this.getDisplayStatus(event);
+
+    if (displayStatus !== 'DRAFT') {
       return;
     }
 
@@ -110,6 +116,14 @@ export class EventListComponent implements OnInit, OnDestroy {
           );
         }
       });
+  }
+
+  cancelEvent(event: Event): void {
+    this.updateEventStatus(event, 'CANCELLED', "L'evenement a ete annule avec succes.");
+  }
+
+  completeEvent(event: Event): void {
+    this.updateEventStatus(event, 'COMPLETED', "L'evenement a ete marque comme complete.");
   }
 
   deleteEvent(event: Event): void {
@@ -156,8 +170,82 @@ export class EventListComponent implements OnInit, OnDestroy {
     return status.replace(/_/g, ' ');
   }
 
+  getDisplayStatus(event: Event): EventStatus {
+    if (event.status === 'CANCELLED') {
+      return 'CANCELLED';
+    }
+
+    if (event.status === 'COMPLETED') {
+      return 'COMPLETED';
+    }
+
+    const endDate = new Date(event.endDatetime);
+
+    if (!Number.isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
+      return 'COMPLETED';
+    }
+
+    return event.status;
+  }
+
+  canPublish(event: Event): boolean {
+    return this.getDisplayStatus(event) === 'DRAFT';
+  }
+
+  canCancel(event: Event): boolean {
+    const displayStatus = this.getDisplayStatus(event);
+    return displayStatus !== 'CANCELLED' && displayStatus !== 'COMPLETED';
+  }
+
+  canComplete(event: Event): boolean {
+    const displayStatus = this.getDisplayStatus(event);
+    return displayStatus !== 'COMPLETED' && displayStatus !== 'CANCELLED';
+  }
+
   getEventPhotoUrl(photoEvent: string | undefined): string | null {
     return getSafeEventPhotoUrl(photoEvent);
+  }
+
+  private updateEventStatus(
+    event: Event,
+    status: EventStatus,
+    successMessage: string
+  ): void {
+    this.actionInProgressId = event.id;
+    this.errorSubject.next('');
+
+    const payload: EventRequest = {
+      title: event.title,
+      description: event.description,
+      type: event.type,
+      status,
+      startDatetime: event.startDatetime,
+      endDatetime: event.endDatetime,
+      location: event.location,
+      maxCapacity: event.maxCapacity,
+      requiresAuthorization: event.requiresAuthorization,
+      classroomId: event.classroomId,
+      createdBy: event.createdBy,
+      eventPrice: event.eventPrice,
+      photoEvent: event.photoEvent
+    };
+
+    this.eventService
+      .updateEvent(event.id, payload)
+      .pipe(
+        finalize(() => (this.actionInProgressId = null)),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(successMessage);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorSubject.next(
+            this.getErrorMessage(error, "La mise a jour du statut a echoue.")
+          );
+        }
+      });
   }
 
   private getErrorMessage(

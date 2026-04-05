@@ -1,101 +1,152 @@
-import { DatePipe, NgClass } from '@angular/common';
+import { AsyncPipe, DatePipe, NgClass } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject,ChangeDetectorRef } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject, forkJoin, of } from 'rxjs';
-import { catchError, finalize, takeUntil } from 'rxjs/operators';
-
+import {
+  catchError,
+  distinctUntilChanged,
+  filter,
+  finalize,
+  map,
+  shareReplay,
+  startWith,
+  switchMap
+} from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Event, EventStatus } from '../../models/event.model';
 import { EventRegistration } from '../../models/event-registration.model';
 import { EventNotificationService } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
-import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
+import { getImageUrl } from '../../utils/photo-url.util';
 
+interface EventDetailViewModel {
+  loading: boolean;
+  event: Event | null;
+  registrations: EventRegistration[];
+  errorMessage: string;
+  registrationsWarning: string;
+}
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [SharedModule, RouterModule, DatePipe, NgClass],
+  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe],
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss']
 })
-export class EventDetailComponent implements OnInit, OnDestroy {
+export class EventDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventService = inject(EventService);
   private readonly notificationService = inject(EventNotificationService);
-  private readonly destroy$ = new Subject<void>();
-  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly refresh$ = new Subject<void>();
 
-  event: Event | null = null;
-  registrations: EventRegistration[] = [];
-  loading = false;
-  publishing = false;
-  errorMessage = '';
-
-  ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (params) => {
-        const id = Number(params.get('id'));
-
-        if (!id || Number.isNaN(id)) {
-          this.errorMessage = "L'identifiant de l'evenement est invalide.";
-          this.event = null;
-          this.registrations = [];
-          this.loading = false;
-          return;
-        }
-
-        this.loadEventDetails(id);
+  readonly vm$ = this.route.paramMap.pipe(
+    map((params) => Number(params.get('id'))),
+    distinctUntilChanged(),
+    switchMap((eventId) => {
+      if (!eventId || Number.isNaN(eventId)) {
+        return of<EventDetailViewModel>({
+          loading: false,
+          event: null,
+          registrations: [],
+          errorMessage: "L'identifiant de l'evenement est invalide.",
+          registrationsWarning: ''
+        });
       }
-    });
-  }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+      return this.refresh$.pipe(
+        startWith(void 0),
+        switchMap(() =>
+          forkJoin({
+            event: this.eventService.getEventById(eventId),
+            registrations: this.eventService.getRegistrationsByEventId(eventId).pipe(
+              catchError((error: HttpErrorResponse) =>
+                of({
+                  registrations: [] as EventRegistration[],
+                  warning: this.getErrorMessage(
+                    error,
+                    'Impossible de charger le resume des participations.'
+                  )
+                })
+              )
+            )
+          }).pipe(
+            map(({ event, registrations }) => {
+              const registrationsData = Array.isArray(registrations)
+                ? registrations
+                : registrations.registrations;
+              const registrationsWarning = Array.isArray(registrations)
+                ? ''
+                : registrations.warning;
 
-  publishEvent(): void {
-    if (!this.event || this.event.status === 'PUBLISHED') {
+              return {
+                loading: false,
+                event,
+                registrations: registrationsData,
+                errorMessage: '',
+                registrationsWarning
+              } satisfies EventDetailViewModel;
+            }),
+            catchError((error: HttpErrorResponse) =>
+              of<EventDetailViewModel>({
+                loading: false,
+                event: null,
+                registrations: [],
+                errorMessage: this.getErrorMessage(
+                  error,
+                  "Impossible de charger l'evenement."
+                ),
+                registrationsWarning: ''
+              })
+            ),
+            startWith<EventDetailViewModel>({
+              loading: true,
+              event: null,
+              registrations: [],
+              errorMessage: '',
+              registrationsWarning: ''
+            })
+          )
+        )
+      );
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
+  publishing = false;
+
+  publishEvent(event: Event): void {
+    if (event.status === 'PUBLISHED') {
       return;
     }
 
     this.publishing = true;
-    this.errorMessage = '';
 
     this.eventService
-      .publishEvent(this.event.id)
-      .pipe(
-        finalize(() => (this.publishing = false)),
-        takeUntil(this.destroy$)
-      )
+      .publishEvent(event.id)
+      .pipe(finalize(() => (this.publishing = false)))
       .subscribe({
-        next: (event) => {
-          this.event = event;
+        next: () => {
           this.notificationService.showSuccess("L'evenement a ete publie avec succes.");
+          this.refresh$.next();
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.getErrorMessage(
-            error,
-            "La publication de l'evenement a echoue."
+          this.notificationService.showError(
+            this.getErrorMessage(error, "La publication de l'evenement a echoue.")
           );
         }
       });
   }
 
-  goToRegistrations(): void {
-    if (this.event) {
-      this.router.navigate(['/events', this.event.id, 'registrations']);
-    }
+  goToRegistrations(eventId: number): void {
+    this.router.navigate(['/events', eventId, 'registrations']);
   }
 
-  goToEdit(): void {
-    if (this.event) {
-      this.router.navigate(['/events', this.event.id, 'edit']);
-    }
+  goToEdit(eventId: number): void {
+    this.router.navigate(['/events', eventId, 'edit']);
   }
 
   goToList(): void {
@@ -120,47 +171,10 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   }
 
   getEventPhotoUrl(photoEvent: string | undefined): string | null {
-    return getSafeEventPhotoUrl(photoEvent);
+    return getImageUrl(photoEvent);
   }
 
-  private loadEventDetails(id: number): void {
-   this.loading = true;
-  this.errorMessage = '';
-  this.event = null;
-  this.registrations = [];
-
-  forkJoin({
-    event: this.eventService.getEventById(id),
-    registrations: this.eventService
-      .getRegistrationsByEventId(id)
-      .pipe(catchError(() => of([])))
-  })
-    .pipe(finalize(() => {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }))
-    .subscribe({
-      next: ({ event, registrations }) => {
-        this.event = event;
-        this.registrations = registrations;
-        this.cdr.detectChanges();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.event = null;
-        this.registrations = [];
-        this.errorMessage = this.getErrorMessage(
-          error,
-          "Impossible de charger l'événement."
-        );
-        this.cdr.detectChanges();
-      }
-    });;
-  }
-
-  private getErrorMessage(
-    error: HttpErrorResponse,
-    fallbackMessage: string
-  ): string {
+  private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {
     if (error.status === 404) {
       return "L'evenement demande est introuvable.";
     }

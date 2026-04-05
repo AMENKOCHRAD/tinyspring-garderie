@@ -1,7 +1,8 @@
 package com.tinyspring.garderie.controller.Events;
 
 import com.tinyspring.garderie.dto.Events.EventRequest;
-import com.tinyspring.garderie.entity.Events.Event;
+import com.tinyspring.garderie.dto.Events.EventResponse;
+import com.tinyspring.garderie.mappeer.EventMapper;
 import com.tinyspring.garderie.service.Events.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,27 +18,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventRestController {
     private final EventService eventService;
+    private final EventMapper eventMapper;
 
     @PostMapping
-    public ResponseEntity<Event> create(@Valid @RequestBody EventRequest request) {
-        Event createdEvent = eventService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
+    public ResponseEntity<EventResponse> create(@Valid @RequestBody EventRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(eventMapper.toResponse(eventService.create(request)));
     }
 
     @GetMapping
-    public ResponseEntity<List<Event>> getAll() {
-        return ResponseEntity.ok(eventService.getAll());
+    public ResponseEntity<List<EventResponse>> getAll() {
+        return ResponseEntity.ok(
+                eventService.getAll().stream().map(eventMapper::toResponse).toList()
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.getById(id));
+    public ResponseEntity<EventResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(eventMapper.toResponse(eventService.getById(id)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Event> update(@PathVariable Long id,
-                                        @Valid @RequestBody EventRequest request) {
-        return ResponseEntity.ok(eventService.update(id, request));
+    public ResponseEntity<EventResponse> update(@PathVariable Long id,
+                                                @Valid @RequestBody EventRequest request) {
+        return ResponseEntity.ok(eventMapper.toResponse(eventService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
@@ -47,14 +51,14 @@ public class EventRestController {
     }
 
     @PutMapping("/{id}/publish")
-    public ResponseEntity<Event> publish(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.publish(id));
+    public ResponseEntity<EventResponse> publish(@PathVariable Long id) {
+        return ResponseEntity.ok(eventMapper.toResponse(eventService.publish(id)));
     }
 
     @PostMapping("/{id}/photo")
-    public ResponseEntity<Event> uploadPhoto(@PathVariable Long id,
-                                             @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(eventService.uploadPhoto(id, file));
+    public ResponseEntity<EventResponse> uploadPhoto(@PathVariable Long id,
+                                                     @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(eventMapper.toResponse(eventService.uploadPhoto(id, file)));
     }
 
 }

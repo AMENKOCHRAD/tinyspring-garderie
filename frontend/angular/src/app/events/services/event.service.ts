@@ -24,8 +24,6 @@ interface EventApiResponse {
   createdAt?: string | null;
   updatedAt?: string | null;
   eventPrice?: number | null;
-  priceEvent?: number | null;
-  photoPrice?: number | null;
   photoEvent?: string | null;
 }
 
@@ -145,8 +143,7 @@ export class EventService {
       createdBy: event.createdBy ?? 0,
       createdAt: event.createdAt ?? undefined,
       updatedAt: event.updatedAt ?? undefined,
-      eventPrice: event.eventPrice ?? event.priceEvent ?? 0,
-      photoPrice: event.photoPrice ?? 0,
+      eventPrice: event.eventPrice ?? 0,
       photoEvent: event.photoEvent ?? undefined
     };
   }

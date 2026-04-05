@@ -1,106 +1,114 @@
-<section class="events-page">
-  @if (errorMessage) {
-    <div class="alert alert-danger" role="alert">
-      {{ errorMessage }}
-    </div>
-  }
-
-  <div class="section-toolbar">
-    <div>
-      <h2>Participations</h2>
-      <p>
-        @if (event) {
-          Suivi des inscriptions pour {{ event.title }}
-        } @else {
-          Suivi des inscriptions à l'événement
-        }
-      </p>
-    </div>
-
-    <div class="header-actions">
-      <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
-        Retour à la liste
-      </button>
-      @if (event) {
-        <button type="button" class="btn btn-outline-primary" (click)="goToDetails()">
-          Voir l'événement
-        </button>
-      }
-    </div>
-  </div>
-
-  <app-card>
-    @if (loading) {
-      <div class="state-container">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="m-t-15 m-b-0">Chargement des participations...</p>
-      </div>
-    } @else if (!registrations.length) {
-      <div class="state-container empty-state">
-        <p class="m-b-0">Aucune participation trouvée pour cet événement.</p>
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table class="table table-hover align-middle registrations-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Enfant</th>
-              <th>Parent</th>
-              <th>Statut</th>
-              <th>Autorisation</th>
-              <th>Document</th>
-              <th>Notes</th>
-              <th>Inscrit le</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (registration of registrations; track registration.id) {
-              <tr>
-                <td>{{ registration.id }}</td>
-                <td>{{ registration.childId }}</td>
-                <td>{{ registration.parentId }}</td>
-                <td>
-                  <span class="status-badge" [ngClass]="getStatusClass(registration.status)">
-                    {{ registration.status.replaceAll('_', ' ') }}
-                  </span>
-                </td>
-                <td>{{ registration.authorizationSigned ? 'Oui' : 'Non' }}</td>
-                <td>
-                  @if (registration.authorizationDocUrl) {
-                    <a [href]="registration.authorizationDocUrl" target="_blank" rel="noreferrer">
-                      Ouvrir
-                    </a>
-                  } @else {
-                    -
-                  }
-                </td>
-                <td>{{ registration.notes || '-' }}</td>
-                <td>{{ registration.registeredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-                <td class="actions-column">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-success"
-                    (click)="confirmRegistration(registration)"
-                    [disabled]="actionRegistrationId === registration.id"
-                  >
-                    Confirmer
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    (click)="cancelRegistration(registration)"
-                    [disabled]="actionRegistrationId === registration.id"
-                  >
-                    Annuler
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+@if (vm$ | async; as vm) {
+  <section class="events-page">
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger" role="alert">
+        {{ vm.errorMessage }}
       </div>
     }
-  </app-card>
-</section>
+
+    <div class="section-toolbar">
+      <div>
+        <h2>Participations</h2>
+        <p>
+          @if (vm.event) {
+            Suivi des inscriptions pour {{ vm.event.title }}
+          } @else {
+            Suivi des inscriptions a l'evenement
+          }
+        </p>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
+          Retour a la liste
+        </button>
+        @if (vm.event) {
+          <button type="button" class="btn btn-outline-primary" (click)="goToDetails(vm.event.id)">
+            Voir l'evenement
+          </button>
+        }
+      </div>
+    </div>
+
+    <app-card>
+      @if (vm.registrationsWarning) {
+        <div class="alert alert-warning" role="alert">
+          {{ vm.registrationsWarning }}
+        </div>
+      }
+
+      @if (vm.loading) {
+        <div class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="m-t-15 m-b-0">Chargement des participations...</p>
+        </div>
+      } @else if (!vm.registrations.length) {
+        <div class="state-container empty-state">
+          <p class="m-b-0">Aucune participation trouvee pour cet evenement.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle registrations-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Enfant</th>
+                <th>Parent</th>
+                <th>Statut</th>
+                <th>Autorisation</th>
+                <th>Document</th>
+                <th>Notes</th>
+                <th>Inscrit le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (registration of vm.registrations; track registration.id) {
+                <tr>
+                  <td>{{ registration.id }}</td>
+                  <td>{{ registration.childId }}</td>
+                  <td>{{ registration.parentId }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(registration.status)">
+                      {{ registration.status.replaceAll('_', ' ') }}
+                    </span>
+                  </td>
+                  <td>{{ registration.authorizationSigned ? 'Oui' : 'Non' }}</td>
+                  <td>
+                    @if (registration.authorizationDocUrl) {
+                      <a [href]="registration.authorizationDocUrl" target="_blank" rel="noreferrer">
+                        Ouvrir
+                      </a>
+                    } @else {
+                      -
+                    }
+                  </td>
+                  <td>{{ registration.notes || '-' }}</td>
+                  <td>{{ registration.registeredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="actions-column">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-success"
+                      (click)="confirmRegistration(registration)"
+                      [disabled]="actionRegistrationId === registration.id"
+                    >
+                      Confirmer
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="cancelRegistration(registration)"
+                      [disabled]="actionRegistrationId === registration.id"
+                    >
+                      Annuler
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-card>
+  </section>
+}

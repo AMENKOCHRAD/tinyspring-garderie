@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class EventRegistrationServiceImpl implements EventRegistrationService   {
+public class EventRegistrationServiceImpl implements EventRegistrationService {
 
     private final EventRepository eventRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
@@ -27,11 +27,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
     @Override
     public EventRegistration register(Long eventId, EventRegistrationRequest request) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Événement introuvable avec l'id : " + eventId));
+                .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + eventId));
 
         if (event.getStatus() != EventStatus.PUBLISHED) {
             throw new InvalidStatusTransitionException(
-                    "Les inscriptions sont autorisées uniquement pour un événement publié"
+                    "Les inscriptions sont autorisees uniquement pour un evenement publie"
             );
         }
 
@@ -41,21 +41,12 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
 
         RegistrationStatus initialStatus;
 
-        // Règle métier :
-        // si capacité atteinte -> nouvelle inscription en WAITLISTED.
         if (event.getMaxCapacity() != null && confirmedCount >= event.getMaxCapacity()) {
             initialStatus = RegistrationStatus.WAITLISTED;
+        } else if (event.isRequiresAuthorization()) {
+            initialStatus = RegistrationStatus.PENDING;
         } else {
-            // Règle métier :
-            // si l'événement exige une autorisation parentale, l'inscription reste PENDING
-            // tant que authorizationSigned n'est pas true.
-            if (Boolean.TRUE.equals(event.isRequiresAuthorization())) {
-                initialStatus = Boolean.TRUE.equals(request.getAuthorizationSigned())
-                        ? RegistrationStatus.PENDING
-                        : RegistrationStatus.PENDING;
-            } else {
-                initialStatus = RegistrationStatus.CONFIRMED;
-            }
+            initialStatus = RegistrationStatus.CONFIRMED;
         }
 
         EventRegistration registration = EventRegistration.builder()
@@ -72,11 +63,12 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventRegistration> getByEventId(Long eventId) {
         eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Événement introuvable avec l'id : " + eventId));
+                .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + eventId));
 
-        return eventRegistrationRepository.findByEventIdOrderByRegisteredAt(eventId);
+        return eventRegistrationRepository.findByEventIdOrderByRegisteredAtAsc(eventId);
     }
 
     @Override
@@ -85,23 +77,20 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
                 .orElseThrow(() -> new ResourceNotFoundException("Inscription introuvable avec l'id : " + registrationId));
 
         Event event = eventRepository.findById(registration.getEventId())
-                .orElseThrow(() -> new ResourceNotFoundException("Événement introuvable avec l'id : " + registration.getEventId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + registration.getEventId()));
 
         if (registration.getStatus() == RegistrationStatus.CANCELLED) {
-            throw new InvalidStatusTransitionException("Impossible de confirmer une inscription annulée");
+            throw new InvalidStatusTransitionException("Impossible de confirmer une inscription annulee");
         }
 
         if (registration.getStatus() == RegistrationStatus.ATTENDED
                 || registration.getStatus() == RegistrationStatus.ABSENT) {
-            throw new InvalidStatusTransitionException("Impossible de confirmer une inscription déjà clôturée");
+            throw new InvalidStatusTransitionException("Impossible de confirmer une inscription deja cloturee");
         }
 
-        // Règle métier :
-        // si l'événement exige une autorisation, la confirmation est bloquée tant que
-        // authorizationSigned = false.
         if (event.isRequiresAuthorization() && !registration.isAuthorizationSigned()) {
             throw new AuthorizationRequiredException(
-                    "L'autorisation parentale signée est obligatoire avant confirmation"
+                    "L'autorisation parentale signee est obligatoire avant confirmation"
             );
         }
 
@@ -109,7 +98,6 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
                 event.getId(), RegistrationStatus.CONFIRMED
         );
 
-        // Si la capacité est atteinte, on garde l'inscription en WAITLISTED.
         if (event.getMaxCapacity() != null
                 && confirmedCount >= event.getMaxCapacity()
                 && registration.getStatus() != RegistrationStatus.CONFIRMED) {
@@ -130,23 +118,18 @@ public class EventRegistrationServiceImpl implements EventRegistrationService   
         registration.setStatus(RegistrationStatus.CANCELLED);
         EventRegistration cancelled = eventRegistrationRepository.save(registration);
 
-        // Règle métier :
-        // si une inscription CONFIRMED est annulée, la première WAITLISTED passe en PENDING.
         if (oldStatus == RegistrationStatus.CONFIRMED) {
             eventRegistrationRepository
-                    .findFirstByEventIdAndStatusOrderByRegisteredAt(
+                    .findFirstByEventIdAndStatusOrderByRegisteredAtAsc(
                             registration.getEventId(),
                             RegistrationStatus.WAITLISTED
                     )
                     .ifPresent(waitlisted -> {
                         waitlisted.setStatus(RegistrationStatus.PENDING);
                         eventRegistrationRepository.save(waitlisted);
-
-
                     });
         }
 
         return cancelled;
     }
-
 }

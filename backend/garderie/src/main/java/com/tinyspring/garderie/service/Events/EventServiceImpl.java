@@ -31,21 +31,10 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event create(EventRequest request) {
-        Event event = Event.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .type(request.getType())
-                .status(request.getStatus() != null ? request.getStatus() : EventStatus.DRAFT)
-                .startDatetime(request.getStartDatetime())
-                .endDatetime(request.getEndDatetime())
-                .location(request.getLocation())
-                .maxCapacity(request.getMaxCapacity())
-                .requiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()))
-                .eventPrice(request.getEventPrice())
-                .photoEvent(request.getPhotoEvent())
-                .classroomId(request.getClassroomId())
-                .createdBy(request.getCreatedBy())
-                .build();
+        Event event = eventMapper.toEntity(request);
+        event.setStatus(request.getStatus() != null ? request.getStatus() : EventStatus.DRAFT);
+        event.setRequiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()));
+        event.setEventPrice(request.getEventPrice());
 
         validateDates(event);
         return eventRepository.save(event);
@@ -72,18 +61,9 @@ public class EventServiceImpl implements EventService {
             );
         }
 
-        existing.setTitle(request.getTitle());
-        existing.setDescription(request.getDescription());
-        existing.setType(request.getType());
-        existing.setStartDatetime(request.getStartDatetime());
-        existing.setEndDatetime(request.getEndDatetime());
-        existing.setLocation(request.getLocation());
-        existing.setMaxCapacity(request.getMaxCapacity());
+        eventMapper.updateEntityFromRequest(request, existing);
         existing.setRequiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()));
         existing.setEventPrice(request.getEventPrice());
-        existing.setPhotoEvent(request.getPhotoEvent());
-        existing.setClassroomId(request.getClassroomId());
-        existing.setCreatedBy(request.getCreatedBy());
 
         validateDates(existing);
 

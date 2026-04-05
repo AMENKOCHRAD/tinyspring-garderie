@@ -18,6 +18,5 @@ export interface Event {
   createdAt?: string;
   updatedAt?: string;
   eventPrice: number;
-  photoPrice: number;
   photoEvent?: string;
 }

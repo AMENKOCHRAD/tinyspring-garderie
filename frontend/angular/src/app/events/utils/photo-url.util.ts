@@ -1,36 +1,39 @@
 import { environment } from 'src/environments/environment';
 
-export function getSafeEventPhotoUrl(value: string | null | undefined): string | null {
-  if (!value) {
+export function getImageUrl(path: string | null | undefined): string | null {
+  if (!path) {
     return null;
   }
 
-  const trimmedValue = value.trim();
+  const trimmedPath = path.trim();
 
-  if (!trimmedValue) {
+  if (!trimmedPath) {
     return null;
   }
 
-  // Reject local filesystem paths and malformed browser-unsafe values.
-  if (/^[a-zA-Z]:\\/.test(trimmedValue) || trimmedValue.includes('\\')) {
+  if (/^[a-zA-Z]:\\/.test(trimmedPath) || trimmedPath.includes('\\')) {
     return null;
   }
 
-  if (trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://')) {
-    return trimmedValue;
+  if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
+    return trimmedPath;
   }
 
-  if (trimmedValue.startsWith('/uploads/') || trimmedValue.startsWith('/assets/')) {
-    return trimmedValue.startsWith('/uploads/')
-      ? `${environment.apiUrl}${trimmedValue}`
-      : trimmedValue;
+  if (trimmedPath.startsWith('/')) {
+    return `${environment.apiUrl}${trimmedPath}`;
   }
 
-  if (trimmedValue.startsWith('uploads/') || trimmedValue.startsWith('assets/')) {
-    return trimmedValue.startsWith('uploads/')
-      ? `${environment.apiUrl}/${trimmedValue}`
-      : `/${trimmedValue}`;
+  if (trimmedPath.startsWith('uploads/')) {
+    return `${environment.apiUrl}/${trimmedPath}`;
+  }
+
+  if (trimmedPath.startsWith('assets/')) {
+    return `/${trimmedPath}`;
   }
 
   return null;
+}
+
+export function getSafeEventPhotoUrl(value: string | null | undefined): string | null {
+  return getImageUrl(value);
 }

@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface EventRegistrationRepository  extends JpaRepository<EventRegistration, Long> {
-    List<EventRegistration> findByEventIdOrderByRegisteredAt(Long eventId);
+    List<EventRegistration> findByEventIdOrderByRegisteredAtAsc(Long eventId);
 
-    Optional<EventRegistration> findFirstByEventIdAndStatusOrderByRegisteredAt(
+    Optional<EventRegistration> findFirstByEventIdAndStatusOrderByRegisteredAtAsc(
             Long eventId,
             RegistrationStatus status
     );

@@ -1,9 +1,17 @@
-import { DatePipe, NgClass } from '@angular/common';
+import { AsyncPipe, DatePipe, NgClass } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subject, forkJoin } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import {
+  catchError,
+  distinctUntilChanged,
+  finalize,
+  map,
+  shareReplay,
+  startWith,
+  switchMap
+} from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Event } from '../../models/event.model';
@@ -11,67 +19,120 @@ import {
   EventRegistration,
   RegistrationStatus
 } from '../../models/event-registration.model';
+import { EventNotificationService } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
+
+interface EventRegistrationsViewModel {
+  loading: boolean;
+  event: Event | null;
+  registrations: EventRegistration[];
+  errorMessage: string;
+  registrationsWarning: string;
+}
 
 @Component({
   selector: 'app-event-registrations',
   standalone: true,
-  imports: [SharedModule, RouterModule, DatePipe, NgClass],
+  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe],
   templateUrl: './event-registrations.component.html',
   styleUrls: ['./event-registrations.component.scss']
 })
-export class EventRegistrationsComponent implements OnInit, OnDestroy {
+export class EventRegistrationsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventService = inject(EventService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly notificationService = inject(EventNotificationService);
+  private readonly refresh$ = new Subject<void>();
 
-  event: Event | null = null;
-  registrations: EventRegistration[] = [];
-  loading = false;
-  errorMessage = '';
   actionRegistrationId: number | null = null;
 
-  ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (params) => {
-        const eventId = Number(params.get('id'));
-
-        if (!eventId || Number.isNaN(eventId)) {
-          this.event = null;
-          this.registrations = [];
-          this.errorMessage = "L'identifiant de l'événement est invalide.";
-          this.loading = false;
-          return;
-        }
-
-        this.loadPage(eventId);
+  readonly vm$ = this.route.paramMap.pipe(
+    map((params) => Number(params.get('id'))),
+    distinctUntilChanged(),
+    switchMap((eventId) => {
+      if (!eventId || Number.isNaN(eventId)) {
+        return of<EventRegistrationsViewModel>({
+          loading: false,
+          event: null,
+          registrations: [],
+          errorMessage: "L'identifiant de l'evenement est invalide.",
+          registrationsWarning: ''
+        });
       }
-    });
-  }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+      return this.refresh$.pipe(
+        startWith(void 0),
+        switchMap(() =>
+          forkJoin({
+            event: this.eventService.getEventById(eventId),
+            registrations: this.eventService.getRegistrationsByEventId(eventId).pipe(
+              catchError((error: HttpErrorResponse) =>
+                of({
+                  registrations: [] as EventRegistration[],
+                  warning: this.getErrorMessage(
+                    error,
+                    'Impossible de charger les participations pour le moment.'
+                  )
+                })
+              )
+            )
+          }).pipe(
+            map(({ event, registrations }) => {
+              const registrationsData = Array.isArray(registrations)
+                ? registrations
+                : registrations.registrations;
+              const registrationsWarning = Array.isArray(registrations)
+                ? ''
+                : registrations.warning;
+
+              return {
+                loading: false,
+                event,
+                registrations: registrationsData,
+                errorMessage: '',
+                registrationsWarning
+              } satisfies EventRegistrationsViewModel;
+            }),
+            catchError((error: HttpErrorResponse) =>
+              of<EventRegistrationsViewModel>({
+                loading: false,
+                event: null,
+                registrations: [],
+                errorMessage: this.getErrorMessage(
+                  error,
+                  'Impossible de charger les participations.'
+                ),
+                registrationsWarning: ''
+              })
+            ),
+            startWith<EventRegistrationsViewModel>({
+              loading: true,
+              event: null,
+              registrations: [],
+              errorMessage: '',
+              registrationsWarning: ''
+            })
+          )
+        )
+      );
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   confirmRegistration(registration: EventRegistration): void {
     this.actionRegistrationId = registration.id;
-    this.errorMessage = '';
 
     this.eventService
       .confirmRegistration(registration.id)
       .pipe(finalize(() => (this.actionRegistrationId = null)))
       .subscribe({
         next: () => {
-          if (this.event) {
-            this.loadPage(this.event.id);
-          }
+          this.notificationService.showSuccess('La participation a ete confirmee.');
+          this.refresh$.next();
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.getErrorMessage(
-            error,
-            'La confirmation de la participation a échoué.'
+          this.notificationService.showError(
+            this.getErrorMessage(error, 'La confirmation de la participation a echoue.')
           );
         }
       });
@@ -79,30 +140,25 @@ export class EventRegistrationsComponent implements OnInit, OnDestroy {
 
   cancelRegistration(registration: EventRegistration): void {
     this.actionRegistrationId = registration.id;
-    this.errorMessage = '';
 
     this.eventService
       .cancelRegistration(registration.id)
       .pipe(finalize(() => (this.actionRegistrationId = null)))
       .subscribe({
         next: () => {
-          if (this.event) {
-            this.loadPage(this.event.id);
-          }
+          this.notificationService.showSuccess('La participation a ete annulee.');
+          this.refresh$.next();
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.getErrorMessage(
-            error,
-            "L'annulation de la participation a échoué."
+          this.notificationService.showError(
+            this.getErrorMessage(error, "L'annulation de la participation a echoue.")
           );
         }
       });
   }
 
-  goToDetails(): void {
-    if (this.event) {
-      this.router.navigate(['/events', this.event.id]);
-    }
+  goToDetails(eventId: number): void {
+    this.router.navigate(['/events', eventId]);
   }
 
   goToList(): void {
@@ -120,39 +176,9 @@ export class EventRegistrationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadPage(eventId: number): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.event = null;
-    this.registrations = [];
-
-    forkJoin({
-      event: this.eventService.getEventById(eventId),
-      registrations: this.eventService.getRegistrationsByEventId(eventId)
-    })
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe({
-        next: ({ event, registrations }) => {
-          this.event = event;
-          this.registrations = registrations;
-        },
-        error: (error: HttpErrorResponse) => {
-          this.event = null;
-          this.registrations = [];
-          this.errorMessage = this.getErrorMessage(
-            error,
-            'Impossible de charger les participations.'
-          );
-        }
-      });
-  }
-
-  private getErrorMessage(
-    error: HttpErrorResponse,
-    fallbackMessage: string
-  ): string {
+  private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {
     if (error.status === 404) {
-      return "L'événement demandé est introuvable.";
+      return "L'evenement demande est introuvable.";
     }
 
     if (typeof error.error === 'string' && error.error.trim()) {
