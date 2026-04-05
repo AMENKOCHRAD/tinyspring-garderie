@@ -189,7 +189,23 @@ export class EventListComponent implements OnInit, OnDestroy {
   }
 
   canPublish(event: Event): boolean {
+    if (event.status === 'PUBLISHED') {
+      return false;
+    }
+
+    if (event.status === 'CANCELLED') {
+      return true;
+    }
+
+    if (event.status === 'COMPLETED') {
+      return this.hasFutureEndDate(event);
+    }
+
     return this.getDisplayStatus(event) === 'DRAFT';
+  }
+
+  canEdit(event: Event): boolean {
+    return true;
   }
 
   canCancel(event: Event): boolean {
@@ -200,6 +216,18 @@ export class EventListComponent implements OnInit, OnDestroy {
   canComplete(event: Event): boolean {
     const displayStatus = this.getDisplayStatus(event);
     return displayStatus !== 'COMPLETED' && displayStatus !== 'CANCELLED';
+  }
+
+  getStatusActionHint(event: Event): string | null {
+    if (event.status === 'COMPLETED' && !this.hasFutureEndDate(event)) {
+      return 'Modifiez la date de fin pour pouvoir republier cet événement.';
+    }
+
+    if (event.status === 'CANCELLED') {
+      return "Cet événement annulé peut être modifié ou republié.";
+    }
+
+    return null;
   }
 
   getEventPhotoUrl(photoEvent: string | undefined): string | null {
@@ -261,5 +289,10 @@ export class EventListComponent implements OnInit, OnDestroy {
     }
 
     return fallbackMessage;
+  }
+
+  private hasFutureEndDate(event: Event): boolean {
+    const endDate = new Date(event.endDatetime);
+    return !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
   }
 }

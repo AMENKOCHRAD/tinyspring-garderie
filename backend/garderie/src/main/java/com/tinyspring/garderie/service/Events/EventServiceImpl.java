@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,18 +55,19 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event update(Long id, EventRequest request) {
         Event existing = getById(id);
-
-        if (existing.getStatus() == EventStatus.CANCELLED || existing.getStatus() == EventStatus.COMPLETED) {
-            throw new InvalidStatusTransitionException(
-                    "Un evenement annule ou termine ne peut plus etre modifie"
-            );
-        }
+        EventStatus previousStatus = existing.getStatus();
 
         eventMapper.updateEntityFromRequest(request, existing);
         existing.setRequiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()));
         existing.setEventPrice(request.getEventPrice());
 
         validateDates(existing);
+
+        if (request.getStatus() != null) {
+            existing.setStatus(request.getStatus());
+        } else if (previousStatus == EventStatus.COMPLETED && isRepublishableAfterEdit(existing)) {
+            existing.setStatus(EventStatus.DRAFT);
+        }
 
         return eventRepository.save(existing);
     }
@@ -80,9 +82,9 @@ public class EventServiceImpl implements EventService {
     public Event publish(Long id) {
         Event event = getById(id);
 
-        if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.COMPLETED) {
+        if (event.getStatus() == EventStatus.COMPLETED && !isRepublishableAfterEdit(event)) {
             throw new InvalidStatusTransitionException(
-                    "Impossible de publier un evenement annule ou termine"
+                    "Un evenement termine doit avoir une nouvelle date de fin dans le futur avant d'etre republie"
             );
         }
 
@@ -134,6 +136,11 @@ public class EventServiceImpl implements EventService {
                     "La date de fin doit etre posterieure a la date de debut"
             );
         }
+    }
+
+    private boolean isRepublishableAfterEdit(Event event) {
+        LocalDateTime now = LocalDateTime.now();
+        return event.getEndDatetime() != null && event.getEndDatetime().isAfter(now);
     }
 
     private boolean isBlank(String value) {

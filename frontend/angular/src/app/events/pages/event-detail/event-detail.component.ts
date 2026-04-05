@@ -119,7 +119,7 @@ export class EventDetailComponent {
   publishing = false;
 
   publishEvent(event: Event): void {
-    if (event.status === 'PUBLISHED') {
+    if (!this.canPublish(event)) {
       return;
     }
 
@@ -170,6 +170,61 @@ export class EventDetailComponent {
     return status.replaceAll('_', ' ');
   }
 
+  getDisplayStatus(event: Event): EventStatus {
+    if (event.status === 'CANCELLED') {
+      return 'CANCELLED';
+    }
+
+    if (event.status === 'COMPLETED') {
+      return 'COMPLETED';
+    }
+
+    const endDate = new Date(event.endDatetime);
+
+    if (!Number.isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
+      return 'COMPLETED';
+    }
+
+    return event.status;
+  }
+
+  isLocked(event: Event): boolean {
+    const displayStatus = this.getDisplayStatus(event);
+    return displayStatus === 'CANCELLED' || displayStatus === 'COMPLETED';
+  }
+
+  canEdit(event: Event): boolean {
+    return true;
+  }
+
+  canPublish(event: Event): boolean {
+    if (event.status === 'PUBLISHED') {
+      return false;
+    }
+
+    if (event.status === 'CANCELLED') {
+      return true;
+    }
+
+    if (event.status === 'COMPLETED') {
+      return this.hasFutureEndDate(event);
+    }
+
+    return this.getDisplayStatus(event) === 'DRAFT';
+  }
+
+  getStatusActionHint(event: Event): string | null {
+    if (event.status === 'COMPLETED' && !this.hasFutureEndDate(event)) {
+      return "Cet événement terminé peut être republié après modification de la date de fin.";
+    }
+
+    if (event.status === 'CANCELLED') {
+      return "Cet événement annulé peut encore être modifié ou republié.";
+    }
+
+    return null;
+  }
+
   getEventPhotoUrl(photoEvent: string | undefined): string | null {
     return getImageUrl(photoEvent);
   }
@@ -188,5 +243,10 @@ export class EventDetailComponent {
     }
 
     return fallbackMessage;
+  }
+
+  private hasFutureEndDate(event: Event): boolean {
+    const endDate = new Date(event.endDatetime);
+    return !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
   }
 }

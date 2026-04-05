@@ -70,6 +70,15 @@
   justify-content: flex-end;
 }
 
+.locked-alert {
+  margin-bottom: 1.25rem;
+}
+
+.locked-button {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .hero-grid {
   display: grid;
   gap: 1.25rem;
@@ -152,6 +161,7 @@
 }
 
 .status-badge {
+  border: 1px solid transparent;
   border-radius: 999px;
   display: inline-flex;
   font-size: 0.75rem;
@@ -160,23 +170,27 @@
 }
 
 .status-published {
-  background: rgba(25, 135, 84, 0.14);
-  color: #0f8a52;
+  background: rgba(21, 128, 61, 0.92);
+  border-color: rgba(187, 247, 208, 0.5);
+  color: #fff;
 }
 
 .status-draft {
-  background: rgba(255, 193, 7, 0.18);
-  color: #9a7300;
+  background: rgba(234, 88, 12, 0.92);
+  border-color: rgba(254, 215, 170, 0.48);
+  color: #fff7ed;
 }
 
 .status-cancelled {
-  background: rgba(220, 53, 69, 0.14);
-  color: #d63b4a;
+  background: rgba(220, 38, 38, 0.92);
+  border-color: rgba(254, 202, 202, 0.5);
+  color: #fff;
 }
 
 .status-completed {
-  background: rgba(13, 110, 253, 0.12);
-  color: #0b63d1;
+  background: rgba(55, 48, 163, 0.92);
+  border-color: rgba(199, 210, 254, 0.5);
+  color: #fff;
 }
 
 @media (max-width: 1199.98px) {

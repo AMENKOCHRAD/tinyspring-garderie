@@ -112,6 +112,10 @@
                   <span class="event-capacity">Capacité : {{ event.maxCapacity }}</span>
                 </div>
 
+                @if (getStatusActionHint(event); as statusHint) {
+                  <p class="event-status-hint">{{ statusHint }}</p>
+                }
+
                 <div class="event-actions">
                   <button type="button" class="icon-button" (click)="goToDetails(event.id)">
                     Voir
@@ -127,6 +131,10 @@
                       [disabled]="actionInProgressId === event.id"
                     >
                       Publier
+                    </button>
+                  } @else if (event.status === 'COMPLETED') {
+                    <button type="button" class="icon-button locked" disabled>
+                      Republier
                     </button>
                   }
                   @if (canCancel(event)) {

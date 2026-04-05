@@ -279,6 +279,13 @@
   padding-top: 0.85rem;
 }
 
+.event-status-hint {
+  color: #8a5a10;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: -0.25rem 0 0;
+}
+
 .event-card-id,
 .event-capacity {
   white-space: nowrap;
@@ -390,6 +397,12 @@
 .icon-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.icon-button.locked {
+  background: #f5f7fb;
+  border-color: #d8e1ee;
+  color: #94a3b8;
 }
 
 @media (max-width: 1199.98px) {

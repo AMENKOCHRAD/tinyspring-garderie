@@ -9,17 +9,17 @@
     @if (vm.loading) {
       <div class="state-card">
         <div class="spinner-border text-primary" role="status"></div>
-        <p class="m-t-15 m-b-0">Chargement de l'evenement...</p>
+        <p class="m-t-15 m-b-0">Chargement de l'événement...</p>
       </div>
     } @else if (vm.event) {
       <div class="section-toolbar">
         <div>
           <h2>{{ vm.event.title }}</h2>
-          <p>Details de l'evenement et apercu des participations.</p>
+          <p>Détails de l'événement et aperçu des participations.</p>
         </div>
 
         <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
-          Retour a la liste
+          Retour à la liste
         </button>
       </div>
 
@@ -27,8 +27,8 @@
         <app-card>
           <div class="event-topbar">
             <div class="event-identity">
-              <span class="status-badge" [ngClass]="getStatusClass(vm.event.status)">
-                {{ formatStatus(vm.event.status) }}
+              <span class="status-badge" [ngClass]="getStatusClass(getDisplayStatus(vm.event))">
+                {{ formatStatus(getDisplayStatus(vm.event)) }}
               </span>
               <h2>{{ vm.event.title }}</h2>
               <p>{{ vm.event.type.replaceAll('_', ' ') }}</p>
@@ -36,29 +36,41 @@
 
             <div class="action-row">
               <button type="button" class="btn btn-outline-primary" (click)="goToEdit(vm.event.id)">
-                Editer
+                Éditer
               </button>
-              <button
-                type="button"
-                class="btn btn-success"
-                (click)="publishEvent(vm.event)"
-                [disabled]="publishing || vm.event.status === 'PUBLISHED'"
-              >
-                @if (publishing) {
-                  <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                }
-                Publier
-              </button>
+              @if (canPublish(vm.event)) {
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  (click)="publishEvent(vm.event)"
+                  [disabled]="publishing"
+                >
+                  @if (publishing) {
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                  }
+                  Publier
+                </button>
+              } @else if (vm.event.status === 'COMPLETED') {
+                <button type="button" class="btn btn-outline-secondary locked-button" disabled>
+                  Republier
+                </button>
+              }
               <button type="button" class="btn btn-outline-secondary" (click)="goToRegistrations(vm.event.id)">
                 Voir les participations
               </button>
             </div>
           </div>
 
+          @if (getStatusActionHint(vm.event); as statusHint) {
+            <div class="alert alert-warning locked-alert" role="alert">
+              {{ statusHint }}
+            </div>
+          }
+
           <div class="hero-grid">
             <div class="photo-panel">
               @if (getEventPhotoUrl(vm.event.photoEvent); as photoUrl) {
-                <img class="event-photo" [src]="photoUrl" alt="Photo de l'evenement" />
+                <img class="event-photo" [src]="photoUrl" alt="Photo de l'événement" />
               } @else {
                 <div class="photo-placeholder">Aucune photo</div>
               }
@@ -70,7 +82,7 @@
                 <p>{{ vm.event.location || '-' }}</p>
               </div>
               <div>
-                <span class="label">Debut</span>
+                <span class="label">Début</span>
                 <p>{{ vm.event.startDatetime | date: 'dd/MM/yyyy HH:mm' }}</p>
               </div>
               <div>
@@ -78,7 +90,7 @@
                 <p>{{ vm.event.endDatetime | date: 'dd/MM/yyyy HH:mm' }}</p>
               </div>
               <div>
-                <span class="label">Capacite</span>
+                <span class="label">Capacité</span>
                 <p>{{ vm.event.maxCapacity }}</p>
               </div>
               <div>
@@ -90,19 +102,19 @@
                 <p>{{ vm.event.classroomId }}</p>
               </div>
               <div>
-                <span class="label">Cree par</span>
+                <span class="label">Créé par</span>
                 <p>{{ vm.event.createdBy }}</p>
               </div>
               <div>
-                <span class="label">Tarif evenement</span>
-                <p>{{ vm.event.eventPrice }}</p>
+                <span class="label">Tarif événement</span>
+                <p>{{ vm.event.eventPrice > 0 ? (vm.event.eventPrice + ' DT') : 'Gratuit' }}</p>
               </div>
               <div>
-                <span class="label">Cree le</span>
+                <span class="label">Créé le</span>
                 <p>{{ vm.event.createdAt ? (vm.event.createdAt | date: 'dd/MM/yyyy HH:mm') : '-' }}</p>
               </div>
               <div>
-                <span class="label">Mis a jour le</span>
+                <span class="label">Mis à jour le</span>
                 <p>{{ vm.event.updatedAt ? (vm.event.updatedAt | date: 'dd/MM/yyyy HH:mm') : '-' }}</p>
               </div>
             </div>
@@ -110,7 +122,7 @@
 
           <div class="description-block">
             <span class="label">Description</span>
-            <p>{{ vm.event.description || 'Aucune description renseignee.' }}</p>
+            <p>{{ vm.event.description || 'Aucune description renseignée.' }}</p>
           </div>
         </app-card>
 
@@ -155,7 +167,7 @@
               </table>
             </div>
           } @else {
-            <div class="empty-inline">Aucune participation enregistree pour le moment.</div>
+            <div class="empty-inline">Aucune participation enregistrée pour le moment.</div>
           }
         </app-card>
       </div>
