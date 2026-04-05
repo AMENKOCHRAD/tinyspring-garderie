@@ -12,12 +12,9 @@
         <p class="m-t-15 m-b-0">Chargement de l'événement...</p>
       </div>
     } @else if (vm.event) {
-      <div class="section-toolbar">
-        <div>
-          <h2>{{ vm.event.title }}</h2>
-          <p>Détails de l'événement et aperçu des participations.</p>
-        </div>
+      <app-events-module-switcher />
 
+      <div class="section-toolbar">
         <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
           Retour à la liste
         </button>
@@ -176,27 +173,19 @@
           }
 
           @if (vm.registrations.length) {
-            <div class="table-responsive">
-              <table class="table table-sm participation-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Enfant</th>
-                    <th>Parent</th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (registration of vm.registrations.slice(0, 5); track registration.id) {
-                    <tr>
-                      <td>{{ registration.id }}</td>
-                      <td>{{ registration.childId }}</td>
-                      <td>{{ registration.parentId }}</td>
-                      <td>{{ registration.status.replaceAll('_', ' ') }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+            <div class="registration-list">
+              @for (registration of vm.registrations.slice(0, 5); track registration.id) {
+                <article class="registration-item">
+                  <div class="registration-main">
+                    <strong>#{{ registration.id }} · Enfant {{ registration.childId }}</strong>
+                    <span>Parent {{ registration.parentId }}</span>
+                  </div>
+                  <span class="registration-status" [ngClass]="getRegistrationStatusClass(registration.status)">
+                    <i [class]="getRegistrationStatusIcon(registration.status)" aria-hidden="true"></i>
+                    <span>{{ formatRegistrationStatus(registration.status) }}</span>
+                  </span>
+                </article>
+              }
             </div>
           } @else {
             <div class="empty-inline">Aucune participation enregistrée pour le moment.</div>

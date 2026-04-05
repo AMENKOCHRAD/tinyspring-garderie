@@ -1,21 +1,31 @@
 import { AsyncPipe, DatePipe, NgClass } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { BehaviorSubject, Subject, combineLatest, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay, startWith, takeUntil, tap } from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { EventsModuleSwitcherComponent } from '../../components/events-module-switcher/events-module-switcher.component';
 import { Event, EventStatus } from '../../models/event.model';
 import { EventRequest } from '../../models/event-request.model';
 import { EventNotificationService, EventToastMessage } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
 
+type EventDateFilter = 'ALL' | 'UPCOMING' | 'TODAY' | 'PAST';
+type EventPriceFilter = 'ALL' | 'FREE' | 'PAID';
+
+interface FilterOption<T extends string> {
+  value: T;
+  label: string;
+}
+
 @Component({
   selector: 'app-event-list',
   standalone: true,
-  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe],
+  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe, FormsModule, EventsModuleSwitcherComponent],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']
 })
@@ -26,10 +36,42 @@ export class EventListComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly loadingSubject = new BehaviorSubject<boolean>(true);
   private readonly errorSubject = new BehaviorSubject<string>('');
+  private readonly searchSubject = new BehaviorSubject<string>('');
+  private readonly statusFilterSubject = new BehaviorSubject<EventStatus | 'ALL'>('ALL');
+  private readonly typeFilterSubject = new BehaviorSubject<string>('ALL');
+  private readonly dateFilterSubject = new BehaviorSubject<EventDateFilter>('ALL');
+  private readonly priceFilterSubject = new BehaviorSubject<EventPriceFilter>('ALL');
 
   readonly toast$ = this.notificationService.message$;
   readonly loading$ = this.loadingSubject.asObservable();
   readonly errorMessage$ = this.errorSubject.asObservable();
+
+  readonly statusOptions: FilterOption<EventStatus | 'ALL'>[] = [
+    { value: 'ALL', label: 'Tous' },
+    { value: 'PUBLISHED', label: 'Publié' },
+    { value: 'DRAFT', label: 'Brouillon' },
+    { value: 'CANCELLED', label: 'Annulé' },
+    { value: 'COMPLETED', label: 'Terminé' }
+  ];
+
+  readonly dateOptions: FilterOption<EventDateFilter>[] = [
+    { value: 'ALL', label: 'Tous' },
+    { value: 'UPCOMING', label: 'À venir' },
+    { value: 'TODAY', label: "Aujourd'hui" },
+    { value: 'PAST', label: 'Passés' }
+  ];
+
+  readonly priceOptions: FilterOption<EventPriceFilter>[] = [
+    { value: 'ALL', label: 'Tous' },
+    { value: 'FREE', label: 'Gratuit' },
+    { value: 'PAID', label: 'Payant' }
+  ];
+
+  searchTerm = '';
+  selectedStatus: EventStatus | 'ALL' = 'ALL';
+  selectedType = 'ALL';
+  selectedDateFilter: EventDateFilter = 'ALL';
+  selectedPriceFilter: EventPriceFilter = 'ALL';
 
   readonly events$ = this.eventService.events$.pipe(
     tap(() => {
@@ -46,24 +88,76 @@ export class EventListComponent implements OnInit, OnDestroy {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
+  readonly typeOptions$ = this.events$.pipe(
+    map((events) => {
+      const types = Array.from(
+        new Set(events.map((event) => event.type).filter((type) => type && type.trim()))
+      ).sort((left, right) => left.localeCompare(right));
+
+      return [
+        { value: 'ALL', label: 'Tous' },
+        ...types.map((type) => ({
+          value: type,
+          label: type.replaceAll('_', ' ')
+        }))
+      ];
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
   readonly vm$ = combineLatest([
     this.events$,
     this.loading$,
     this.errorMessage$,
-    this.toast$.pipe(startWith(null as EventToastMessage | null))
+    this.toast$.pipe(startWith(null as EventToastMessage | null)),
+    this.searchSubject.asObservable(),
+    this.statusFilterSubject.asObservable(),
+    this.typeFilterSubject.asObservable(),
+    this.dateFilterSubject.asObservable(),
+    this.priceFilterSubject.asObservable(),
+    this.typeOptions$
   ]).pipe(
-    map(([events, loading, errorMessage, toast]) => ({
+    map(([
       events,
       loading,
       errorMessage,
       toast,
-      totalEvents: events.length,
-      publishedEvents: events.filter((event) => this.getDisplayStatus(event) === 'PUBLISHED').length,
-      upcomingEvents: events.filter((event) => {
-        const displayStatus = this.getDisplayStatus(event);
-        return displayStatus !== 'CANCELLED' && new Date(event.startDatetime) > new Date();
-      }).length
-    }))
+      searchTerm,
+      statusFilter,
+      typeFilter,
+      dateFilter,
+      priceFilter,
+      typeOptions
+    ]) => {
+      const filteredEvents = events.filter((event) =>
+        this.matchesSearch(event, searchTerm) &&
+        this.matchesStatus(event, statusFilter) &&
+        this.matchesType(event, typeFilter) &&
+        this.matchesDate(event, dateFilter) &&
+        this.matchesPrice(event, priceFilter)
+      );
+
+      return {
+        events,
+        filteredEvents,
+        loading,
+        errorMessage,
+        toast,
+        typeOptions,
+        hasActiveFilters:
+          searchTerm.length > 0 ||
+          statusFilter !== 'ALL' ||
+          typeFilter !== 'ALL' ||
+          dateFilter !== 'ALL' ||
+          priceFilter !== 'ALL',
+        totalEvents: events.length,
+        publishedEvents: events.filter((event) => this.getDisplayStatus(event) === 'PUBLISHED').length,
+        upcomingEvents: events.filter((event) => {
+          const displayStatus = this.getDisplayStatus(event);
+          return displayStatus !== 'CANCELLED' && new Date(event.startDatetime) > new Date();
+        }).length
+      };
+    })
   );
 
   actionInProgressId: number | null = null;
@@ -79,6 +173,39 @@ export class EventListComponent implements OnInit, OnDestroy {
 
   dismissToast(): void {
     this.notificationService.clear();
+  }
+
+  updateSearchTerm(value: string): void {
+    this.searchTerm = value;
+    this.searchSubject.next(value.trim());
+  }
+
+  updateStatusFilter(value: EventStatus | 'ALL'): void {
+    this.selectedStatus = value;
+    this.statusFilterSubject.next(value);
+  }
+
+  updateTypeFilter(value: string): void {
+    this.selectedType = value;
+    this.typeFilterSubject.next(value);
+  }
+
+  updateDateFilter(value: EventDateFilter): void {
+    this.selectedDateFilter = value;
+    this.dateFilterSubject.next(value);
+  }
+
+  updatePriceFilter(value: EventPriceFilter): void {
+    this.selectedPriceFilter = value;
+    this.priceFilterSubject.next(value);
+  }
+
+  resetFilters(): void {
+    this.updateSearchTerm('');
+    this.updateStatusFilter('ALL');
+    this.updateTypeFilter('ALL');
+    this.updateDateFilter('ALL');
+    this.updatePriceFilter('ALL');
   }
 
   goToNewEvent(): void {
@@ -173,20 +300,6 @@ export class EventListComponent implements OnInit, OnDestroy {
   }
 
   getDisplayStatus(event: Event): EventStatus {
-    if (event.status === 'CANCELLED') {
-      return 'CANCELLED';
-    }
-
-    if (event.status === 'COMPLETED') {
-      return 'COMPLETED';
-    }
-
-    const endDate = new Date(event.endDatetime);
-
-    if (!Number.isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
-      return 'COMPLETED';
-    }
-
     return event.status;
   }
 
@@ -218,11 +331,11 @@ export class EventListComponent implements OnInit, OnDestroy {
 
   getStatusActionHint(event: Event): string | null {
     if (this.isCancelled(event)) {
-      return "Cet événement annulé est verrouillé : modification, publication et participations indisponibles.";
+      return null;
     }
 
     if (this.canRepublish(event)) {
-      return "Cet événement terminé peut être réutilisé via Republier pour mettre à jour ses dates.";
+      return null;
     }
 
     return null;
@@ -288,5 +401,65 @@ export class EventListComponent implements OnInit, OnDestroy {
 
   private isCancelled(event: Event): boolean {
     return event.status === 'CANCELLED';
+  }
+
+  private matchesSearch(event: Event, searchTerm: string): boolean {
+    if (!searchTerm) {
+      return true;
+    }
+
+    const normalizedSearch = searchTerm.toLowerCase();
+    const haystack = [
+      event.title,
+      event.type.replaceAll('_', ' '),
+      event.location,
+      event.description
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(normalizedSearch);
+  }
+
+  private matchesStatus(event: Event, statusFilter: EventStatus | 'ALL'): boolean {
+    return statusFilter === 'ALL' || this.getDisplayStatus(event) === statusFilter;
+  }
+
+  private matchesType(event: Event, typeFilter: string): boolean {
+    return typeFilter === 'ALL' || event.type === typeFilter;
+  }
+
+  private matchesDate(event: Event, dateFilter: EventDateFilter): boolean {
+    if (dateFilter === 'ALL') {
+      return true;
+    }
+
+    const now = new Date();
+    const start = new Date(event.startDatetime);
+    const end = new Date(event.endDatetime);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return false;
+    }
+
+    if (dateFilter === 'UPCOMING') {
+      return start.getTime() > now.getTime();
+    }
+
+    if (dateFilter === 'PAST') {
+      return end.getTime() < now.getTime();
+    }
+
+    return start.toDateString() === now.toDateString();
+  }
+
+  private matchesPrice(event: Event, priceFilter: EventPriceFilter): boolean {
+    if (priceFilter === 'ALL') {
+      return true;
+    }
+
+    const price = event.eventPrice ?? 0;
+    return priceFilter === 'FREE' ? price <= 0 : price > 0;
   }
 }

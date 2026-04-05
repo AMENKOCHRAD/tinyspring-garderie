@@ -1,0 +1,21 @@
+<div class="module-switcher" role="tablist" aria-label="Navigation du module événements">
+  <a
+    class="switch-pill"
+    routerLink="/events"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="{ exact: true }"
+  >
+    Événements
+  </a>
+  <a
+    class="switch-pill"
+    routerLink="/events/registrations"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="{ exact: true }"
+  >
+    Participations
+  </a>
+  <button type="button" class="switch-pill disabled" disabled>
+    Menus
+  </button>
+</div>

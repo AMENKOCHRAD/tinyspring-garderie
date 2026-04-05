@@ -127,6 +127,20 @@ export class EventService {
     );
   }
 
+  markRegistrationAttended(id: number): Observable<EventRegistration> {
+    return this.http.put<EventRegistration>(
+      `${this.apiUrl}/registrations/${id}/attended`,
+      {}
+    );
+  }
+
+  markRegistrationAbsent(id: number): Observable<EventRegistration> {
+    return this.http.put<EventRegistration>(
+      `${this.apiUrl}/registrations/${id}/absent`,
+      {}
+    );
+  }
+
   private mapEventResponse(event: EventApiResponse): Event {
     return {
       id: event.id,

@@ -16,6 +16,7 @@ import {
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { EventFormComponent } from '../../components/event-form/event-form.component';
+import { EventsModuleSwitcherComponent } from '../../components/events-module-switcher/events-module-switcher.component';
 import { Event } from '../../models/event.model';
 import { EventFormSubmission } from '../../models/event-form-submission.model';
 import { EventNotificationService } from '../../services/event-notification.service';
@@ -30,7 +31,7 @@ interface EventCreateViewModel {
 @Component({
   selector: 'app-event-create',
   standalone: true,
-  imports: [SharedModule, RouterModule, EventFormComponent, AsyncPipe],
+  imports: [SharedModule, RouterModule, EventFormComponent, AsyncPipe, EventsModuleSwitcherComponent],
   templateUrl: './event-create.component.html',
   styleUrls: ['./event-create.component.scss']
 })

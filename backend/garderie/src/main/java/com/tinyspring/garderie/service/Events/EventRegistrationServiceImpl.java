@@ -35,25 +35,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
             );
         }
 
-        long confirmedCount = eventRegistrationRepository.countByEventIdAndStatus(
-                eventId, RegistrationStatus.CONFIRMED
-        );
-
-        RegistrationStatus initialStatus;
-
-        if (event.getMaxCapacity() != null && confirmedCount >= event.getMaxCapacity()) {
-            initialStatus = RegistrationStatus.WAITLISTED;
-        } else if (event.isRequiresAuthorization()) {
-            initialStatus = RegistrationStatus.PENDING;
-        } else {
-            initialStatus = RegistrationStatus.CONFIRMED;
-        }
-
         EventRegistration registration = EventRegistration.builder()
                 .eventId(eventId)
                 .childId(request.getChildId())
                 .parentId(request.getParentId())
-                .status(initialStatus)
+                .status(RegistrationStatus.CONFIRMED)
                 .authorizationSigned(Boolean.TRUE.equals(request.getAuthorizationSigned()))
                 .authorizationDocUrl(request.getAuthorizationDocUrl())
                 .notes(request.getNotes())
@@ -131,5 +117,41 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
 
         return cancelled;
+    }
+
+    @Override
+    public EventRegistration markAttended(Long registrationId) {
+        EventRegistration registration = getRegistrationForAttendance(registrationId);
+        registration.setStatus(RegistrationStatus.ATTENDED);
+        return eventRegistrationRepository.save(registration);
+    }
+
+    @Override
+    public EventRegistration markAbsent(Long registrationId) {
+        EventRegistration registration = getRegistrationForAttendance(registrationId);
+        registration.setStatus(RegistrationStatus.ABSENT);
+        return eventRegistrationRepository.save(registration);
+    }
+
+    private EventRegistration getRegistrationForAttendance(Long registrationId) {
+        EventRegistration registration = eventRegistrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inscription introuvable avec l'id : " + registrationId));
+
+        Event event = eventRepository.findById(registration.getEventId())
+                .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + registration.getEventId()));
+
+        if (event.getStatus() != EventStatus.COMPLETED) {
+            throw new InvalidStatusTransitionException(
+                    "La presence ne peut etre renseignee que pour un evenement termine"
+            );
+        }
+
+        if (registration.getStatus() == RegistrationStatus.CANCELLED) {
+            throw new InvalidStatusTransitionException(
+                    "Une inscription annulee ne peut pas etre marquee presente ou absente"
+            );
+        }
+
+        return registration;
     }
 }

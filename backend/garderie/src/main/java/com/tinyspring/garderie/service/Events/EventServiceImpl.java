@@ -43,13 +43,16 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<Event> getAll() {
-        return eventRepository.findAll();
+        List<Event> events = eventRepository.findAll();
+        events.forEach(this::syncCompletedStatusIfNeeded);
+        return events;
     }
 
     @Override
     public Event getById(Long id) {
-        return eventRepository.findById(id)
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + id));
+        return syncCompletedStatusIfNeeded(event);
     }
 
     @Override
@@ -160,6 +163,19 @@ public class EventServiceImpl implements EventService {
     private boolean isRepublishableAfterEdit(Event event) {
         LocalDateTime now = LocalDateTime.now();
         return event.getEndDatetime() != null && event.getEndDatetime().isAfter(now);
+    }
+
+    private Event syncCompletedStatusIfNeeded(Event event) {
+        if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.COMPLETED) {
+            return event;
+        }
+
+        if (event.getEndDatetime() != null && event.getEndDatetime().isBefore(LocalDateTime.now())) {
+            event.setStatus(EventStatus.COMPLETED);
+            return eventRepository.save(event);
+        }
+
+        return event;
     }
 
     private boolean isBlank(String value) {

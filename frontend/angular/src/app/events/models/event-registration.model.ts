@@ -1,4 +1,11 @@
-export type RegistrationStatus = string;
+export type RegistrationStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'WAITLISTED'
+  | 'ATTENDED'
+  | 'ABSENT'
+  | string;
 
 export interface EventRegistration {
   id: number;

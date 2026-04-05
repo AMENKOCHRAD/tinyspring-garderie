@@ -54,4 +54,18 @@ public class EventRegistrationRestController {
                 eventRegistrationMapper.toResponse(eventRegistrationService.cancel(id))
         );
     }
+
+    @PutMapping("/registrations/{id}/attended")
+    public ResponseEntity<EventRegistrationResponse> markAttended(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                eventRegistrationMapper.toResponse(eventRegistrationService.markAttended(id))
+        );
+    }
+
+    @PutMapping("/registrations/{id}/absent")
+    public ResponseEntity<EventRegistrationResponse> markAbsent(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                eventRegistrationMapper.toResponse(eventRegistrationService.markAbsent(id))
+        );
+    }
 }

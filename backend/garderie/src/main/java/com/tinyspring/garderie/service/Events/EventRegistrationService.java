@@ -13,4 +13,8 @@ public interface EventRegistrationService {
     EventRegistration confirm(Long registrationId);
 
     EventRegistration cancel(Long registrationId);
+
+    EventRegistration markAttended(Long registrationId);
+
+    EventRegistration markAbsent(Long registrationId);
 }

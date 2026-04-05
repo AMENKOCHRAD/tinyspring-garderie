@@ -14,8 +14,9 @@ import {
 } from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { EventsModuleSwitcherComponent } from '../../components/events-module-switcher/events-module-switcher.component';
 import { Event, EventStatus } from '../../models/event.model';
-import { EventRegistration } from '../../models/event-registration.model';
+import { EventRegistration, RegistrationStatus } from '../../models/event-registration.model';
 import { EventNotificationService } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
 import { getImageUrl } from '../../utils/photo-url.util';
@@ -31,7 +32,7 @@ interface EventDetailViewModel {
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe],
+  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe, EventsModuleSwitcherComponent],
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss']
 })
@@ -174,20 +175,6 @@ export class EventDetailComponent {
   }
 
   getDisplayStatus(event: Event): EventStatus {
-    if (event.status === 'CANCELLED') {
-      return 'CANCELLED';
-    }
-
-    if (event.status === 'COMPLETED') {
-      return 'COMPLETED';
-    }
-
-    const endDate = new Date(event.endDatetime);
-
-    if (!Number.isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
-      return 'COMPLETED';
-    }
-
     return event.status;
   }
 
@@ -232,6 +219,44 @@ export class EventDetailComponent {
     }
 
     return null;
+  }
+
+  getRegistrationStatusClass(status: RegistrationStatus): string {
+    switch (status) {
+      case 'ATTENDED':
+        return 'registration-attended';
+      case 'ABSENT':
+        return 'registration-absent';
+      case 'CONFIRMED':
+        return 'registration-confirmed';
+      case 'CANCELLED':
+        return 'registration-cancelled';
+      case 'WAITLISTED':
+        return 'registration-waitlisted';
+      default:
+        return 'registration-pending';
+    }
+  }
+
+  getRegistrationStatusIcon(status: RegistrationStatus): string {
+    switch (status) {
+      case 'ATTENDED':
+        return 'feather icon-check-circle';
+      case 'ABSENT':
+        return 'feather icon-x-circle';
+      case 'CONFIRMED':
+        return 'feather icon-user-check';
+      case 'CANCELLED':
+        return 'feather icon-slash';
+      case 'WAITLISTED':
+        return 'feather icon-clock';
+      default:
+        return 'feather icon-alert-circle';
+    }
+  }
+
+  formatRegistrationStatus(status: RegistrationStatus): string {
+    return status.replaceAll('_', ' ');
   }
 
   getEventPhotoUrl(photoEvent: string | undefined): string | null {

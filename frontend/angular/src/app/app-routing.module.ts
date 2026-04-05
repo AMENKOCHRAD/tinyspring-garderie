@@ -39,6 +39,13 @@ const routes: Routes = [
           )
       },
       {
+        path: 'events/registrations',
+        loadComponent: () =>
+          import(
+            './events/pages/event-registrations/event-registrations.component'
+          ).then((c) => c.EventRegistrationsComponent)
+      },
+      {
         path: 'events/:id/edit',
         data: { mode: 'edit' },
         loadComponent: () =>
