@@ -55,6 +55,13 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event update(Long id, EventRequest request) {
         Event existing = getById(id);
+
+        if (existing.getStatus() == EventStatus.CANCELLED) {
+            throw new InvalidStatusTransitionException(
+                    "Un evenement annule ne peut plus etre modifie"
+            );
+        }
+
         EventStatus previousStatus = existing.getStatus();
 
         eventMapper.updateEntityFromRequest(request, existing);
@@ -82,6 +89,12 @@ public class EventServiceImpl implements EventService {
     public Event publish(Long id) {
         Event event = getById(id);
 
+        if (event.getStatus() == EventStatus.CANCELLED) {
+            throw new InvalidStatusTransitionException(
+                    "Un evenement annule ne peut pas etre publie"
+            );
+        }
+
         if (event.getStatus() == EventStatus.COMPLETED && !isRepublishableAfterEdit(event)) {
             throw new InvalidStatusTransitionException(
                     "Un evenement termine doit avoir une nouvelle date de fin dans le futur avant d'etre republie"
@@ -106,6 +119,12 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event uploadPhoto(Long id, MultipartFile file) {
         Event event = getById(id);
+
+        if (event.getStatus() == EventStatus.CANCELLED) {
+            throw new InvalidStatusTransitionException(
+                    "Un evenement annule ne peut plus etre modifie"
+            );
+        }
 
         if (file == null || file.isEmpty()) {
             throw new InvalidStatusTransitionException("Le fichier image est obligatoire");

@@ -6,7 +6,6 @@ import { Subject, forkJoin, of } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
-  filter,
   finalize,
   map,
   shareReplay,
@@ -52,7 +51,7 @@ export class EventDetailComponent {
           loading: false,
           event: null,
           registrations: [],
-          errorMessage: "L'identifiant de l'evenement est invalide.",
+          errorMessage: "L'identifiant de l'événement est invalide.",
           registrationsWarning: ''
         });
       }
@@ -68,7 +67,7 @@ export class EventDetailComponent {
                   registrations: [] as EventRegistration[],
                   warning: this.getErrorMessage(
                     error,
-                    'Impossible de charger le resume des participations.'
+                    'Impossible de charger le résumé des participations.'
                   )
                 })
               )
@@ -97,7 +96,7 @@ export class EventDetailComponent {
                 registrations: [],
                 errorMessage: this.getErrorMessage(
                   error,
-                  "Impossible de charger l'evenement."
+                  "Impossible de charger l'événement."
                 ),
                 registrationsWarning: ''
               })
@@ -130,12 +129,12 @@ export class EventDetailComponent {
       .pipe(finalize(() => (this.publishing = false)))
       .subscribe({
         next: () => {
-          this.notificationService.showSuccess("L'evenement a ete publie avec succes.");
+          this.notificationService.showSuccess("L'événement a été publié avec succès.");
           this.refresh$.next();
         },
         error: (error: HttpErrorResponse) => {
           this.notificationService.showError(
-            this.getErrorMessage(error, "La publication de l'evenement a echoue.")
+            this.getErrorMessage(error, "La publication de l'événement a échoué.")
           );
         }
       });
@@ -146,6 +145,10 @@ export class EventDetailComponent {
   }
 
   goToEdit(eventId: number): void {
+    this.router.navigate(['/events', eventId, 'edit']);
+  }
+
+  goToRepublish(eventId: number): void {
     this.router.navigate(['/events', eventId, 'edit']);
   }
 
@@ -188,38 +191,44 @@ export class EventDetailComponent {
     return event.status;
   }
 
-  isLocked(event: Event): boolean {
-    const displayStatus = this.getDisplayStatus(event);
-    return displayStatus === 'CANCELLED' || displayStatus === 'COMPLETED';
-  }
-
   canEdit(event: Event): boolean {
-    return true;
+    return !this.isCancelled(event);
   }
 
   canPublish(event: Event): boolean {
-    if (event.status === 'PUBLISHED') {
-      return false;
+    return !this.isCancelled(event) && this.getDisplayStatus(event) === 'DRAFT';
+  }
+
+  canRepublish(event: Event): boolean {
+    return !this.isCancelled(event) && this.getDisplayStatus(event) === 'COMPLETED';
+  }
+
+  canViewParticipations(event: Event): boolean {
+    return !this.isCancelled(event);
+  }
+
+  getLockedReason(event: Event, action: 'edit' | 'publish' | 'registrations'): string {
+    if (this.isCancelled(event)) {
+      switch (action) {
+        case 'edit':
+          return "Un événement annulé ne peut pas être modifié";
+        case 'publish':
+          return "Un événement annulé ne peut pas être publié";
+        default:
+          return "Les participations sont indisponibles pour un événement annulé";
+      }
     }
 
-    if (event.status === 'CANCELLED') {
-      return true;
-    }
-
-    if (event.status === 'COMPLETED') {
-      return this.hasFutureEndDate(event);
-    }
-
-    return this.getDisplayStatus(event) === 'DRAFT';
+    return '';
   }
 
   getStatusActionHint(event: Event): string | null {
-    if (event.status === 'COMPLETED' && !this.hasFutureEndDate(event)) {
-      return "Cet événement terminé peut être republié après modification de la date de fin.";
+    if (this.isCancelled(event)) {
+      return "Cet événement annulé est verrouillé : modification, publication et participations indisponibles.";
     }
 
-    if (event.status === 'CANCELLED') {
-      return "Cet événement annulé peut encore être modifié ou republié.";
+    if (this.canRepublish(event)) {
+      return "Utilisez Republier pour rouvrir le formulaire, modifier les dates puis republier l'événement.";
     }
 
     return null;
@@ -231,7 +240,7 @@ export class EventDetailComponent {
 
   private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {
     if (error.status === 404) {
-      return "L'evenement demande est introuvable.";
+      return "L'événement demandé est introuvable.";
     }
 
     if (typeof error.error === 'string' && error.error.trim()) {
@@ -245,8 +254,7 @@ export class EventDetailComponent {
     return fallbackMessage;
   }
 
-  private hasFutureEndDate(event: Event): boolean {
-    const endDate = new Date(event.endDatetime);
-    return !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
+  private isCancelled(event: Event): boolean {
+    return event.status === 'CANCELLED';
   }
 }

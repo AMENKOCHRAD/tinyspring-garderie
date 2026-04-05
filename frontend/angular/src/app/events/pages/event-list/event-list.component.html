@@ -117,57 +117,126 @@
                 }
 
                 <div class="event-actions">
-                  <button type="button" class="icon-button" (click)="goToDetails(event.id)">
-                    Voir
+                  <button
+                    type="button"
+                    class="icon-button icon-only"
+                    (click)="goToDetails(event.id)"
+                    title="Voir l'événement"
+                    aria-label="Voir l'événement"
+                  >
+                    <i class="feather icon-eye" aria-hidden="true"></i>
                   </button>
-                  <a class="icon-button" [routerLink]="['/events', event.id, 'edit']">
-                    Éditer
-                  </a>
+
+                  @if (canEdit(event)) {
+                    <a
+                      class="icon-button icon-only"
+                      [routerLink]="['/events', event.id, 'edit']"
+                      title="Modifier l'événement"
+                      aria-label="Modifier l'événement"
+                    >
+                      <i class="feather icon-edit-2" aria-hidden="true"></i>
+                    </a>
+                  } @else {
+                    <span
+                      class="action-tooltip-wrapper"
+                      title="Un événement annulé ne peut pas être modifié"
+                    >
+                      <button type="button" class="icon-button icon-only locked" disabled aria-label="Modifier l'événement indisponible">
+                        <i class="feather icon-edit-2" aria-hidden="true"></i>
+                      </button>
+                    </span>
+                  }
+
                   @if (canPublish(event)) {
                     <button
                       type="button"
-                      class="icon-button success"
+                      class="icon-button icon-only success"
                       (click)="publishEvent(event)"
                       [disabled]="actionInProgressId === event.id"
+                      title="Publier l'événement"
+                      aria-label="Publier l'événement"
                     >
-                      Publier
+                      <i class="feather icon-upload-cloud" aria-hidden="true"></i>
                     </button>
-                  } @else if (event.status === 'COMPLETED') {
-                    <button type="button" class="icon-button locked" disabled>
-                      Republier
+                  } @else if (canRepublish(event)) {
+                    <button
+                      type="button"
+                      class="icon-button republish-button"
+                      (click)="goToRepublish(event.id)"
+                      title="Republier l'événement"
+                      aria-label="Republier l'événement"
+                    >
+                      <i class="feather icon-rotate-cw" aria-hidden="true"></i>
+                      <span>Republier</span>
                     </button>
+                  } @else if (event.status === 'CANCELLED') {
+                    <span
+                      class="action-tooltip-wrapper"
+                      title="Un événement annulé ne peut pas être publié"
+                    >
+                      <button type="button" class="icon-button icon-only locked" disabled aria-label="Publier l'événement indisponible">
+                        <i class="feather icon-upload-cloud" aria-hidden="true"></i>
+                      </button>
+                    </span>
                   }
+
                   @if (canCancel(event)) {
                     <button
                       type="button"
-                      class="icon-button warning"
+                      class="icon-button icon-only warning"
                       (click)="cancelEvent(event)"
                       [disabled]="actionInProgressId === event.id"
+                      title="Annuler l'événement"
+                      aria-label="Annuler l'événement"
                     >
-                      Annuler
+                      <i class="feather icon-slash" aria-hidden="true"></i>
                     </button>
                   }
+
                   @if (canComplete(event)) {
                     <button
                       type="button"
-                      class="icon-button complete"
+                      class="icon-button icon-only complete"
                       (click)="completeEvent(event)"
                       [disabled]="actionInProgressId === event.id"
+                      title="Marquer l'événement comme complété"
+                      aria-label="Marquer l'événement comme complété"
                     >
-                      Compléter
+                      <i class="feather icon-check-circle" aria-hidden="true"></i>
                     </button>
                   }
+
                   <button
                     type="button"
-                    class="icon-button danger"
+                    class="icon-button icon-only danger"
                     (click)="deleteEvent(event)"
                     [disabled]="actionInProgressId === event.id"
+                    title="Supprimer l'événement"
+                    aria-label="Supprimer l'événement"
                   >
-                    Supprimer
+                    <i class="feather icon-trash-2" aria-hidden="true"></i>
                   </button>
-                  <button type="button" class="icon-button" (click)="goToRegistrations(event.id)">
-                    Participations
-                  </button>
+
+                  @if (canViewParticipations(event)) {
+                    <button
+                      type="button"
+                      class="icon-button icon-only"
+                      (click)="goToRegistrations(event.id)"
+                      title="Voir les participations"
+                      aria-label="Voir les participations"
+                    >
+                      <i class="feather icon-users" aria-hidden="true"></i>
+                    </button>
+                  } @else {
+                    <span
+                      class="action-tooltip-wrapper"
+                      title="Les participations sont indisponibles pour un événement annulé"
+                    >
+                      <button type="button" class="icon-button icon-only locked" disabled aria-label="Voir les participations indisponible">
+                        <i class="feather icon-users" aria-hidden="true"></i>
+                      </button>
+                    </span>
+                  }
                 </div>
               </div>
             </article>

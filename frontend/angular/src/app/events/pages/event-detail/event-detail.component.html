@@ -7,7 +7,7 @@
     }
 
     @if (vm.loading) {
-      <div class="state-card" style="text-align: center; padding: 40px;">
+      <div class="state-card">
         <div class="spinner-border text-primary" role="status"></div>
         <p class="m-t-15 m-b-0">Chargement de l'événement...</p>
       </div>
@@ -23,10 +23,10 @@
         </button>
       </div>
 
-      <div class="content-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;" con>
+      <div class="content-grid">
         <app-card>
-          <div class="event-topbar" style="display: flex; justify-content: space-between; align-items: center;" >
-            <div class="event-identity" style="display: flex; flex-direction: column;">
+          <div class="event-topbar">
+            <div class="event-identity">
               <span class="status-badge" [ngClass]="getStatusClass(getDisplayStatus(vm.event))">
                 {{ formatStatus(getDisplayStatus(vm.event)) }}
               </span>
@@ -35,9 +35,18 @@
             </div>
 
             <div class="action-row">
-              <button type="button" class="btn btn-outline-primary" (click)="goToEdit(vm.event.id)">
-                Éditer
-              </button>
+              @if (canEdit(vm.event)) {
+                <button type="button" class="btn btn-outline-primary" (click)="goToEdit(vm.event.id)">
+                  Éditer
+                </button>
+              } @else {
+                <span class="action-tooltip-wrapper" [title]="getLockedReason(vm.event, 'edit')">
+                  <button type="button" class="btn btn-outline-secondary locked-button" disabled>
+                    Éditer
+                  </button>
+                </span>
+              }
+
               @if (canPublish(vm.event)) {
                 <button
                   type="button"
@@ -50,14 +59,29 @@
                   }
                   Publier
                 </button>
-              } @else if (vm.event.status === 'COMPLETED') {
-                <button type="button" class="btn btn-outline-secondary locked-button" disabled>
+              } @else if (canRepublish(vm.event)) {
+                <button type="button" class="btn btn-primary" (click)="goToRepublish(vm.event.id)">
                   Republier
                 </button>
+              } @else if (vm.event.status === 'CANCELLED') {
+                <span class="action-tooltip-wrapper" [title]="getLockedReason(vm.event, 'publish')">
+                  <button type="button" class="btn btn-outline-secondary locked-button" disabled>
+                    Publier
+                  </button>
+                </span>
               }
-              <button type="button" class="btn btn-outline-secondary" (click)="goToRegistrations(vm.event.id)">
-                Voir les participations
-              </button>
+
+              @if (canViewParticipations(vm.event)) {
+                <button type="button" class="btn btn-outline-secondary" (click)="goToRegistrations(vm.event.id)">
+                  Voir les participations
+                </button>
+              } @else {
+                <span class="action-tooltip-wrapper" [title]="getLockedReason(vm.event, 'registrations')">
+                  <button type="button" class="btn btn-outline-secondary locked-button" disabled>
+                    Voir les participations
+                  </button>
+                </span>
+              }
             </div>
           </div>
 
@@ -132,9 +156,17 @@
               <span class="label">Participations</span>
               <h3>{{ vm.registrations.length }}</h3>
             </div>
-            <button type="button" class="btn btn-outline-primary btn-sm" (click)="goToRegistrations(vm.event.id)">
-              Ouvrir
-            </button>
+            @if (canViewParticipations(vm.event)) {
+              <button type="button" class="btn btn-outline-primary btn-sm" (click)="goToRegistrations(vm.event.id)">
+                Ouvrir
+              </button>
+            } @else {
+              <span class="action-tooltip-wrapper" [title]="getLockedReason(vm.event, 'registrations')">
+                <button type="button" class="btn btn-outline-secondary btn-sm locked-button" disabled>
+                  Ouvrir
+                </button>
+              </span>
+            }
           </div>
 
           @if (vm.registrationsWarning) {

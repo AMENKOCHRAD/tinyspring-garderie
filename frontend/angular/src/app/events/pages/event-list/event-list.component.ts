@@ -39,7 +39,7 @@ export class EventListComponent implements OnInit, OnDestroy {
     catchError((error: HttpErrorResponse) => {
       this.loadingSubject.next(false);
       this.errorSubject.next(
-        this.getErrorMessage(error, "Impossible de charger les evenements.")
+        this.getErrorMessage(error, "Impossible de charger les événements.")
       );
       return of([] as Event[]);
     }),
@@ -93,10 +93,12 @@ export class EventListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/events', eventId, 'registrations']);
   }
 
-  publishEvent(event: Event): void {
-    const displayStatus = this.getDisplayStatus(event);
+  goToRepublish(eventId: number): void {
+    this.router.navigate(['/events', eventId, 'edit']);
+  }
 
-    if (displayStatus !== 'DRAFT') {
+  publishEvent(event: Event): void {
+    if (!this.canPublish(event)) {
       return;
     }
 
@@ -112,23 +114,23 @@ export class EventListComponent implements OnInit, OnDestroy {
       .subscribe({
         error: (error: HttpErrorResponse) => {
           this.errorSubject.next(
-            this.getErrorMessage(error, "La publication de l'evenement a echoue.")
+            this.getErrorMessage(error, "La publication de l'événement a échoué.")
           );
         }
       });
   }
 
   cancelEvent(event: Event): void {
-    this.updateEventStatus(event, 'CANCELLED', "L'evenement a ete annule avec succes.");
+    this.updateEventStatus(event, 'CANCELLED', "L'événement a été annulé avec succès.");
   }
 
   completeEvent(event: Event): void {
-    this.updateEventStatus(event, 'COMPLETED', "L'evenement a ete marque comme complete.");
+    this.updateEventStatus(event, 'COMPLETED', "L'événement a été marqué comme complété.");
   }
 
   deleteEvent(event: Event): void {
     const confirmed = window.confirm(
-      `Supprimer l'evenement "${event.title || 'sans titre'}" ?`
+      `Supprimer l'événement "${event.title || 'sans titre'}" ?`
     );
 
     if (!confirmed) {
@@ -147,7 +149,7 @@ export class EventListComponent implements OnInit, OnDestroy {
       .subscribe({
         error: (error: HttpErrorResponse) => {
           this.errorSubject.next(
-            this.getErrorMessage(error, "La suppression de l'evenement a echoue.")
+            this.getErrorMessage(error, "La suppression de l'événement a échoué.")
           );
         }
       });
@@ -189,28 +191,16 @@ export class EventListComponent implements OnInit, OnDestroy {
   }
 
   canPublish(event: Event): boolean {
-    if (event.status === 'PUBLISHED') {
-      return false;
-    }
-
-    if (event.status === 'CANCELLED') {
-      return true;
-    }
-
-    if (event.status === 'COMPLETED') {
-      return this.hasFutureEndDate(event);
-    }
-
-    return this.getDisplayStatus(event) === 'DRAFT';
+    return !this.isCancelled(event) && this.getDisplayStatus(event) === 'DRAFT';
   }
 
   canEdit(event: Event): boolean {
-    return true;
+    return !this.isCancelled(event);
   }
 
   canCancel(event: Event): boolean {
     const displayStatus = this.getDisplayStatus(event);
-    return displayStatus !== 'CANCELLED' && displayStatus !== 'COMPLETED';
+    return displayStatus !== 'COMPLETED' && displayStatus !== 'CANCELLED';
   }
 
   canComplete(event: Event): boolean {
@@ -218,13 +208,21 @@ export class EventListComponent implements OnInit, OnDestroy {
     return displayStatus !== 'COMPLETED' && displayStatus !== 'CANCELLED';
   }
 
+  canViewParticipations(event: Event): boolean {
+    return !this.isCancelled(event);
+  }
+
+  canRepublish(event: Event): boolean {
+    return !this.isCancelled(event) && this.getDisplayStatus(event) === 'COMPLETED';
+  }
+
   getStatusActionHint(event: Event): string | null {
-    if (event.status === 'COMPLETED' && !this.hasFutureEndDate(event)) {
-      return 'Modifiez la date de fin pour pouvoir republier cet événement.';
+    if (this.isCancelled(event)) {
+      return "Cet événement annulé est verrouillé : modification, publication et participations indisponibles.";
     }
 
-    if (event.status === 'CANCELLED') {
-      return "Cet événement annulé peut être modifié ou republié.";
+    if (this.canRepublish(event)) {
+      return "Cet événement terminé peut être réutilisé via Republier pour mettre à jour ses dates.";
     }
 
     return null;
@@ -270,16 +268,13 @@ export class EventListComponent implements OnInit, OnDestroy {
         },
         error: (error: HttpErrorResponse) => {
           this.errorSubject.next(
-            this.getErrorMessage(error, "La mise a jour du statut a echoue.")
+            this.getErrorMessage(error, "La mise à jour du statut a échoué.")
           );
         }
       });
   }
 
-  private getErrorMessage(
-    error: HttpErrorResponse,
-    fallbackMessage: string
-  ): string {
+  private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {
     if (typeof error.error === 'string' && error.error.trim()) {
       return error.error;
     }
@@ -291,8 +286,7 @@ export class EventListComponent implements OnInit, OnDestroy {
     return fallbackMessage;
   }
 
-  private hasFutureEndDate(event: Event): boolean {
-    const endDate = new Date(event.endDatetime);
-    return !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
+  private isCancelled(event: Event): boolean {
+    return event.status === 'CANCELLED';
   }
 }
