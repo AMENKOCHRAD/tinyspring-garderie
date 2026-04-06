@@ -12,6 +12,7 @@ public record DemandeTransportResponse(
         Long parentId,
         String parentNom,
         Long trajetId,
+        LocalDate dateDemande,
         String pointDepart,
         String destination,
         LocalDate dateTrajet,

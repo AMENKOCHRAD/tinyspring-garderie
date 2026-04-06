@@ -14,6 +14,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "demandes_transport")
 public class DemandeTransport {
@@ -34,6 +36,9 @@ public class DemandeTransport {
     @JoinColumn(name = "trajet_id", nullable = false)
     private Trajet trajet;
 
+    @Column(nullable = false)
+    private LocalDate dateDemande = LocalDate.now();
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutDemandeTransport statut = StatutDemandeTransport.EN_ATTENTE;
@@ -50,6 +55,7 @@ public class DemandeTransport {
         this.trajet = trajet;
         this.statut = statut;
         this.pointRamassage = pointRamassage;
+        this.dateDemande = LocalDate.now();
     }
 
     public Long getId() {
@@ -78,6 +84,14 @@ public class DemandeTransport {
 
     public void setTrajet(Trajet trajet) {
         this.trajet = trajet;
+    }
+
+    public LocalDate getDateDemande() {
+        return dateDemande;
+    }
+
+    public void setDateDemande(LocalDate dateDemande) {
+        this.dateDemande = dateDemande;
     }
 
     public StatutDemandeTransport getStatut() {

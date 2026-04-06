@@ -1,0 +1,36 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import url('./assets/kidkinder/style.css');
+@import url('./assets/kidkinder/lib/flaticon/font/flaticon.css');
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: #f8f9fa;
+}
+
+.navbar-collapse.show {
+  display: block !important;
+}
+
+.nav-item.nav-link,
+.btn,
+a {
+  cursor: pointer;
+}
+
+.page-header {
+  min-height: 300px;
+}
+
+.portal-card {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(18, 38, 63, 0.08);
+}
+
+.portal-table th {
+  white-space: nowrap;
+}

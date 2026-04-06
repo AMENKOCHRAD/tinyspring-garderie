@@ -5,6 +5,9 @@ import com.tinyspring.garderie.dto.transport.DemandeTransportResponse;
 import com.tinyspring.garderie.dto.transport.EnfantTrajetResponse;
 import com.tinyspring.garderie.dto.transport.TrajetDetailsResponse;
 import com.tinyspring.garderie.dto.transport.TraitementDemandeTransportResponse;
+import com.tinyspring.garderie.dto.transport.UpdateDemandeTransportRequest;
+import com.tinyspring.garderie.dto.transport.parent.ParentEnfantResponse;
+import com.tinyspring.garderie.dto.transport.parent.ParentTrajetResponse;
 import com.tinyspring.garderie.entity.RoleName;
 import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.entity.transport.AffectationTransport;
@@ -93,6 +96,47 @@ public class TransportServiceImpl implements TransportService {
     }
 
     @Override
+    public DemandeTransportResponse modifierDemandeTransport(Long parentId, Long demandeId, UpdateDemandeTransportRequest request) {
+        User parent = getUser(parentId);
+        DemandeTransport demande = getDemande(demandeId);
+
+        if (!demande.getParent().getId().equals(parent.getId())) {
+            throw new BusinessException("Le parent connecte ne peut modifier que ses propres demandes");
+        }
+        if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE) {
+            throw new BusinessException("Seules les demandes en attente peuvent etre modifiees");
+        }
+
+        Enfant enfant = enfantRepository.findByIdAndParentId(request.getEnfantId(), parentId)
+                .orElseThrow(() -> new BusinessException("Cet enfant n'appartient pas au parent connecte"));
+        Trajet trajet = getTrajet(request.getTrajetId());
+        if (!trajet.getDateTrajet().isAfter(LocalDate.now())) {
+            throw new BusinessException("Le parent ne peut modifier une demande que pour un trajet a partir de demain");
+        }
+
+        demande.setEnfant(enfant);
+        demande.setTrajet(trajet);
+        demande.setPointRamassage(request.getPointRamassage());
+        logger.info("Demande de transport modifiee. demandeId={}, parentId={}", demandeId, parentId);
+
+        return toDemandeResponse(demandeTransportRepository.save(demande));
+    }
+
+    @Override
+    public void supprimerDemandeTransport(Long parentId, Long demandeId) {
+        DemandeTransport demande = getDemande(demandeId);
+        if (!demande.getParent().getId().equals(parentId)) {
+            throw new BusinessException("Le parent connecte ne peut supprimer que ses propres demandes");
+        }
+        if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE) {
+            throw new BusinessException("Seules les demandes en attente peuvent etre supprimees");
+        }
+
+        demandeTransportRepository.delete(demande);
+        logger.info("Demande de transport supprimee. demandeId={}, parentId={}", demandeId, parentId);
+    }
+
+    @Override
     @Transactional
     public List<DemandeTransportResponse> listerToutesLesDemandes() {
         return demandeTransportRepository.findAllByOrderByIdDesc()
@@ -107,6 +151,29 @@ public class TransportServiceImpl implements TransportService {
         return demandeTransportRepository.findByParentIdOrderByIdDesc(parentId)
                 .stream()
                 .map(this::toDemandeResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<ParentTrajetResponse> listerTrajetsDisponibles() {
+        return trajetRepository.findAll().stream()
+                .filter(trajet -> trajet.getDateTrajet() != null && !trajet.getDateTrajet().isBefore(LocalDate.now().plusDays(1)))
+                .map(trajet -> new ParentTrajetResponse(
+                        trajet.getId(),
+                        trajet.getPointDepart(),
+                        trajet.getDestination(),
+                        trajet.getDateTrajet(),
+                        trajet.getHeureDepart()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<ParentEnfantResponse> listerEnfantsParParent(Long parentId) {
+        return enfantRepository.findByParentId(parentId).stream()
+                .map(enfant -> new ParentEnfantResponse(enfant.getId(), getNomCompletEnfant(enfant)))
                 .toList();
     }
 
@@ -236,6 +303,7 @@ public class TransportServiceImpl implements TransportService {
                 demande.getParent().getId(),
                 demande.getParent().getNom(),
                 demande.getTrajet().getId(),
+                demande.getDateDemande(),
                 demande.getTrajet().getPointDepart(),
                 demande.getTrajet().getDestination(),
                 demande.getTrajet().getDateTrajet(),
