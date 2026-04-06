@@ -62,6 +62,7 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item',
         icon: 'feather icon-users'
       },
+      
       {
         id: 'enfants',
         title: 'Gestion des enfants',
@@ -95,6 +96,14 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-message-circle'
       },
       {
+        id: 'reclamations',
+        title: 'Réclamations',
+        type: 'item',
+        url: '/reclamations',
+        classes: 'nav-item',
+        icon: 'feather icon-alert-circle'
+      },
+      {
         id: 'rh',
         title: 'RH & Formations',
         type: 'item',
@@ -118,6 +127,7 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item',
         icon: 'feather icon-navigation'
       }
+      
     ]
   }
 ];

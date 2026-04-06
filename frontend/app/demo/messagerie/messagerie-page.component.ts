@@ -12,13 +12,18 @@ import { User } from 'src/app/models/user.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="card">
-      <div class="card-body">
-        <h2>Gestion Messagerie interne</h2>
+    <div class="messagerie-page">
+      <div class="messagerie-wrapper">
 
-        <div class="card mb-4">
+        <div class="page-header">
+          <h2>Gestion Messagerie interne</h2>
+          <p>Créer, consulter, modifier et supprimer des conversations</p>
+        </div>
+
+        <!-- CREATE CONVERSATION -->
+        <div class="card shadow-sm border-0 mb-4">
           <div class="card-body">
-            <h4>Créer une conversation</h4>
+            <h4 class="mb-3">Créer une conversation</h4>
 
             <div *ngIf="createError" class="alert alert-danger mt-2">
               {{ createError }}
@@ -87,59 +92,184 @@ import { User } from 'src/app/models/user.model';
           </div>
         </div>
 
-        <p>Liste de mes conversations</p>
+        <!-- UPDATE CONVERSATION -->
+        <div class="card shadow-sm border-0 mb-4" *ngIf="editingConversationId !== null">
+          <div class="card-body">
+            <h4 class="mb-3">Modifier la conversation</h4>
 
-        <div *ngIf="loading" class="mt-3">
-          Chargement des conversations...
+            <div *ngIf="updateError" class="alert alert-danger">
+              {{ updateError }}
+            </div>
+
+            <div *ngIf="updateSuccess" class="alert alert-success">
+              {{ updateSuccess }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Nouveau sujet</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="editedSubject"
+                name="editedSubject"
+                placeholder="Modifier le sujet"
+              />
+            </div>
+
+            <button class="btn btn-success me-2" (click)="updateConversation()">
+              Enregistrer
+            </button>
+
+            <button class="btn btn-secondary" (click)="cancelEditConversation()">
+              Annuler
+            </button>
+          </div>
         </div>
 
-        <div *ngIf="error" class="alert alert-danger mt-3">
-          {{ error }}
-        </div>
+        <!-- LIST CONVERSATIONS -->
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h4 class="mb-3">Liste de mes conversations</h4>
 
-        <div *ngIf="!loading && conversations.length === 0" class="alert alert-info mt-3">
-          Aucune conversation trouvée.
-        </div>
+            <div *ngIf="loading" class="mt-3">
+              Chargement des conversations...
+            </div>
 
-        <div class="mt-3" *ngIf="conversations.length > 0">
-          <div
-            class="card mb-3"
-            *ngFor="let conversation of conversations"
-            style="cursor: pointer;"
-            (click)="goToConversation(conversation.id)"
-          >
-            <div class="card-body">
-              <h5 class="mb-2">{{ conversation.subject }}</h5>
+            <div *ngIf="error" class="alert alert-danger mt-3">
+              {{ error }}
+            </div>
 
-              <p class="mb-1">
-                <strong>Type :</strong> {{ conversation.type }}
-              </p>
+            <div *ngIf="deleteSuccess" class="alert alert-success mt-3">
+              {{ deleteSuccess }}
+            </div>
 
-              <p class="mb-1">
-                <strong>Statut :</strong> {{ conversation.status }}
-              </p>
+            <div *ngIf="!loading && conversations.length === 0" class="alert alert-info mt-3">
+              Aucune conversation trouvée.
+            </div>
 
-              <p class="mb-1">
-                <strong>Parent :</strong> {{ conversation.parent?.nom }}
-              </p>
+            <div class="conversation-list" *ngIf="conversations.length > 0">
+              <div *ngFor="let conv of conversations" class="conversation-card">
+                <div class="conversation-clickable" (click)="goToConversation(conv.id)">
+                  <h5 class="mb-2">{{ conv.subject }}</h5>
+                  <p class="mb-1"><strong>Type :</strong> {{ conv.type }}</p>
+                  <p class="mb-1"><strong>Statut :</strong> {{ conv.status }}</p>
+                  <p class="mb-1"><strong>Parent :</strong> {{ conv.parent?.nom }}</p>
+                  <p class="mb-1" *ngIf="conv.admin"><strong>Admin :</strong> {{ conv.admin.nom }}</p>
+                  <p class="mb-1" *ngIf="conv.animatrice"><strong>Animatrice :</strong> {{ conv.animatrice.nom }}</p>
+                  <p class="mb-0 text-muted">
+                    Créée le : {{ conv.createdAt | date:'short' }}
+                  </p>
+                </div>
 
-              <p class="mb-1" *ngIf="conversation.admin">
-                <strong>Admin :</strong> {{ conversation.admin.nom }}
-              </p>
+                <div class="conversation-actions">
+                  <button
+                    class="btn btn-sm btn-warning me-2"
+                    (click)="editConversation(conv); $event.stopPropagation()"
+                  >
+                    Modifier
+                  </button>
 
-              <p class="mb-1" *ngIf="conversation.animatrice">
-                <strong>Animatrice :</strong> {{ conversation.animatrice.nom }}
-              </p>
-
-              <p class="mb-0 text-muted">
-                Créée le : {{ conversation.createdAt | date:'short' }}
-              </p>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    (click)="deleteConversation(conv.id); $event.stopPropagation()"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .messagerie-page {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .messagerie-wrapper {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 20px;
+    }
+
+    .page-header h2 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 700;
+      color: #212529;
+    }
+
+    .page-header p {
+      margin: 6px 0 0 0;
+      color: #6c757d;
+      font-size: 16px;
+    }
+
+    .conversation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .conversation-card {
+      background: #ffffff;
+      border: 1px solid #e9ecef;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .conversation-clickable {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .conversation-clickable h5 {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .conversation-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 180px;
+    }
+
+    @media (max-width: 768px) {
+      .messagerie-page {
+        padding: 12px;
+      }
+
+      .conversation-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .conversation-actions {
+        width: 100%;
+        justify-content: flex-start;
+        min-width: auto;
+      }
+    }
+  `]
 })
 export class MessageriePageComponent implements OnInit {
   conversations: Conversation[] = [];
@@ -147,14 +277,23 @@ export class MessageriePageComponent implements OnInit {
 
   loading = false;
   error = '';
+
   createError = '';
   createSuccess = '';
+
+  updateError = '';
+  updateSuccess = '';
+
+  deleteSuccess = '';
 
   selectedRole = '';
 
   subjectTouched = false;
   readonly subjectMinLength = 5;
   readonly subjectMaxLength = 100;
+
+  editingConversationId: number | null = null;
+  editedSubject = '';
 
   newConversation = {
     subject: '',
@@ -172,10 +311,6 @@ export class MessageriePageComponent implements OnInit {
 
   get subjectValue(): string {
     return this.newConversation.subject || '';
-  }
-
-  get subjectLength(): number {
-    return this.subjectValue.trim().length;
   }
 
   get subjectError(): string {
@@ -211,6 +346,7 @@ export class MessageriePageComponent implements OnInit {
   loadConversations(): void {
     this.loading = true;
     this.error = '';
+    this.deleteSuccess = '';
 
     this.messagerieService.getMyConversations().subscribe({
       next: (data) => {
@@ -314,6 +450,71 @@ export class MessageriePageComponent implements OnInit {
         } else {
           this.createError = 'Erreur lors de la création de la conversation.';
         }
+      }
+    });
+  }
+
+  editConversation(conv: Conversation): void {
+    this.editingConversationId = conv.id;
+    this.editedSubject = conv.subject;
+    this.updateError = '';
+    this.updateSuccess = '';
+  }
+
+  cancelEditConversation(): void {
+    this.editingConversationId = null;
+    this.editedSubject = '';
+    this.updateError = '';
+    this.updateSuccess = '';
+  }
+
+  updateConversation(): void {
+    this.updateError = '';
+    this.updateSuccess = '';
+
+    if (!this.editedSubject.trim()) {
+      this.updateError = 'Le sujet est obligatoire.';
+      return;
+    }
+
+    if (this.editingConversationId === null) {
+      this.updateError = 'Aucune conversation sélectionnée.';
+      return;
+    }
+
+    this.messagerieService.updateConversation(this.editingConversationId, {
+      subject: this.editedSubject.trim()
+    }).subscribe({
+      next: () => {
+        this.updateSuccess = 'Conversation modifiée avec succès.';
+        this.editingConversationId = null;
+        this.editedSubject = '';
+        this.loadConversations();
+      },
+      error: (err) => {
+        console.log('Erreur update conversation = ', err);
+        this.updateError = 'Impossible de modifier la conversation.';
+      }
+    });
+  }
+
+  deleteConversation(id: number): void {
+    this.error = '';
+    this.deleteSuccess = '';
+
+    const confirmDelete = confirm('Supprimer cette conversation ?');
+    if (!confirmDelete) {
+      return;
+    }
+
+    this.messagerieService.deleteConversation(id).subscribe({
+      next: () => {
+        this.deleteSuccess = 'Conversation supprimée avec succès.';
+        this.loadConversations();
+      },
+      error: (err) => {
+        console.log('Erreur suppression conversation = ', err);
+        this.error = 'Impossible de supprimer la conversation.';
       }
     });
   }

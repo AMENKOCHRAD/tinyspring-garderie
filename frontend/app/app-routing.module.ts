@@ -69,6 +69,13 @@ const routes: Routes = [
           import('./demo/messagerie/conversation-detail.component').then(
             (c) => c.ConversationDetailComponent
           )
+      },
+      {
+        path: 'reclamations',
+        loadComponent: () =>
+          import('./demo/reclamation/reclamation-page.component').then(
+            (c) => c.ReclamationPageComponent
+          )
       }
     ]
   },
