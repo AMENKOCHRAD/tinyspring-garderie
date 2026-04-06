@@ -95,13 +95,38 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-message-circle'
       },
       {
-        id: 'rh',
-        title: 'RH & Formations',
-        type: 'item',
-        url: '/rh-formations',
-        classes: 'nav-item',
-        icon: 'feather icon-book'
-      },
+  id: 'rh',
+  title: 'RH & Formations',
+  type: 'collapse',
+  classes: 'nav-item',
+  icon: 'feather icon-book',
+  children: [
+    {
+      id: 'rh-animatrices',
+      title: 'Animatrices',
+      type: 'item',
+      url: '/rh/animatrices',
+      classes: 'nav-item',
+      icon: 'feather icon-user'
+    },
+    {
+      id: 'rh-absences-conges',
+      title: 'Absences & Congés',
+      type: 'item',
+      url: '/rh/absences-conges',
+      classes: 'nav-item',
+      icon: 'feather icon-calendar'
+    },
+    {
+      id: 'rh-formations',
+      title: 'Formations',
+      type: 'item',
+      url: '/rh/formations',
+      classes: 'nav-item',
+      icon: 'feather icon-award'
+    }
+  ]
+},
       {
         id: 'boutique',
         title: 'Boutique en ligne',

@@ -1,0 +1,111 @@
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">Absences & Congés</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span>
+        <span class="separator">/</span>
+        <span>RH & Formations</span>
+        <span class="separator">/</span>
+        <span class="active">Absences & Congés</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card orange">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByStatut('EN_ATTENTE') }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByStatut('APPROUVE') }}</span>
+        <span class="stat-label">Approuvées</span>
+      </div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">❌</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByStatut('REFUSE') }}</span>
+        <span class="stat-label">Refusées</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <select class="filter-select" [(ngModel)]="filterStatut">
+      <option value="">Tous les statuts</option>
+      <option value="EN_ATTENTE">En attente</option>
+      <option value="APPROUVE">Approuvé</option>
+      <option value="REFUSE">Refusé</option>
+    </select>
+  </div>
+
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Animatrice</th>
+            <th>Type</th>
+            <th>Date début</th>
+            <th>Date fin</th>
+            <th>Nb jours</th>
+            <th>Motif</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ac of getFilteredAbsenceConges(); let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>
+              <div class="animatrice-info">
+                <div class="avatar">
+                  {{ ac.animatricePrenom?.[0] }}{{ ac.animatriceNom?.[0] }}
+                </div>
+                <span>{{ ac.animatricePrenom }} {{ ac.animatriceNom }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-type">{{ ac.type | titlecase }}</span>
+            </td>
+            <td>{{ ac.dateDebut }}</td>
+            <td>{{ ac.dateFin }}</td>
+            <td>{{ ac.nbJours }} j</td>
+            <td>{{ ac.motif || '—' }}</td>
+            <td>
+              <span class="badge"
+                [ngClass]="{
+                  'badge-waiting': ac.statut === 'EN_ATTENTE',
+                  'badge-active': ac.statut === 'APPROUVE',
+                  'badge-inactive': ac.statut === 'REFUSE'
+                }">
+                {{ ac.statut }}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn-validate" (click)="valider(ac.id!)"
+                  *ngIf="ac.statut === 'EN_ATTENTE'" title="Valider">✅</button>
+                <button class="btn-refuse" (click)="refuser(ac.id!)"
+                  *ngIf="ac.statut === 'EN_ATTENTE'" title="Refuser">❌</button>
+                <button class="btn-delete" (click)="supprimer(ac.id!)" title="Supprimer">🗑️</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="getFilteredAbsenceConges().length === 0">
+            <td colspan="9" class="empty-state">Aucune demande trouvée</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

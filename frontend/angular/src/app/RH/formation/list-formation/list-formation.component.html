@@ -1,0 +1,101 @@
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">Formations</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span>
+        <span class="separator">/</span>
+        <span>RH & Formations</span>
+        <span class="separator">/</span>
+        <span class="active">Formations</span>
+      </nav>
+    </div>
+    <button class="btn-add" routerLink="/rh/formations/new">
+      + Ajouter une formation
+    </button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-icon">📚</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ formations.length }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByType('INTERNE') }}</span>
+        <span class="stat-label">Internes</span>
+      </div>
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-icon">🌐</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByType('EXTERNE') }}</span>
+        <span class="stat-label">Externes</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <input type="text" class="search-input"
+      placeholder="Rechercher par titre, formateur..."
+      [(ngModel)]="searchTerm" />
+    <select class="filter-select" [(ngModel)]="filterType">
+      <option value="">Tous les types</option>
+      <option value="INTERNE">Interne</option>
+      <option value="EXTERNE">Externe</option>
+    </select>
+  </div>
+
+  <div class="cards-grid">
+    <div class="formation-card" *ngFor="let formation of getFilteredFormations()">
+      <div class="card-header" [ngClass]="formation.type === 'INTERNE' ? 'header-purple' : 'header-teal'">
+        <span class="card-type">{{ formation.type }}</span>
+        <div class="card-actions">
+          <button class="btn-edit" [routerLink]="['/rh/formations/edit', formation.id]">✏️</button>
+          <button class="btn-delete" (click)="deleteFormation(formation.id!)">🗑️</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3 class="card-title">{{ formation.titre }}</h3>
+        <p class="card-description">{{ formation.description || 'Aucune description' }}</p>
+        <div class="card-meta">
+          <div class="meta-item">
+            <span class="meta-icon">👤</span>
+            <span>{{ formation.formateur || '—' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-icon">📅</span>
+            <span>{{ formation.dateDebut || '—' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-icon">👥</span>
+            <span>{{ formation.placesMax || 0 }} places</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="badge"
+            [ngClass]="{
+              'badge-inscrite': formation.statutInscription === 'INSCRITE',
+              'badge-encours': formation.statutInscription === 'EN_COURS',
+              'badge-terminee': formation.statutInscription === 'TERMINEE'
+            }">
+            {{ formation.statutInscription }}
+          </span>
+          <span class="participants">
+            {{ formation.animatrices?.length || 0 }} inscrit(es)
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="getFilteredFormations().length === 0">
+      Aucune formation trouvée
+    </div>
+  </div>
+
+</div>

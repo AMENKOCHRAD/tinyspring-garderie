@@ -1,0 +1,117 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">Gestion des Animatrices</h2>
+      <nav class="breadcrumb-nav">
+        <span class="breadcrumb-home">🏠</span>
+        <span class="separator">/</span>
+        <span>RH & Formations</span>
+        <span class="separator">/</span>
+        <span class="active">Animatrices</span>
+      </nav>
+    </div>
+    <button class="btn-add" routerLink="/rh/animatrices/new">
+      + Ajouter une animatrice
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-icon">👥</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ animatrices.length }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getActiveCount() }}</span>
+        <span class="stat-label">Actives</span>
+      </div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">⛔</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ getInactiveCount() }}</span>
+        <span class="stat-label">Inactives</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Rechercher par nom, prénom, email..."
+      [(ngModel)]="searchTerm"
+    />
+    <select class="filter-select" [(ngModel)]="filterStatut">
+      <option value="">Tous les statuts</option>
+      <option value="ACTIVE">Active</option>
+      <option value="INACTIVE">Inactive</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Animatrice</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>Spécialité</th>
+            <th>Date embauche</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let animatrice of getFilteredAnimatrices(); let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>
+              <div class="animatrice-info">
+                <div class="avatar">
+                  {{ animatrice.prenom[0] }}{{ animatrice.nom[0] }}
+                </div>
+                <div>
+                  <div class="animatrice-name">{{ animatrice.prenom }} {{ animatrice.nom }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ animatrice.email }}</td>
+            <td>{{ animatrice.telephone || '—' }}</td>
+            <td>{{ animatrice.specialite || '—' }}</td>
+            <td>{{ animatrice.dateEmbauche || '—' }}</td>
+            <td>
+              <span class="badge" [ngClass]="animatrice.statut === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
+                {{ animatrice.statut }}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn-edit" [routerLink]="['/rh/animatrices/edit', animatrice.id]">
+                  ✏️
+                </button>
+                <button class="btn-delete" (click)="deleteAnimatrice(animatrice.id!)">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="getFilteredAnimatrices().length === 0">
+            <td colspan="8" class="empty-state">Aucune animatrice trouvée</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,208 @@
+.page-wrapper {
+  padding: 24px;
+  background: #f4f6f9;
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 6px 0;
+}
+
+.breadcrumb-nav {
+  font-size: 13px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  .active { color: #4680ff; font-weight: 500; }
+}
+
+.btn-add {
+  background: linear-gradient(135deg, #4680ff, #6c63ff);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover { opacity: 0.9; }
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  .stat-icon { font-size: 32px; }
+  .stat-info { display: flex; flex-direction: column; }
+  .stat-number { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+
+  &.blue { border-left: 4px solid #4680ff; .stat-number { color: #4680ff; } }
+  &.purple { border-left: 4px solid #6c63ff; .stat-number { color: #6c63ff; } }
+  &.teal { border-left: 4px solid #2ed8b6; .stat-number { color: #2ed8b6; } }
+}
+
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+  &:focus { border-color: #4680ff; }
+}
+
+.filter-select {
+  padding: 10px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+  cursor: pointer;
+  &:focus { border-color: #4680ff; }
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.formation-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  transition: transform 0.2s;
+  &:hover { transform: translateY(-2px); }
+}
+
+.card-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &.header-purple { background: linear-gradient(135deg, #6c63ff, #4680ff); }
+  &.header-teal { background: linear-gradient(135deg, #2ed8b6, #1d9e75); }
+
+  .card-type {
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 6px;
+
+    button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      &:hover { background: rgba(255,255,255,0.35); }
+    }
+  }
+}
+
+.card-body { padding: 20px; }
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 8px 0;
+}
+
+.card-description {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555;
+
+  .meta-icon { font-size: 14px; }
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.badge-inscrite { background: #eef2ff; color: #4680ff; }
+  &.badge-encours { background: #fff8e6; color: #f0a500; }
+  &.badge-terminee { background: #e8faf5; color: #2ed8b6; }
+}
+
+.participants {
+  font-size: 12px;
+  color: #888;
+}
+
+.empty-state {
+  text-align: center;
+  color: #aaa;
+  padding: 40px;
+  font-size: 15px;
+  grid-column: 1 / -1;
+}
