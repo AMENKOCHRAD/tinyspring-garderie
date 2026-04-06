@@ -10,8 +10,14 @@
     <app-events-module-switcher />
 
     <div class="section-toolbar">
-      <button type="button" class="btn btn-primary add-button" (click)="goToNewEvent()">
-        Ajouter un événement
+      <button
+        type="button"
+        class="btn btn-primary add-button icon-only-add"
+        (click)="goToNewEvent()"
+        title="Ajouter un événement"
+        aria-label="Ajouter un événement"
+      >
+        <i class="feather icon-plus" aria-hidden="true"></i>
       </button>
     </div>
 

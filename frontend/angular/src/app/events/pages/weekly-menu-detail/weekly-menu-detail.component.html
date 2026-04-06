@@ -1,0 +1,82 @@
+@if (vm$ | async; as vm) {
+  <section class="menu-detail-page">
+    <app-events-module-switcher />
+
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger" role="alert">
+        {{ vm.errorMessage }}
+      </div>
+    }
+
+    @if (vm.loading) {
+      <div class="state-card">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="m-t-15 m-b-0">Chargement du menu...</p>
+      </div>
+    } @else if (vm.menu) {
+        <div class="detail-toolbar">
+          <div>
+          <span class="status-badge" [ngClass]="getStatusClass(vm.menu.status)">{{ formatStatus(vm.menu.status) }}</span>
+          <h2>{{ vm.menu.title }}</h2>
+          <p>{{ vm.menu.weekStartDate | date: 'dd/MM/yyyy' }} - {{ vm.menu.weekEndDate | date: 'dd/MM/yyyy' }}</p>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary" (click)="goToEdit(vm.menu.id)">
+          Éditer
+        </button>
+      </div>
+
+      <div class="day-grid">
+        @for (day of vm.menu.dailyMenus; track day.id) {
+          <app-card>
+            <div class="day-card-header">
+              <div>
+                <h3>{{ formatDayOfWeek(day.dayOfWeek) }}</h3>
+                <p>{{ day.menuDate | date: 'dd/MM/yyyy' }}</p>
+              </div>
+            </div>
+
+            <div class="meal-sections">
+              @for (section of mealSections; track section.key) {
+                <div class="meal-section">
+                  <h4>{{ section.label }}</h4>
+
+                  @if (getDishesByCategory(day, section.key).length) {
+                    <div class="dish-stack">
+                      @for (dish of getDishesByCategory(day, section.key); track dish.id) {
+                        <article class="dish-card">
+                          @if (getDishPhotoUrl(dish.photoUrl); as photoUrl) {
+                            <img class="dish-photo" [src]="photoUrl" alt="Photo du plat" />
+                          }
+
+                          <div class="dish-body">
+                            <strong>{{ dish.name }}</strong>
+                            @if (dish.description) {
+                              <p>{{ dish.description }}</p>
+                            }
+                            @if (getAllergenBadges(dish.allergens).length) {
+                              <div class="allergen-row">
+                                @for (allergen of getAllergenBadges(dish.allergens); track allergen) {
+                                  <span class="allergen-badge">
+                                    <i class="feather icon-alert-triangle" aria-hidden="true"></i>
+                                    <span>{{ allergen }}</span>
+                                  </span>
+                                }
+                              </div>
+                            }
+                          </div>
+                        </article>
+                      }
+                    </div>
+                  } @else {
+                    <div class="empty-meal">Aucun plat</div>
+                  }
+                </div>
+              }
+            </div>
+          </app-card>
+        }
+      </div>
+    }
+  </section>
+}

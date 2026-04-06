@@ -1,0 +1,36 @@
+package com.tinyspring.garderie.controller.Events;
+
+import com.tinyspring.garderie.dto.Events.DailyMenuRequest;
+import com.tinyspring.garderie.dto.Events.DailyMenuResponse;
+import com.tinyspring.garderie.service.Events.DailyMenuService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/menus/daily")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
+public class DailyMenuRestController {
+    private final DailyMenuService dailyMenuService;
+
+    @PostMapping
+    public ResponseEntity<DailyMenuResponse> create(@Valid @RequestBody DailyMenuRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(dailyMenuService.create(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<DailyMenuResponse> update(@PathVariable Long id,
+                                                    @Valid @RequestBody DailyMenuRequest request) {
+        return ResponseEntity.ok(dailyMenuService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        dailyMenuService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}

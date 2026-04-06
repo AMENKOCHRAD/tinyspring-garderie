@@ -1,0 +1,81 @@
+@if (vm$ | async; as vm) {
+  <section class="menus-page">
+    @if (toast$ | async; as toast) {
+      <div class="menu-toast" [ngClass]="toast.kind">
+        <span>{{ toast.text }}</span>
+        <button type="button" class="toast-close" (click)="dismissToast()">×</button>
+      </div>
+    }
+
+    <app-events-module-switcher />
+
+    <div class="section-toolbar">
+      <button type="button" class="btn btn-primary add-button" (click)="goToCreate()">
+        <i class="feather icon-plus" aria-hidden="true"></i>
+        <span>Créer un menu</span>
+      </button>
+    </div>
+
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger" role="alert">
+        {{ vm.errorMessage }}
+      </div>
+    }
+
+    <div class="menus-panel">
+      @if (vm.loading) {
+        <div class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="m-t-15 m-b-0">Chargement des menus...</p>
+        </div>
+      } @else if (!vm.menus.length) {
+        <div class="state-container empty-state">
+          <p class="m-b-15">Aucun menu hebdomadaire disponible.</p>
+          <button type="button" class="btn btn-outline-primary" (click)="goToCreate()">
+            Créer le premier menu
+          </button>
+        </div>
+      } @else {
+        <div class="menu-grid">
+          @for (menu of vm.menus; track menu.id) {
+            <article class="menu-card">
+              <div class="menu-card-header">
+                <span class="status-badge" [ngClass]="getStatusClass(menu.status)">
+                  {{ formatStatus(menu.status) }}
+                </span>
+                <span class="menu-meta">{{ getDaysLabel(menu) }}</span>
+              </div>
+
+              <div class="menu-card-body">
+                <h3>{{ menu.title || 'Menu sans titre' }}</h3>
+                <p class="menu-range">
+                  {{ menu.weekStartDate | date: 'dd/MM/yyyy' }} - {{ menu.weekEndDate | date: 'dd/MM/yyyy' }}
+                </p>
+                @if (menu.templateName) {
+                  <p class="template-name">Modèle : {{ menu.templateName }}</p>
+                }
+              </div>
+
+              <div class="menu-card-footer">
+                <button type="button" class="action-btn" (click)="goToDetails(menu.id)">
+                  Voir
+                </button>
+                <button type="button" class="action-btn" (click)="goToEdit(menu.id)">
+                  Éditer
+                </button>
+                @if (menu.status === 'TEMPLATE') {
+                  <button type="button" class="action-btn accent" (click)="duplicateMenu(menu)">
+                    Dupliquer
+                  </button>
+                }
+                <button type="button" class="action-btn danger" (click)="deleteMenu(menu)">
+                  Supprimer
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}

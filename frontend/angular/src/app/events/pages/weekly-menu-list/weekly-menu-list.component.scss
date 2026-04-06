@@ -1,0 +1,156 @@
+.menus-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.menu-toast {
+  align-items: center;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.95rem 1rem;
+}
+
+.menu-toast.success {
+  background: #eefaf2;
+  border: 1px solid #bde3ca;
+  color: #0f8a52;
+}
+
+.menu-toast.error {
+  background: #fff3f3;
+  border: 1px solid #f2c3c3;
+  color: #d63b4a;
+}
+
+.toast-close {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 1.2rem;
+}
+
+.section-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.add-button {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 0.55rem;
+}
+
+.menus-panel {
+  background: #fff;
+  border: 1px solid #e6ebf3;
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+.state-container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 240px;
+  text-align: center;
+}
+
+.empty-state {
+  border: 1px dashed #dfe5ef;
+  border-radius: 18px;
+  padding: 2rem;
+}
+
+.menu-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.menu-card {
+  background: #fff;
+  border: 1px solid #e6ebf3;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.2rem;
+}
+
+.menu-card-header,
+.menu-card-footer {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.menu-card-body h3 {
+  color: #1f2a44;
+  font-size: 1.2rem;
+  margin: 0 0 0.45rem;
+}
+
+.menu-range,
+.template-name,
+.menu-meta {
+  color: #6b7280;
+  margin: 0;
+}
+
+.status-badge {
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.45rem 0.8rem;
+}
+
+.status-draft {
+  background: rgba(234, 88, 12, 0.92);
+}
+
+.status-published {
+  background: rgba(21, 128, 61, 0.92);
+}
+
+.status-template {
+  background: rgba(55, 48, 163, 0.92);
+}
+
+.action-btn {
+  background: #fff;
+  border: 1px solid #d8e1ee;
+  border-radius: 999px;
+  color: #1f2a44;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+}
+
+.action-btn.accent {
+  border-color: rgba(55, 48, 163, 0.24);
+  color: #3730a3;
+}
+
+.action-btn.danger {
+  border-color: rgba(220, 53, 69, 0.24);
+  color: #d63b4a;
+}
+
+@media (max-width: 1199.98px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -117,6 +117,7 @@ export class EventDetailComponent {
   );
 
   publishing = false;
+  actionRegistrationId: number | null = null;
 
   publishEvent(event: Event): void {
     if (!this.canPublish(event)) {
@@ -211,11 +212,11 @@ export class EventDetailComponent {
 
   getStatusActionHint(event: Event): string | null {
     if (this.isCancelled(event)) {
-      return "Cet événement annulé est verrouillé : modification, publication et participations indisponibles.";
+      return "Cet événement annulé est donc verrouillé ";
     }
 
     if (this.canRepublish(event)) {
-      return "Utilisez Republier pour rouvrir le formulaire, modifier les dates puis republier l'événement.";
+      return "Pour republier cet événement, cliquez sur le bouton de modification, apportez les changements souhaités (par exemple, une nouvelle date) puis publiez à nouveau.";
     }
 
     return null;
@@ -261,6 +262,56 @@ export class EventDetailComponent {
 
   getEventPhotoUrl(photoEvent: string | undefined): string | null {
     return getImageUrl(photoEvent);
+  }
+
+  canMarkAttendance(event: Event, registration: EventRegistration): boolean {
+    if (event.status !== 'COMPLETED') {
+      return false;
+    }
+
+    return (
+      registration.status !== 'CANCELLED' &&
+      registration.status !== 'ATTENDED' &&
+      registration.status !== 'ABSENT'
+    );
+  }
+
+  markRegistrationAttended(registration: EventRegistration): void {
+    this.actionRegistrationId = registration.id;
+
+    this.eventService
+      .markRegistrationAttended(registration.id)
+      .pipe(finalize(() => (this.actionRegistrationId = null)))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess('La présence a été marquée.');
+          this.refresh$.next();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.notificationService.showError(
+            this.getErrorMessage(error, 'Le marquage en présent a échoué.')
+          );
+        }
+      });
+  }
+
+  markRegistrationAbsent(registration: EventRegistration): void {
+    this.actionRegistrationId = registration.id;
+
+    this.eventService
+      .markRegistrationAbsent(registration.id)
+      .pipe(finalize(() => (this.actionRegistrationId = null)))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess("L'absence a été marquée.");
+          this.refresh$.next();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.notificationService.showError(
+            this.getErrorMessage(error, "Le marquage en absent a échoué.")
+          );
+        }
+      });
   }
 
   private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {

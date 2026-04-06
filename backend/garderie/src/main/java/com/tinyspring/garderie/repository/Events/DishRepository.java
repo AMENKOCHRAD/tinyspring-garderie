@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface DishRepository extends JpaRepository<Dish, Long> {
     List<Dish> findByDailyMenuId(Long dailyMenuId);
+    List<Dish> findByDailyMenuIdOrderByMealTypeAscNameAsc(Long dailyMenuId);
 }

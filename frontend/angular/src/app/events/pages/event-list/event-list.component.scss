@@ -39,6 +39,16 @@
   white-space: nowrap;
 }
 
+.icon-only-add {
+  align-items: center;
+  display: inline-flex;
+  font-size: 1rem;
+  height: 42px;
+  justify-content: center;
+  padding: 0;
+  width: 42px;
+}
+
 .stats-grid {
   display: grid;
   gap: 1rem;

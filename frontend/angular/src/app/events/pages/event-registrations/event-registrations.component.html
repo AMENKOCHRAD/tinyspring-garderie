@@ -10,9 +10,6 @@
 
     <div class="section-toolbar">
       <div class="header-actions">
-        <button type="button" class="btn btn-outline-secondary" (click)="goToList()">
-          Retour à la liste
-        </button>
         @if (vm.event) {
           <button type="button" class="btn btn-outline-primary" (click)="goToDetails(vm.event.id)">
             Voir l'événement
@@ -126,23 +123,25 @@
                     @if (canMarkAttendance(registration, vm.isGlobalView, vm.event)) {
                       <button
                         type="button"
-                        class="icon-action success"
+                        class="attendance-action success"
                         (click)="markAttended(registration)"
                         [disabled]="actionRegistrationId === registration.id"
                         title="Marquer présent"
                         aria-label="Marquer présent"
                       >
                         <i class="feather icon-check-circle" aria-hidden="true"></i>
+                        <span>Présent</span>
                       </button>
                       <button
                         type="button"
-                        class="icon-action danger"
+                        class="attendance-action danger"
                         (click)="markAbsent(registration)"
                         [disabled]="actionRegistrationId === registration.id"
                         title="Marquer absent"
                         aria-label="Marquer absent"
                       >
                         <i class="feather icon-x-circle" aria-hidden="true"></i>
+                        <span>Absent</span>
                       </button>
                     } @else {
                       <span class="attendance-static">{{ formatStatus(registration.status) }}</span>

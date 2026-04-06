@@ -33,8 +33,6 @@ public class WeeklyMenu {
 
     private String templateName;
 
-    private Long createdBy;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

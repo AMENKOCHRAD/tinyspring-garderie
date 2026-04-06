@@ -180,10 +180,40 @@
                     <strong>#{{ registration.id }} · Enfant {{ registration.childId }}</strong>
                     <span>Parent {{ registration.parentId }}</span>
                   </div>
-                  <span class="registration-status" [ngClass]="getRegistrationStatusClass(registration.status)">
-                    <i [class]="getRegistrationStatusIcon(registration.status)" aria-hidden="true"></i>
-                    <span>{{ formatRegistrationStatus(registration.status) }}</span>
-                  </span>
+
+                  <div class="registration-side">
+                    <span class="registration-status" [ngClass]="getRegistrationStatusClass(registration.status)">
+                      <i [class]="getRegistrationStatusIcon(registration.status)" aria-hidden="true"></i>
+                      <span>{{ formatRegistrationStatus(registration.status) }}</span>
+                    </span>
+
+                    @if (canMarkAttendance(vm.event, registration)) {
+                      <div class="attendance-actions">
+                        <button
+                          type="button"
+                          class="attendance-action success"
+                          (click)="markRegistrationAttended(registration)"
+                          [disabled]="actionRegistrationId === registration.id"
+                          title="Marquer présent"
+                          aria-label="Marquer présent"
+                        >
+                          <i class="feather icon-check-circle" aria-hidden="true"></i>
+                          <span>Présent</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="attendance-action danger"
+                          (click)="markRegistrationAbsent(registration)"
+                          [disabled]="actionRegistrationId === registration.id"
+                          title="Marquer absent"
+                          aria-label="Marquer absent"
+                        >
+                          <i class="feather icon-x-circle" aria-hidden="true"></i>
+                          <span>Absent</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
                 </article>
               }
             </div>

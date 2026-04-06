@@ -46,6 +46,34 @@ const routes: Routes = [
           ).then((c) => c.EventRegistrationsComponent)
       },
       {
+        path: 'events/menus',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-list/weekly-menu-list.component').then(
+            (c) => c.WeeklyMenuListComponent
+          )
+      },
+      {
+        path: 'events/menus/create',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-form/weekly-menu-form.component').then(
+            (c) => c.WeeklyMenuFormComponent
+          )
+      },
+      {
+        path: 'events/menus/:id/edit',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-form/weekly-menu-form.component').then(
+            (c) => c.WeeklyMenuFormComponent
+          )
+      },
+      {
+        path: 'events/menus/:id',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-detail/weekly-menu-detail.component').then(
+            (c) => c.WeeklyMenuDetailComponent
+          )
+      },
+      {
         path: 'events/:id/edit',
         data: { mode: 'edit' },
         loadComponent: () =>
