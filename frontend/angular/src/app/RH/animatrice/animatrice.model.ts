@@ -10,4 +10,5 @@ export interface Animatrice {
   statut?: StatutAnimatrice;
   specialite?: string;
   photoUrl?: string;
+  motDePasseTemporaire?: string;
 }

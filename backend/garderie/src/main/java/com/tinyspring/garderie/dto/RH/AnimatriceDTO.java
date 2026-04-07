@@ -33,4 +33,7 @@ public class AnimatriceDTO {
     private String specialite;
 
     private String photoUrl;
+
+    // Retourné uniquement lors de la création pour afficher à l'admin
+    private String motDePasseTemporaire;
 }

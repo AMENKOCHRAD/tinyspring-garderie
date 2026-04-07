@@ -126,3 +126,103 @@
   &:hover { opacity: 0.9; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
+.photo-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.photo-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4680ff, #6c63ff);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.upload-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-upload {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #eef2ff;
+  color: #4680ff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: #dde6ff; }
+}
+
+.file-name {
+  font-size: 12px;
+  color: #4680ff;
+}
+
+.file-hint {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.alert-password {
+  background: #fffbea;
+  border-left: 4px solid #f0a500;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .password-title {
+    font-weight: 600;
+    color: #f0a500;
+    font-size: 14px;
+  }
+
+  .password-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: #555;
+
+    code {
+      background: #f4f4f4;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-left: 6px;
+    }
+  }
+
+  small { font-size: 12px; color: #888; }
+}

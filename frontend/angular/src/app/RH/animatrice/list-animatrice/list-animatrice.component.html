@@ -78,9 +78,15 @@
             <td>{{ i + 1 }}</td>
             <td>
               <div class="animatrice-info">
-                <div class="avatar">
-                  {{ animatrice.prenom[0] }}{{ animatrice.nom[0] }}
+                <div class="avatar" *ngIf="!animatrice.photoUrl">
+                {{ animatrice.prenom[0] }}{{ animatrice.nom[0] }}
                 </div>
+                <img
+                *ngIf="animatrice.photoUrl"
+                [src]="'http://localhost:8081/uploads/' + animatrice.photoUrl"
+                class="avatar-img"
+                [alt]="animatrice.prenom"
+                />
                 <div>
                   <div class="animatrice-name">{{ animatrice.prenom }} {{ animatrice.nom }}</div>
                 </div>

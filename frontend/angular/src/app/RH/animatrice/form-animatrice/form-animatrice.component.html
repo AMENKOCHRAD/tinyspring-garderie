@@ -23,6 +23,17 @@
   <div class="alert alert-error" *ngIf="errorMessage">
     ❌ {{ errorMessage }}
   </div>
+  
+  <div class="alert alert-password" *ngIf="motDePasseTemporaire">
+  <div class="password-title">🔑 Compte créé automatiquement !</div>
+  <div class="password-info">
+    <span><strong>Email :</strong> {{ animatrice.email }}</span>
+    <span><strong>Mot de passe temporaire :</strong>
+      <code>{{ motDePasseTemporaire }}</code>
+    </span>
+  </div>
+  <small>Communiquez ces informations à l'animatrice.</small>
+</div>
 
   <!-- Form Card -->
   <div class="form-card">
@@ -111,16 +122,31 @@
             <option value="INACTIVE">Inactive</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Photo URL</label>
-          <input
-            type="text"
-            [(ngModel)]="animatrice.photoUrl"
-            name="photoUrl"
-            placeholder="https://..."
-            class="form-input"
-          />
-        </div>
+       <div class="form-group">
+  <label>Photo de profil</label>
+  <div class="photo-upload">
+    <div class="photo-preview" *ngIf="previewUrl">
+      <img [src]="previewUrl" alt="Preview" class="preview-img" />
+    </div>
+    <div class="avatar-placeholder" *ngIf="!previewUrl">
+      <span>{{ animatrice.prenom ? animatrice.prenom[0] : '?' }}{{ animatrice.nom ? animatrice.nom[0] : '' }}</span>
+    </div>
+    <div class="upload-actions">
+      <label class="btn-upload" for="fileInput">
+        Choisir une photo
+      </label>
+      <input
+        type="file"
+        id="fileInput"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+        style="display: none"
+      />
+      <span class="file-name" *ngIf="selectedFile">{{ selectedFile.name }}</span>
+      <span class="file-hint" *ngIf="!selectedFile">JPG, PNG — max 5MB</span>
+    </div>
+  </div>
+</div>
       </div>
 
       <div class="form-actions">

@@ -69,4 +69,17 @@ export class AnimatriceService {
     return this.http.put<Animatrice>(`${this.apiUrl}/animatrice/profil/${id}`,
       animatrice, { headers: this.getAnimatriceHeaders() });
   }
+  uploadPhoto(id: number, file: File): Observable<Animatrice> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const credentials = btoa('admin@garderie.com:admin123');
+  const headers = new HttpHeaders({
+    'Authorization': `Basic ${credentials}`
+  });
+  return this.http.post<Animatrice>(
+    `${this.apiUrl}/admin/animatrices/${id}/upload-photo`,
+    formData,
+    { headers }
+  );
+}
 }
