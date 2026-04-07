@@ -1,11 +1,12 @@
 package com.tinyspring.garderie.controller;
 
-import com.tinyspring.garderie.dto.SendMessageRequest;
 import com.tinyspring.garderie.dto.UpdateMessageReadStatusRequest;
 import com.tinyspring.garderie.dto.UpdateMessageRequest;
 import com.tinyspring.garderie.entity.Message;
 import com.tinyspring.garderie.service.MessageService;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,10 +19,15 @@ public class MessageController {
         this.messageService = messageService;
     }
 
-    @PostMapping("/api/conversations/{conversationId}/messages")
+    @PostMapping(value = "/api/conversations/{conversationId}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Message sendMessage(@PathVariable Long conversationId,
-                               @RequestBody SendMessageRequest request) {
-        return messageService.sendMessage(conversationId, request);
+                               @RequestParam(value = "content", required = false) String content,
+                               @RequestParam(value = "image", required = false) MultipartFile image) {
+        return messageService.sendMessage(conversationId, content, image);
+    }
+    @PutMapping("/api/conversations/{conversationId}/messages/read")
+    public void markConversationMessagesAsRead(@PathVariable Long conversationId) {
+        messageService.markConversationMessagesAsRead(conversationId);
     }
 
     @GetMapping("/api/conversations/{conversationId}/messages")

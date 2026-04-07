@@ -1,6 +1,5 @@
 package com.tinyspring.garderie.service.impl;
 
-import com.tinyspring.garderie.dto.SendMessageRequest;
 import com.tinyspring.garderie.dto.UpdateMessageReadStatusRequest;
 import com.tinyspring.garderie.dto.UpdateMessageRequest;
 import com.tinyspring.garderie.entity.Conversation;
@@ -13,8 +12,12 @@ import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.service.MessageService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -32,7 +35,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message sendMessage(Long conversationId, SendMessageRequest request) {
+    public Message sendMessage(Long conversationId, String content, MultipartFile image) {
         User currentUser = getCurrentUser();
 
         Conversation conversation = conversationRepository.findById(conversationId)
@@ -47,15 +50,56 @@ public class MessageServiceImpl implements MessageService {
             throw new RuntimeException("Impossible d'envoyer un message dans une conversation fermée ou archivée");
         }
 
-        if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-            throw new RuntimeException("Le contenu du message est obligatoire");
+        boolean hasText = content != null && !content.trim().isEmpty();
+        boolean hasImage = image != null && !image.isEmpty();
+
+        if (!hasText && !hasImage) {
+            throw new RuntimeException("Le message doit contenir un texte ou une image");
         }
 
         Message message = new Message();
-        message.setContent(request.getContent().trim());
+        message.setContent(hasText ? content.trim() : null);
         message.setSender(currentUser);
         message.setConversation(conversation);
         message.setIsRead(false);
+
+        if (hasImage) {
+            try {
+                String originalFilename = image.getOriginalFilename();
+                String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
+                        ? originalFilename.replaceAll("\\s+", "_")
+                        : "image";
+
+                String extension = "";
+                int dotIndex = safeOriginalFilename.lastIndexOf(".");
+                if (dotIndex != -1) {
+                    extension = safeOriginalFilename.substring(dotIndex);
+                }
+
+                String uniqueFileName = UUID.randomUUID() + extension;
+
+                java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads", "messages").toAbsolutePath().normalize();
+                java.nio.file.Files.createDirectories(uploadPath);
+
+                java.nio.file.Path targetPath = uploadPath.resolve(uniqueFileName);
+
+                System.out.println("Upload dir = " + uploadPath);
+                System.out.println("Target file = " + targetPath);
+
+                java.nio.file.Files.copy(
+                        image.getInputStream(),
+                        targetPath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                );
+
+                message.setImageName(safeOriginalFilename);
+                message.setImagePath("/uploads/messages/" + uniqueFileName);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Erreur upload image : " + e.getMessage(), e);
+            }
+        }
 
         return messageRepository.save(message);
     }
@@ -114,6 +158,30 @@ public class MessageServiceImpl implements MessageService {
         message.setIsRead(request.getIsRead());
 
         return messageRepository.save(message);
+    }
+
+    @Override
+    public void markConversationMessagesAsRead(Long conversationId) {
+        User currentUser = getCurrentUser();
+
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation introuvable"));
+
+        if (!isParticipant(conversation, currentUser)) {
+            throw new RuntimeException("Accès refusé à cette conversation");
+        }
+
+        List<Message> messages = messageRepository.findByConversationOrderBySentAtAsc(conversation);
+
+        for (Message message : messages) {
+            boolean isReceivedMessage = message.getSender() != null
+                    && !message.getSender().getId().equals(currentUser.getId());
+
+            if (isReceivedMessage && Boolean.FALSE.equals(message.getIsRead())) {
+                message.setIsRead(true);
+                messageRepository.save(message);
+            }
+        }
     }
 
     @Override

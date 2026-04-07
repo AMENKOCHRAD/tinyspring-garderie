@@ -1,6 +1,5 @@
 package com.tinyspring.garderie.service.impl;
 
-import com.tinyspring.garderie.dto.CreateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Conversation;
@@ -16,8 +15,15 @@ import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.service.ReclamationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ReclamationServiceImpl implements ReclamationService {
@@ -35,7 +41,11 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     @Override
-    public Reclamation createReclamation(CreateReclamationRequest request) {
+    public Reclamation createReclamation(String title,
+                                         String description,
+                                         String priority,
+                                         MultipartFile image,
+                                         MultipartFile attachment) {
         User currentUser = getCurrentUser();
 
         String roleName = currentUser.getRole().getName().name();
@@ -44,16 +54,16 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new RuntimeException("Seul un parent peut créer une réclamation");
         }
 
-        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+        if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("Le titre est obligatoire");
         }
 
-        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+        if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("La description est obligatoire");
         }
 
         Conversation conversation = new Conversation();
-        conversation.setSubject("Réclamation : " + request.getTitle().trim());
+        conversation.setSubject("Réclamation : " + title.trim());
         conversation.setType(ConversationType.RECLAMATION);
         conversation.setStatus(ConversationStatus.OPEN);
         conversation.setCreatedBy(currentUser);
@@ -62,22 +72,97 @@ public class ReclamationServiceImpl implements ReclamationService {
         Conversation savedConversation = conversationRepository.save(conversation);
 
         Reclamation reclamation = new Reclamation();
-        reclamation.setTitle(request.getTitle().trim());
-        reclamation.setDescription(request.getDescription().trim());
+        reclamation.setTitle(title.trim());
+        reclamation.setDescription(description.trim());
         reclamation.setParent(currentUser);
         reclamation.setConversation(savedConversation);
         reclamation.setStatus(ReclamationStatus.OPEN);
 
-        if (request.getPriority() != null && !request.getPriority().trim().isEmpty()) {
+        if (priority != null && !priority.trim().isEmpty()) {
             try {
                 reclamation.setPriority(
-                        ReclamationPriority.valueOf(request.getPriority().trim().toUpperCase())
+                        ReclamationPriority.valueOf(priority.trim().toUpperCase())
                 );
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Priorité invalide. Valeurs autorisées : LOW, MEDIUM, HIGH");
             }
         } else {
             reclamation.setPriority(ReclamationPriority.MEDIUM);
+        }
+
+        // IMAGE
+        boolean hasImage = image != null && !image.isEmpty();
+        if (hasImage) {
+            try {
+                String originalFilename = image.getOriginalFilename();
+                String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
+                        ? originalFilename.replaceAll("\\s+", "_")
+                        : "image";
+
+                String extension = "";
+                int dotIndex = safeOriginalFilename.lastIndexOf(".");
+                if (dotIndex != -1) {
+                    extension = safeOriginalFilename.substring(dotIndex);
+                }
+
+                String uniqueFileName = UUID.randomUUID() + extension;
+
+                Path uploadPath = Paths.get("uploads", "reclamations").toAbsolutePath().normalize();
+                Files.createDirectories(uploadPath);
+
+                Path targetPath = uploadPath.resolve(uniqueFileName);
+
+                Files.copy(
+                        image.getInputStream(),
+                        targetPath,
+                        StandardCopyOption.REPLACE_EXISTING
+                );
+
+                reclamation.setImageName(safeOriginalFilename);
+                reclamation.setImagePath("/uploads/reclamations/" + uniqueFileName);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Erreur upload image réclamation : " + e.getMessage(), e);
+            }
+        }
+
+        // ATTACHMENT
+        boolean hasAttachment = attachment != null && !attachment.isEmpty();
+        if (hasAttachment) {
+            try {
+                String originalFilename = attachment.getOriginalFilename();
+                String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
+                        ? originalFilename.replaceAll("\\s+", "_")
+                        : "attachment";
+
+                String extension = "";
+                int dotIndex = safeOriginalFilename.lastIndexOf(".");
+                if (dotIndex != -1) {
+                    extension = safeOriginalFilename.substring(dotIndex);
+                }
+
+                String uniqueFileName = UUID.randomUUID() + extension;
+
+                Path uploadPath = Paths.get("uploads", "reclamations", "attachments").toAbsolutePath().normalize();
+                Files.createDirectories(uploadPath);
+
+                Path targetPath = uploadPath.resolve(uniqueFileName);
+
+                Files.copy(
+                        attachment.getInputStream(),
+                        targetPath,
+                        StandardCopyOption.REPLACE_EXISTING
+                );
+
+                reclamation.setAttachmentName(safeOriginalFilename);
+                reclamation.setAttachmentPath("/uploads/reclamations/attachments/" + uniqueFileName);
+                reclamation.setAttachmentType(attachment.getContentType());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Erreur upload pièce jointe réclamation : " + e.getMessage(), e);
+            }
         }
 
         return reclamationRepository.save(reclamation);

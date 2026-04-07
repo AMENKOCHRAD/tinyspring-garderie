@@ -19,12 +19,16 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private LocalDateTime sentAt;
 
     private Boolean isRead;
+
+    private String imageName;
+
+    private String imagePath;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)

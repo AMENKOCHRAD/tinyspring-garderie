@@ -37,7 +37,13 @@ export interface Reclamation {
   status: string;
   createdAt: string;
   updatedAt: string;
+  imageName?: string | null;
+  imagePath?: string | null;
+  attachmentName?: string | null;
+  attachmentPath?: string | null;
+  attachmentType?: string | null;
   conversation?: any;
+
 }
 
 export interface CreateReclamationRequest {
@@ -186,10 +192,33 @@ updateConversationStatus(id: number, status: string): Observable<Conversation> {
   );
 }
 
-createReclamation(data: CreateReclamationRequest): Observable<Reclamation> {
+createReclamation(
+  title: string,
+  description: string,
+  priority: string,
+  image?: File | null,
+  attachment?: File | null
+): Observable<Reclamation> {
+  const formData = new FormData();
+
+  formData.append('title', title.trim());
+  formData.append('description', description.trim());
+
+  if (priority && priority.trim()) {
+    formData.append('priority', priority.trim());
+  }
+
+  if (image) {
+    formData.append('image', image);
+  }
+
+  if (attachment) {
+    formData.append('attachment', attachment);
+  }
+
   return this.http.post<Reclamation>(
     `${this.apiUrl}/reclamations`,
-    data,
+    formData,
     { headers: this.authService.getBasicAuthHeaders() }
   );
 }

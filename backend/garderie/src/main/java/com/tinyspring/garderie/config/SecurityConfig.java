@@ -3,6 +3,7 @@ package com.tinyspring.garderie.config;
 import com.tinyspring.garderie.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -36,6 +37,7 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -53,12 +55,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
-                        .requestMatchers("/api/users/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
 
+                        .requestMatchers("/api/users/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
                         .requestMatchers("/api/conversations/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
                         .requestMatchers("/api/messages/**").hasAnyRole("PARENT", "ADMIN", "ANIMATRICE")
-                        .requestMatchers("/api/reclamations/**").hasAnyRole("PARENT", "ADMIN")
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
+
+                        // important : changement de statut réservé à ADMIN
+                        .requestMatchers(HttpMethod.PUT, "/api/reclamations/*/status").hasRole("ADMIN")
+
+                        // autres endpoints réclamation autorisés pour PARENT et ADMIN
+                        .requestMatchers("/api/reclamations/**").hasAnyRole("PARENT", "ADMIN")
 
                         .anyRequest().authenticated()
                 )

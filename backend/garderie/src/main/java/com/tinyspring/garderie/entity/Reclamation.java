@@ -31,6 +31,13 @@ public class Reclamation {
     @Enumerated(EnumType.STRING)
     private ReclamationPriority priority;
 
+    private String imageName;
+    private String imagePath;
+
+    private String attachmentName;
+    private String attachmentPath;
+    private String attachmentType;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
