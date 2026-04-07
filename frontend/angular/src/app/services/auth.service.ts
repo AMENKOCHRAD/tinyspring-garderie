@@ -35,6 +35,10 @@ export class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
+  isAdmin(): boolean {
+    return this.getUser()?.role === 'ADMIN';
+  }
+
   logout(): void {
     localStorage.removeItem('user');
   }

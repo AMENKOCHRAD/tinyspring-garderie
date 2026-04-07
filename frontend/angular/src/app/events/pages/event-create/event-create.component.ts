@@ -120,11 +120,18 @@ export class EventCreateComponent {
           }
 
           return this.eventService.uploadEventPhoto(event.id, submission.photoFile).pipe(
-            timeout(10000),
-            catchError(() => {
-              this.notificationService.showError(
-                "L'evenement a ete enregistre, mais l'image n'a pas pu etre envoyee."
+            timeout(60000),
+            catchError((error: HttpErrorResponse) => {
+              this.errorMessage = this.getErrorMessage(
+                error,
+                "L'evenement a ete enregistre, mais l'image n'a pas pu etre envoyee. Reessayez avec cette fiche ouverte."
               );
+
+              if (this.isEditMode && this.eventId) {
+                return of(event);
+              }
+
+              this.router.navigate(['/events', event.id, 'edit']);
               return of(event);
             })
           );

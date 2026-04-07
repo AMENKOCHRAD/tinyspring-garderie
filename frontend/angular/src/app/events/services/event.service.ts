@@ -76,7 +76,7 @@ export class EventService {
 
   uploadEventPhoto(id: number, file: File): Observable<Event> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', file, file.name);
 
     return this.http
       .post<EventApiResponse>(`${this.apiUrl}/events/${id}/photo`, formData)

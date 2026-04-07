@@ -1,21 +1,22 @@
-// Angular Import
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 
-// project import
-import { AdminComponent } from './theme/layout/admin/admin.component';
+import { adminAuthGuard, adminChildAuthGuard } from './guards/admin-auth.guard';
 import { GuestComponent } from './theme/layout/guest/guest.component';
+import { AdminComponent } from './theme/layout/admin/admin.component';
 
 const routes: Routes = [
   {
     path: '',
+    redirectTo: '/sign-in',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
     component: AdminComponent,
+    canActivate: [adminAuthGuard],
+    canActivateChild: [adminChildAuthGuard],
     children: [
-      {
-        path: '',
-        redirectTo: '/analytics',
-        pathMatch: 'full'
-      },
       {
         path: 'analytics',
         loadComponent: () =>
@@ -41,9 +42,9 @@ const routes: Routes = [
       {
         path: 'events/registrations',
         loadComponent: () =>
-          import(
-            './events/pages/event-registrations/event-registrations.component'
-          ).then((c) => c.EventRegistrationsComponent)
+          import('./events/pages/event-registrations/event-registrations.component').then(
+            (c) => c.EventRegistrationsComponent
+          )
       },
       {
         path: 'events/menus',
@@ -91,9 +92,9 @@ const routes: Routes = [
       {
         path: 'events/:id/registrations',
         loadComponent: () =>
-          import(
-            './events/pages/event-registrations/event-registrations.component'
-          ).then((c) => c.EventRegistrationsComponent)
+          import('./events/pages/event-registrations/event-registrations.component').then(
+            (c) => c.EventRegistrationsComponent
+          )
       },
       {
         path: 'events/:id',
@@ -168,7 +169,7 @@ const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/login'
+    redirectTo: '/sign-in'
   }
 ];
 

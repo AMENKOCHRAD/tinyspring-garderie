@@ -48,6 +48,8 @@ public class Event {
     private String photoEvent;
 
     private Long classroomId;
+    @Column(name = "target_classroom_ids", columnDefinition = "TEXT")
+    private String targetClassroomIds;
     private Long createdBy;
 
     @CreationTimestamp

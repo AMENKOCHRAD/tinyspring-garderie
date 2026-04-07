@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -25,11 +26,10 @@ public class EventResponse {
     private Integer maxCapacity;
     private boolean requiresAuthorization;
     private Long classroomId;
+    private List<Long> targetClassroomIds;
     private Long createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     private Double eventPrice;
     private String photoEvent;
-
 }
