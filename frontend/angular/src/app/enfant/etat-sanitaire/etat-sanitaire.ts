@@ -85,8 +85,6 @@ export class EtatSanitaireComponent implements OnInit {
 
     this.etatSanitaireService.getAllEnfants().subscribe({
       next: (enfants: Enfant[]) => {
-        console.log('ENFANTS = ', enfants);
-
         if (!enfants || enfants.length === 0) {
           this.enfantsAvecEtat = [];
           this.isLoading = false;
@@ -95,7 +93,6 @@ export class EtatSanitaireComponent implements OnInit {
 
         const requetes = enfants.map((enfant: Enfant) => {
           const enfantId = this.extraireEnfantId(enfant);
-          console.log('Chargement enfantId = ', enfantId, enfant.nom, enfant.prenom);
 
           if (!enfantId) {
             return of({
@@ -106,30 +103,20 @@ export class EtatSanitaireComponent implements OnInit {
 
           return forkJoin({
             conditions: this.etatSanitaireService.getConditionsByEnfant(enfantId).pipe(
-              catchError((err) => {
-                console.error('ERREUR CONDITIONS enfantId = ' + enfantId, err);
-                return of([]);
-              })
+              catchError(() => of([]))
             ),
             traitements: this.etatSanitaireService.getTraitementsByEnfant(enfantId).pipe(
-              catchError((err) => {
-                console.error('ERREUR TRAITEMENTS enfantId = ' + enfantId, err);
-                return of([]);
-              })
+              catchError(() => of([]))
             )
           });
         });
 
         forkJoin(requetes).subscribe({
           next: (resultats: any[]) => {
-            console.log('RESULTATS CONDITIONS/TRAITEMENTS = ', resultats);
-
             this.enfantsAvecEtat = enfants.map((enfant: Enfant, index: number) => {
               const conditions = this.toArray<ConditionSanitaire>(resultats[index]?.conditions);
-              const traitements = this.toArray<Traitement>(resultats[index]?.traitements);
-
-              console.log('Conditions enfant ' + this.extraireEnfantId(enfant) + ' = ', conditions);
-              console.log('Traitements enfant ' + this.extraireEnfantId(enfant) + ' = ', traitements);
+              const traitements = this.toArray<Traitement>(resultats[index]?.traitements)
+                .filter((traitement: Traitement) => (traitement.statut || '').toUpperCase() === 'VALIDE');
 
               return {
                 enfant,
@@ -139,18 +126,15 @@ export class EtatSanitaireComponent implements OnInit {
               };
             });
 
-            console.log('DONNEES FINALES = ', this.enfantsAvecEtat);
             this.isLoading = false;
           },
-          error: (err) => {
-            console.error('ERREUR GLOBALE = ', err);
+          error: () => {
             this.error = 'Erreur lors du chargement des données sanitaires';
             this.isLoading = false;
           }
         });
       },
-      error: (err) => {
-        console.error('ERREUR ENFANTS = ', err);
+      error: () => {
         this.error = 'Erreur lors du chargement des enfants';
         this.isLoading = false;
       }

@@ -9,6 +9,7 @@ import { GuestComponent } from './theme/layout/guest/guest.component';
 import { DashboardProfilsEnfants } from './enfant/dashboard-profils-enfants/dashboard-profils-enfants';
 import { GestionEnfantsComponent } from './enfant/gestion-enfants/gestion-enfants';
 import { EtatSanitaireComponent } from './enfant/etat-sanitaire/etat-sanitaire';
+import { ValidationTraitementsComponent } from './enfant/validation-traitements/validation-traitements';
 
 const routes: Routes = [
   {
@@ -36,6 +37,10 @@ const routes: Routes = [
             redirectTo: 'liste',
             pathMatch: 'full'
           },
+           {
+      path: 'validation-traitements',
+      component: ValidationTraitementsComponent
+    },
           {
             path: 'liste',
             component: DashboardProfilsEnfants

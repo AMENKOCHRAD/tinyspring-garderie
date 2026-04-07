@@ -1,0 +1,117 @@
+<div class="container mt-4">
+  <div class="mb-4">
+    <h2 class="mb-1">Validation des traitements</h2>
+    <p class="text-muted mb-2">
+      Traitements soumis par les parents en attente de validation
+    </p>
+    <span class="badge bg-warning text-dark fs-6">
+      {{ traitementsFiltres.length }} traitements en attente
+    </span>
+  </div>
+
+  <div class="card p-3 mb-4">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Rechercher par nom enfant, nom parent ou médicament..."
+      [(ngModel)]="searchTerm"
+      (input)="filtrerTraitements()"
+    />
+  </div>
+
+  <div *ngIf="isLoading" class="alert alert-info">
+    Chargement des traitements...
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!isLoading && traitementsFiltres.length === 0" class="alert alert-secondary">
+    Aucun traitement en attente de validation.
+  </div>
+
+  <div class="row">
+    <div class="col-lg-7">
+      <div class="card mb-3" *ngFor="let traitement of traitementsFiltres">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+            <div>
+              <h5 class="mb-1">{{ traitement.nomTraitement }}</h5>
+              <p class="mb-1 text-muted">
+                Enfant : {{ traitement.nomEnfant }} {{ traitement.prenomEnfant }}
+              </p>
+              <p class="mb-1 text-muted">
+                Parent : {{ traitement.nomParent }} - {{ traitement.emailParent }}
+              </p>
+            </div>
+
+            <span class="badge bg-warning text-dark">
+              EN ATTENTE
+            </span>
+          </div>
+
+          <p class="mb-2">
+            <strong>Condition :</strong> {{ traitement.nomCondition }}
+          </p>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-primary btn-sm" (click)="consulter(traitement.traitementId)">
+              Consulter
+            </button>
+
+            <button class="btn btn-success btn-sm" (click)="accepter(traitement.traitementId)">
+              Accepter
+            </button>
+
+            <button class="btn btn-danger btn-sm" (click)="refuser(traitement)">
+              Refuser
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5" *ngIf="traitementSelectionne">
+      <div class="card details-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Détails du traitement</h5>
+          <button class="btn btn-sm btn-outline-secondary" (click)="fermerDetails()">X</button>
+        </div>
+
+        <div class="card-body">
+          <p><strong>Enfant :</strong> {{ traitementSelectionne.nomEnfant }} {{ traitementSelectionne.prenomEnfant }}</p>
+          <p><strong>Parent :</strong> {{ traitementSelectionne.nomParent }}</p>
+          <p><strong>Email parent :</strong> {{ traitementSelectionne.emailParent }}</p>
+
+          <hr />
+
+          <p><strong>Condition :</strong> {{ traitementSelectionne.nomCondition }}</p>
+          <p><strong>Type :</strong> {{ traitementSelectionne.typeCondition }}</p>
+          <p *ngIf="traitementSelectionne.descriptionCondition">
+            <strong>Description condition :</strong> {{ traitementSelectionne.descriptionCondition }}
+          </p>
+
+          <hr />
+
+          <p><strong>Traitement :</strong> {{ traitementSelectionne.nomTraitement }}</p>
+          <p *ngIf="traitementSelectionne.description">
+            <strong>Description :</strong> {{ traitementSelectionne.description }}
+          </p>
+          <p *ngIf="traitementSelectionne.ordonnance">
+            <strong>Ordonnance :</strong> {{ traitementSelectionne.ordonnance }}
+          </p>
+          <p *ngIf="traitementSelectionne.dateDebut">
+            <strong>Date début :</strong> {{ traitementSelectionne.dateDebut }}
+          </p>
+          <p *ngIf="traitementSelectionne.dateFin">
+            <strong>Date fin :</strong> {{ traitementSelectionne.dateFin }}
+          </p>
+          <p *ngIf="traitementSelectionne.heuresPrises?.length">
+            <strong>Heures de prise :</strong> {{ traitementSelectionne.heuresPrises.join(', ') }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

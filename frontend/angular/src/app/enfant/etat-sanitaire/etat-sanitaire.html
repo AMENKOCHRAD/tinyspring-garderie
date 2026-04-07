@@ -71,10 +71,10 @@
       </div>
 
       <div class="mt-3">
-        <h6 class="mb-3">Traitements de l’enfant</h6>
+        <h6 class="mb-3">Traitements validés de l’enfant</h6>
 
         <div *ngIf="item.traitements.length === 0" class="text-muted">
-          Aucun traitement enregistré.
+          Aucun traitement validé enregistré.
         </div>
 
         <div
@@ -103,10 +103,6 @@
 
           <p class="mb-1" *ngIf="traitement.heuresPrises && traitement.heuresPrises.length > 0">
             <strong>Heures de prise :</strong> {{ traitement.heuresPrises.join(', ') }}
-          </p>
-
-          <p class="mb-0" *ngIf="traitement.statut">
-            <strong>Statut :</strong> {{ traitement.statut }}
           </p>
         </div>
       </div>
