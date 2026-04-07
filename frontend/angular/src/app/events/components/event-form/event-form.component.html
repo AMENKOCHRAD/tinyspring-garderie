@@ -144,31 +144,33 @@
                 (change)="onFileSelected($event)"
               />
 
-              <div class="upload-row">
-                <button
-                  type="button"
-                  class="btn btn-outline-primary"
-                  (click)="photoInput.click()"
-                  [disabled]="submitting()"
-                >
-                  Ajouter image
-                </button>
+              <div class="event-image-field">
+                <div class="upload-row">
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary"
+                    (click)="photoInput.click()"
+                    [disabled]="submitting()"
+                  >
+                    Choisir une image
+                  </button>
+
+                  @if (selectedPhotoFile) {
+                    <button
+                      type="button"
+                      class="btn btn-link btn-sm remove-file-button"
+                      (click)="removeSelectedPhoto(photoInput)"
+                      [disabled]="submitting()"
+                    >
+                      Retirer
+                    </button>
+                  }
+                </div>
 
                 @if (displayedFileName) {
                   <span class="selected-file-name">{{ displayedFileName }}</span>
                 } @else {
                   <span class="selected-file-name muted">Aucun fichier selectionne</span>
-                }
-
-                @if (selectedPhotoFile) {
-                  <button
-                    type="button"
-                    class="btn btn-link btn-sm remove-file-button"
-                    (click)="removeSelectedPhoto(photoInput)"
-                    [disabled]="submitting()"
-                  >
-                    Retirer
-                  </button>
                 }
               </div>
             </div>
@@ -194,14 +196,20 @@
 
       <div class="col-lg-4">
         <div class="photo-preview-card">
-          <span class="preview-label">Apercu photo</span>
+          <div class="preview-header">
+            <span class="preview-label">Apercu photo</span>
+            <small>Format recommande : horizontal</small>
+          </div>
 
-          @if (currentPhotoPreview) {
-            <img class="photo-preview" [src]="currentPhotoPreview" alt="Apercu de l'evenement" />
-            <p class="preview-caption">{{ displayedFileName || 'Image actuelle' }}</p>
-          } @else {
-            <div class="photo-placeholder">Aucune photo</div>
-          }
+          <div class="photo-preview-stage">
+            @if (currentPhotoPreview) {
+              <img class="photo-preview" [src]="currentPhotoPreview" alt="Apercu de l'evenement" />
+            } @else {
+              <div class="photo-placeholder">Aucune photo</div>
+            }
+          </div>
+
+          <p class="preview-caption">{{ displayedFileName || 'L image s affichera ici apres selection.' }}</p>
         </div>
       </div>
     </div>

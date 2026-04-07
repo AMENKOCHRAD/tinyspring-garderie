@@ -90,11 +90,13 @@
 
           <div class="hero-grid">
             <div class="photo-panel">
-              @if (getEventPhotoUrl(vm.event.photoEvent); as photoUrl) {
-                <img class="event-photo" [src]="photoUrl" alt="Photo de l'événement" />
-              } @else {
-                <div class="photo-placeholder">Aucune photo</div>
-              }
+              <div class="photo-frame">
+                @if (getEventPhotoUrl(vm.event.photoEvent); as photoUrl) {
+                  <img class="event-photo" [src]="photoUrl" alt="Photo de l'événement" />
+                } @else {
+                  <div class="photo-placeholder">Aucune photo</div>
+                }
+              </div>
             </div>
 
             <div class="detail-grid">

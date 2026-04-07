@@ -3,15 +3,27 @@
 }
 
 .photo-preview-card {
-  background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+  background: #f8fbff;
   border: 1px solid #dbe6f3;
-  border-radius: 20px;
+  border-radius: 22px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.9rem;
   height: 100%;
-  min-height: 280px;
-  padding: 1rem;
+  min-height: 320px;
+  padding: 1.1rem;
+}
+
+.preview-header {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.preview-header small {
+  color: #8b97aa;
+  font-size: 0.75rem;
 }
 
 .preview-label {
@@ -22,10 +34,26 @@
   text-transform: uppercase;
 }
 
+.photo-preview-stage {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
+    repeating-linear-gradient(
+      45deg,
+      rgba(215, 225, 238, 0.4),
+      rgba(215, 225, 238, 0.4) 12px,
+      rgba(244, 247, 252, 0.9) 12px,
+      rgba(244, 247, 252, 0.9) 24px
+    );
+  border: 1px solid #d8e2ef;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
 .photo-preview {
-  border-radius: 16px;
-  height: 220px;
+  display: block;
+  height: 250px;
   object-fit: cover;
+  object-position: center;
   width: 100%;
 }
 
@@ -33,7 +61,14 @@
   color: #6b7280;
   font-size: 0.8rem;
   margin: 0;
-  word-break: break-all;
+  word-break: break-word;
+}
+
+.event-image-field {
+  background: #f8fbff;
+  border: 1px dashed #cdd9ea;
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
 }
 
 .upload-row {
@@ -60,14 +95,11 @@
 
 .photo-placeholder {
   align-items: center;
-  background: #fff;
-  border: 1px dashed #c9d8ea;
-  border-radius: 16px;
   color: #6b7280;
   display: flex;
-  flex: 1;
+  height: 250px;
   justify-content: center;
-  min-height: 220px;
+  padding: 1rem;
   text-align: center;
 }
 
@@ -86,5 +118,10 @@
   .photo-preview-card {
     margin-top: 1rem;
     min-height: auto;
+  }
+
+  .photo-preview,
+  .photo-placeholder {
+    height: 220px;
   }
 }

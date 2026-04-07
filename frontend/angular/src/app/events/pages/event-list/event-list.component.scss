@@ -226,25 +226,32 @@
 }
 
 .event-card-media {
-  background: linear-gradient(135deg, #eef4fb 0%, #dde8f5 100%);
-  min-height: 220px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)),
+    linear-gradient(135deg, #eef4fb 0%, #dde8f5 100%);
+  min-height: 240px;
   position: relative;
+  padding: 0.9rem 0.9rem 0;
 }
 
 .event-card-image,
 .event-card-placeholder {
-  border-radius: 24px 24px 0 0;
-  height: 220px;
+  border-radius: 18px;
+  height: 230px;
   width: 100%;
 }
 
 .event-card-image {
+  box-shadow: 0 14px 34px rgba(31, 42, 68, 0.16);
   display: block;
   object-fit: cover;
+  object-position: center;
 }
 
 .event-card-placeholder {
   align-items: center;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px dashed #cad7e7;
   color: #708199;
   display: flex;
   font-size: 0.95rem;
@@ -553,8 +560,16 @@
   .event-card-media,
   .event-card-image,
   .event-card-placeholder {
+    min-height: 210px;
+  }
+
+  .event-card-media {
+    padding: 0.75rem 0.75rem 0;
+  }
+
+  .event-card-image,
+  .event-card-placeholder {
     height: 200px;
-    min-height: 200px;
   }
 
   .event-card-footer {
