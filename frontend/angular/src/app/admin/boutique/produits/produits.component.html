@@ -1,0 +1,312 @@
+<div class="b-page">
+
+  @if (errorMsg) {
+    <div class="b-alert b-alert--danger">
+      <span>{{ errorMsg }}</span>
+      <button class="b-alert__close" (click)="errorMsg = ''">×</button>
+    </div>
+  }
+  @if (successMsg) {
+    <div class="b-alert b-alert--success">
+      <span>{{ successMsg }}</span>
+      <button class="b-alert__close" (click)="successMsg = ''">×</button>
+    </div>
+  }
+
+  <!-- En-tête avec titre, breadcrumb et bouton -->
+  <div class="b-page-header">
+    <div class="b-header-section">
+      <div class="b-header-top">
+        <h4 class="b-page-title">Gestion des Produits</h4>
+      </div>
+      <nav class="b-breadcrumb">
+        <a href="#" class="b-breadcrumb__item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </a>
+        <span class="b-breadcrumb__separator">/</span>
+        <span class="b-breadcrumb__item">Boutique en ligne</span>
+        <span class="b-breadcrumb__separator">/</span>
+        <span class="b-breadcrumb__item active">Produits</span>
+      </nav>
+    </div>
+    <button class="b-btn b-btn--primary" (click)="openAdd()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Ajouter un produit
+    </button>
+  </div>
+
+  <!-- Cards statistiques -->
+  <div class="b-stats-row">
+    <div class="b-stat-card b-stat-card--blue">
+      <div class="b-stat-card__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+      </div>
+      <div class="b-stat-card__content">
+        <div class="b-stat-card__number">{{ produits.length }}</div>
+        <div class="b-stat-card__label">Total</div>
+      </div>
+    </div>
+    <div class="b-stat-card b-stat-card--green">
+      <div class="b-stat-card__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="b-stat-card__content">
+        <div class="b-stat-card__number">{{ getStockCount() }}</div>
+        <div class="b-stat-card__label">En stock</div>
+      </div>
+    </div>
+    <div class="b-stat-card b-stat-card--red">
+      <div class="b-stat-card__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </div>
+      <div class="b-stat-card__content">
+        <div class="b-stat-card__number">{{ getRuptureCount() }}</div>
+        <div class="b-stat-card__label">Rupture</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerte stock faible -->
+  @if (lowStockProduits.length > 0) {
+    <div class="b-alert b-alert--warning b-alert--stock">
+      <div class="b-alert__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="b-alert__body">
+        <strong>Stock faible détecté !</strong>
+        <span>
+          {{ lowStockProduits.length }} produit(s) avec un stock ≤ 3 :
+          {{ getLowStockList() }}
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Barre de recherche + filtre -->
+  <div class="b-search-bar">
+    <div class="b-search">
+      <svg class="b-search__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" class="b-search__input" placeholder="Rechercher par nom…"
+             [(ngModel)]="searchQuery" (ngModelChange)="applyFilter()">
+    </div>
+    <select class="b-select" [(ngModel)]="filterCategorieId" (change)="onFilterChange()">
+      <option [ngValue]="null">Toutes les catégories</option>
+      @for (cat of categories; track cat.id) {
+        <option [ngValue]="cat.id">{{ cat.nom }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Tableau -->
+  <div class="b-card">
+    <div class="table-responsive">
+      <table class="b-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Image</th>
+            <th>Nom</th>
+            <th>Prix</th>
+            <th>Stock</th>
+            <th>Catégorie</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filteredProduits; track p.id; let idx = $index) {
+            <tr class="b-tr" [class.b-tr--even]="idx % 2 === 0">
+              <td>{{ p.id }}</td>
+              <td>
+                @if (p.imageUrl) {
+                  <img [src]="baseUrl + p.imageUrl" [alt]="p.nom" class="b-img">
+                } @else {
+                  <div class="b-img-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                         fill="none" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                  </div>
+                }
+              </td>
+              <td><span class="b-name">{{ p.nom }}</span></td>
+              <td>{{ p.prix | number:'1.2-2' }} €</td>
+              <td>
+                @if (p.stock === 0) {
+                  <span class="b-badge b-badge--danger">Rupture</span>
+                } @else if (p.stock < 5) {
+                  <span class="b-badge b-badge--warning">Faible</span>
+                } @else {
+                  <span class="b-badge b-badge--success">{{ p.stock }}</span>
+                }
+              </td>
+              <td>{{ p.categorieNom }}</td>
+              <td>
+                <div class="b-actions">
+                  <button class="b-btn-icon b-btn-icon--edit" (click)="openEdit(p)" title="Modifier">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="b-btn-icon b-btn-icon--delete" (click)="openDelete(p)" title="Supprimer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="b-empty">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24"
+                       fill="none" stroke="#dee2e6" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  </svg>
+                  <p class="b-empty__text">Aucun élément trouvé</p>
+                  <p class="b-empty__subtext">Commencez par en ajouter un</p>
+                  <button class="b-btn b-btn--primary" (click)="openAdd()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Ajouter un produit
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal formulaire -->
+<ng-template #formModal let-modal>
+  <div class="b-modal-header">
+    <div class="b-modal-title">
+      {{ isEditMode ? 'Modifier le produit' : 'Ajouter un produit' }}
+    </div>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="b-modal-body">
+    <form [formGroup]="form">
+      <div class="b-field">
+        <label class="b-label">Nom <span class="b-required">*</span></label>
+        <input type="text" class="b-input" formControlName="nom"
+               [class.b-input--error]="form.get('nom')?.invalid && form.get('nom')?.touched"
+               placeholder="Nom du produit">
+        @if (form.get('nom')?.invalid && form.get('nom')?.touched) {
+          <span class="b-error">Le nom est requis (min. 2 caractères).</span>
+        }
+      </div>
+      <div class="b-field">
+        <label class="b-label">Description</label>
+        <textarea class="b-input b-textarea" formControlName="description" rows="2"
+                  placeholder="Description optionnelle"></textarea>
+      </div>
+      <div class="b-row">
+        <div class="b-field">
+          <label class="b-label">Prix (€) <span class="b-required">*</span></label>
+          <input type="number" class="b-input" formControlName="prix" min="0" step="0.01"
+                 [class.b-input--error]="form.get('prix')?.invalid && form.get('prix')?.touched"
+                 placeholder="0.00">
+          @if (form.get('prix')?.invalid && form.get('prix')?.touched) {
+            <span class="b-error">Prix requis (≥ 0).</span>
+          }
+        </div>
+        <div class="b-field">
+          <label class="b-label">Stock <span class="b-required">*</span></label>
+          <input type="number" class="b-input" formControlName="stock" min="0"
+                 [class.b-input--error]="form.get('stock')?.invalid && form.get('stock')?.touched"
+                 placeholder="0">
+          @if (form.get('stock')?.invalid && form.get('stock')?.touched) {
+            <span class="b-error">Stock requis (≥ 0).</span>
+          }
+        </div>
+      </div>
+      <div class="b-field">
+        <label class="b-label">Catégorie <span class="b-required">*</span></label>
+        <select class="b-input b-select" formControlName="categorieId"
+                [class.b-input--error]="form.get('categorieId')?.invalid && form.get('categorieId')?.touched">
+          <option [ngValue]="null" disabled>-- Sélectionner --</option>
+          @for (cat of categories; track cat.id) {
+            <option [ngValue]="cat.id">{{ cat.nom }}</option>
+          }
+        </select>
+        @if (form.get('categorieId')?.invalid && form.get('categorieId')?.touched) {
+          <span class="b-error">Catégorie requise.</span>
+        }
+      </div>
+      <div class="b-field">
+        <label class="b-label">Image</label>
+        @if (imagePreview) {
+          <div class="b-preview">
+            <img [src]="imagePreview" alt="Aperçu">
+          </div>
+        }
+        <input type="file" class="b-input b-input--file" accept="image/*" (change)="onFileChange($event)">
+        @if (isEditMode && selectedProduit?.imageUrl && !selectedFile) {
+          <small class="b-hint">Laisser vide pour conserver l'image actuelle.</small>
+        }
+      </div>
+    </form>
+  </div>
+  <div class="b-modal-footer">
+    <button type="button" class="b-btn b-btn--outline" (click)="modal.dismiss()">Annuler</button>
+    <button type="button" class="b-btn b-btn--primary" (click)="save(modal)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal suppression -->
+<ng-template #deleteModal let-modal>
+  <div class="b-modal-header b-modal-header--danger">
+    <div class="b-modal-title">Confirmer la suppression</div>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="b-modal-body">
+    <p>Voulez-vous vraiment supprimer le produit <strong>{{ selectedProduit?.nom }}</strong> ?</p>
+    <p class="b-hint">Cette action est irréversible.</p>
+  </div>
+  <div class="b-modal-footer">
+    <button type="button" class="b-btn b-btn--outline" (click)="modal.dismiss()">Annuler</button>
+    <button type="button" class="b-btn b-btn--danger" (click)="modal.close()">Supprimer</button>
+  </div>
+</ng-template>

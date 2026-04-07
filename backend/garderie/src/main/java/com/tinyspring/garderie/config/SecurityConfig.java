@@ -30,9 +30,9 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider auth = new DaoAuthenticationProvider(); // ✅ constructeur vide
-        auth.setUserDetailsService(userDetailsService);                    // ✅ setter séparé
-        auth.setPasswordEncoder(passwordEncoder);                          // ✅ setter séparé
+        DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
+        auth.setUserDetailsService(userDetailsService);
+        auth.setPasswordEncoder(passwordEncoder);
         return auth;
     }
 
@@ -46,6 +46,9 @@ public class SecurityConfig {
 
                         // ── Auth ───────────────────────────────────────────
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // ── Images statiques publiques ─────────────────────
+                        .requestMatchers("/images/**").permitAll()           // ✅ AJOUT
 
                         // ── Boutique front-office ──────────────────────────
                         .requestMatchers(HttpMethod.GET, "/api/boutique/categories/**").permitAll()

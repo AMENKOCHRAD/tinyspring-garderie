@@ -14,6 +14,7 @@ public class ProduitDto {
     private Double prix;
     private Integer stock;
     private String imageUrl;
+    private int seuilAlerte;
 
     // On n'expose pas l'objet Categorie entier → juste id + nom
     private Long categorieId;

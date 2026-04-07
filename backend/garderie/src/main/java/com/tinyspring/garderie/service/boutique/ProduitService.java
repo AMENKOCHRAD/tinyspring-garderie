@@ -2,10 +2,13 @@ package com.tinyspring.garderie.service.boutique;
 
 import com.tinyspring.garderie.dto.boutique.ProduitDto;
 import com.tinyspring.garderie.entity.boutique.Categorie;
+import com.tinyspring.garderie.entity.boutique.Commande;
 import com.tinyspring.garderie.entity.boutique.Produit;
 import com.tinyspring.garderie.repository.boutique.CategorieRepository;
+import com.tinyspring.garderie.repository.boutique.CommandeRepository;
 import com.tinyspring.garderie.repository.boutique.ProduitRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,11 +18,14 @@ public class ProduitService {
 
     private final ProduitRepository produitRepository;
     private final CategorieRepository categorieRepository;
+    private final CommandeRepository commandeRepository;
 
     public ProduitService(ProduitRepository produitRepository,
-                          CategorieRepository categorieRepository) {
+                          CategorieRepository categorieRepository,
+                          CommandeRepository commandeRepository) {
         this.produitRepository = produitRepository;
         this.categorieRepository = categorieRepository;
+        this.commandeRepository = commandeRepository;
     }
 
     // ── Mapping entité → DTO ──────────────────────────────────────────────────
@@ -34,6 +40,7 @@ public class ProduitService {
                 .imageUrl(produit.getImageUrl())
                 .categorieId(produit.getCategorie().getId())
                 .categorieNom(produit.getCategorie().getNom())
+                .seuilAlerte(produit.getSeuilAlerte())
                 .build();
     }
 
@@ -110,10 +117,37 @@ public class ProduitService {
         return toDto(produitRepository.save(existing));
     }
 
+    // ── Vérifie si le produit est lié à des commandes ─────────────────────────
+    public boolean hasCommandes(Long id) {
+        return produitRepository.existsInCommandes(id);
+    }
+
+    public List<ProduitDto> findLowStock() {
+        return produitRepository.findAll()
+                .stream()
+                .filter(p -> p.getStock() <= p.getSeuilAlerte())
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // ── Suppression : détache d'abord de toutes les commandes ─────────────────
+    @Transactional
     public void delete(Long id) {
-        if (!produitRepository.existsById(id)) {
-            throw new RuntimeException("Produit introuvable avec l'id : " + id);
+        Produit produit = produitRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produit introuvable avec l'id : " + id));
+
+        // Détacher le produit de toutes les commandes liées
+        // pour éviter la contrainte FK sur commande_produit
+        List<Commande> commandes = commandeRepository.findAll()
+                .stream()
+                .filter(c -> c.getProduits().stream().anyMatch(p -> p.getId().equals(id)))
+                .collect(Collectors.toList());
+
+        for (Commande commande : commandes) {
+            commande.getProduits().removeIf(p -> p.getId().equals(id));
+            commandeRepository.save(commande);
         }
-        produitRepository.deleteById(id);
+
+        produitRepository.delete(produit);
     }
 }

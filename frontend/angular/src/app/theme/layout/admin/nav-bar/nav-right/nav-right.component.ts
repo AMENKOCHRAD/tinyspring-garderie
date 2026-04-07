@@ -1,5 +1,5 @@
 // angular import
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { animate, style, transition, trigger } from '@angular/animations';
 
 // bootstrap import
@@ -7,6 +7,7 @@ import { NgbDropdownConfig } from '@ng-bootstrap/ng-bootstrap';
 
 // project import
 import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { NotificationService } from 'src/app/services/notification.service';
 import { ChatUserListComponent } from './chat-user-list/chat-user-list.component';
 import { ChatMsgComponent } from './chat-msg/chat-msg.component';
 
@@ -32,6 +33,8 @@ export class NavRightComponent {
   visibleUserList: boolean;
   chatMessage: boolean;
   friendId!: number;
+  private notifService = inject(NotificationService);
+  get lowStockCount() { return this.notifService.lowStockCount; }
 
   // constructor
   constructor() {

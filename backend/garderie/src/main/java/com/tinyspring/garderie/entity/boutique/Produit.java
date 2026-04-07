@@ -31,6 +31,9 @@ public class Produit {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "seuil_alerte", nullable = false)
+    private int seuilAlerte = 3;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)

@@ -6,6 +6,7 @@ import { email, Field, form, minLength, required } from '@angular/forms/signals'
 // project import
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { AuthService } from 'src/app/services/auth.service';
+import { NotificationService } from 'src/app/services/notification.service';
 
 @Component({
   selector: 'app-sign-in',
@@ -17,6 +18,7 @@ export class SignInComponent {
   private cd = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private notifService = inject(NotificationService);
 
   submitted = signal(false);
   error = signal('');
@@ -49,8 +51,10 @@ export class SignInComponent {
     this.authService.login(credentials).subscribe({
       next: (response) => {
         this.authService.saveUser(response);
+        this.authService.saveCredentials(credentials.email, credentials.password);
 
         if (response.role === 'ADMIN') {
+          this.notifService.startPolling();
           this.router.navigate(['/analytics']);
         } else if (response.role === 'PARENT') {
           this.router.navigate(['/sample-page']);

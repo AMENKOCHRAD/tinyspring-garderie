@@ -1,7 +1,8 @@
 /// <reference types="@angular/localize" />
 
 import { enableProdMode, importProvidersFrom } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './app/interceptors/auth.interceptor';
 
 import { environment } from './environments/environment';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
@@ -15,6 +16,6 @@ if (environment.production) {
 bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(BrowserModule, AppRoutingModule),
-    provideHttpClient()
+    provideHttpClient(withInterceptors([authInterceptor]))
   ]
 }).catch((err) => console.error(err));

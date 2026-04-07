@@ -9,6 +9,7 @@ import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.repository.boutique.CommandeRepository;
 import com.tinyspring.garderie.repository.boutique.ProduitRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -105,9 +106,30 @@ public class CommandeService {
         return toDto(commandeRepository.save(commande));
     }
 
+
+    @Transactional
     public CommandeDto updateStatut(Long id, String nouveauStatut) {
         Commande commande = commandeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Commande introuvable avec l'id : " + id));
+
+        if ("CONFIRMEE".equals(nouveauStatut) && !"CONFIRMEE".equals(commande.getStatut())) {
+            for (Produit produit : commande.getProduits()) {
+                // Recharger le produit FRAIS depuis la DB pour avoir le vrai stock actuel
+                Produit produitFrais = produitRepository.findById(produit.getId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Produit introuvable : " + produit.getId()));
+
+                if (produitFrais.getStock() <= 0) {
+                    throw new RuntimeException(
+                            "Stock insuffisant pour le produit : \"" + produitFrais.getNom() + "\"" +
+                                    " (stock actuel : " + produitFrais.getStock() + ")"
+                    );
+                }
+                produitFrais.setStock(produitFrais.getStock() - 1);
+                produitRepository.saveAndFlush(produitFrais);
+            }
+        }
+
         commande.setStatut(nouveauStatut);
         return toDto(commandeRepository.save(commande));
     }

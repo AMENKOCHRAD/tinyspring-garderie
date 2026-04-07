@@ -57,6 +57,27 @@ const routes: Routes = [
           import('./demo/other/sample-page/sample-page.component').then(
             (c) => c.SamplePageComponent
           )
+      },
+      {
+        path: 'admin/boutique/categories',
+        loadComponent: () =>
+          import('./admin/boutique/categories/categories.component').then(
+            (c) => c.AdminCategoriesComponent
+          )
+      },
+      {
+        path: 'admin/boutique/produits',
+        loadComponent: () =>
+          import('./admin/boutique/produits/produits.component').then(
+            (c) => c.AdminProduitsComponent
+          )
+      },
+      {
+        path: 'admin/boutique/commandes',
+        loadComponent: () =>
+          import('./admin/boutique/commandes/commandes.component').then(
+            (c) => c.AdminCommandesComponent
+          )
       }
     ]
   },

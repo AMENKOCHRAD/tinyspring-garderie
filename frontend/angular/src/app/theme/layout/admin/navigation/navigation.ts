@@ -105,10 +105,32 @@ export const NavigationItems: NavigationItem[] = [
       {
         id: 'boutique',
         title: 'Boutique en ligne',
-        type: 'item',
-        url: '/boutique',
+        type: 'collapse',
         classes: 'nav-item',
-        icon: 'feather icon-shopping-cart'
+        icon: 'feather icon-shopping-cart',
+        children: [
+          {
+            id: 'boutique-categories',
+            title: 'Catégories',
+            type: 'item',
+            url: '/admin/boutique/categories',
+            icon: 'feather icon-tag'
+          },
+          {
+            id: 'boutique-produits',
+            title: 'Produits',
+            type: 'item',
+            url: '/admin/boutique/produits',
+            icon: 'feather icon-package'
+          },
+          {
+            id: 'boutique-commandes',
+            title: 'Commandes',
+            type: 'item',
+            url: '/admin/boutique/commandes',
+            icon: 'feather icon-clipboard'
+          }
+        ]
       },
       {
         id: 'transport',
