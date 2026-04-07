@@ -3,6 +3,7 @@ import { AfterViewInit, OnDestroy ,Component, effect, inject, input, output } fr
 import {
   AbstractControl,
   FormBuilder,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
@@ -21,7 +22,7 @@ import * as L from 'leaflet';
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SharedModule],
+  imports: [CommonModule, ReactiveFormsModule,FormsModule, SharedModule],
   templateUrl: './event-form.component.html',
   styleUrls: ['./event-form.component.scss']
 })
@@ -30,7 +31,14 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
   private readonly http = inject(HttpClient);
 
     private map: L.Map | null = null;
-  private marker: L.Marker | null = null;
+   private marker: L.Marker | null = null;
+   locationSearch = '';
+  searching = false;
+  searchResults: Array<{
+  display_name: string;
+  lat: string;
+  lon: string;
+}> = [];
   readonly submitting = input(false);
   readonly errorMessage = input<string | null>(null);
   readonly submitLabel = input('Enregistrer');
@@ -195,6 +203,8 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
       startDatetime: rawValue.startDatetime ?? '',
       endDatetime: rawValue.endDatetime ?? '',
       location: (rawValue.location ?? '').trim(),
+      latitude: rawValue.latitude ?? null,
+      longitude: rawValue.longitude ?? null,
       maxCapacity: Number(rawValue.maxCapacity),
       requiresAuthorization: Boolean(rawValue.requiresAuthorization),
       classroomId: Number(rawValue.classroomId),
@@ -325,6 +335,53 @@ private reverseGeocode(lat: number, lng: number): void {
   setTimeout(() => {
     this.map?.invalidateSize();
   }, 0);
+}
+searchLocation(): void {
+  const query = this.locationSearch.trim();
+
+  if (!query) {
+    this.searchResults = [];
+    return;
+  }
+
+  this.searching = true;
+
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=5`;
+
+  this.http.get<Array<{ display_name: string; lat: string; lon: string }>>(url).subscribe({
+    next: (results) => {
+      this.searchResults = results ?? [];
+      this.searching = false;
+    },
+    error: () => {
+      this.searchResults = [];
+      this.searching = false;
+    }
+  });
+}
+
+selectSearchResult(result: { display_name: string; lat: string; lon: string }): void {
+  const lat = Number(result.lat);
+  const lng = Number(result.lon);
+
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return;
+  }
+
+  this.setMarker(lat, lng);
+
+  this.form.patchValue({
+    location: result.display_name,
+    latitude: lat,
+    longitude: lng
+  });
+
+  this.locationSearch = result.display_name;
+  this.searchResults = [];
+}
+
+clearSearchResults(): void {
+  this.searchResults = [];
 }
   ngAfterViewInit(): void {
   this.initMap();

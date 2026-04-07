@@ -8,6 +8,8 @@ export interface EventRequest {
   startDatetime: string;
   endDatetime: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   maxCapacity: number;
   requiresAuthorization: boolean;
   classroomId: number;

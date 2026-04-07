@@ -17,6 +17,9 @@ interface EventApiResponse {
   startDatetime?: string | null;
   endDatetime?: string | null;
   location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+
   maxCapacity?: number | null;
   requiresAuthorization?: boolean | null;
   classroomId?: number | null;
@@ -151,6 +154,8 @@ export class EventService {
       startDatetime: event.startDatetime ?? '',
       endDatetime: event.endDatetime ?? '',
       location: event.location ?? '',
+      latitude: event.latitude ?? null,
+      longitude: event.longitude ?? null,
       maxCapacity: event.maxCapacity ?? 0,
       requiresAuthorization: Boolean(event.requiresAuthorization),
       classroomId: event.classroomId ?? 0,

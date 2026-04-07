@@ -92,6 +92,49 @@
             </div>
           </div>
           <div class="col-12">
+  <div class="form-group">
+    <label class="form-label" for="locationSearch">Rechercher un lieu</label>
+
+    <div class="location-search-row">
+      <input
+        id="locationSearch"
+        type="text"
+        class="form-control"
+        [(ngModel)]="locationSearch"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Ex: Tunis, Lac 1, Sousse..."
+        (keyup.enter)="searchLocation()"
+      />
+
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        (click)="searchLocation()"
+      >
+        Rechercher
+      </button>
+    </div>
+
+    @if (searching) {
+      <small class="text-muted">Recherche en cours...</small>
+    }
+
+    @if (searchResults.length > 0) {
+      <div class="location-search-results">
+        @for (result of searchResults; track result.display_name) {
+          <button
+            type="button"
+            class="location-search-result-item"
+            (click)="selectSearchResult(result)"
+          >
+            {{ result.display_name }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
+          <div class="col-12">
             <div class="form-group">
               <label class="form-label">Carte</label>
             <div id="event-map" class="event-map"></div>
