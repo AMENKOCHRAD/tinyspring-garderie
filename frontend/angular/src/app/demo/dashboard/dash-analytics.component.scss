@@ -29,3 +29,30 @@
 ::ng-deep .bg-gradient-teal { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; border:none; }
 ::ng-deep .bg-gradient-pink { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%) !important; border:none; }
 ::ng-deep .bg-gradient-dark { background: linear-gradient(135deg, #434343 0%, #000000 100%) !important; border:none; }
+.submenu-dropdown {
+  position: absolute;
+  top: 95%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  color: #333 !important;
+  text-decoration: none !important;
+  font-size: 14px;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #f0f4ff;
+    color: #4361ee !important;
+  }
+}

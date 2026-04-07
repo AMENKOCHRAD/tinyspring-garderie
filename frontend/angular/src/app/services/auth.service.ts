@@ -21,9 +21,13 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(data: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data);
-  }
+  login(data: LoginRequest): Observable<LoginResponse>{
+  // Stocke les credentials pour Basic Auth
+  const credentials = btoa(`${data.email}:${data.password}`);
+  localStorage.setItem('basicAuth', credentials); // ← ajoute cette ligne
+  
+  return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data);
+}
 
   saveUser(user: LoginResponse): void {
     localStorage.setItem('user', JSON.stringify(user));
@@ -36,5 +40,6 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('user');
+    localStorage.removeItem('basicAuth'); // ← ajoute cette ligne
   }
 }

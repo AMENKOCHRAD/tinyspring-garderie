@@ -1,0 +1,35 @@
+<div class="container mt-4">
+  <h2>Liste globale des enfants</h2>
+
+  <div *ngIf="isLoading">Chargement...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <table class="table table-bordered table-striped" *ngIf="!isLoading">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Date naissance</th>
+        <th>Parent</th>
+        <th>Contact</th>
+        <th>Email Parent</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let enfant of enfants">
+        <td>{{ enfant.nom }}</td>
+        <td>{{ enfant.prenom }}</td>
+        <td>{{ enfant.dateNaissance }}</td>
+        <td>{{ enfant.parent.nom }}</td>
+         <td>{{ enfant.contactUrgence}}</td>
+        <td>{{ enfant.parent.email }}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" (click)="supprimerEnfant(enfant.id)">
+            Supprimer
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

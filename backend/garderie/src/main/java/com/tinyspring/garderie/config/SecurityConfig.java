@@ -45,7 +45,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
-                        .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
+                        .requestMatchers("/api/enfants/**").permitAll()//hasAnyRole("ADMIN", "ANIMATRICE", "PARENT")
+                        .requestMatchers("/api/conditions/**").hasAnyRole("ADMIN", "PARENT")
+                        .requestMatchers("/api/traitements/**").hasAnyRole("ADMIN","PARENT")
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
