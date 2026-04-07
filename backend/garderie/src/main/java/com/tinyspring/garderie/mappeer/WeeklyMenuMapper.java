@@ -7,16 +7,18 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = DailyMenuMapper.class)
 public interface WeeklyMenuMapper {
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "dailyMenus", ignore = true)
     WeeklyMenu toEntity(WeeklyMenuRequest request);
 
-    @Mapping(target = "dailyMenus", ignore = true)
     WeeklyMenuResponse toResponse(WeeklyMenu weeklyMenu);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "dailyMenus", ignore = true)
     void updateEntityFromRequest(WeeklyMenuRequest request, @MappingTarget WeeklyMenu weeklyMenu);
 }

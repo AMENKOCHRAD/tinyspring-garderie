@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/menus/weekly")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+
 public class WeeklyMenuRestController {
     private final WeeklyMenuService weeklyMenuService;
 

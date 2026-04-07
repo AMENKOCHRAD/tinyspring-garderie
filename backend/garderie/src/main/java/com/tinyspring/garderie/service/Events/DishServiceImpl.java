@@ -2,6 +2,7 @@ package com.tinyspring.garderie.service.Events;
 
 import com.tinyspring.garderie.dto.Events.DishRequest;
 import com.tinyspring.garderie.dto.Events.DishResponse;
+import com.tinyspring.garderie.entity.Events.DailyMenu;
 import com.tinyspring.garderie.entity.Events.Dish;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
 import com.tinyspring.garderie.mappeer.DishMapper;
@@ -23,22 +24,34 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class DishServiceImpl implements DishService {
+
     private final DishRepository dishRepository;
     private final DailyMenuRepository dailyMenuRepository;
     private final DishMapper dishMapper;
 
     @Override
     public DishResponse create(DishRequest request) {
-        ensureDailyMenuExists(request.getDailyMenuId());
+        if (request.getDailyMenuId() == null) {
+            throw new IllegalArgumentException("dailyMenuId est obligatoire pour la création standalone d'un plat");
+        }
+
+        DailyMenu dailyMenu = getDailyMenuEntity(request.getDailyMenuId());
         Dish dish = dishMapper.toEntity(request);
+        dish.setDailyMenu(dailyMenu);
+
         return dishMapper.toResponse(dishRepository.save(dish));
     }
 
     @Override
     public DishResponse update(Long id, DishRequest request) {
-        ensureDailyMenuExists(request.getDailyMenuId());
         Dish dish = getEntity(id);
         dishMapper.updateEntityFromRequest(request, dish);
+
+        if (request.getDailyMenuId() != null) {
+            DailyMenu dailyMenu = getDailyMenuEntity(request.getDailyMenuId());
+            dish.setDailyMenu(dailyMenu);
+        }
+
         return dishMapper.toResponse(dishRepository.save(dish));
     }
 
@@ -51,6 +64,7 @@ public class DishServiceImpl implements DishService {
     @Override
     public DishResponse uploadPhoto(Long id, MultipartFile file) {
         Dish dish = getEntity(id);
+
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Le fichier image est obligatoire");
         }
@@ -80,8 +94,7 @@ public class DishServiceImpl implements DishService {
     @Override
     @Transactional(readOnly = true)
     public List<DishResponse> getByDailyMenuId(Long dailyMenuId) {
-        ensureDailyMenuExists(dailyMenuId);
-        return dishRepository.findByDailyMenuIdOrderByMealTypeAscNameAsc(dailyMenuId)
+        return dishRepository.findByDailyMenu_IdOrderByMealTypeAscNameAsc(dailyMenuId)
                 .stream()
                 .map(dishMapper::toResponse)
                 .toList();
@@ -92,8 +105,8 @@ public class DishServiceImpl implements DishService {
                 .orElseThrow(() -> new ResourceNotFoundException("Plat introuvable avec l'id : " + id));
     }
 
-    private void ensureDailyMenuExists(Long dailyMenuId) {
-        dailyMenuRepository.findById(dailyMenuId)
+    private DailyMenu getDailyMenuEntity(Long dailyMenuId) {
+        return dailyMenuRepository.findById(dailyMenuId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu journalier introuvable avec l'id : " + dailyMenuId));
     }
 }

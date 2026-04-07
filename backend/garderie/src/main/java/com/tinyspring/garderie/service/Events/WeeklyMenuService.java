@@ -12,4 +12,5 @@ public interface WeeklyMenuService {
     WeeklyMenuResponse update(Long id, WeeklyMenuRequest request);
     void delete(Long id);
     WeeklyMenuResponse duplicate(Long id);
+
 }

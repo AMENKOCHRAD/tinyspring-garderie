@@ -3,21 +3,22 @@ package com.tinyspring.garderie.entity.Events;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Entity
 @Table(name = "dish")
 @Getter
 @Setter
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Dish {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long dailyMenuId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "daily_menu_id", nullable = false)
+    private DailyMenu dailyMenu;
 
     @Enumerated(EnumType.STRING)
     private MealType mealType;

@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/menus/dishes")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+
 public class DishRestController {
     private final DishService dishService;
 

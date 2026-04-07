@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DishRepository extends JpaRepository<Dish, Long> {
-    List<Dish> findByDailyMenuId(Long dailyMenuId);
-    List<Dish> findByDailyMenuIdOrderByMealTypeAscNameAsc(Long dailyMenuId);
+    List<Dish> findByDailyMenu_Id(Long dailyMenuId);
+    List<Dish> findByDailyMenu_IdOrderByMealTypeAscNameAsc(Long dailyMenuId);
 }

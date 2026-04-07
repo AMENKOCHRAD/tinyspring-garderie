@@ -1,4 +1,5 @@
 package com.tinyspring.garderie.dto.Events;
+
 import com.tinyspring.garderie.entity.Events.MealType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DishRequest {
 
-    @NotNull(message = "L'identifiant du menu journalier est obligatoire")
+    // Optional for standalone dish endpoints
     private Long dailyMenuId;
 
     @NotNull(message = "Le type de plat est obligatoire")
@@ -31,4 +32,7 @@ public class DishRequest {
 
     @Size(max = 5000, message = "La liste des allergènes est trop longue")
     private String allergens;
+
+    @Size(max = 5000, message = "Les flags d'allergènes sont trop longs")
+    private String allergenConflictFlags;
 }

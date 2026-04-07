@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -23,5 +24,7 @@ public class WeeklyMenuResponse {
     private Boolean isTemplate;
     private String templateName;
     private LocalDateTime createdAt;
-    private List<DailyMenuResponse> dailyMenus;
+
+    @Builder.Default
+    private List<DailyMenuResponse> dailyMenus = new ArrayList<>();
 }

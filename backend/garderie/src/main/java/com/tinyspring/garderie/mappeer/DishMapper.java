@@ -9,11 +9,15 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface DishMapper {
+
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "dailyMenu", ignore = true)
     Dish toEntity(DishRequest request);
 
+    @Mapping(target = "dailyMenuId", source = "dailyMenu.id")
     DishResponse toResponse(Dish dish);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "dailyMenu", ignore = true)
     void updateEntityFromRequest(DishRequest request, @MappingTarget Dish dish);
 }

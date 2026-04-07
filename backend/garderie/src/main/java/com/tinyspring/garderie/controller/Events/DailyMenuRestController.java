@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/menus/daily")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+
 public class DailyMenuRestController {
     private final DailyMenuService dailyMenuService;
 

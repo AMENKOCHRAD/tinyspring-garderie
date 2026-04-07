@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -21,5 +22,7 @@ public class DailyMenuResponse {
     private DayOfWeek dayOfWeek;
     private Boolean isVisibleToParents;
     private LocalDateTime publishedAt;
-    private List<DishResponse> dishes;
+
+    @Builder.Default
+    private List<DishResponse> dishes = new ArrayList<>();
 }

@@ -1,9 +1,8 @@
 package com.tinyspring.garderie.entity.Events;
 
 public enum MealType {
-    STARTER,
-    MAIN,
-    SIDE,
+    ENTREE,
+    PLAT_PRINCIPAL,
     DESSERT,
-    SNACK
+    GOUTER
 }
