@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, input, output } from '@angular/core';
+import { AfterViewInit, OnDestroy ,Component, effect, inject, input, output } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -15,15 +15,22 @@ import { EventFormSubmission } from '../../models/event-form-submission.model';
 import { EventRequest } from '../../models/event-request.model';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
 
+import { HttpClient } from '@angular/common/http';
+import * as L from 'leaflet';
+
 @Component({
   selector: 'app-event-form',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, SharedModule],
   templateUrl: './event-form.component.html',
   styleUrls: ['./event-form.component.scss']
 })
-export class EventFormComponent {
+export class EventFormComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
+  private readonly http = inject(HttpClient);
 
+    private map: L.Map | null = null;
+  private marker: L.Marker | null = null;
   readonly submitting = input(false);
   readonly errorMessage = input<string | null>(null);
   readonly submitLabel = input('Enregistrer');
@@ -52,6 +59,8 @@ export class EventFormComponent {
       startDatetime: ['', [Validators.required]],
       endDatetime: ['', [Validators.required]],
       location: ['', [Validators.maxLength(255)]],
+      latitude: [null as number | null],
+      longitude: [null as number | null],
       maxCapacity: [1, [Validators.required, Validators.min(1)]],
       requiresAuthorization: [false],
       classroomId: [null as number | null, [Validators.required, Validators.min(1)]],
@@ -108,6 +117,8 @@ export class EventFormComponent {
           startDatetime: '',
           endDatetime: '',
           location: '',
+          latitude: null,
+          longitude: null,
           maxCapacity: 1,
           requiresAuthorization: false,
           classroomId: null,
@@ -127,6 +138,8 @@ export class EventFormComponent {
         startDatetime: this.toDateTimeLocalValue(event.startDatetime),
         endDatetime: this.toDateTimeLocalValue(event.endDatetime),
         location: event.location,
+        latitude: (event as any).latitude ?? null,
+        longitude: (event as any).longitude ?? null,
         maxCapacity: event.maxCapacity,
         requiresAuthorization: event.requiresAuthorization,
         classroomId: event.classroomId,
@@ -256,4 +269,71 @@ export class EventFormComponent {
       this.objectPreviewUrl = null;
     }
   }
+  private setMarker(lat: number, lng: number): void {
+  if (!this.map) return;
+
+  if (this.marker) {
+    this.marker.setLatLng([lat, lng]);
+  } else {
+    this.marker = L.marker([lat, lng]).addTo(this.map);
+  }
+
+  this.map.setView([lat, lng], 15);
+}
+private reverseGeocode(lat: number, lng: number): void {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+
+  this.http.get<any>(url).subscribe({
+    next: (response) => {
+      const placeName =
+        response?.display_name ||
+        `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+      this.form.patchValue({
+        location: placeName
+      });
+    },
+    error: () => {
+      this.form.patchValue({
+        location: `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+      });
+    }
+  });
+}
+  private initMap(): void {
+  if (this.map) return;
+
+  this.map = L.map('event-map').setView([36.8065, 10.1815], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(this.map);
+
+  this.map.on('click', (e: L.LeafletMouseEvent) => {
+    const { lat, lng } = e.latlng;
+
+    this.setMarker(lat, lng);
+
+    this.form.patchValue({
+      latitude: lat,
+      longitude: lng
+    });
+
+    this.reverseGeocode(lat, lng);
+  });
+
+  setTimeout(() => {
+    this.map?.invalidateSize();
+  }, 0);
+}
+  ngAfterViewInit(): void {
+  this.initMap();
+}
+
+ngOnDestroy(): void {
+  if (this.map) {
+    this.map.remove();
+    this.map = null;
+  }
+}
 }

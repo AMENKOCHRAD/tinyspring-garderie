@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByClassroomIdAndStatus(Long classroomId, EventStatus status);
+
+    List<Event> findByStatusOrderByStartDatetimeAsc(EventStatus status);
 }

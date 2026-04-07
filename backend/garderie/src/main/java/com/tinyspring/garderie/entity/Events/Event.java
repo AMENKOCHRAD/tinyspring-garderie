@@ -37,6 +37,9 @@ public class Event {
 
     private String location;
 
+    private Double latitude;
+    private Double longitude;
+
     private Integer maxCapacity;
 
     private boolean requiresAuthorization;

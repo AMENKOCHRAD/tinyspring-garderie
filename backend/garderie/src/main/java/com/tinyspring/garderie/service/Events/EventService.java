@@ -11,7 +11,11 @@ public interface EventService {
 
     List<Event> getAll();
 
+    List<Event> getPublished();
+
     Event getById(Long id);
+
+    Event getPublishedById(Long id);
 
     Event update(Long id, EventRequest request);
 
@@ -20,4 +24,5 @@ public interface EventService {
     Event publish(Long id);
 
     Event uploadPhoto(Long id, MultipartFile file);
+     void validateLocation(Event event);
 }

@@ -23,6 +23,8 @@ public class EventResponse {
     private LocalDateTime startDatetime;
     private LocalDateTime endDatetime;
     private String location;
+    private Double latitude;
+    private Double longitude;
     private Integer maxCapacity;
     private boolean requiresAuthorization;
     private Long classroomId;
@@ -32,4 +34,9 @@ public class EventResponse {
     private LocalDateTime updatedAt;
     private Double eventPrice;
     private String photoEvent;
+    private Long confirmedRegistrations;
+    private Long waitlistedRegistrations;
+    private Integer remainingCapacity;
+    private boolean full;
+    private boolean registrationOpen;
 }

@@ -38,6 +38,7 @@ public class EventServiceImpl implements EventService {
         event.setEventPrice(request.getEventPrice());
 
         validateDates(event);
+        validateLocation(event);
         return eventRepository.save(event);
     }
 
@@ -49,10 +50,29 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<Event> getPublished() {
+        List<Event> events = eventRepository.findByStatusOrderByStartDatetimeAsc(EventStatus.PUBLISHED);
+        return events.stream()
+                .map(this::syncCompletedStatusIfNeeded)
+                .filter(event -> event.getStatus() == EventStatus.PUBLISHED)
+                .toList();
+    }
+
+    @Override
     public Event getById(Long id) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + id));
         return syncCompletedStatusIfNeeded(event);
+    }
+
+    @Override
+    public Event getPublishedById(Long id) {
+        Event event = getById(id);
+        if (event.getStatus() != EventStatus.PUBLISHED) {
+            throw new ResourceNotFoundException("Evenement public introuvable avec l'id : " + id);
+        }
+
+        return event;
     }
 
     @Override
@@ -72,6 +92,7 @@ public class EventServiceImpl implements EventService {
         existing.setEventPrice(request.getEventPrice());
 
         validateDates(existing);
+        validateLocation(existing);
 
         if (request.getStatus() != null) {
             existing.setStatus(request.getStatus());
@@ -188,5 +209,16 @@ public class EventServiceImpl implements EventService {
         }
 
         return filename.substring(filename.lastIndexOf('.'));
+    }
+
+    public void validateLocation(Event event) {
+        boolean hasLat = event.getLatitude() != null;
+        boolean hasLng = event.getLongitude() != null;
+
+        if (hasLat != hasLng) {
+            throw new InvalidStatusTransitionException(
+                    "Latitude et longitude doivent etre fournies ensemble"
+            );
+        }
     }
 }

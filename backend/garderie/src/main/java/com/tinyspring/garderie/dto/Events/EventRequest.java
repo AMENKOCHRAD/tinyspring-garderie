@@ -38,6 +38,9 @@ public class EventRequest {
     @Size(max = 255, message = "Le lieu ne doit pas depasser 255 caracteres")
     private String location;
 
+    private Double latitude;
+    private Double longitude;
+
     @Min(value = 1, message = "La capacite maximale doit etre superieure a 0")
     private Integer maxCapacity;
 

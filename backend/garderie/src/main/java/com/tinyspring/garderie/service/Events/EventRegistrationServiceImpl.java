@@ -14,12 +14,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class EventRegistrationServiceImpl implements EventRegistrationService {
+    private static final Set<RegistrationStatus> CAPACITY_CONSUMING_STATUSES =
+            EnumSet.of(RegistrationStatus.CONFIRMED, RegistrationStatus.ATTENDED);
+    private static final Set<RegistrationStatus> ACTIVE_REGISTRATION_STATUSES =
+            EnumSet.of(RegistrationStatus.PENDING, RegistrationStatus.CONFIRMED, RegistrationStatus.WAITLISTED);
 
     private final EventRepository eventRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
@@ -35,12 +41,39 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
             );
         }
 
+        if (eventRegistrationRepository.existsByEventIdAndChildIdAndStatusIn(
+                eventId,
+                request.getChildId(),
+                ACTIVE_REGISTRATION_STATUSES
+        )) {
+            throw new InvalidStatusTransitionException(
+                    "Cet enfant possede deja une inscription active pour cet evenement"
+            );
+        }
+
+        boolean authorizationSigned = Boolean.TRUE.equals(request.getAuthorizationSigned());
+        if (event.isRequiresAuthorization() && !authorizationSigned) {
+            throw new AuthorizationRequiredException(
+                    "L'autorisation parentale signee est obligatoire pour cet evenement"
+            );
+        }
+
+        long confirmedCount = eventRegistrationRepository.countByEventIdAndStatusIn(
+                eventId,
+                CAPACITY_CONSUMING_STATUSES
+        );
+
+        RegistrationStatus initialStatus = RegistrationStatus.CONFIRMED;
+        if (event.getMaxCapacity() != null && confirmedCount >= event.getMaxCapacity()) {
+            initialStatus = RegistrationStatus.WAITLISTED;
+        }
+
         EventRegistration registration = EventRegistration.builder()
                 .eventId(eventId)
                 .childId(request.getChildId())
                 .parentId(request.getParentId())
-                .status(RegistrationStatus.CONFIRMED)
-                .authorizationSigned(Boolean.TRUE.equals(request.getAuthorizationSigned()))
+                .status(initialStatus)
+                .authorizationSigned(authorizationSigned)
                 .authorizationDocUrl(request.getAuthorizationDocUrl())
                 .notes(request.getNotes())
                 .build();
@@ -111,7 +144,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
                             RegistrationStatus.WAITLISTED
                     )
                     .ifPresent(waitlisted -> {
-                        waitlisted.setStatus(RegistrationStatus.PENDING);
+                        if (!waitlisted.isAuthorizationSigned()) {
+                            waitlisted.setStatus(RegistrationStatus.PENDING);
+                        } else {
+                            waitlisted.setStatus(RegistrationStatus.CONFIRMED);
+                        }
                         eventRegistrationRepository.save(waitlisted);
                     });
         }

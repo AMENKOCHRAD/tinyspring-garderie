@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 public interface EventRegistrationRepository  extends JpaRepository<EventRegistration, Long> {
     List<EventRegistration> findByEventIdOrderByRegisteredAtAsc(Long eventId);
@@ -16,4 +17,8 @@ public interface EventRegistrationRepository  extends JpaRepository<EventRegistr
     );
 
     long countByEventIdAndStatus(Long eventId, RegistrationStatus status);
+
+    long countByEventIdAndStatusIn(Long eventId, Collection<RegistrationStatus> statuses);
+
+    boolean existsByEventIdAndChildIdAndStatusIn(Long eventId, Long childId, Collection<RegistrationStatus> statuses);
 }
