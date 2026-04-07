@@ -1,0 +1,107 @@
+@if (vm$ | async; as vm) {
+  <section class="daily-menu-page">
+    <app-events-module-switcher />
+
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger" role="alert">{{ vm.errorMessage }}</div>
+    }
+
+    @if (vm.loading) {
+      <div class="state-card">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="m-t-15 m-b-0">Chargement du jour...</p>
+      </div>
+    } @else if (vm.day && vm.menu) {
+      <form class="daily-form" [formGroup]="form" (ngSubmit)="save()">
+        <div class="page-header">
+          <div>
+            <h1>Modifier {{ vm.day.dayOfWeek }}</h1>
+            <p>{{ vm.menu.title }}</p>
+          </div>
+
+          <div class="header-actions">
+            <button type="button" class="btn btn-outline-secondary" (click)="backToMenu()">Retour au menu</button>
+            <button type="button" class="btn btn-outline-danger" (click)="deleteDay()">Supprimer le jour</button>
+          </div>
+        </div>
+
+        <div class="surface-card">
+          <div class="day-grid">
+            <label class="field">
+              <span>Jour</span>
+              <select class="form-control" formControlName="dayOfWeek">
+                @for (option of dayOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Date</span>
+              <input type="date" class="form-control" formControlName="menuDate" />
+            </label>
+          </div>
+
+          <label class="checkbox-row">
+            <input type="checkbox" formControlName="isVisibleToParents" />
+            <span>Visible pour les parents</span>
+          </label>
+        </div>
+
+        <div class="surface-card">
+          <div class="section-head">
+            <h2>Plats du jour</h2>
+            <button type="button" class="btn btn-outline-primary" (click)="addDish()">+ Ajouter un plat</button>
+          </div>
+
+          <div formArrayName="dishes" class="dish-list">
+            @for (dishControl of dishesArray.controls; track $index; let dishIndex = $index) {
+              <div class="dish-card" [formGroupName]="dishIndex">
+                <div class="dish-grid">
+                  <label class="field">
+                    <span>Nom</span>
+                    <input class="form-control" formControlName="name" />
+                  </label>
+
+                  <label class="field">
+                    <span>Allergenes</span>
+                    <input class="form-control" formControlName="allergens" />
+                  </label>
+
+                  <label class="field">
+                    <span>Categorie</span>
+                    <select class="form-control" formControlName="mealType">
+                      @for (option of mealOptions; track option.value) {
+                        <option [value]="option.value">{{ option.label }}</option>
+                      }
+                    </select>
+                  </label>
+                </div>
+
+                <label class="field full-width">
+                  <span>Description</span>
+                  <textarea class="form-control" rows="2" formControlName="description"></textarea>
+                </label>
+
+                <div class="dish-actions">
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeDish(dishIndex)">
+                    Supprimer le plat
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="saving">
+            @if (saving) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            }
+            Enregistrer ce jour
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+}

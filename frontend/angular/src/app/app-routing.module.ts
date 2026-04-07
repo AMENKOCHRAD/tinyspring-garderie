@@ -67,6 +67,13 @@ const routes: Routes = [
           )
       },
       {
+        path: 'events/menus/:menuId/days/:dayId/edit',
+        loadComponent: () =>
+          import('./events/pages/daily-menu-form/daily-menu-form.component').then(
+            (c) => c.DailyMenuFormComponent
+          )
+      },
+      {
         path: 'events/menus/:id',
         loadComponent: () =>
           import('./events/pages/weekly-menu-detail/weekly-menu-detail.component').then(

@@ -116,7 +116,6 @@ public class WeeklyMenuServiceImpl implements WeeklyMenuService {
                         .mealType(sourceDish.getMealType())
                         .name(sourceDish.getName())
                         .description(sourceDish.getDescription())
-                        .photoUrl(sourceDish.getPhotoUrl())
                         .allergens(sourceDish.getAllergens())
                         .allergenConflictFlags(sourceDish.getAllergenConflictFlags())
                         .build();
@@ -145,6 +144,9 @@ public class WeeklyMenuServiceImpl implements WeeklyMenuService {
     private void applyTemplateFlags(WeeklyMenu weeklyMenu) {
         boolean template = weeklyMenu.getStatus() == MenuStatus.TEMPLATE || weeklyMenu.isTemplate();
         weeklyMenu.setTemplate(template);
+        if (weeklyMenu.getStatus() == MenuStatus.TEMPLATE) {
+            weeklyMenu.setStatus(MenuStatus.DRAFT);
+        }
 
         if (!template) {
             weeklyMenu.setTemplateName(null);
@@ -162,7 +164,6 @@ public class WeeklyMenuServiceImpl implements WeeklyMenuService {
         List<DailyMenuRequest> dailyMenuRequests = request.getDailyMenus();
 
         if (dailyMenuRequests == null || dailyMenuRequests.isEmpty()) {
-            generateDefaultFiveDays(weeklyMenu);
             return;
         }
 
@@ -197,25 +198,6 @@ public class WeeklyMenuServiceImpl implements WeeklyMenuService {
                     dailyMenu.addDish(dish);
                 }
             }
-        }
-    }
-
-    private void generateDefaultFiveDays(WeeklyMenu weeklyMenu) {
-        LocalDate startDate = weeklyMenu.getWeekStartDate();
-        if (startDate == null) {
-            return;
-        }
-
-        for (int i = 0; i < 5; i++) {
-            LocalDate date = startDate.plusDays(i);
-
-            DailyMenu dailyMenu = DailyMenu.builder()
-                    .menuDate(date)
-                    .dayOfWeek(date.getDayOfWeek())
-                    .isVisibleToParents(true)
-                    .build();
-
-            weeklyMenu.addDailyMenu(dailyMenu);
         }
     }
 

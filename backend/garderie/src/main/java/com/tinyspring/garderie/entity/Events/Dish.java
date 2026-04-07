@@ -28,8 +28,6 @@ public class Dish {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String photoUrl;
-
     @Column(columnDefinition = "TEXT")
     private String allergens;
 

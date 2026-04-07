@@ -333,6 +333,12 @@
   margin: 1rem 0 0;
 }
 
+.inline-checkbox {
+  align-self: end;
+  margin: 0;
+  min-height: 42px;
+}
+
 .panel-separator {
   border: 0;
   border-top: 1px solid #e7ebf2;
@@ -366,13 +372,6 @@
   min-width: 44px;
 }
 
-.dish-upload-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.upload-button,
 .add-dish-button {
   align-items: center;
   background: #fff;
@@ -384,26 +383,12 @@
   justify-content: center;
   min-height: 42px;
   padding: 0.75rem 1rem;
+  width: 100%;
 }
 
 .add-dish-button {
   margin-top: 0.85rem;
   width: 100%;
-}
-
-.dish-preview {
-  border: 1px solid #d9dee7;
-  border-radius: 10px;
-  height: 120px;
-  object-fit: cover;
-  width: 100%;
-}
-
-.dish-preview.placeholder {
-  align-items: center;
-  color: #6b7280;
-  display: flex;
-  justify-content: center;
 }
 
 @media (max-width: 991.98px) {

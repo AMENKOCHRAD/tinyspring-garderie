@@ -1,4 +1,4 @@
-export type MealCategory = 'STARTER' | 'MAIN' | 'SIDE' | 'DESSERT' | 'SNACK';
+export type MealCategory = 'ENTREE' | 'PLAT_PRINCIPAL' | 'DESSERT' | 'GOUTER';
 
 export interface Dish {
   id: number;
@@ -6,7 +6,6 @@ export interface Dish {
   mealType: MealCategory;
   name: string;
   description?: string;
-  photoUrl?: string;
   allergens?: string;
   allergenConflictFlags?: string;
 }

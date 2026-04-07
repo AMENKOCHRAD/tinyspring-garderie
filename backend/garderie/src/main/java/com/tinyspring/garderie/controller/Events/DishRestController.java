@@ -7,14 +7,17 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/menus/dishes")
 @RequiredArgsConstructor
-
 public class DishRestController {
     private final DishService dishService;
 
@@ -24,8 +27,7 @@ public class DishRestController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DishResponse> update(@PathVariable Long id,
-                                               @Valid @RequestBody DishRequest request) {
+    public ResponseEntity<DishResponse> update(@PathVariable Long id, @Valid @RequestBody DishRequest request) {
         return ResponseEntity.ok(dishService.update(id, request));
     }
 
@@ -33,11 +35,5 @@ public class DishRestController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         dishService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/upload-photo")
-    public ResponseEntity<DishResponse> uploadPhoto(@PathVariable Long id,
-                                                    @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(dishService.uploadPhoto(id, file));
     }
 }

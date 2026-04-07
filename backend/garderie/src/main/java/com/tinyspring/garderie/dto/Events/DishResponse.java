@@ -16,7 +16,6 @@ public class DishResponse {
     private MealType mealType;
     private String name;
     private String description;
-    private String photoUrl;
     private String allergens;
     private String allergenConflictFlags;
 }

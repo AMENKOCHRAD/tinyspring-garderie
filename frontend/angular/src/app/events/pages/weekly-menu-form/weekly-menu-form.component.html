@@ -17,13 +17,13 @@
       <form class="menu-form" [formGroup]="form" (ngSubmit)="submit(vm.isEdit)">
         <div class="form-intro">
           <h1>{{ vm.isEdit ? 'Modifier un menu hebdomadaire' : 'Creer un menu hebdomadaire' }}</h1>
-          <p>Définissez la semaine, puis configurez les jours et les plats.</p>
+          <p>Definissez la semaine, puis configurez les jours et les plats.</p>
         </div>
 
         <div class="step-indicator" role="tablist" aria-label="Etapes du formulaire menu">
           <button type="button" class="step-pill" [class.active]="currentStep === 1" (click)="backToStep1()">
             <span class="step-index">1</span>
-            <span>Informations générales</span>
+            <span>Informations generales</span>
           </button>
           <button type="button" class="step-pill" [class.active]="currentStep === 2" (click)="continueToStep2()">
             <span class="step-index">2</span>
@@ -34,12 +34,12 @@
         @if (currentStep === 1) {
           <div class="surface-card step-card">
             <div class="section-heading">
-              <h2>Semaine</h2>
+              <h2>Informations generales</h2>
             </div>
 
             <div class="general-grid">
               <label class="field">
-                <span>Titre du menu</span>
+                <span>Titre</span>
                 <input class="form-control" formControlName="title" placeholder="ex: Menu semaine 15 - Printemps" />
               </label>
 
@@ -58,13 +58,18 @@
               </label>
 
               <label class="field">
-                <span>Date de fin</span>
+                <span>Date de fin (auto)</span>
                 <input type="date" class="form-control" formControlName="weekEndDate" readonly />
               </label>
 
               <label class="field">
                 <span>Nom du template (optionnel)</span>
                 <input class="form-control" formControlName="templateName" placeholder="ex: Hiver, Ramadan..." />
+              </label>
+
+              <label class="checkbox-row inline-checkbox">
+                <input type="checkbox" formControlName="isTemplate" />
+                <span>Template reutilisable</span>
               </label>
             </div>
 
@@ -77,8 +82,7 @@
 
             <div class="step-actions">
               <button type="button" class="btn btn-outline-primary" (click)="continueToStep2()">
-                Continuer vers les jours
-                <span aria-hidden="true">→</span>
+                Continuer vers les jours ->
               </button>
             </div>
           </div>
@@ -119,7 +123,7 @@
 
                     <div class="day-header-actions">
                       <button type="button" class="btn btn-outline-secondary btn-sm" (click)="removeDay(dayIndex)">
-                        Supprimer
+                        Supprimer le jour
                       </button>
                       <button
                         type="button"
@@ -200,19 +204,6 @@
                                 <span>Description</span>
                                 <textarea class="form-control" rows="2" formControlName="description"></textarea>
                               </label>
-
-                              <div class="dish-upload-row">
-                                <label class="upload-button">
-                                  <input type="file" accept="image/*" hidden (change)="onDishFileSelected(dayIndex, dishIndex, $event)" />
-                                  <span>Ajouter une image</span>
-                                </label>
-
-                                @if (getDishPreview(dayIndex, dishIndex); as previewUrl) {
-                                  <img class="dish-preview" [src]="previewUrl" alt="Apercu du plat" />
-                                } @else {
-                                  <div class="dish-preview placeholder">Aucune image</div>
-                                }
-                              </div>
                             </div>
                           </div>
                         }

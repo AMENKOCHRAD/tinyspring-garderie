@@ -2,6 +2,7 @@ package com.tinyspring.garderie.exception.Events;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -19,7 +20,9 @@ public class EventExceptionHandler {
 
     @ExceptionHandler({
             InvalidStatusTransitionException.class,
-            AuthorizationRequiredException.class
+            AuthorizationRequiredException.class,
+            IllegalArgumentException.class,
+            HttpMessageNotReadableException.class
     })
     public ResponseEntity<Map<String, Object>> handleBadRequest(RuntimeException exception) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());

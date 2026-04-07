@@ -10,7 +10,6 @@ export interface DishRequest {
   mealType: MealCategory;
   name: string;
   description?: string;
-  photoUrl?: string;
   allergens?: string;
 }
 
@@ -31,11 +30,5 @@ export class DishService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  uploadPhoto(id: number, file: File): Observable<Dish> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<Dish>(`${this.apiUrl}/${id}/upload-photo`, formData);
   }
 }

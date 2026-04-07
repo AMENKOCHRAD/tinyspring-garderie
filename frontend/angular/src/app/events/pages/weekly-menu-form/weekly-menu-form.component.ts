@@ -4,7 +4,7 @@ import { Component, inject } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
-import { catchError, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
+import { catchError, map, shareReplay, startWith, switchMap, take } from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { EventsModuleSwitcherComponent } from '../../components/events-module-switcher/events-module-switcher.component';
@@ -39,13 +39,12 @@ export class WeeklyMenuFormComponent {
   private readonly notificationService = inject(EventNotificationService);
 
   private originalMenu: WeeklyMenu | null = null;
-  private readonly selectedDishFiles = new Map<string, File>();
-  private readonly previewObjectUrls = new Map<string, string>();
 
   saving = false;
   currentStep = 1;
   expandedDayIndex = 0;
   private hasGeneratedInitialDays = false;
+  private pendingAddDayFromQuery = false;
 
   readonly statusOptions: { value: WeeklyMenuStatus; label: string }[] = [
     { value: 'DRAFT', label: 'Brouillon' },
@@ -54,11 +53,10 @@ export class WeeklyMenuFormComponent {
   ];
 
   readonly mealOptions: { value: MealCategory; label: string }[] = [
-    { value: 'STARTER', label: 'Entree' },
-    { value: 'MAIN', label: 'Plat principal' },
-    { value: 'SIDE', label: 'Accompagnement' },
+    { value: 'ENTREE', label: 'Entree' },
+    { value: 'PLAT_PRINCIPAL', label: 'Plat principal' },
     { value: 'DESSERT', label: 'Dessert' },
-    { value: 'SNACK', label: 'Gouter' }
+    { value: 'GOUTER', label: 'Gouter' }
   ];
 
   readonly dayOptions: { value: MenuDayOfWeek; label: string }[] = [
@@ -75,6 +73,7 @@ export class WeeklyMenuFormComponent {
     weekStartDate: ['', Validators.required],
     weekEndDate: [{ value: '', disabled: true }, Validators.required],
     status: ['DRAFT' as WeeklyMenuStatus, Validators.required],
+    isTemplate: [false],
     templateName: [''],
     dailyMenus: this.fb.array([])
   });
@@ -120,14 +119,43 @@ export class WeeklyMenuFormComponent {
   constructor() {
     this.form.get('weekStartDate')?.valueChanges.subscribe((value) => {
       this.updateComputedEndDate(value);
-      if (!this.originalMenu && this.hasGeneratedInitialDays) {
-        this.regenerateInitialDaysFromStartDate();
-      }
+      this.syncDaysWithWeekStartDate(value);
     });
 
     this.form.get('status')?.valueChanges.subscribe((status) => {
-      if (status !== 'TEMPLATE') {
+      if (status !== 'DRAFT' && this.form.get('isTemplate')?.value) {
+        this.form.get('isTemplate')?.setValue(false, { emitEvent: false });
+      }
+      if (!this.form.get('isTemplate')?.value) {
         this.form.get('templateName')?.setValue('');
+      }
+    });
+
+    this.form.get('isTemplate')?.valueChanges.subscribe((isTemplate) => {
+      const status = this.form.get('status')?.value as WeeklyMenuStatus;
+      if (isTemplate && status === 'PUBLISHED') {
+        this.form.get('status')?.setValue('DRAFT');
+      }
+      if (!isTemplate) {
+        this.form.get('templateName')?.setValue('');
+      }
+    });
+
+    this.route.queryParamMap.pipe(take(1)).subscribe((params) => {
+      if (params.get('addDay') === '1') {
+        this.pendingAddDayFromQuery = true;
+        if (this.route.snapshot.paramMap.get('id')) {
+          this.currentStep = 2;
+          return;
+        }
+
+        this.currentStep = 2;
+        if (!this.dailyMenusArray.length) {
+          this.generateInitialWeekDays();
+          this.hasGeneratedInitialDays = true;
+        }
+        this.addDay();
+        this.clearAddDayQueryParam();
       }
     });
   }
@@ -197,12 +225,10 @@ export class WeeklyMenuFormComponent {
     this.dayDishes(dayIndex).push(
       this.fb.group({
         id: [dish?.id ?? null],
-        mealType: [dish?.mealType ?? 'STARTER', Validators.required],
+        mealType: [this.normalizeMealType(dish?.mealType ?? 'ENTREE'), Validators.required],
         name: [dish?.name ?? '', Validators.required],
         description: [dish?.description ?? ''],
         allergens: [dish?.allergens ?? ''],
-        photoUrl: [dish?.photoUrl ?? ''],
-        previewUrl: [dish?.photoUrl ?? ''],
         clientKey: [this.createClientKey()]
       })
     );
@@ -210,10 +236,6 @@ export class WeeklyMenuFormComponent {
   }
 
   removeDish(dayIndex: number, dishIndex: number): void {
-    const control = this.dayDishes(dayIndex).at(dishIndex);
-    const clientKey = control.get('clientKey')?.value as string;
-    this.selectedDishFiles.delete(clientKey);
-    this.revokePreviewUrl(clientKey);
     this.dayDishes(dayIndex).removeAt(dishIndex);
   }
 
@@ -225,41 +247,24 @@ export class WeeklyMenuFormComponent {
     return this.expandedDayIndex === index;
   }
 
-  onDishFileSelected(dayIndex: number, dishIndex: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    const dishGroup = this.dayDishes(dayIndex).at(dishIndex);
-    const clientKey = dishGroup.get('clientKey')?.value as string;
-    this.selectedDishFiles.set(clientKey, file);
-    this.revokePreviewUrl(clientKey);
-
-    const previewUrl = URL.createObjectURL(file);
-    this.previewObjectUrls.set(clientKey, previewUrl);
-    dishGroup.patchValue({ previewUrl });
-    input.value = '';
-  }
-
-  getDishPreview(dayIndex: number, dishIndex: number): string | null {
-    return (this.dayDishes(dayIndex).at(dishIndex).get('previewUrl')?.value as string) || null;
-  }
-
   getStatusPreviewClass(): string {
     const status = this.form.get('status')?.value as WeeklyMenuStatus;
+    const isTemplate = Boolean(this.form.get('isTemplate')?.value);
+    if (isTemplate) {
+      return 'status-template';
+    }
     switch (status) {
       case 'PUBLISHED':
         return 'status-published';
-      case 'TEMPLATE':
-        return 'status-template';
       default:
         return 'status-draft';
     }
   }
 
   getStatusLabel(status: WeeklyMenuStatus | null | undefined): string {
+    if (this.form.get('isTemplate')?.value) {
+      return 'Template';
+    }
     return this.statusOptions.find((option) => option.value === status)?.label ?? 'Brouillon';
   }
 
@@ -304,6 +309,7 @@ export class WeeklyMenuFormComponent {
   }
 
   async submit(isEdit: boolean): Promise<void> {
+    this.syncDaysWithWeekStartDate(this.form.get('weekStartDate')?.value);
     this.form.markAllAsTouched();
 
     if (this.hasGeneralInfoErrors()) {
@@ -327,15 +333,14 @@ export class WeeklyMenuFormComponent {
     this.saving = true;
 
     try {
-      const photoUploadWarnings: string[] = [];
       const raw = this.form.getRawValue();
       const weeklyPayload: WeeklyMenuRequest = {
         title: raw.title ?? '',
         weekStartDate: raw.weekStartDate ?? null,
         weekEndDate: raw.weekEndDate ?? null,
-        status: raw.status as WeeklyMenuStatus,
-        isTemplate: raw.status === 'TEMPLATE',
-        templateName: raw.status === 'TEMPLATE' ? raw.templateName || null : null
+        status: ((raw.status as WeeklyMenuStatus) === 'TEMPLATE' ? 'DRAFT' : raw.status) as WeeklyMenuStatus,
+        isTemplate: Boolean(raw.isTemplate),
+        templateName: raw.isTemplate ? raw.templateName || null : null
       };
 
       const savedWeekly =
@@ -343,15 +348,8 @@ export class WeeklyMenuFormComponent {
           ? await firstValueFrom(this.weeklyMenuService.update(this.originalMenu.id, weeklyPayload))
           : await firstValueFrom(this.weeklyMenuService.create(weeklyPayload));
 
-      await this.syncDailyMenus(savedWeekly.id, photoUploadWarnings);
-
-      if (photoUploadWarnings.length) {
-        this.notificationService.showError(
-          `Le menu a ete enregistre, mais ${photoUploadWarnings.length} photo(s) n'ont pas pu etre envoyee(s).`
-        );
-      } else {
-        this.notificationService.showSuccess('Le menu a ete enregistre avec succes.');
-      }
+      await this.syncDailyMenus(savedWeekly.id);
+      this.notificationService.showSuccess('Le menu a ete enregistre avec succes.');
       await this.router.navigate(['/events/menus', savedWeekly.id]);
     } catch (error) {
       this.notificationService.showError(
@@ -362,7 +360,7 @@ export class WeeklyMenuFormComponent {
     }
   }
 
-  private async syncDailyMenus(weeklyMenuId: number, photoUploadWarnings: string[]): Promise<void> {
+  private async syncDailyMenus(weeklyMenuId: number): Promise<void> {
     const originalDays = this.originalMenu?.dailyMenus ?? [];
     const currentDayIds = this.dailyMenusArray.controls
       .map((control) => control.get('id')?.value as number | null)
@@ -387,11 +385,11 @@ export class WeeklyMenuFormComponent {
         ? await firstValueFrom(this.dailyMenuService.update(dayId, dayPayload))
         : await firstValueFrom(this.dailyMenuService.create(dayPayload));
 
-      await this.syncDishes(savedDay.id, dayControl.get('dishes') as FormArray, photoUploadWarnings);
+      await this.syncDishes(savedDay.id, dayControl.get('dishes') as FormArray);
     }
   }
 
-  private async syncDishes(dailyMenuId: number, dishesArray: FormArray, photoUploadWarnings: string[]): Promise<void> {
+  private async syncDishes(dailyMenuId: number, dishesArray: FormArray): Promise<void> {
     const originalDay = this.originalMenu?.dailyMenus.find((day) => day.id === dailyMenuId);
     const originalDishes = originalDay?.dishes ?? [];
     const currentDishIds = dishesArray.controls
@@ -405,14 +403,12 @@ export class WeeklyMenuFormComponent {
 
     for (const dishControl of dishesArray.controls) {
       const dishId = dishControl.get('id')?.value as number | null;
-      const clientKey = dishControl.get('clientKey')?.value as string;
 
       const dishPayload: DishRequest = {
         dailyMenuId,
-        mealType: dishControl.get('mealType')?.value as MealCategory,
+        mealType: this.normalizeMealType(dishControl.get('mealType')?.value as MealCategory),
         name: dishControl.get('name')?.value ?? '',
         description: dishControl.get('description')?.value ?? '',
-        photoUrl: dishControl.get('photoUrl')?.value ?? '',
         allergens: dishControl.get('allergens')?.value ?? ''
       };
 
@@ -421,25 +417,8 @@ export class WeeklyMenuFormComponent {
         : await firstValueFrom(this.dishService.create(dishPayload));
 
       dishControl.patchValue({
-        id: savedDish.id,
-        photoUrl: savedDish.photoUrl ?? '',
-        previewUrl: savedDish.photoUrl ?? ''
+        id: savedDish.id
       });
-
-      const pendingFile = this.selectedDishFiles.get(clientKey);
-      if (pendingFile) {
-        try {
-          const uploadedDish = await firstValueFrom(this.dishService.uploadPhoto(savedDish.id, pendingFile));
-          dishControl.patchValue({
-            photoUrl: uploadedDish.photoUrl ?? '',
-            previewUrl: uploadedDish.photoUrl ?? ''
-          });
-          this.selectedDishFiles.delete(clientKey);
-          this.revokePreviewUrl(clientKey);
-        } catch {
-          photoUploadWarnings.push(dishPayload.name || 'Plat sans nom');
-        }
-      }
     }
   }
 
@@ -454,12 +433,20 @@ export class WeeklyMenuFormComponent {
       title: menu.title,
       weekStartDate: menu.weekStartDate ?? '',
       weekEndDate: menu.weekEndDate ?? '',
-      status: menu.status,
+      status: (menu.status === 'TEMPLATE' ? 'DRAFT' : menu.status),
+      isTemplate: Boolean(menu.isTemplate || menu.status === 'TEMPLATE'),
       templateName: menu.templateName ?? ''
     });
 
     menu.dailyMenus.forEach((day) => this.addDay(day));
     this.expandedDayIndex = 0;
+
+    if (this.pendingAddDayFromQuery) {
+      this.currentStep = 2;
+      this.addDay();
+      this.pendingAddDayFromQuery = false;
+      this.clearAddDayQueryParam();
+    }
   }
 
   private resetToDefaults(): void {
@@ -473,6 +460,7 @@ export class WeeklyMenuFormComponent {
       weekStartDate: '',
       weekEndDate: '',
       status: 'DRAFT',
+      isTemplate: false,
       templateName: ''
     });
   }
@@ -496,17 +484,12 @@ export class WeeklyMenuFormComponent {
     this.expandedDayIndex = 0;
   }
 
-  private regenerateInitialDaysFromStartDate(): void {
-    if (this.originalMenu || !this.dailyMenusArray.length) {
+  private syncDaysWithWeekStartDate(startDateValue: string | null | undefined): void {
+    if (!this.dailyMenusArray.length || !startDateValue) {
       return;
     }
 
-    const startDate = this.form.get('weekStartDate')?.value;
-    if (!startDate) {
-      return;
-    }
-
-    const start = new Date(`${startDate}T00:00:00`);
+    const start = new Date(`${startDateValue}T00:00:00`);
     this.dailyMenusArray.controls.forEach((control, index) => {
       const currentDate = new Date(start);
       currentDate.setDate(start.getDate() + index);
@@ -583,14 +566,6 @@ export class WeeklyMenuFormComponent {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  private revokePreviewUrl(clientKey: string): void {
-    const previewUrl = this.previewObjectUrls.get(clientKey);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      this.previewObjectUrls.delete(clientKey);
-    }
-  }
-
   private getErrorMessage(error: HttpErrorResponse, fallback: string): string {
     if (typeof error.error === 'string' && error.error.trim()) {
       return error.error;
@@ -599,5 +574,27 @@ export class WeeklyMenuFormComponent {
       return error.error.message;
     }
     return fallback;
+  }
+
+  private clearAddDayQueryParam(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { addDay: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
+
+  private normalizeMealType(value: MealCategory): MealCategory {
+    switch (value) {
+      case 'ENTREE':
+        return 'ENTREE';
+      case 'PLAT_PRINCIPAL':
+        return 'PLAT_PRINCIPAL';
+      case 'GOUTER':
+        return 'GOUTER';
+      default:
+        return 'DESSERT';
+    }
   }
 }
