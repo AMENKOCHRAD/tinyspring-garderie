@@ -10,6 +10,7 @@ import java.util.Collection;
 
 public interface EventRegistrationRepository  extends JpaRepository<EventRegistration, Long> {
     List<EventRegistration> findByEventIdOrderByRegisteredAtAsc(Long eventId);
+    List<EventRegistration> findByParentIdOrderByRegisteredAtDesc(Long parentId);
 
     Optional<EventRegistration> findFirstByEventIdAndStatusOrderByRegisteredAtAsc(
             Long eventId,
@@ -21,4 +22,6 @@ public interface EventRegistrationRepository  extends JpaRepository<EventRegistr
     long countByEventIdAndStatusIn(Long eventId, Collection<RegistrationStatus> statuses);
 
     boolean existsByEventIdAndChildIdAndStatusIn(Long eventId, Long childId, Collection<RegistrationStatus> statuses);
+
+    boolean existsByEventIdAndChildId(Long eventId, Long childId);
 }

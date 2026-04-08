@@ -18,7 +18,7 @@ import { AuthService } from '../shared/auth.service';
           <div class="col-lg-6 mb-5">
             <p class="section-title pr-5"><span class="pr-2">Authentification</span></p>
             <h1 class="mb-4">Connectez-vous à votre espace</h1>
-            <p>Ce frontoffice accueille les parents et les animateurs pour gérer leurs activités auprès de TinySpring.</p>
+            <p>   </p>
             
             <div class="mb-4">
               <p class="font-weight-bold">Accès disponible :</p>
@@ -87,7 +87,7 @@ import { AuthService } from '../shared/auth.service';
 
                 <!-- Demo credentials info -->
                 <hr class="my-4">
-                <p class="text-muted small mb-2"><strong>Démo (si backend disponible) :</strong></p>
+                <p class="text-muted small mb-2"><strong>Identifiants de démonstration :</strong></p>
                 <ul class="text-muted small mb-0">
                   <li>Parent: parent&#64;garderie.com</li>
                   <li>Animatrice: animatrice&#64;garderie.com</li>

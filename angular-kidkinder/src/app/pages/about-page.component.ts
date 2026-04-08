@@ -18,17 +18,17 @@ import { PageHeroComponent } from '../components/page-hero.component';
           </div>
           <div class="col-lg-7">
             <p class="section-title pr-5"><span class="pr-2">Notre approche</span></p>
-            <h1 class="mb-4">Une conversion pensee pour Angular</h1>
-            <p>Cette page reprend le contenu du template initial en separant clairement le layout, les composants de page et les donnees reutilisables.</p>
+            <h1 class="mb-4">Experience exceptionnelle</h1>
+            <p>TinySpring propose une approche innovante pour la gestion de votre garderie, en combinant la puissance des technologies modernes et la simplicité d'utilisation.</p>
             <div class="row pt-2 pb-4">
               <div class="col-6 col-md-4">
                 <img class="img-fluid rounded" src="/assets/kidkinder/img/about-2.jpg" alt="Equipe">
               </div>
               <div class="col-6 col-md-8">
                 <ul class="list-inline m-0">
-                  <li class="py-2 border-top border-bottom"><i class="fa fa-check text-primary mr-3"></i>Navigation SPA avec Angular Router</li>
-                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i>Sections reutilisables</li>
-                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i>Facile a brancher sur des endpoints Spring</li>
+                  <li class="py-2 border-top border-bottom"><i class="fa fa-check text-primary mr-3"></i><span class="font-weight-bold">Innovation</span></li>
+                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i><span class="font-weight-bold">Simplicité d'utilisation</span></li>
+                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i><span class="font-weight-bold">Design responsive</span></li>
                 </ul>
               </div>
             </div>

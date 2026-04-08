@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { navItems } from '../shared/site-data';
 import { AuthService } from '../shared/auth.service';
 import { AuthUser } from '../shared/auth.models';
@@ -34,12 +34,21 @@ import { AuthUser } from '../shared/auth.models';
               (click)="menuOpen = false">
               {{ item.label }}
             </a>
+            <a
+              *ngIf="isLoggedIn && currentUser?.role === 'PARENT'"
+              [routerLink]="'/parent/portal'"
+              fragment="events-section"
+              [class.active]="isEventsNavActive()"
+              class="nav-item nav-link"
+              (click)="menuOpen = false">
+              Evenements
+            </a>
 
             <!-- Parent nav items (if logged in as parent) -->
             <a
               *ngIf="isLoggedIn && currentUser?.role === 'PARENT'"
               [routerLink]="'/parent/portal'"
-              routerLinkActive="active"
+              [class.active]="isPortalNavActive()"
               class="nav-item nav-link"
               (click)="menuOpen = false">
               Mon Portail
@@ -90,6 +99,8 @@ export class SiteHeaderComponent implements OnInit {
   protected isLoggedIn = false;
   protected currentUser: AuthUser | null = null;
   protected readonly publicNavItems = navItems;
+  protected currentUrl = '';
+  protected currentHash = '';
 
   constructor(
     private authService: AuthService,
@@ -101,6 +112,13 @@ export class SiteHeaderComponent implements OnInit {
     this.authService.auth$.subscribe((user) => {
       this.currentUser = user;
       this.isLoggedIn = user?.isAuthenticated ?? false;
+    });
+
+    this.updateRouteState();
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.updateRouteState();
+      }
     });
   }
 
@@ -125,5 +143,18 @@ export class SiteHeaderComponent implements OnInit {
       // Admin is NOT part of this frontoffice
     };
     return roleLabels[role || ''] || 'Utilisateur';
+  }
+
+  protected isEventsNavActive(): boolean {
+    return this.currentUrl.startsWith('/parent/portal') && this.currentHash === 'events-section';
+  }
+
+  protected isPortalNavActive(): boolean {
+    return this.currentUrl.startsWith('/parent/portal') && this.currentHash !== 'events-section';
+  }
+
+  private updateRouteState(): void {
+    this.currentUrl = this.router.url.split('#')[0] ?? '';
+    this.currentHash = window.location.hash.replace('#', '');
   }
 }

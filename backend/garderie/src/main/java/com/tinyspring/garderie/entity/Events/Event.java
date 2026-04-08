@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.entity.Events;
 
+import com.tinyspring.garderie.entity.Classes.Classe;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -50,7 +51,17 @@ public class Event {
     @Column(name = "photo_event", length = 500)
     private String photoEvent;
 
+    @Column(name = "classroom_id")
     private Long classroomId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "classroom_id",
+            insertable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_event_classe")
+    )
+    private Classe classroom;
     @Column(name = "target_classroom_ids", columnDefinition = "TEXT")
     private String targetClassroomIds;
     private Long createdBy;

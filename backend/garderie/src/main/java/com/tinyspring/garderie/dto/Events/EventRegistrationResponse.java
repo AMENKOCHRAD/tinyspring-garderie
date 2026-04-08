@@ -15,13 +15,16 @@ import java.time.LocalDateTime;
 public class EventRegistrationResponse {
     private Long id;
     private Long eventId;
+    private String eventTitle;
     private Long childId;
+    private String childFullName;
     private Long parentId;
     private RegistrationStatus status;
     private boolean authorizationSigned;
     private String authorizationDocUrl;
     private String notes;
     private LocalDateTime registeredAt;
-
+    private LocalDateTime eventStartDatetime;
+    private boolean cancellableByParent;
 
 }

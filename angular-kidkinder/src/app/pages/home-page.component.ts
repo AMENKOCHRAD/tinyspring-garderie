@@ -12,8 +12,8 @@ import { blogPosts, classes, features, teachers, testimonials } from '../shared/
       <div class="row align-items-center px-3">
         <div class="col-lg-6 text-center text-lg-left">
           <h4 class="text-white mb-4 mt-5 mt-lg-0">Creche et jardin d enfants</h4>
-          <h1 class="display-3 font-weight-bold text-white">Une version Angular prete pour TinySpring</h1>
-          <p class="text-white mb-4">Le template d origine a ete transforme en pages Angular, avec une page de connexion unique et une redirection selon le role admin, parent ou animateur.</p>
+          <h1 class="display-3 font-weight-bold text-white">TinySpring</h1>
+          <p class="text-white mb-4">Une solution moderne pour la gestion de votre garderie</p>
           <a routerLink="/login" class="btn btn-secondary mt-1 py-3 px-5 mr-2">Connexion</a>
           <a routerLink="/classes" class="btn btn-outline-light mt-1 py-3 px-5">Explorer</a>
         </div>
@@ -47,17 +47,17 @@ import { blogPosts, classes, features, teachers, testimonials } from '../shared/
           </div>
           <div class="col-lg-7">
             <p class="section-title pr-5"><span class="pr-2">A propos</span></p>
-            <h1 class="mb-4">Une base frontend plus moderne</h1>
-            <p>La navigation, les sections et les donnees du template sont maintenant structurees pour Angular, avec en plus des parcours dedies pour les parents et pour l equipe de gestion.</p>
+            <h1 class="mb-4">TinySpring</h1>
+            <p>TinySpring est une solution moderne pour la gestion de votre garderie, en combinant la puissance des technologies modernes et la simplicité d'utilisation.</p>
             <div class="row pt-2 pb-4">
               <div class="col-6 col-md-4">
                 <img class="img-fluid rounded" src="/assets/kidkinder/img/about-2.jpg" alt="Classe">
               </div>
               <div class="col-6 col-md-8">
                 <ul class="list-inline m-0">
-                  <li class="py-2 border-top border-bottom"><i class="fa fa-check text-primary mr-3"></i>Pages converties en composants</li>
-                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i>Assets ranges dans src/assets</li>
-                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i>Routing Angular deja prepare avec portail parent et dashboard</li>
+                  <li class="py-2 border-top border-bottom"><i class="fa fa-check text-primary mr-3"></i><span class="font-weight-bold">Innovation</span></li>
+                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i><span class="font-weight-bold">Simplicité d'utilisation</span></li>
+                  <li class="py-2 border-bottom"><i class="fa fa-check text-primary mr-3"></i><span class="font-weight-bold">Design responsive</span></li>
                 </ul>
               </div>
             </div>
@@ -71,7 +71,7 @@ import { blogPosts, classes, features, teachers, testimonials } from '../shared/
       <div class="container">
         <div class="text-center pb-2">
           <p class="section-title px-5"><span class="px-2">Classes</span></p>
-          <h1 class="mb-4">Des contenus pilotables par donnees</h1>
+          <h1 class="mb-4">Nos classes</h1>
         </div>
         <div class="row">
           <div class="col-lg-4 mb-5" *ngFor="let item of classes">
@@ -152,7 +152,7 @@ import { blogPosts, classes, features, teachers, testimonials } from '../shared/
       <div class="container">
         <div class="text-center pb-2">
           <p class="section-title px-5"><span class="px-2">Actualites</span></p>
-          <h1 class="mb-4">Exemple de section blog</h1>
+          <h1 class="mb-4"> section blog</h1>
         </div>
         <div class="row pb-3">
           <div class="col-lg-4 mb-4" *ngFor="let post of blogPosts">

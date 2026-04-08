@@ -14,6 +14,11 @@ import { EventNotificationService, EventToastMessage } from '../../services/even
 import { EventService } from '../../services/event.service';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
 
+import { FullCalendarModule } from '@fullcalendar/angular';
+import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+
 type EventDateFilter = 'ALL' | 'UPCOMING' | 'TODAY' | 'PAST';
 type EventPriceFilter = 'ALL' | 'FREE' | 'PAID';
 
@@ -25,7 +30,16 @@ interface FilterOption<T extends string> {
 @Component({
   selector: 'app-event-list',
   standalone: true,
-  imports: [SharedModule, RouterModule, DatePipe, NgClass, AsyncPipe, FormsModule, EventsModuleSwitcherComponent],
+  imports: [
+    SharedModule,
+    RouterModule,
+    DatePipe,
+    NgClass,
+    AsyncPipe,
+    FormsModule,
+    EventsModuleSwitcherComponent,
+    FullCalendarModule
+  ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']
 })
@@ -34,6 +48,7 @@ export class EventListComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(EventNotificationService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
+
   private readonly loadingSubject = new BehaviorSubject<boolean>(true);
   private readonly errorSubject = new BehaviorSubject<string>('');
   private readonly searchSubject = new BehaviorSubject<string>('');
@@ -72,6 +87,22 @@ export class EventListComponent implements OnInit, OnDestroy {
   selectedType = 'ALL';
   selectedDateFilter: EventDateFilter = 'ALL';
   selectedPriceFilter: EventPriceFilter = 'ALL';
+
+  actionInProgressId: number | null = null;
+
+  calendarOptions: CalendarOptions = {
+    initialView: 'dayGridMonth',
+    plugins: [dayGridPlugin, interactionPlugin],
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,dayGridWeek'
+    },
+    locale: 'fr',
+    height: 'auto',
+    events: [],
+    eventClick: (info: EventClickArg) => this.onCalendarEventClick(info)
+  };
 
   readonly events$ = this.eventService.events$.pipe(
     tap(() => {
@@ -157,13 +188,18 @@ export class EventListComponent implements OnInit, OnDestroy {
           return displayStatus !== 'CANCELLED' && new Date(event.startDatetime) > new Date();
         }).length
       };
-    })
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
-
-  actionInProgressId: number | null = null;
 
   ngOnInit(): void {
     this.eventService.refreshEvents();
+
+    this.vm$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((vm) => {
+        this.updateCalendarEvents(vm.filteredEvents);
+      });
   }
 
   ngOnDestroy(): void {
@@ -222,6 +258,33 @@ export class EventListComponent implements OnInit, OnDestroy {
 
   goToRepublish(eventId: number): void {
     this.router.navigate(['/events', eventId, 'edit']);
+  }
+
+  onCalendarEventClick(info: EventClickArg): void {
+    const eventId = Number(info.event.id);
+
+    if (!Number.isNaN(eventId)) {
+      this.goToDetails(eventId);
+    }
+  }
+
+  updateCalendarEvents(events: Event[]): void {
+    this.calendarOptions = {
+      ...this.calendarOptions,
+      events: this.getCalendarEvents(events)
+    };
+  }
+
+  getCalendarEvents(events: Event[]) {
+    return events.map((event) => ({
+      id: String(event.id),
+      title: event.title || 'Événement sans titre',
+      start: event.startDatetime,
+      end: event.endDatetime,
+      backgroundColor: this.getCalendarStatusColor(this.getDisplayStatus(event)),
+      borderColor: this.getCalendarStatusColor(this.getDisplayStatus(event)),
+      textColor: '#ffffff'
+    }));
   }
 
   publishEvent(event: Event): void {
@@ -385,6 +448,20 @@ export class EventListComponent implements OnInit, OnDestroy {
           );
         }
       });
+  }
+
+  private getCalendarStatusColor(status: EventStatus): string {
+    switch (status) {
+      case 'PUBLISHED':
+        return '#16a34a';
+      case 'CANCELLED':
+        return '#dc2626';
+      case 'COMPLETED':
+        return '#7c3aed';
+      case 'DRAFT':
+      default:
+        return '#2563eb';
+    }
   }
 
   private getErrorMessage(error: HttpErrorResponse, fallbackMessage: string): string {

@@ -15,10 +15,10 @@ import { adminNavItems, navItems, parentNavItems } from '../shared/site-data';
             <i class="flaticon-043-teddy-bear"></i>
             <span class="text-white">TinySpring</span>
           </a>
-          <p>Une vitrine Angular inspiree du template KidKinder, avec connexion par role et espaces dedies pour parent, animateur et administration.</p>
+          <p>Vitrine TinySpring garderie intelligente </p>
         </div>
         <div class="col-lg-3 col-md-6 mb-5">
-          <h3 class="text-primary mb-4">Coordonnees</h3>
+          <h3 class="text-primary mb-4">Coordonnées</h3>
           <div class="d-flex">
             <h4 class="fa fa-map-marker-alt text-primary"></h4>
             <div class="pl-3">
@@ -36,7 +36,7 @@ import { adminNavItems, navItems, parentNavItems } from '../shared/site-data';
           <div class="d-flex">
             <h4 class="fa fa-phone-alt text-primary"></h4>
             <div class="pl-3">
-              <h5 class="text-white">Telephone</h5>
+              <h5 class="text-white">Téléphone</h5>
               <p>+216 00 000 000</p>
             </div>
           </div>
@@ -72,7 +72,7 @@ import { adminNavItems, navItems, parentNavItems } from '../shared/site-data';
       </div>
       <div class="container-fluid pt-5" style="border-top: 1px solid rgba(23, 162, 184, .2);">
         <p class="m-0 text-center text-white">
-          &copy; TinySpring. Conversion Angular du template KidKinder pour integration dans ton projet.
+          &copy; TinySpring. Tous droits réservés. Designed by <a class="text-primary" href="https://htmlcodex.com" target="_blank">HTML Codex</a>
         </p>
       </div>
     </div>

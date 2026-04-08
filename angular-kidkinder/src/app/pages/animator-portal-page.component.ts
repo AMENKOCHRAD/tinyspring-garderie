@@ -14,7 +14,7 @@ import { AuthService } from '../shared/auth.service';
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4">
           <div>
             <p class="section-title pr-5 mb-2"><span class="pr-2">Espace animateur</span></p>
-            <h1 class="mb-0">Outils front pour l animateur</h1>
+            <h1 class="mb-0">Espace animateur</h1>
           </div>
           <div class="mt-3 mt-lg-0">
             <a class="btn btn-outline-primary mr-2" routerLink="/">Retour au site</a>
@@ -36,8 +36,8 @@ import { AuthService } from '../shared/auth.service';
         </div>
 
         <div class="bg-white rounded shadow-sm p-4">
-          <h4 class="mb-3">Vue operationnelle</h4>
-          <p class="mb-0">Cet espace peut ensuite etre branche aux vraies donnees TinySpring pour permettre a l animateur de consulter les groupes, les evenements, le staff et les messages sans acceder au dashboard admin.</p>
+          <h4 class="mb-3">Fonctionnalités</h4>
+          <p class="mb-0">Cet espace permet aux animateurs de gérer leurs activités et d'interagir avec les enfants de manière efficace et sécurisée.</p>
         </div>
       </div>
     </div>

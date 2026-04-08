@@ -1,5 +1,7 @@
 package com.tinyspring.garderie.entity.Events;
 
+import com.tinyspring.garderie.entity.Children.Child;
+import com.tinyspring.garderie.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,11 +23,38 @@ public class EventRegistration {
     @Column(name = "event_id", nullable = false)
     private Long eventId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "event_id",
+            insertable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_event_registration_event")
+    )
+    private Event event;
+
     @Column(name = "child_id", nullable = false)
     private Long childId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "child_id",
+            insertable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_event_registration_child")
+    )
+    private Child child;
+
     @Column(name = "parent_id", nullable = false)
     private Long parentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "parent_id",
+            insertable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_event_registration_parent")
+    )
+    private User parent;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

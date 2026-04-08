@@ -12,8 +12,8 @@ import { PageHeroComponent } from '../components/page-hero.component';
       <div class="container">
         <div class="text-center pb-2">
           <p class="section-title px-5"><span class="px-2">Prendre contact</span></p>
-          <h1 class="mb-3">Une page prete pour ton formulaire Angular</h1>
-          <h4 class="text-center mb-4">Tu peux maintenant brancher cette vue sur un endpoint Spring Boot ou un service Angular.</h4>
+          <h1 class="mb-3">Contact</h1>
+          <h4 class="text-center mb-4">N'hésitez pas à nous contacter pour toute question ou suggestion.</h4>
         </div>
         <div class="row">
           <div class="col-lg-7 mb-5">

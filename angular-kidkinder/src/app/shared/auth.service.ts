@@ -40,6 +40,8 @@ export class AuthService {
       tap((response: LoginResponse) => {
         // Store auth state in memory and localStorage
         const authUser: AuthUser = {
+          id: response.id,
+          name: response.name,
           email: response.email,
           role: response.role,
           isAuthenticated: true
@@ -113,7 +115,24 @@ export class AuthService {
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored) as AuthUser;
+        const parsed = JSON.parse(stored) as Partial<AuthUser>;
+        if (
+          typeof parsed.id !== 'number' ||
+          typeof parsed.name !== 'string' ||
+          typeof parsed.email !== 'string' ||
+          typeof parsed.role !== 'string'
+        ) {
+          this.clearAuth();
+          return null;
+        }
+
+        return {
+          id: parsed.id,
+          name: parsed.name,
+          email: parsed.email,
+          role: parsed.role as UserRole,
+          isAuthenticated: Boolean(parsed.isAuthenticated)
+        };
       } catch {
         // Invalid JSON in localStorage, clear it
         this.clearAuth();

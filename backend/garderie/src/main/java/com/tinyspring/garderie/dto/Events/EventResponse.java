@@ -28,7 +28,9 @@ public class EventResponse {
     private Integer maxCapacity;
     private boolean requiresAuthorization;
     private Long classroomId;
+    private String classroomName;
     private List<Long> targetClassroomIds;
+    private List<String> targetedClassroomNames;
     private Long createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -28,6 +28,7 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "port": 4201,
           "options": {
             "buildTarget": "angular-kidkinder:build"
           }

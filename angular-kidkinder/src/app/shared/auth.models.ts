@@ -12,6 +12,8 @@ export interface LoginRequest {
  * Response from backend after successful login
  */
 export interface LoginResponse {
+  id: number;
+  name: string;
   message: string;
   email: string;
   role: UserRole;
@@ -22,6 +24,8 @@ export interface LoginResponse {
  * Internal representation of authenticated user
  */
 export interface AuthUser {
+  id: number;
+  name: string;
   email: string;
   role: UserRole;
   isAuthenticated: boolean;
