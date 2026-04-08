@@ -20,6 +20,7 @@ public class AbsenceCongeService {
 
     private final AbsenceCongeRepository absenceCongeRepository;
     private final AnimatriceRepository animatriceRepository;
+    private final EmailService emailService;
 
     // ========== ADMIN ==========
 
@@ -39,21 +40,49 @@ public class AbsenceCongeService {
 
     public AbsenceCongeDTO validerDemande(Long id) {
         AbsenceConge absenceConge = absenceCongeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée avec l'id : " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée : " + id));
         absenceConge.setStatut(StatutAbsenceConge.APPROUVE);
-        return toDTO(absenceCongeRepository.save(absenceConge));
+        AbsenceCongeDTO result = toDTO(absenceCongeRepository.save(absenceConge));
+
+        // ✅ Email à l'animatrice
+        emailService.envoyerDecisionAbsence(
+                absenceConge.getAnimatrice().getEmail(),
+                absenceConge.getAnimatrice().getPrenom(),
+                absenceConge.getAnimatrice().getNom(),
+                absenceConge.getType().name(),
+                absenceConge.getDateDebut().toString(),
+                absenceConge.getDateFin().toString(),
+                true,
+                null
+        );
+
+        return result;
     }
 
     public AbsenceCongeDTO refuserDemande(Long id) {
         AbsenceConge absenceConge = absenceCongeRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée avec l'id : " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée : " + id));
         absenceConge.setStatut(StatutAbsenceConge.REFUSE);
-        return toDTO(absenceCongeRepository.save(absenceConge));
+        AbsenceCongeDTO result = toDTO(absenceCongeRepository.save(absenceConge));
+
+        // ✅ Email à l'animatrice
+        emailService.envoyerDecisionAbsence(
+                absenceConge.getAnimatrice().getEmail(),
+                absenceConge.getAnimatrice().getPrenom(),
+                absenceConge.getAnimatrice().getNom(),
+                absenceConge.getType().name(),
+                absenceConge.getDateDebut().toString(),
+                absenceConge.getDateFin().toString(),
+                false,
+                null
+        );
+
+        return result;
     }
 
     public void deleteAbsenceConge(Long id) {
         if (!absenceCongeRepository.existsById(id)) {
-            throw new EntityNotFoundException("Demande non trouvée avec l'id : " + id);
+            throw new EntityNotFoundException("Demande non trouvée : " + id);
         }
         absenceCongeRepository.deleteById(id);
     }
@@ -82,7 +111,7 @@ public class AbsenceCongeService {
 
     // ========== MAPPING ==========
 
-    private AbsenceCongeDTO toDTO(AbsenceConge absenceConge) {
+    public AbsenceCongeDTO toDTO(AbsenceConge absenceConge) {
         return AbsenceCongeDTO.builder()
                 .id(absenceConge.getId())
                 .animatriceId(absenceConge.getAnimatrice().getId())

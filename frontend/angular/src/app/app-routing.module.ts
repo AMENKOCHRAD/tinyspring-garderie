@@ -59,63 +59,77 @@ const routes: Routes = [
           )
       },
 
- // ===== RH & Formations =====
-{
-  path: 'rh/animatrices',
-  loadComponent: () =>
-    import('./RH/animatrice/list-animatrice/list-animatrice.component').then(
-      (c) => c.ListAnimatriceComponent
-    )
-},
-{
-  path: 'rh/animatrices/new',
-  loadComponent: () =>
-    import('./RH/animatrice/form-animatrice/form-animatrice.component').then(
-      (c) => c.FormAnimatriceComponent
-    )
-},
-{
-  path: 'rh/animatrices/edit/:id',
-  loadComponent: () =>
-    import('./RH/animatrice/form-animatrice/form-animatrice.component').then(
-      (c) => c.FormAnimatriceComponent
-    )
-},
-{
-  path: 'rh/absences-conges',
-  loadComponent: () =>
-    import('./RH/absence-conge/list-absence-conge/list-absence-conge.component').then(
-      (c) => c.ListAbsenceCongeComponent
-    )
-},
-{
-  path: 'rh/absences-conges/:id',
-  loadComponent: () =>
-    import('./RH/absence-conge/detail-absence-conge/detail-absence-conge.component').then(
-      (c) => c.DetailAbsenceCongeComponent
-    )
-},
-{
-  path: 'rh/formations',
-  loadComponent: () =>
-    import('./RH/formation/list-formation/list-formation.component').then(
-      (c) => c.ListFormationComponent
-    )
-},
-{
-  path: 'rh/formations/new',
-  loadComponent: () =>
-    import('./RH/formation/form-formation/form-formation.component').then(
-      (c) => c.FormFormationComponent
-    )
-},
-{
-  path: 'rh/formations/edit/:id',
-  loadComponent: () =>
-    import('./RH/formation/form-formation/form-formation.component').then(
-      (c) => c.FormFormationComponent
-    )
-}
+      // ===== RH & Formations =====
+      {
+        path: 'rh/dashboard',
+        loadComponent: () =>
+          import('./RH/dashboard/rh-dashboard.component').then(
+            (c) => c.RhDashboardComponent
+          )
+      },
+      {
+        path: 'rh/calendrier',
+        loadComponent: () =>
+          import('./RH/calendrier/rh-calendrier.component').then(
+            (c) => c.RhCalendrierComponent
+          )
+      },
+      {
+        path: 'rh/animatrices',
+        loadComponent: () =>
+          import('./RH/animatrice/list-animatrice/list-animatrice.component').then(
+            (c) => c.ListAnimatriceComponent
+          )
+      },
+      {
+        path: 'rh/animatrices/new',
+        loadComponent: () =>
+          import('./RH/animatrice/form-animatrice/form-animatrice.component').then(
+            (c) => c.FormAnimatriceComponent
+          )
+      },
+      {
+        path: 'rh/animatrices/edit/:id',
+        loadComponent: () =>
+          import('./RH/animatrice/form-animatrice/form-animatrice.component').then(
+            (c) => c.FormAnimatriceComponent
+          )
+      },
+      {
+        path: 'rh/absences-conges',
+        loadComponent: () =>
+          import('./RH/absence-conge/list-absence-conge/list-absence-conge.component').then(
+            (c) => c.ListAbsenceCongeComponent
+          )
+      },
+      {
+        path: 'rh/absences-conges/:id',
+        loadComponent: () =>
+          import('./RH/absence-conge/detail-absence-conge/detail-absence-conge.component').then(
+            (c) => c.DetailAbsenceCongeComponent
+          )
+      },
+      {
+        path: 'rh/formations',
+        loadComponent: () =>
+          import('./RH/formation/list-formation/list-formation.component').then(
+            (c) => c.ListFormationComponent
+          )
+      },
+      {
+        path: 'rh/formations/new',
+        loadComponent: () =>
+          import('./RH/formation/form-formation/form-formation.component').then(
+            (c) => c.FormFormationComponent
+          )
+      },
+      {
+        path: 'rh/formations/edit/:id',
+        loadComponent: () =>
+          import('./RH/formation/form-formation/form-formation.component').then(
+            (c) => c.FormFormationComponent
+          )
+      }
     ]
   },
   {

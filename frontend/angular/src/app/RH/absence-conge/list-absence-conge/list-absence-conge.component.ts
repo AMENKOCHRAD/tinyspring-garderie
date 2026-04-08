@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,11 +12,12 @@ import { AbsenceCongeService } from '../../../services/RH/absence-conge.service'
   templateUrl: './list-absence-conge.component.html',
   styleUrl: './list-absence-conge.component.scss'
 })
-export class ListAbsenceCongeComponent implements OnInit {
+export class ListAbsenceCongeComponent implements OnInit, OnDestroy {
 
   absenceConges: AbsenceConge[] = [];
   filterStatut: string = '';
   isLoading: boolean = false;
+  private refreshInterval: any;
 
   constructor(
     private absenceCongeService: AbsenceCongeService,
@@ -25,6 +26,15 @@ export class ListAbsenceCongeComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAbsenceConges();
+    // ✅ Rafraîchissement automatique toutes les 20 secondes
+    this.refreshInterval = setInterval(() => this.loadAbsenceConges(), 20000);
+  }
+
+  ngOnDestroy(): void {
+    // ✅ Nettoyage quand on quitte la page
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   loadAbsenceConges(): void {

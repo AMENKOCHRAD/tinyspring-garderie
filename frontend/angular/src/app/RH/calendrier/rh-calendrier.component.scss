@@ -1,0 +1,118 @@
+.calendrier-wrapper {
+  padding: 24px;
+
+  .cal-header {
+    margin-bottom: 20px;
+
+    .cal-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 4px;
+    }
+
+    .cal-subtitle {
+      color: #64748b;
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+
+  .legende {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+
+    .legende-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #374151;
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+    }
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 60px;
+    color: #64748b;
+  }
+
+  .calendar-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+
+    // FullCalendar styles
+    ::ng-deep {
+      .fc-toolbar-title {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+      }
+
+      .fc-button-primary {
+        background: #4f46e5 !important;
+        border-color: #4f46e5 !important;
+        border-radius: 6px !important;
+        font-size: 13px !important;
+
+        &:hover {
+          background: #4338ca !important;
+          border-color: #4338ca !important;
+        }
+
+        &:focus { box-shadow: none !important; }
+      }
+
+      .fc-button-active {
+        background: #3730a3 !important;
+        border-color: #3730a3 !important;
+      }
+
+      .fc-today-button {
+        background: #f1f5f9 !important;
+        border-color: #e2e8f0 !important;
+        color: #374151 !important;
+
+        &:hover {
+          background: #e2e8f0 !important;
+        }
+      }
+
+      .fc-day-today {
+        background: #eff6ff !important;
+      }
+
+      .fc-event {
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        padding: 2px 6px !important;
+        cursor: pointer !important;
+        border: none !important;
+      }
+
+      .fc-col-header-cell {
+        background: #f8fafc !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        color: #64748b !important;
+        padding: 8px !important;
+      }
+
+      .fc-daygrid-day-number {
+        color: #374151 !important;
+        font-size: 13px !important;
+      }
+    }
+  }
+}

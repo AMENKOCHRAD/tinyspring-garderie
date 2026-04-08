@@ -87,4 +87,67 @@ public class EmailService {
                 </div>
                 """.formatted(prenom, nom, email, motDePasse);
     }
+    public void envoyerDecisionAbsence(String destinataire, String prenom, String nom,
+                                       String type, String dateDebut, String dateFin,
+                                       boolean approuve, String motifRefus) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(destinataire);
+            String sujet = approuve
+                    ? "✅ Votre demande d'absence a été approuvée"
+                    : "❌ Votre demande d'absence a été refusée";
+            helper.setSubject(sujet);
+            helper.setText(construireCorpsDecision(prenom, nom, type, dateDebut, dateFin, approuve, motifRefus), true);
+
+            mailSender.send(message);
+            System.out.println("✅ Email décision envoyé à : " + destinataire);
+
+        } catch (MessagingException e) {
+            System.err.println("❌ Erreur envoi email décision : " + e.getMessage());
+        }
+    }
+
+    private String construireCorpsDecision(String prenom, String nom, String type,
+                                           String dateDebut, String dateFin,
+                                           boolean approuve, String motifRefus) {
+        String couleur = approuve ? "#10b981" : "#ef4444";
+        String icone = approuve ? "✅" : "❌";
+        String statut = approuve ? "APPROUVÉE" : "REFUSÉE";
+
+        return """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;
+                        border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+
+              <div style="background: %s; padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">%s Demande %s</h1>
+              </div>
+
+              <div style="padding: 32px;">
+                <p style="color: #475569;">Bonjour <strong>%s %s</strong>,</p>
+                <p style="color: #475569;">
+                  Votre demande d'absence a été <strong>%s</strong>.
+                </p>
+
+                <div style="background: #f8fafc; border-left: 4px solid %s;
+                            padding: 20px; border-radius: 8px; margin: 24px 0;">
+                  <p style="margin: 0 0 8px; color: #64748b; font-size: 13px;">
+                    📋 <strong>Type :</strong> %s
+                  </p>
+                  <p style="margin: 0 0 8px; color: #64748b; font-size: 13px;">
+                    📅 <strong>Du :</strong> %s
+                  </p>
+                  <p style="margin: 0; color: #64748b; font-size: 13px;">
+                    📅 <strong>Au :</strong> %s
+                  </p>
+                </div>
+
+                <p style="color: #94a3b8; font-size: 12px; margin-top: 32px; text-align: center;">
+                  © 2026 TinySpring Garderie
+                </p>
+              </div>
+            </div>
+            """.formatted(couleur, icone, statut, prenom, nom, statut, couleur, type, dateDebut, dateFin);
+    }
 }

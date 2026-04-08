@@ -124,7 +124,23 @@ export const NavigationItems: NavigationItem[] = [
       url: '/rh/formations',
       classes: 'nav-item',
       icon: 'feather icon-award'
-    }
+    },
+    {
+  id: 'rh-dashboard',
+  title: 'Dashboard RH',
+  type: 'item',
+  url: '/rh/dashboard',
+  classes: 'nav-item',
+  icon: 'feather icon-pie-chart'
+},
+{
+  id: 'rh-calendrier',
+  title: 'Calendrier',
+  type: 'item',
+  url: '/rh/calendrier',
+  classes: 'nav-item',
+  icon: 'feather icon-calendar'
+},
   ]
 },
       {
