@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.tinyspring.garderie.dto.LoginResponse;
+import com.tinyspring.garderie.security.JwtService;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -18,10 +20,14 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(UserRepository userRepository,
+                          PasswordEncoder passwordEncoder,
+                          JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/login")
@@ -39,10 +45,26 @@ public class AuthController {
                     .body("Mot de passe incorrect");
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Login success");
-        response.put("email", user.getEmail());
-        response.put("role", user.getRole().getName().name());
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities("ROLE_" + user.getRole().getName().name())
+                .build();
+
+        String token = jwtService.generateToken(userDetails, Map.of(
+                "role", user.getRole().getName().name(),
+                "userId", user.getId(),
+                "nom", user.getNom()
+        ));
+
+        LoginResponse response = new LoginResponse(
+                "Login success",
+                user.getId(),
+                user.getNom(),
+                user.getEmail(),
+                user.getRole().getName().name(),
+                token
+        );
 
         return ResponseEntity.ok(response);
     }

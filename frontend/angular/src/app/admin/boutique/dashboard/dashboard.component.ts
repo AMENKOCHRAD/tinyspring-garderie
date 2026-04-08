@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { AuthService } from 'src/app/services/auth.service';
 import { DashboardService } from 'src/app/services/boutique/dashboard.service';
 import { DashboardStats } from 'src/app/models/boutique/dashboard-stats.model';
 
@@ -13,6 +15,7 @@ import { DashboardStats } from 'src/app/models/boutique/dashboard-stats.model';
 })
 export class AdminDashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   stats: DashboardStats | null = null;
@@ -26,14 +29,30 @@ export class AdminDashboardComponent implements OnInit {
   loadStats(): void {
     this.loading = true;
     this.errorMsg = '';
+
+    const currentUser = this.authService.getUser();
+    console.info('[AdminDashboard] Chargement du dashboard boutique.', {
+      endpoint: 'http://localhost:8081/api/admin/boutique/dashboard/stats',
+      hasToken: !!this.authService.getToken(),
+      role: currentUser?.role ?? null,
+      email: currentUser?.email ?? null
+    });
+
     this.dashboardService.getStats().subscribe({
       next: (data) => {
         this.stats = data;
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.errorMsg = 'Erreur lors du chargement du dashboard.';
+      error: (error: HttpErrorResponse) => {
+        console.error('[AdminDashboard] Erreur de chargement du dashboard.', {
+          status: error.status,
+          url: error.url,
+          errorBody: error.error
+        });
+
+        this.stats = null;
+        this.errorMsg = this.buildErrorMessage(error);
         this.loading = false;
         this.cdr.detectChanges();
       }
@@ -117,6 +136,28 @@ export class AdminDashboardComponent implements OnInit {
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     img.src = this.getPlaceholderDataUrl();
+  }
+
+  private buildErrorMessage(error: HttpErrorResponse): string {
+    const statusText = error.status ? `HTTP ${error.status}` : 'HTTP inconnu';
+
+    if (error.status === 401) {
+      return `Chargement du dashboard impossible (${statusText}) : JWT absent, expire ou invalide.`;
+    }
+
+    if (error.status === 403) {
+      return `Chargement du dashboard impossible (${statusText}) : acces ADMIN requis.`;
+    }
+
+    if (error.status === 404) {
+      return `Chargement du dashboard impossible (${statusText}) : endpoint introuvable.`;
+    }
+
+    if (error.status === 0) {
+      return 'Chargement du dashboard impossible (HTTP 0) : backend inaccessible ou probleme CORS.';
+    }
+
+    return `Chargement du dashboard impossible (${statusText}).`;
   }
 
   private getPlaceholderDataUrl(): string {

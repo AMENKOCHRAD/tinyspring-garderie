@@ -1,13 +1,30 @@
+import { inject } from '@angular/core';
 import { HttpInterceptorFn } from '@angular/common/http';
+import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const authService = inject(AuthService);
+
   if (req.url.includes('/api/admin/')) {
-    const email = localStorage.getItem('userEmail');
-    const password = localStorage.getItem('userPassword');
-    if (email && password) {
-      const token = btoa(`${email}:${password}`);
+    const token = authService.getToken();
+
+    if (!token) {
+      console.warn('[AuthInterceptor] Aucun JWT disponible pour la requete admin.', {
+        url: req.url
+      });
+      return next(req);
+    }
+
+    if (!authService.isAdmin()) {
+      console.warn('[AuthInterceptor] Session non ADMIN sur une requete admin.', {
+        url: req.url,
+        role: authService.getUser()?.role ?? null
+      });
+    }
+
+    if (!req.headers.has('Authorization')) {
       const cloned = req.clone({
-        setHeaders: { Authorization: `Basic ${token}` }
+        setHeaders: { Authorization: `Bearer ${token}` }
       });
       return next(cloned);
     }

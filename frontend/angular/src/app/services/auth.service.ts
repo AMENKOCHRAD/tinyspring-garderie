@@ -9,8 +9,11 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message: string;
+  userId: number;
+  nom: string;
   email: string;
   role: string;
+  token: string;
 }
 
 @Injectable({
@@ -27,11 +30,7 @@ export class AuthService {
 
   saveUser(user: LoginResponse): void {
     localStorage.setItem('user', JSON.stringify(user));
-  }
-
-  saveCredentials(email: string, password: string): void {
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('userPassword', password);
+    this.clearLegacyCredentials();
   }
 
   getUser(): LoginResponse | null {
@@ -39,7 +38,22 @@ export class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
+  getToken(): string | null {
+    const token = this.getUser()?.token?.trim();
+    return token ? token : null;
+  }
+
+  isAdmin(): boolean {
+    return this.getUser()?.role === 'ADMIN';
+  }
+
+  clearLegacyCredentials(): void {
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userPassword');
+  }
+
   logout(): void {
     localStorage.removeItem('user');
+    this.clearLegacyCredentials();
   }
 }

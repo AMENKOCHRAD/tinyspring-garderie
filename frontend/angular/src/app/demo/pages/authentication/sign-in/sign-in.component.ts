@@ -51,7 +51,6 @@ export class SignInComponent {
     this.authService.login(credentials).subscribe({
       next: (response) => {
         this.authService.saveUser(response);
-        this.authService.saveCredentials(credentials.email, credentials.password);
 
         if (response.role === 'ADMIN') {
           this.notifService.startPolling();

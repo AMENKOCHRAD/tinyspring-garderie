@@ -82,6 +82,7 @@ public class CommandeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public CommandeDto create(CommandeRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException(
@@ -92,9 +93,8 @@ public class CommandeService {
             throw new RuntimeException("Aucun produit valide trouvé pour cette commande");
         }
 
-        // Vérifier et décrémenter le stock pour chaque produit
+        // Vérifier uniquement le stock à la création
         for (Produit produit : produits) {
-            // Relecture fraîche depuis la DB
             Produit produitFrais = produitRepository.findById(produit.getId())
                     .orElseThrow(() -> new RuntimeException(
                             "Produit introuvable : " + produit.getId()));
@@ -103,10 +103,7 @@ public class CommandeService {
                 throw new RuntimeException(
                         "Rupture de stock pour le produit : \"" + produitFrais.getNom() + "\"");
             }
-            produitFrais.setStock(produitFrais.getStock() - 1);
-            produitRepository.saveAndFlush(produitFrais);
         }
-
         double montantTotal = produits.stream()
                 .mapToDouble(Produit::getPrix)
                 .sum();

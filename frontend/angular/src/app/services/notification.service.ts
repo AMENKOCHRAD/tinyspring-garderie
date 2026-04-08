@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter, Subject } from 'rxjs';
 import { Commande } from 'src/app/models/boutique/commande.model';
@@ -37,12 +37,7 @@ export class NotificationService {
       filter((e): e is NavigationEnd => e instanceof NavigationEnd)
     ).subscribe((e) => {
       if (e.url === '/admin/boutique/commandes') {
-        const email = localStorage.getItem('userEmail') || '';
-        const password = localStorage.getItem('userPassword') || '';
-        const headers = new HttpHeaders({
-          Authorization: 'Basic ' + btoa(email + ':' + password)
-        });
-        this.http.get<Commande[]>(this.adminUrl, { headers }).subscribe({
+        this.http.get<Commande[]>(this.adminUrl).subscribe({
           next: (commandes) => {
             this.previousCount = commandes.length;
             this.isInitialized = true;
@@ -90,14 +85,7 @@ export class NotificationService {
   private poll(): void {
     console.log('[Notif] poll() exécuté, previousCount =', this.previousCount);
 
-    // Construit le header Basic Auth explicitement pour garantir l'authentification
-    const email = localStorage.getItem('userEmail') || '';
-    const password = localStorage.getItem('userPassword') || '';
-    const headers = new HttpHeaders({
-      Authorization: 'Basic ' + btoa(email + ':' + password)
-    });
-
-    this.http.get<Commande[]>(this.adminUrl, { headers }).subscribe({
+    this.http.get<Commande[]>(this.adminUrl).subscribe({
       next: (commandes) => {
         const count = commandes.length;
         console.log('[Notif] commandes reçues :', count, '| isInitialized :', this.isInitialized);
@@ -172,12 +160,7 @@ export class NotificationService {
   }
 
   private pollStock(): void {
-    const email    = localStorage.getItem('userEmail') || '';
-    const password = localStorage.getItem('userPassword') || '';
-    const headers  = new HttpHeaders({
-      Authorization: 'Basic ' + btoa(email + ':' + password)
-    });
-    this.http.get<Produit[]>(`${this.adminProduitUrl}/low-stock`, { headers })
+    this.http.get<Produit[]>(`${this.adminProduitUrl}/low-stock`)
       .subscribe({
         next: (produits) => {
           this.lowStockProduits.set(produits);
