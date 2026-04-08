@@ -7,6 +7,7 @@ import com.tinyspring.garderie.entity.Reclamation;
 import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.entity.enums.ConversationStatus;
 import com.tinyspring.garderie.entity.enums.ConversationType;
+import com.tinyspring.garderie.entity.enums.ReclamationCategory;
 import com.tinyspring.garderie.entity.enums.ReclamationPriority;
 import com.tinyspring.garderie.entity.enums.ReclamationStatus;
 import com.tinyspring.garderie.repository.ConversationRepository;
@@ -44,6 +45,7 @@ public class ReclamationServiceImpl implements ReclamationService {
     public Reclamation createReclamation(String title,
                                          String description,
                                          String priority,
+                                         String category,
                                          MultipartFile image,
                                          MultipartFile attachment) {
         User currentUser = getCurrentUser();
@@ -62,6 +64,10 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new RuntimeException("La description est obligatoire");
         }
 
+        if (category == null || category.trim().isEmpty()) {
+            throw new RuntimeException("La catégorie est obligatoire");
+        }
+
         Conversation conversation = new Conversation();
         conversation.setSubject("Réclamation : " + title.trim());
         conversation.setType(ConversationType.RECLAMATION);
@@ -78,6 +84,14 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setConversation(savedConversation);
         reclamation.setStatus(ReclamationStatus.OPEN);
 
+        try {
+            reclamation.setCategory(
+                    ReclamationCategory.valueOf(category.trim().toUpperCase())
+            );
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Catégorie invalide. Valeurs autorisées : REPAS, TRANSPORT, COMPORTEMENT, HYGIENE, SECURITE, PERSONNEL, AUTRE");
+        }
+
         if (priority != null && !priority.trim().isEmpty()) {
             try {
                 reclamation.setPriority(
@@ -90,7 +104,6 @@ public class ReclamationServiceImpl implements ReclamationService {
             reclamation.setPriority(ReclamationPriority.MEDIUM);
         }
 
-        // IMAGE
         boolean hasImage = image != null && !image.isEmpty();
         if (hasImage) {
             try {
@@ -127,7 +140,6 @@ public class ReclamationServiceImpl implements ReclamationService {
             }
         }
 
-        // ATTACHMENT
         boolean hasAttachment = attachment != null && !attachment.isEmpty();
         if (hasAttachment) {
             try {
@@ -236,8 +248,20 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new RuntimeException("La description est obligatoire");
         }
 
+        if (request.getCategory() == null || request.getCategory().trim().isEmpty()) {
+            throw new RuntimeException("La catégorie est obligatoire");
+        }
+
         reclamation.setTitle(request.getTitle().trim());
         reclamation.setDescription(request.getDescription().trim());
+
+        try {
+            reclamation.setCategory(
+                    ReclamationCategory.valueOf(request.getCategory().trim().toUpperCase())
+            );
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Catégorie invalide. Valeurs autorisées : REPAS, TRANSPORT, COMPORTEMENT, HYGIENE, SECURITE, PERSONNEL, AUTRE");
+        }
 
         if (request.getPriority() != null && !request.getPriority().trim().isEmpty()) {
             try {

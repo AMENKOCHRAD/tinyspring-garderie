@@ -25,10 +25,11 @@ public class ReclamationController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam(value = "priority", required = false) String priority,
+            @RequestParam("category") String category,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "attachment", required = false) MultipartFile attachment
     ) {
-        return reclamationService.createReclamation(title, description, priority, image, attachment);
+        return reclamationService.createReclamation(title, description, priority, category, image, attachment);
     }
 
     @GetMapping

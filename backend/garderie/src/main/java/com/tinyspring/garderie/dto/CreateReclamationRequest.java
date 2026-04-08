@@ -10,9 +10,7 @@ import lombok.*;
 public class CreateReclamationRequest {
 
     private String title;
-
     private String description;
-
-    // LOW, MEDIUM, HIGH
     private String priority;
+    private String category;
 }

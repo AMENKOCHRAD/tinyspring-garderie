@@ -12,6 +12,7 @@ public interface ReclamationService {
     Reclamation createReclamation(String title,
                                   String description,
                                   String priority,
+                                  String category,
                                   MultipartFile image,
                                   MultipartFile attachment);
 

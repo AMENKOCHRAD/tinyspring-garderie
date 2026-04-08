@@ -169,6 +169,19 @@ import {
             </div>
 
             <div class="mb-3">
+              <label class="form-label">Catégorie</label>
+              <select
+                class="form-control"
+                [(ngModel)]="newReclamation.category"
+              >
+                <option value="">-- Choisir une catégorie --</option>
+                <option *ngFor="let category of reclamationCategories" [value]="category">
+                  {{ getCategoryLabel(category) }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
               <label class="form-label">Priorité</label>
               <select
                 class="form-control"
@@ -204,12 +217,19 @@ import {
                 class="form-control"
                 (change)="onAttachmentSelected($event)"
               />
+              <small class="text-muted d-block mt-1">
+                Formats possibles : PDF, DOC, DOCX, image ou autre fichier.
+              </small>
             </div>
 
             <div *ngIf="selectedAttachmentName" class="mb-3">
-              <small class="text-muted">
-                Pièce jointe sélectionnée : <strong>{{ selectedAttachmentName }}</strong>
-              </small>
+              <div class="attachment-preview-inline">
+                <span class="attachment-icon">{{ getAttachmentIcon(selectedAttachmentName) }}</span>
+                <div class="attachment-meta">
+                  <div class="attachment-name">{{ selectedAttachmentName }}</div>
+                  <small class="text-muted">Prête à être envoyée avec la réclamation</small>
+                </div>
+              </div>
             </div>
 
             <button class="btn btn-primary" (click)="createReclamation()">
@@ -250,6 +270,19 @@ import {
             </div>
 
             <div class="mb-3">
+              <label class="form-label">Catégorie</label>
+              <select
+                class="form-control"
+                [(ngModel)]="editedReclamation.category"
+              >
+                <option value="">-- Choisir une catégorie --</option>
+                <option *ngFor="let category of reclamationCategories" [value]="category">
+                  {{ getCategoryLabel(category) }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
               <label class="form-label">Priorité</label>
               <select
                 class="form-control"
@@ -277,7 +310,7 @@ import {
             <h4 class="mb-3">Recherche et filtres</h4>
 
             <div class="row">
-              <div class="col-md-4 mb-3">
+              <div class="col-md-3 mb-3">
                 <label class="form-label">Recherche par titre</label>
                 <input
                   type="text"
@@ -287,7 +320,17 @@ import {
                 />
               </div>
 
-              <div class="col-md-4 mb-3">
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Filtrer par catégorie</label>
+                <select class="form-control" [(ngModel)]="filterCategory">
+                  <option value="">Toutes</option>
+                  <option *ngFor="let category of reclamationCategories" [value]="category">
+                    {{ getCategoryLabel(category) }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="col-md-3 mb-3">
                 <label class="form-label">Filtrer par statut</label>
                 <select class="form-control" [(ngModel)]="filterStatus">
                   <option value="">Tous</option>
@@ -298,7 +341,7 @@ import {
                 </select>
               </div>
 
-              <div class="col-md-4 mb-3">
+              <div class="col-md-3 mb-3">
                 <label class="form-label">Filtrer par priorité</label>
                 <select class="form-control" [(ngModel)]="filterPriority">
                   <option value="">Toutes</option>
@@ -342,6 +385,7 @@ import {
                     <th>ID</th>
                     <th>Titre</th>
                     <th>Description</th>
+                    <th>Catégorie</th>
                     <th>Image</th>
                     <th>Pièce jointe</th>
                     <th>Priorité</th>
@@ -357,6 +401,11 @@ import {
                     <td>{{ rec.title }}</td>
                     <td>{{ rec.description }}</td>
                     <td>
+                      <span class="badge category-badge">
+                        {{ getCategoryLabel(rec.category) }}
+                      </span>
+                    </td>
+                    <td>
                       <img
                         *ngIf="rec.imagePath"
                         [src]="getFileUrl(rec.imagePath)"
@@ -366,16 +415,41 @@ import {
                       <span *ngIf="!rec.imagePath" class="text-muted">Aucune image</span>
                     </td>
                     <td>
-                      <a
-                        *ngIf="rec.attachmentPath"
-                        [href]="getFileUrl(rec.attachmentPath)"
-                        [attr.download]="rec.attachmentName || true"
-                        target="_blank"
-                        class="attachment-link"
-                      >
-                        {{ rec.attachmentName || 'Télécharger' }}
-                      </a>
-                      <span *ngIf="!rec.attachmentPath" class="text-muted">Aucune pièce jointe</span>
+                      <div *ngIf="rec.attachmentPath; else noAttachmentAdmin" class="attachment-box attachment-admin-box">
+                        <div class="attachment-top">
+                          <span class="attachment-icon">{{ getAttachmentIcon(rec.attachmentName, rec.attachmentType) }}</span>
+                          <div class="attachment-meta">
+                            <div class="attachment-name">
+                              {{ rec.attachmentName || 'Pièce jointe' }}
+                            </div>
+                            <small class="text-muted">
+                              {{ getAttachmentTypeLabel(rec.attachmentName, rec.attachmentType) }}
+                            </small>
+                          </div>
+                        </div>
+
+                        <div class="attachment-admin-actions">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            (click)="openAttachment(rec.attachmentPath)"
+                          >
+                            Ouvrir
+                          </button>
+
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-success"
+                            (click)="downloadAttachment(rec.attachmentPath, rec.attachmentName)"
+                          >
+                            Télécharger
+                          </button>
+                        </div>
+                      </div>
+
+                      <ng-template #noAttachmentAdmin>
+                        <span class="text-muted">Aucune pièce jointe</span>
+                      </ng-template>
                     </td>
                     <td>
                       <span
@@ -440,7 +514,13 @@ import {
             <!-- PARENT VIEW = CARDS -->
             <div class="reclamation-list" *ngIf="!isAdmin() && filteredReclamations().length > 0">
               <div class="reclamation-card" *ngFor="let rec of filteredReclamations()">
-                <h5>{{ rec.title }}</h5>
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                  <h5 class="mb-0">{{ rec.title }}</h5>
+                  <span class="badge category-badge">
+                    {{ getCategoryLabel(rec.category) }}
+                  </span>
+                </div>
+
                 <p class="mb-2">{{ rec.description }}</p>
 
                 <div *ngIf="rec.imagePath" class="mb-3">
@@ -451,18 +531,44 @@ import {
                   />
                 </div>
 
-                <div *ngIf="rec.attachmentPath" class="mb-3">
+                <div class="mb-3">
                   <label class="form-label">Pièce jointe</label>
-                  <div>
-                    <a
-                      [href]="getFileUrl(rec.attachmentPath)"
-                      [attr.download]="rec.attachmentName || true"
-                      target="_blank"
-                      class="attachment-link"
-                    >
-                      {{ rec.attachmentName || 'Télécharger la pièce jointe' }}
-                    </a>
+
+                  <div *ngIf="rec.attachmentPath; else noAttachmentParent" class="attachment-box">
+                    <div class="attachment-top">
+                      <span class="attachment-icon">{{ getAttachmentIcon(rec.attachmentName, rec.attachmentType) }}</span>
+                      <div class="attachment-meta">
+                        <div class="attachment-name">
+                          {{ rec.attachmentName || 'Pièce jointe' }}
+                        </div>
+                        <small class="text-muted">
+                          {{ getAttachmentTypeLabel(rec.attachmentName, rec.attachmentType) }}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div class="attachment-actions">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="openAttachment(rec.attachmentPath)"
+                      >
+                        Ouvrir
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="downloadAttachment(rec.attachmentPath, rec.attachmentName)"
+                      >
+                        Télécharger
+                      </button>
+                    </div>
                   </div>
+
+                  <ng-template #noAttachmentParent>
+                    <div class="text-muted">Aucune pièce jointe</div>
+                  </ng-template>
                 </div>
 
                 <p class="mb-1">
@@ -699,15 +805,76 @@ import {
       border: 1px solid #dee2e6;
     }
 
-    .attachment-link {
-      color: #0d6efd;
+    .category-badge {
+      background: #e0ecff;
+      color: #1d4ed8;
       font-weight: 600;
-      text-decoration: none;
-      word-break: break-word;
+      border: 1px solid #bfd6ff;
     }
 
-    .attachment-link:hover {
-      text-decoration: underline;
+    .attachment-preview-inline {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 12px;
+      background: #f8f9fa;
+    }
+
+    .attachment-box {
+      border: 1px solid #dee2e6;
+      border-radius: 12px;
+      padding: 12px;
+      background: #f8f9fa;
+      min-width: 220px;
+    }
+
+    .attachment-admin-box {
+      min-width: 180px;
+    }
+
+    .attachment-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .attachment-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e9ecef;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .attachment-meta {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .attachment-name {
+      font-weight: 600;
+      color: #212529;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    .attachment-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .attachment-admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .action-btn {
@@ -793,11 +960,26 @@ import {
       .bar {
         width: 42px;
       }
+
+      .attachment-actions,
+      .attachment-admin-actions {
+        flex-direction: column;
+      }
     }
   `]
 })
 export class ReclamationPageComponent implements OnInit {
   reclamations: Reclamation[] = [];
+
+  reclamationCategories: string[] = [
+    'REPAS',
+    'TRANSPORT',
+    'COMPORTEMENT',
+    'HYGIENE',
+    'SECURITE',
+    'PERSONNEL',
+    'AUTRE'
+  ];
 
   loading = false;
   error = '';
@@ -814,6 +996,7 @@ export class ReclamationPageComponent implements OnInit {
   editingReclamationId: number | null = null;
 
   searchTitle = '';
+  filterCategory = '';
   filterStatus = '';
   filterPriority = '';
 
@@ -828,12 +1011,14 @@ export class ReclamationPageComponent implements OnInit {
   newReclamation = {
     title: '',
     description: '',
+    category: '',
     priority: ''
   };
 
   editedReclamation = {
     title: '',
     description: '',
+    category: '',
     priority: ''
   };
 
@@ -852,6 +1037,27 @@ export class ReclamationPageComponent implements OnInit {
 
   toggleStats(): void {
     this.showStats = !this.showStats;
+  }
+
+  getCategoryLabel(category?: string | null): string {
+    switch (category) {
+      case 'REPAS':
+        return 'Repas';
+      case 'TRANSPORT':
+        return 'Transport';
+      case 'COMPORTEMENT':
+        return 'Comportement';
+      case 'HYGIENE':
+        return 'Hygiène';
+      case 'SECURITE':
+        return 'Sécurité';
+      case 'PERSONNEL':
+        return 'Personnel';
+      case 'AUTRE':
+        return 'Autre';
+      default:
+        return category || 'Non définie';
+    }
   }
 
   onReclamationImageSelected(event: Event): void {
@@ -882,11 +1088,90 @@ export class ReclamationPageComponent implements OnInit {
     return this.messagerieService.getFullImageUrl(path);
   }
 
+  openAttachment(path?: string | null): void {
+    if (!path) {
+      return;
+    }
+
+    const fileUrl = this.getFileUrl(path);
+    window.open(fileUrl, '_blank');
+  }
+
+  downloadAttachment(path?: string | null, fileName?: string | null): void {
+    if (!path) {
+      return;
+    }
+
+    this.error = '';
+
+    this.messagerieService.downloadFile(path).subscribe({
+      next: (blob: Blob) => {
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = blobUrl;
+        link.download = fileName && fileName.trim() ? fileName : 'piece-jointe';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(blobUrl);
+      },
+      error: (err) => {
+        console.error('Erreur téléchargement pièce jointe = ', err);
+        this.error = 'Impossible de télécharger la pièce jointe.';
+      }
+    });
+  }
+
+  getAttachmentExtension(fileName?: string | null, attachmentType?: string | null): string {
+    if (fileName && fileName.includes('.')) {
+      return fileName.split('.').pop()!.toLowerCase();
+    }
+
+    if (attachmentType) {
+      if (attachmentType.includes('pdf')) return 'pdf';
+      if (attachmentType.includes('word')) return 'doc';
+      if (attachmentType.includes('image')) return 'image';
+      if (attachmentType.includes('sheet') || attachmentType.includes('excel')) return 'xls';
+      if (attachmentType.includes('zip') || attachmentType.includes('rar')) return 'zip';
+    }
+
+    return 'file';
+  }
+
+  getAttachmentIcon(fileName?: string | null, attachmentType?: string | null): string {
+    const ext = this.getAttachmentExtension(fileName, attachmentType);
+
+    if (['pdf'].includes(ext)) return '📄';
+    if (['doc', 'docx'].includes(ext)) return '📝';
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'image'].includes(ext)) return '🖼️';
+    if (['zip', 'rar', '7z'].includes(ext)) return '🗜️';
+
+    return '📎';
+  }
+
+  getAttachmentTypeLabel(fileName?: string | null, attachmentType?: string | null): string {
+    const ext = this.getAttachmentExtension(fileName, attachmentType);
+
+    if (['pdf'].includes(ext)) return 'Document PDF';
+    if (['doc', 'docx'].includes(ext)) return 'Document Word';
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return 'Fichier tableur';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'image'].includes(ext)) return 'Image';
+    if (['zip', 'rar', '7z'].includes(ext)) return 'Archive compressée';
+
+    return attachmentType || 'Fichier joint';
+  }
+
   filteredReclamations(): Reclamation[] {
     return this.reclamations.filter((rec) => {
       const matchTitle =
         !this.searchTitle ||
         rec.title.toLowerCase().includes(this.searchTitle.toLowerCase());
+
+      const matchCategory =
+        !this.filterCategory || rec.category === this.filterCategory;
 
       const matchStatus =
         !this.filterStatus || rec.status === this.filterStatus;
@@ -894,7 +1179,7 @@ export class ReclamationPageComponent implements OnInit {
       const matchPriority =
         !this.filterPriority || rec.priority === this.filterPriority;
 
-      return matchTitle && matchStatus && matchPriority;
+      return matchTitle && matchCategory && matchStatus && matchPriority;
     });
   }
 
@@ -982,6 +1267,11 @@ export class ReclamationPageComponent implements OnInit {
       return;
     }
 
+    if (!this.newReclamation.category) {
+      this.createError = 'La catégorie est obligatoire.';
+      return;
+    }
+
     if (!this.newReclamation.priority) {
       this.createError = 'La priorité est obligatoire.';
       return;
@@ -991,6 +1281,7 @@ export class ReclamationPageComponent implements OnInit {
       this.newReclamation.title.trim(),
       this.newReclamation.description.trim(),
       this.newReclamation.priority,
+      this.newReclamation.category,
       this.selectedReclamationImage,
       this.selectedAttachment
     ).subscribe({
@@ -999,6 +1290,7 @@ export class ReclamationPageComponent implements OnInit {
         this.newReclamation = {
           title: '',
           description: '',
+          category: '',
           priority: ''
         };
         this.selectedReclamationImage = null;
@@ -1019,6 +1311,7 @@ export class ReclamationPageComponent implements OnInit {
     this.editedReclamation = {
       title: rec.title,
       description: rec.description,
+      category: rec.category || '',
       priority: rec.priority
     };
     this.updateError = '';
@@ -1030,6 +1323,7 @@ export class ReclamationPageComponent implements OnInit {
     this.editedReclamation = {
       title: '',
       description: '',
+      category: '',
       priority: ''
     };
     this.updateError = '';
@@ -1055,6 +1349,11 @@ export class ReclamationPageComponent implements OnInit {
       return;
     }
 
+    if (!this.editedReclamation.category) {
+      this.updateError = 'La catégorie est obligatoire.';
+      return;
+    }
+
     if (!this.editedReclamation.priority) {
       this.updateError = 'La priorité est obligatoire.';
       return;
@@ -1063,6 +1362,7 @@ export class ReclamationPageComponent implements OnInit {
     this.messagerieService.updateReclamation(this.editingReclamationId, {
       title: this.editedReclamation.title.trim(),
       description: this.editedReclamation.description.trim(),
+      category: this.editedReclamation.category,
       priority: this.editedReclamation.priority
     }).subscribe({
       next: () => {
@@ -1071,6 +1371,7 @@ export class ReclamationPageComponent implements OnInit {
         this.editedReclamation = {
           title: '',
           description: '',
+          category: '',
           priority: ''
         };
         this.loadReclamations();

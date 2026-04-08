@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.entity;
 
+import com.tinyspring.garderie.entity.enums.ReclamationCategory;
 import jakarta.persistence.*;
 import lombok.*;
 import com.tinyspring.garderie.entity.enums.ReclamationPriority;
@@ -30,6 +31,9 @@ public class Reclamation {
 
     @Enumerated(EnumType.STRING)
     private ReclamationPriority priority;
+
+    @Enumerated(EnumType.STRING)
+    private ReclamationCategory category;
 
     private String imageName;
     private String imagePath;
@@ -64,6 +68,10 @@ public class Reclamation {
 
         if (this.priority == null) {
             this.priority = ReclamationPriority.MEDIUM;
+        }
+
+        if (this.category == null) {
+            this.category = ReclamationCategory.AUTRE;
         }
     }
 
