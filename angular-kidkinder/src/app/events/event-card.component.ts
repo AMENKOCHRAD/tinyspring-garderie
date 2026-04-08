@@ -74,32 +74,22 @@ import { ParentEvent } from './events.models';
           <span>{{ event.availableChildren.length }} enfant(s) encore eligible(s)</span>
         </div>
 
-      <div class="event-card-actions">
-  <button type="button" class="icon-btn secondary" (click)="view.emit(event)" title="Voir">
-    <i class="fa fa-eye"></i>
-    <span>Voir</span>
-  </button>
+        <div class="event-card-actions">
+          <button type="button" class="icon-btn secondary" (click)="view.emit(event)" title="Voir les details">
+            <i class="fa fa-eye"></i>
+            <span>Voir</span>
+          </button>
 
-  <button
-    *ngIf="canCancelParticipation() && hasConfirmedParticipation()"
-    type="button"
-    class="icon-btn danger"
-    (click)="cancelParticipation.emit(event)"
-    title="Annuler la participation">
-    <i class="fa fa-times-circle"></i>
-    <span>Annuler</span>
-  </button>
-
-  <button
-    type="button"
-    class="icon-btn primary"
-    [disabled]="isParticipateDisabled()"
-    (click)="participate.emit(event)"
-    [title]="getParticipateLabel()">
-    <i class="fa" [ngClass]="getParticipateIcon()"></i>
-    <span>{{ getParticipateLabel() }}</span>
-  </button>
-</div>
+          <button
+            type="button"
+            class="icon-btn primary"
+            [disabled]="isParticipateDisabled()"
+            (click)="participate.emit(event)"
+            [title]="getParticipateLabel()">
+            <i class="fa" [ngClass]="getParticipateIcon()"></i>
+            <span>{{ getParticipateLabel() }}</span>
+          </button>
+        </div>
       </div>
     </article>
   `,
@@ -274,11 +264,6 @@ import { ParentEvent } from './events.models';
     .icon-btn:not(:disabled):hover {
       transform: translateY(-1px);
     }
-    .icon-btn.danger {
-  background: linear-gradient(135deg, #f87171, #dc2626);
-  color: #fff;
-  box-shadow: 0 14px 28px rgba(220, 38, 38, 0.22);
-
 
     .icon-btn.secondary {
       background: #eef6ff;
@@ -314,25 +299,6 @@ export class EventCardComponent {
   @Input({ required: true }) public event!: ParentEvent;
   @Output() public view = new EventEmitter<ParentEvent>();
   @Output() public participate = new EventEmitter<ParentEvent>();
-  @Output() public cancelParticipation = new EventEmitter<ParentEvent>();
-
-  protected canCancelParticipation(): boolean {
-  if (!this.event.hasParticipation || !this.event.startDatetime) {
-    return false;
-  }
-
-  const eventStart = new Date(this.event.startDatetime).getTime();
-  const now = new Date().getTime();
-  const twentyFourHours = 24 * 60 * 60 * 1000;
-
-  return eventStart - now > twentyFourHours;
-}
-
-protected hasConfirmedParticipation(): boolean {
-  return this.event.activeParticipations?.some(
-    (participation) => participation.status?.toUpperCase() === 'CONFIRMED'
-  ) ?? false;
-}
 
   protected formatType(type: string): string {
     return type.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (letter) => letter.toUpperCase());

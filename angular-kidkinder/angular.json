@@ -16,6 +16,14 @@
             "index": "src/index.html",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
+            "optimization": {
+              "scripts": true,
+              "styles": {
+                "minify": true,
+                "inlineCritical": false
+              },
+              "fonts": false
+            },
             "assets": [
               {
                 "glob": "**/*",

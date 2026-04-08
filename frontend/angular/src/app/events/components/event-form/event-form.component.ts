@@ -30,8 +30,8 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
 
-    private map: L.Map | null = null;
-   private marker: L.Marker | null = null;
+  private map: L.Map | null = null;
+  private marker: L.Marker | null = null;
    locationSearch = '';
   searching = false;
   searchResults: Array<{
