@@ -21,15 +21,17 @@ public class CommandeService {
     private final ProduitRepository produitRepository;
     private final UserRepository userRepository;
     private final ProduitService produitService;
+    private final EmailService emailService;
 
     public CommandeService(CommandeRepository commandeRepository,
                            ProduitRepository produitRepository,
                            UserRepository userRepository,
-                           ProduitService produitService) {
+                           ProduitService produitService, EmailService emailService) {
         this.commandeRepository = commandeRepository;
         this.produitRepository = produitRepository;
         this.userRepository = userRepository;
         this.produitService = produitService;
+        this.emailService   = emailService;
     }
 
     // ── Mapping entité → DTO ──────────────────────────────────────────────────
@@ -81,17 +83,30 @@ public class CommandeService {
     }
 
     public CommandeDto create(CommandeRequest request) {
-        // Récupérer l'utilisateur
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable avec l'id : " + request.getUserId()));
+                .orElseThrow(() -> new RuntimeException(
+                        "Utilisateur introuvable avec l'id : " + request.getUserId()));
 
-        // Récupérer les produits
         List<Produit> produits = produitRepository.findAllById(request.getProduitIds());
         if (produits.isEmpty()) {
             throw new RuntimeException("Aucun produit valide trouvé pour cette commande");
         }
 
-        // Calculer le montant total
+        // Vérifier et décrémenter le stock pour chaque produit
+        for (Produit produit : produits) {
+            // Relecture fraîche depuis la DB
+            Produit produitFrais = produitRepository.findById(produit.getId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Produit introuvable : " + produit.getId()));
+
+            if (produitFrais.getStock() <= 0) {
+                throw new RuntimeException(
+                        "Rupture de stock pour le produit : \"" + produitFrais.getNom() + "\"");
+            }
+            produitFrais.setStock(produitFrais.getStock() - 1);
+            produitRepository.saveAndFlush(produitFrais);
+        }
+
         double montantTotal = produits.stream()
                 .mapToDouble(Produit::getPrix)
                 .sum();
@@ -103,8 +118,13 @@ public class CommandeService {
                 .produits(produits)
                 .build();
 
-        return toDto(commandeRepository.save(commande));
+        CommandeDto dto = toDto(commandeRepository.save(commande));
+        // Recharger avec les relations pour l'email
+        Commande saved = commandeRepository.findById(dto.getId()).orElseThrow();
+        emailService.sendCommandeCreee(saved);
+        return dto;
     }
+
 
 
     @Transactional
@@ -131,7 +151,13 @@ public class CommandeService {
         }
 
         commande.setStatut(nouveauStatut);
-        return toDto(commandeRepository.save(commande));
+        CommandeDto result = toDto(commandeRepository.save(commande));
+        if ("CONFIRMEE".equals(nouveauStatut)) {
+            emailService.sendCommandeConfirmee(commande);
+        } else if ("LIVREE".equals(nouveauStatut)) {
+            emailService.sendCommandeLivree(commande);
+        }
+        return result;
     }
 
     public void delete(Long id) {

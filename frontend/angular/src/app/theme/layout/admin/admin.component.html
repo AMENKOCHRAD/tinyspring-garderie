@@ -17,7 +17,9 @@
       <div class="pcoded-inner-content">
         <div class="main-body">
           <div class="page-wrapper">
-            <app-breadcrumb />
+            @if (!isBoutiquePage) {
+              <app-breadcrumb />
+            }
             <router-outlet />
           </div>
         </div>

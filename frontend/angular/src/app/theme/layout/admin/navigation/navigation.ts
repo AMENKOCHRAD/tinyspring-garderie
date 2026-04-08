@@ -110,6 +110,13 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-shopping-cart',
         children: [
           {
+            id: 'boutique-dashboard',
+            title: 'Dashboard',
+            type: 'item',
+            url: '/admin/boutique/dashboard',
+            icon: 'feather icon-bar-chart-2'
+          },
+          {
             id: 'boutique-categories',
             title: 'Catégories',
             type: 'item',

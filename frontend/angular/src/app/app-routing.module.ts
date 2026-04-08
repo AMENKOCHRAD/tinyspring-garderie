@@ -59,6 +59,13 @@ const routes: Routes = [
           )
       },
       {
+        path: 'admin/boutique/dashboard',
+        loadComponent: () =>
+          import('./admin/boutique/dashboard/dashboard.component').then(
+            (c) => c.AdminDashboardComponent
+          )
+      },
+      {
         path: 'admin/boutique/categories',
         loadComponent: () =>
           import('./admin/boutique/categories/categories.component').then(

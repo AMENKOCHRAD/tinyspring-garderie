@@ -3,18 +3,36 @@ package com.tinyspring.garderie.repository.boutique;
 import com.tinyspring.garderie.entity.boutique.Commande;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import java.time.LocalDateTime;
 
 import java.util.List;
 
 @Repository
 public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
-    // Toutes les commandes d'un utilisateur
     List<Commande> findByUserId(Long userId);
 
-    // Commandes par statut (admin)
     List<Commande> findByStatut(String statut);
 
-    // Commandes d'un user par statut
     List<Commande> findByUserIdAndStatut(Long userId, String statut);
+
+    long countByStatut(String statut);
+
+    @org.springframework.data.jpa.repository.Query(
+            "SELECT COALESCE(SUM(c.montantTotal), 0) FROM Commande c WHERE c.statut <> 'ANNULEE'"
+    )
+    Double sumMontantTotalCommandesValides();
+
+    List<Commande> findAllByOrderByDateCommandeDesc(Pageable pageable);
+
+    @Query("""
+    SELECT FUNCTION('DATE_FORMAT', c.dateCommande, '%Y-%m'), COALESCE(SUM(c.montantTotal), 0)
+    FROM Commande c
+    WHERE c.statut <> 'ANNULEE'
+    GROUP BY FUNCTION('DATE_FORMAT', c.dateCommande, '%Y-%m')
+    ORDER BY FUNCTION('DATE_FORMAT', c.dateCommande, '%Y-%m')
+""")
+    List<Object[]> sumMontantTotalGroupByMonth();
 }

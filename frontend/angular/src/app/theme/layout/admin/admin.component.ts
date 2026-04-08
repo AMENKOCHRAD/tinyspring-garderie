@@ -1,6 +1,6 @@
 // Angular Import
-import { Component, HostListener, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { RouterModule, Router, NavigationEnd, Event } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 // Project Import
@@ -16,18 +16,28 @@ import { LayoutStateService } from '../../shared/service/layout-state.service';
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
-export class AdminComponent {
+export class AdminComponent implements OnInit {
   private layoutState = inject(LayoutStateService);
+  private router = inject(Router);
 
   // public props
   navCollapsed!: boolean;
   navCollapsedMob: boolean;
   windowWidth: number;
+  isBoutiquePage = false;
 
   // constructor
   constructor() {
     this.windowWidth = window.innerWidth;
     this.navCollapsedMob = false;
+  }
+
+  ngOnInit(): void {
+    this.router.events.subscribe((event: Event) => {
+      if (event instanceof NavigationEnd) {
+        this.isBoutiquePage = event.url.startsWith('/admin/boutique/');
+      }
+    });
   }
 
   @HostListener('window:resize', ['$event'])
