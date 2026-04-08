@@ -71,6 +71,13 @@ const routes: Routes = [
           )
       },
       {
+        path: 'reclamations/history',
+        loadComponent: () =>
+          import('./demo/reclamation/reclamation-history-page.component').then(
+            (c) => c.ReclamationHistoryPageComponent
+          )
+      },
+      {
         path: 'reclamations',
         loadComponent: () =>
           import('./demo/reclamation/reclamation-page.component').then(

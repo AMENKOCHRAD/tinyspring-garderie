@@ -67,6 +67,24 @@ public class ReclamationController {
                 .headers(headers)
                 .body(pdfBytes);
     }
+    @GetMapping("/export-excel")
+    public ResponseEntity<byte[]> exportReclamationsExcel() {
+        byte[] excelBytes = reclamationService.exportReclamationsExcel();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ));
+        headers.setContentDisposition(
+                ContentDisposition.attachment()
+                        .filename("liste-reclamations.xlsx")
+                        .build()
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(excelBytes);
+    }
 
     @PutMapping("/{id}")
     public Reclamation updateReclamation(@PathVariable Long id,
@@ -84,4 +102,17 @@ public class ReclamationController {
     public void deleteReclamation(@PathVariable Long id) {
         reclamationService.deleteReclamation(id);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

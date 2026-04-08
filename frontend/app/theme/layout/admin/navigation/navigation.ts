@@ -62,7 +62,6 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item',
         icon: 'feather icon-users'
       },
-      
       {
         id: 'enfants',
         title: 'Gestion des enfants',
@@ -88,20 +87,36 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-calendar'
       },
       {
-        id: 'messagerie',
+        id: 'messagerie-interne',
         title: 'Messagerie interne',
-        type: 'item',
-        url: '/messagerie',
-        classes: 'nav-item',
-        icon: 'feather icon-message-circle'
-      },
-      {
-        id: 'reclamations',
-        title: 'Réclamations',
-        type: 'item',
-        url: '/reclamations',
-        classes: 'nav-item',
-        icon: 'feather icon-alert-circle'
+        type: 'collapse',
+        icon: 'feather icon-message-circle',
+        children: [
+          {
+            id: 'messagerie',
+            title: 'Conversations',
+            type: 'item',
+            url: '/messagerie',
+            classes: 'nav-item',
+            icon: 'feather icon-mail'
+          },
+          {
+            id: 'reclamations',
+            title: 'Réclamations',
+            type: 'item',
+            url: '/reclamations',
+            classes: 'nav-item',
+            icon: 'feather icon-alert-circle'
+          },
+          {
+            id: 'reclamations-history',
+            title: 'Historique des réclamations',
+            type: 'item',
+            url: '/reclamations/history',
+            classes: 'nav-item',
+            icon: 'feather icon-clock'
+          }
+        ]
       },
       {
         id: 'rh',
@@ -127,7 +142,6 @@ export const NavigationItems: NavigationItem[] = [
         classes: 'nav-item',
         icon: 'feather icon-navigation'
       }
-      
     ]
   }
 ];

@@ -25,6 +25,8 @@ public interface ReclamationService {
 
     byte[] exportReclamationHistoryPdf(Long reclamationId);
 
+    byte[] exportReclamationsExcel();
+
     Reclamation updateReclamation(Long id, UpdateReclamationRequest request);
 
     Reclamation updateStatus(Long reclamationId, UpdateReclamationStatusRequest request);

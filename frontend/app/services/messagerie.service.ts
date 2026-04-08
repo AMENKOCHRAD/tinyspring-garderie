@@ -37,6 +37,7 @@ export interface Reclamation {
   priority: string;
   status: string;
   category: string;
+  adminComment?: string | null;
   createdAt: string;
   updatedAt: string;
   imageName?: string | null;
@@ -47,11 +48,15 @@ export interface Reclamation {
   conversation?: any;
 }
 
-export interface CreateReclamationRequest {
-  title: string;
-  description: string;
-  priority: string;
-  category: string;
+export interface ReclamationHistory {
+  id: number;
+  actionType: string;
+  actionLabel: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  actorName: string;
+  actorRole: string;
+  createdAt: string;
 }
 
 @Injectable({
@@ -65,10 +70,6 @@ export class MessagerieService {
     private http: HttpClient,
     private authService: AuthService
   ) {}
-
-  // =========================
-  // Conversation
-  // =========================
 
   getMyConversations(): Observable<Conversation[]> {
     return this.http.get<Conversation[]>(
@@ -100,20 +101,12 @@ export class MessagerieService {
     );
   }
 
-  // =========================
-  // Users
-  // =========================
-
   getUsersByRole(roleName: string): Observable<User[]> {
     return this.http.get<User[]>(
       `${this.apiUrl}/users/by-role/${roleName}`,
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
-
-  // =========================
-  // Messages
-  // =========================
 
   getMessagesByConversation(conversationId: number): Observable<Message[]> {
     return this.http.get<Message[]>(
@@ -178,10 +171,6 @@ export class MessagerieService {
     );
   }
 
-  // =========================
-  // Utils
-  // =========================
-
   getFullImageUrl(path?: string | null): string {
     if (!path) {
       return '';
@@ -198,16 +187,38 @@ export class MessagerieService {
     });
   }
 
-  // =========================
-  // Reclamations
-  // =========================
-
   getMyReclamations(): Observable<Reclamation[]> {
     return this.http.get<Reclamation[]>(
       `${this.apiUrl}/reclamations`,
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
+
+  getReclamationHistory(reclamationId: number): Observable<ReclamationHistory[]> {
+    return this.http.get<ReclamationHistory[]>(
+      `${this.apiUrl}/reclamations/${reclamationId}/history`,
+      { headers: this.authService.getBasicAuthHeaders() }
+    );
+  }
+
+  exportReclamationHistoryPdf(reclamationId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/reclamations/${reclamationId}/history/export-pdf`,
+      {
+        headers: this.authService.getBasicAuthHeaders(),
+        responseType: 'blob'
+      }
+    );
+  }
+  exportReclamationsExcel(): Observable<Blob> {
+  return this.http.get(
+    `${this.apiUrl}/reclamations/export-excel`,
+    {
+      headers: this.authService.getBasicAuthHeaders(),
+      responseType: 'blob'
+    }
+  );
+}
 
   createReclamation(
     title: string,
@@ -267,4 +278,5 @@ export class MessagerieService {
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
+  
 }

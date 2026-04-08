@@ -1,6 +1,14 @@
 package com.tinyspring.garderie.service.impl;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Element;
 import com.lowagie.text.Font;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Conversation;
@@ -18,40 +26,31 @@ import com.tinyspring.garderie.repository.ReclamationHistoryRepository;
 import com.tinyspring.garderie.repository.ReclamationRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.service.ReclamationService;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.UUID;
-
-import java.io.ByteArrayOutputStream;
-import java.time.format.DateTimeFormatter;
-import com.lowagie.text.Document;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
-
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+
 @Service
 public class ReclamationServiceImpl implements ReclamationService {
 
@@ -164,7 +163,6 @@ public class ReclamationServiceImpl implements ReclamationService {
                 reclamation.setImagePath("/uploads/reclamations/" + uniqueFileName);
 
             } catch (IOException e) {
-                e.printStackTrace();
                 throw new RuntimeException("Erreur upload image réclamation : " + e.getMessage(), e);
             }
         }
@@ -201,7 +199,6 @@ public class ReclamationServiceImpl implements ReclamationService {
                 reclamation.setAttachmentType(attachment.getContentType());
 
             } catch (IOException e) {
-                e.printStackTrace();
                 throw new RuntimeException("Erreur upload pièce jointe réclamation : " + e.getMessage(), e);
             }
         }
@@ -245,7 +242,6 @@ public class ReclamationServiceImpl implements ReclamationService {
                 .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
 
         checkAccessToReclamation(currentUser, reclamation);
-
         return reclamation;
     }
 
@@ -259,6 +255,204 @@ public class ReclamationServiceImpl implements ReclamationService {
         checkAccessToReclamation(currentUser, reclamation);
 
         return reclamationHistoryRepository.findByReclamationOrderByCreatedAtDesc(reclamation);
+    }
+
+    @Override
+    public byte[] exportReclamationHistoryPdf(Long reclamationId) {
+        User currentUser = getCurrentUser();
+
+        Reclamation reclamation = reclamationRepository.findById(reclamationId)
+                .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
+
+        checkAccessToReclamation(currentUser, reclamation);
+
+        List<ReclamationHistory> histories =
+                reclamationHistoryRepository.findByReclamationOrderByCreatedAtDesc(reclamation);
+
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+            Document document = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(document, baos);
+            document.open();
+
+            Font titleFont = new Font(Font.HELVETICA, 18, Font.BOLD);
+            Font subTitleFont = new Font(Font.HELVETICA, 11, Font.NORMAL, Color.DARK_GRAY);
+            Font sectionFont = new Font(Font.HELVETICA, 13, Font.BOLD);
+            Font bodyFont = new Font(Font.HELVETICA, 10, Font.NORMAL);
+            Font smallBoldFont = new Font(Font.HELVETICA, 10, Font.BOLD);
+
+            Paragraph title = new Paragraph("Historique de reclamation", titleFont);
+            title.setSpacingAfter(6f);
+            document.add(title);
+
+            Paragraph subtitle = new Paragraph(
+                    "Reclamation #" + reclamation.getId() + " - " + reclamation.getTitle(),
+                    subTitleFont
+            );
+            subtitle.setSpacingAfter(16f);
+            document.add(subtitle);
+
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.setWidthPercentage(100);
+            infoTable.setSpacingAfter(18f);
+            infoTable.setWidths(new float[]{1.5f, 3.5f});
+
+            addInfoRow(infoTable, "Titre", safeText(reclamation.getTitle()), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Categorie", safeText(reclamation.getCategory() != null ? reclamation.getCategory().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Priorite", safeText(reclamation.getPriority() != null ? reclamation.getPriority().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Statut", safeText(reclamation.getStatus() != null ? reclamation.getStatus().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Parent", reclamation.getParent() != null ? safeText(reclamation.getParent().getEmail()) : "-", smallBoldFont, bodyFont);
+
+            document.add(infoTable);
+
+            Paragraph section = new Paragraph("Timeline des evenements", sectionFont);
+            section.setSpacingAfter(10f);
+            document.add(section);
+
+            if (histories.isEmpty()) {
+                Paragraph empty = new Paragraph("Aucun historique disponible.", bodyFont);
+                document.add(empty);
+            } else {
+                PdfPTable historyTable = new PdfPTable(5);
+                historyTable.setWidthPercentage(100);
+                historyTable.setWidths(new float[]{1.6f, 2.2f, 1.7f, 2.2f, 2.3f});
+
+                addHeaderCell(historyTable, "Date");
+                addHeaderCell(historyTable, "Action");
+                addHeaderCell(historyTable, "Acteur");
+                addHeaderCell(historyTable, "Ancienne valeur");
+                addHeaderCell(historyTable, "Nouvelle valeur");
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+                for (ReclamationHistory history : histories) {
+                    addBodyCell(historyTable, history.getCreatedAt() != null ? history.getCreatedAt().format(formatter) : "-");
+                    addBodyCell(historyTable, safeText(history.getActionLabel()));
+                    addBodyCell(historyTable, safeText(history.getActorName()) + " (" + safeText(history.getActorRole()) + ")");
+                    addBodyCell(historyTable, safeText(history.getOldValue()));
+                    addBodyCell(historyTable, safeText(history.getNewValue()));
+                }
+
+                document.add(historyTable);
+            }
+
+            document.close();
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la generation du PDF de l'historique : " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public byte[] exportReclamationsExcel() {
+        User currentUser = getCurrentUser();
+        String roleName = currentUser.getRole().getName().name();
+
+        if (!roleName.equals("ADMIN")) {
+            throw new RuntimeException("Seul un admin peut exporter la liste des réclamations");
+        }
+
+        List<Reclamation> reclamations = reclamationRepository.findAll();
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Reclamations");
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            CellStyle wrapStyle = workbook.createCellStyle();
+            wrapStyle.setWrapText(true);
+            wrapStyle.setVerticalAlignment(VerticalAlignment.TOP);
+
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {
+                    "ID",
+                    "Titre",
+                    "Description",
+                    "Categorie",
+                    "Priorite",
+                    "Statut",
+                    "Parent",
+                    "Admin assigne",
+                    "Commentaire admin",
+                    "Image",
+                    "Piece jointe",
+                    "Date creation",
+                    "Date mise a jour"
+            };
+
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowIndex = 1;
+            for (Reclamation reclamation : reclamations) {
+                Row row = sheet.createRow(rowIndex++);
+
+                row.createCell(0).setCellValue(reclamation.getId() != null ? reclamation.getId() : 0);
+                row.createCell(1).setCellValue(safeExcelText(reclamation.getTitle()));
+
+                Cell descriptionCell = row.createCell(2);
+                descriptionCell.setCellValue(safeExcelText(reclamation.getDescription()));
+                descriptionCell.setCellStyle(wrapStyle);
+
+                row.createCell(3).setCellValue(
+                        reclamation.getCategory() != null ? reclamation.getCategory().name() : "-"
+                );
+                row.createCell(4).setCellValue(
+                        reclamation.getPriority() != null ? reclamation.getPriority().name() : "-"
+                );
+                row.createCell(5).setCellValue(
+                        reclamation.getStatus() != null ? reclamation.getStatus().name() : "-"
+                );
+                row.createCell(6).setCellValue(
+                        reclamation.getParent() != null ? safeExcelText(reclamation.getParent().getEmail()) : "-"
+                );
+                row.createCell(7).setCellValue(
+                        reclamation.getAssignedAdmin() != null ? safeExcelText(reclamation.getAssignedAdmin().getEmail()) : "-"
+                );
+
+                Cell adminCommentCell = row.createCell(8);
+                adminCommentCell.setCellValue(safeExcelText(reclamation.getAdminComment()));
+                adminCommentCell.setCellStyle(wrapStyle);
+
+                row.createCell(9).setCellValue(
+                        reclamation.getImageName() != null ? safeExcelText(reclamation.getImageName()) : "-"
+                );
+                row.createCell(10).setCellValue(
+                        reclamation.getAttachmentName() != null ? safeExcelText(reclamation.getAttachmentName()) : "-"
+                );
+                row.createCell(11).setCellValue(
+                        reclamation.getCreatedAt() != null ? reclamation.getCreatedAt().toString() : "-"
+                );
+                row.createCell(12).setCellValue(
+                        reclamation.getUpdatedAt() != null ? reclamation.getUpdatedAt().toString() : "-"
+                );
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+                int currentWidth = sheet.getColumnWidth(i);
+                sheet.setColumnWidth(i, Math.min(currentWidth + 1000, 20000));
+            }
+
+            workbook.write(baos);
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la generation du fichier Excel : " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -506,93 +700,6 @@ public class ReclamationServiceImpl implements ReclamationService {
             conversationRepository.delete(conversation);
         }
     }
-    @Override
-    public byte[] exportReclamationHistoryPdf(Long reclamationId) {
-        User currentUser = getCurrentUser();
-
-        Reclamation reclamation = reclamationRepository.findById(reclamationId)
-                .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
-
-        checkAccessToReclamation(currentUser, reclamation);
-
-        List<ReclamationHistory> histories =
-                reclamationHistoryRepository.findByReclamationOrderByCreatedAtDesc(reclamation);
-
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-            Document document = new Document(PageSize.A4, 36, 36, 50, 40);
-            PdfWriter.getInstance(document, baos);
-            document.open();
-
-            Font titleFont = new Font(Font.HELVETICA, 18, Font.BOLD);
-            Font subTitleFont = new Font(Font.HELVETICA, 11, Font.NORMAL, Color.DARK_GRAY);
-            Font sectionFont = new Font(Font.HELVETICA, 13, Font.BOLD);
-            Font bodyFont = new Font(Font.HELVETICA, 10, Font.NORMAL);
-            Font smallBoldFont = new Font(Font.HELVETICA, 10, Font.BOLD);
-
-            Paragraph title = new Paragraph("Historique de reclamation", titleFont);
-            title.setSpacingAfter(6f);
-            document.add(title);
-
-            Paragraph subtitle = new Paragraph(
-                    "Reclamation #" + reclamation.getId() + " - " + reclamation.getTitle(),
-                    subTitleFont
-            );
-            subtitle.setSpacingAfter(16f);
-            document.add(subtitle);
-
-            PdfPTable infoTable = new PdfPTable(2);
-            infoTable.setWidthPercentage(100);
-            infoTable.setSpacingAfter(18f);
-            infoTable.setWidths(new float[]{1.5f, 3.5f});
-
-            addInfoRow(infoTable, "Titre", reclamation.getTitle(), smallBoldFont, bodyFont);
-            addInfoRow(infoTable, "Categorie", safeText(reclamation.getCategory() != null ? reclamation.getCategory().name() : null), smallBoldFont, bodyFont);
-            addInfoRow(infoTable, "Priorite", safeText(reclamation.getPriority() != null ? reclamation.getPriority().name() : null), smallBoldFont, bodyFont);
-            addInfoRow(infoTable, "Statut", safeText(reclamation.getStatus() != null ? reclamation.getStatus().name() : null), smallBoldFont, bodyFont);
-            addInfoRow(infoTable, "Parent", reclamation.getParent() != null ? safeText(reclamation.getParent().getEmail()) : "-", smallBoldFont, bodyFont);
-
-            document.add(infoTable);
-
-            Paragraph section = new Paragraph("Timeline des evenements", sectionFont);
-            section.setSpacingAfter(10f);
-            document.add(section);
-
-            if (histories.isEmpty()) {
-                Paragraph empty = new Paragraph("Aucun historique disponible.", bodyFont);
-                document.add(empty);
-            } else {
-                PdfPTable historyTable = new PdfPTable(5);
-                historyTable.setWidthPercentage(100);
-                historyTable.setWidths(new float[]{1.6f, 2.2f, 1.7f, 2.2f, 2.3f});
-
-                addHeaderCell(historyTable, "Date");
-                addHeaderCell(historyTable, "Action");
-                addHeaderCell(historyTable, "Acteur");
-                addHeaderCell(historyTable, "Ancienne valeur");
-                addHeaderCell(historyTable, "Nouvelle valeur");
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-                for (ReclamationHistory history : histories) {
-                    addBodyCell(historyTable, history.getCreatedAt() != null ? history.getCreatedAt().format(formatter) : "-");
-                    addBodyCell(historyTable, safeText(history.getActionLabel()));
-                    addBodyCell(historyTable, safeText(history.getActorName()) + " (" + safeText(history.getActorRole()) + ")");
-                    addBodyCell(historyTable, safeText(history.getOldValue()));
-                    addBodyCell(historyTable, safeText(history.getNewValue()));
-                }
-
-                document.add(historyTable);
-            }
-
-            document.close();
-            return baos.toByteArray();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la generation du PDF de l'historique : " + e.getMessage(), e);
-        }
-    }
 
     private void addHistory(Reclamation reclamation,
                             ReclamationHistoryActionType actionType,
@@ -645,6 +752,7 @@ public class ReclamationServiceImpl implements ReclamationService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur connecté introuvable"));
     }
+
     private void addInfoRow(PdfPTable table,
                             String label,
                             String value,
@@ -679,6 +787,10 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     private String safeText(String value) {
+        return (value == null || value.trim().isEmpty()) ? "-" : value;
+    }
+
+    private String safeExcelText(String value) {
         return (value == null || value.trim().isEmpty()) ? "-" : value;
     }
 }

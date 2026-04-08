@@ -21,23 +21,25 @@ import {
           <p>Créer, consulter, modifier, supprimer et suivre les réclamations</p>
         </div>
 
-        <!-- ADMIN BUTTON STATS -->
         <div class="card shadow-sm border-0 mb-4" *ngIf="isAdmin()">
           <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
               <h4 class="mb-1">Statistiques Réclamations</h4>
-              <p class="text-muted mb-0">
-                Vue synthétique des statuts et des priorités
-              </p>
+              <p class="text-muted mb-0">Vue synthétique des statuts et des priorités</p>
             </div>
 
-            <button class="btn btn-info text-white" (click)="toggleStats()">
-              {{ showStats ? 'Masquer les statistiques' : 'Afficher les statistiques' }}
-            </button>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-success" (click)="exportExcel()">
+                {{ exportExcelLoading ? 'Export en cours...' : 'Exporter Excel' }}
+              </button>
+
+              <button class="btn btn-info text-white" (click)="toggleStats()">
+                {{ showStats ? 'Masquer les statistiques' : 'Afficher les statistiques' }}
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- STATS -->
         <div class="card shadow-sm border-0 mb-4" *ngIf="isAdmin() && showStats">
           <div class="card-body">
             <h4 class="mb-4">Tableau de bord statistique</h4>
@@ -47,27 +49,21 @@ import {
                 <h5 class="chart-title">Répartition des réclamations par statut</h5>
 
                 <div class="pie-chart-wrapper">
-                  <div
-                    class="pie-chart"
-                    [style.background]="getStatusPieGradient()"
-                  ></div>
+                  <div class="pie-chart" [style.background]="getStatusPieGradient()"></div>
 
                   <div class="chart-legend">
                     <div class="legend-item">
                       <span class="legend-color status-open-color"></span>
                       <span>OPEN : {{ getStatusCount('OPEN') }}</span>
                     </div>
-
                     <div class="legend-item">
                       <span class="legend-color status-progress-color"></span>
                       <span>IN_PROGRESS : {{ getStatusCount('IN_PROGRESS') }}</span>
                     </div>
-
                     <div class="legend-item">
                       <span class="legend-color status-resolved-color"></span>
                       <span>RESOLVED : {{ getStatusCount('RESOLVED') }}</span>
                     </div>
-
                     <div class="legend-item">
                       <span class="legend-color status-rejected-color"></span>
                       <span>REJECTED : {{ getStatusCount('REJECTED') }}</span>
@@ -83,10 +79,7 @@ import {
                   <div class="bar-chart">
                     <div class="bar-group">
                       <div class="bar-area">
-                        <div
-                          class="bar low-bar"
-                          [style.height.%]="getBarHeight(getPriorityCount('LOW'))"
-                        ></div>
+                        <div class="bar low-bar" [style.height.%]="getBarHeight(getPriorityCount('LOW'))"></div>
                       </div>
                       <div class="bar-label">LOW</div>
                       <div class="bar-value">{{ getPriorityCount('LOW') }}</div>
@@ -94,10 +87,7 @@ import {
 
                     <div class="bar-group">
                       <div class="bar-area">
-                        <div
-                          class="bar medium-bar"
-                          [style.height.%]="getBarHeight(getPriorityCount('MEDIUM'))"
-                        ></div>
+                        <div class="bar medium-bar" [style.height.%]="getBarHeight(getPriorityCount('MEDIUM'))"></div>
                       </div>
                       <div class="bar-label">MEDIUM</div>
                       <div class="bar-value">{{ getPriorityCount('MEDIUM') }}</div>
@@ -105,10 +95,7 @@ import {
 
                     <div class="bar-group">
                       <div class="bar-area">
-                        <div
-                          class="bar high-bar"
-                          [style.height.%]="getBarHeight(getPriorityCount('HIGH'))"
-                        ></div>
+                        <div class="bar high-bar" [style.height.%]="getBarHeight(getPriorityCount('HIGH'))"></div>
                       </div>
                       <div class="bar-label">HIGH</div>
                       <div class="bar-value">{{ getPriorityCount('HIGH') }}</div>
@@ -135,45 +122,26 @@ import {
           </div>
         </div>
 
-        <!-- CREATE -->
-        <div class="card shadow-sm border-0 mb-4">
+        <div class="card shadow-sm border-0 mb-4" *ngIf="!isAdmin()">
           <div class="card-body">
             <h4 class="mb-3">Créer une réclamation</h4>
 
-            <div *ngIf="createError" class="alert alert-danger">
-              {{ createError }}
-            </div>
-
-            <div *ngIf="createSuccess" class="alert alert-success">
-              {{ createSuccess }}
-            </div>
+            <div *ngIf="createError" class="alert alert-danger">{{ createError }}</div>
+            <div *ngIf="createSuccess" class="alert alert-success">{{ createSuccess }}</div>
 
             <div class="mb-3">
               <label class="form-label">Titre</label>
-              <input
-                type="text"
-                class="form-control"
-                [(ngModel)]="newReclamation.title"
-                placeholder="Ex: Problème de repas"
-              />
+              <input type="text" class="form-control" [(ngModel)]="newReclamation.title" placeholder="Ex: Problème de repas" />
             </div>
 
             <div class="mb-3">
               <label class="form-label">Description</label>
-              <textarea
-                class="form-control"
-                rows="4"
-                [(ngModel)]="newReclamation.description"
-                placeholder="Décrire votre réclamation..."
-              ></textarea>
+              <textarea class="form-control" rows="4" [(ngModel)]="newReclamation.description" placeholder="Décrire votre réclamation..."></textarea>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Catégorie</label>
-              <select
-                class="form-control"
-                [(ngModel)]="newReclamation.category"
-              >
+              <select class="form-control" [(ngModel)]="newReclamation.category">
                 <option value="">-- Choisir une catégorie --</option>
                 <option *ngFor="let category of reclamationCategories" [value]="category">
                   {{ getCategoryLabel(category) }}
@@ -183,10 +151,7 @@ import {
 
             <div class="mb-3">
               <label class="form-label">Priorité</label>
-              <select
-                class="form-control"
-                [(ngModel)]="newReclamation.priority"
-              >
+              <select class="form-control" [(ngModel)]="newReclamation.priority">
                 <option value="">-- Choisir --</option>
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -196,12 +161,7 @@ import {
 
             <div class="mb-3">
               <label class="form-label">Ajouter une image</label>
-              <input
-                type="file"
-                class="form-control"
-                accept="image/*"
-                (change)="onReclamationImageSelected($event)"
-              />
+              <input type="file" class="form-control" accept="image/*" (change)="onReclamationImageSelected($event)" />
             </div>
 
             <div *ngIf="selectedReclamationImageName" class="mb-3">
@@ -212,11 +172,7 @@ import {
 
             <div class="mb-3">
               <label class="form-label">Ajouter une pièce jointe</label>
-              <input
-                type="file"
-                class="form-control"
-                (change)="onAttachmentSelected($event)"
-              />
+              <input type="file" class="form-control" (change)="onAttachmentSelected($event)" />
               <small class="text-muted d-block mt-1">
                 Formats possibles : PDF, DOC, DOCX, image ou autre fichier.
               </small>
@@ -238,73 +194,72 @@ import {
           </div>
         </div>
 
-        <!-- UPDATE -->
         <div class="card shadow-sm border-0 mb-4" *ngIf="editingReclamationId !== null">
           <div class="card-body">
-            <h4 class="mb-3">Modifier la réclamation</h4>
+            <h4 class="mb-3">
+              {{ isAdmin() ? 'Réponse administrative' : 'Modifier la réclamation' }}
+            </h4>
 
-            <div *ngIf="updateError" class="alert alert-danger">
-              {{ updateError }}
-            </div>
+            <div *ngIf="updateError" class="alert alert-danger">{{ updateError }}</div>
+            <div *ngIf="updateSuccess" class="alert alert-success">{{ updateSuccess }}</div>
 
-            <div *ngIf="updateSuccess" class="alert alert-success">
-              {{ updateSuccess }}
-            </div>
+            <ng-container *ngIf="!isAdmin()">
+              <div class="mb-3">
+                <label class="form-label">Titre</label>
+                <input type="text" class="form-control" [(ngModel)]="editedReclamation.title" />
+              </div>
 
-            <div class="mb-3">
-              <label class="form-label">Titre</label>
-              <input
-                type="text"
-                class="form-control"
-                [(ngModel)]="editedReclamation.title"
-              />
-            </div>
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" rows="4" [(ngModel)]="editedReclamation.description"></textarea>
+              </div>
 
-            <div class="mb-3">
-              <label class="form-label">Description</label>
-              <textarea
-                class="form-control"
-                rows="4"
-                [(ngModel)]="editedReclamation.description"
-              ></textarea>
-            </div>
+              <div class="mb-3">
+                <label class="form-label">Catégorie</label>
+                <select class="form-control" [(ngModel)]="editedReclamation.category">
+                  <option value="">-- Choisir une catégorie --</option>
+                  <option *ngFor="let category of reclamationCategories" [value]="category">
+                    {{ getCategoryLabel(category) }}
+                  </option>
+                </select>
+              </div>
 
-            <div class="mb-3">
-              <label class="form-label">Catégorie</label>
-              <select
-                class="form-control"
-                [(ngModel)]="editedReclamation.category"
-              >
-                <option value="">-- Choisir une catégorie --</option>
-                <option *ngFor="let category of reclamationCategories" [value]="category">
-                  {{ getCategoryLabel(category) }}
-                </option>
-              </select>
-            </div>
+              <div class="mb-3">
+                <label class="form-label">Priorité</label>
+                <select class="form-control" [(ngModel)]="editedReclamation.priority">
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+              </div>
+            </ng-container>
 
-            <div class="mb-3">
-              <label class="form-label">Priorité</label>
-              <select
-                class="form-control"
-                [(ngModel)]="editedReclamation.priority"
-              >
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-              </select>
-            </div>
+            <ng-container *ngIf="isAdmin()">
+              <div class="admin-response-box mb-3">
+                <div class="admin-response-header">
+                  <h5 class="mb-1">Réponse de l’administration</h5>
+                  <p class="text-muted mb-0">
+                    Ajoutez une réponse claire et professionnelle visible par le parent.
+                  </p>
+                </div>
 
-            <button class="btn btn-success me-2" (click)="updateReclamation()">
-              Enregistrer
-            </button>
+                <div class="mb-3 mt-3">
+                  <label class="form-label">Commentaire administratif</label>
+                  <textarea
+                    class="form-control admin-comment-textarea"
+                    rows="6"
+                    [(ngModel)]="editedReclamation.adminComment"
+                    [placeholder]="getAdminCommentPlaceholder()"
+                  ></textarea>
+                </div>
+              </div>
+            </ng-container>
 
-            <button class="btn btn-secondary" (click)="cancelEdit()">
-              Annuler
-            </button>
+            <button class="btn btn-success me-2" (click)="updateReclamation()">Enregistrer</button>
+            <button class="btn btn-secondary" (click)="cancelEdit()">Annuler</button>
           </div>
         </div>
 
-        <!-- FILTERS -->
         <div class="card shadow-sm border-0 mb-4">
           <div class="card-body">
             <h4 class="mb-3">Recherche et filtres</h4>
@@ -312,12 +267,7 @@ import {
             <div class="row">
               <div class="col-md-3 mb-3">
                 <label class="form-label">Recherche par titre</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="searchTitle"
-                  placeholder="Chercher une réclamation..."
-                />
+                <input type="text" class="form-control" [(ngModel)]="searchTitle" placeholder="Chercher une réclamation..." />
               </div>
 
               <div class="col-md-3 mb-3">
@@ -354,30 +304,19 @@ import {
           </div>
         </div>
 
-        <!-- LIST -->
         <div class="card shadow-sm border-0">
           <div class="card-body">
             <h4 class="mb-3">Liste des réclamations</h4>
 
             <div *ngIf="loading">Chargement...</div>
-
-            <div *ngIf="error" class="alert alert-danger">
-              {{ error }}
-            </div>
-
-            <div *ngIf="deleteSuccess" class="alert alert-success">
-              {{ deleteSuccess }}
-            </div>
-
-            <div *ngIf="statusSuccess" class="alert alert-success">
-              {{ statusSuccess }}
-            </div>
+            <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+            <div *ngIf="deleteSuccess" class="alert alert-success">{{ deleteSuccess }}</div>
+            <div *ngIf="statusSuccess" class="alert alert-success">{{ statusSuccess }}</div>
 
             <div *ngIf="!loading && filteredReclamations().length === 0" class="alert alert-info">
               Aucune réclamation trouvée.
             </div>
 
-            <!-- ADMIN VIEW = TABLE -->
             <div *ngIf="isAdmin() && filteredReclamations().length > 0" class="table-responsive">
               <table class="table table-hover table-bordered align-middle">
                 <thead class="table-light">
@@ -386,6 +325,7 @@ import {
                     <th>Titre</th>
                     <th>Description</th>
                     <th>Catégorie</th>
+                    <th>Réponse admin</th>
                     <th>Image</th>
                     <th>Pièce jointe</th>
                     <th>Priorité</th>
@@ -401,9 +341,15 @@ import {
                     <td>{{ rec.title }}</td>
                     <td>{{ rec.description }}</td>
                     <td>
-                      <span class="badge category-badge">
-                        {{ getCategoryLabel(rec.category) }}
-                      </span>
+                      <span class="badge category-badge">{{ getCategoryLabel(rec.category) }}</span>
+                    </td>
+                    <td style="min-width: 230px;">
+                      <div *ngIf="rec.adminComment?.trim(); else noAdminReply" class="admin-comment-preview">
+                        {{ rec.adminComment }}
+                      </div>
+                      <ng-template #noAdminReply>
+                        <span class="text-muted">Pas encore de réponse</span>
+                      </ng-template>
                     </td>
                     <td>
                       <img
@@ -419,9 +365,7 @@ import {
                         <div class="attachment-top">
                           <span class="attachment-icon">{{ getAttachmentIcon(rec.attachmentName, rec.attachmentType) }}</span>
                           <div class="attachment-meta">
-                            <div class="attachment-name">
-                              {{ rec.attachmentName || 'Pièce jointe' }}
-                            </div>
+                            <div class="attachment-name">{{ rec.attachmentName || 'Pièce jointe' }}</div>
                             <small class="text-muted">
                               {{ getAttachmentTypeLabel(rec.attachmentName, rec.attachmentType) }}
                             </small>
@@ -429,19 +373,11 @@ import {
                         </div>
 
                         <div class="attachment-admin-actions">
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-outline-primary"
-                            (click)="openAttachment(rec.attachmentPath)"
-                          >
+                          <button type="button" class="btn btn-sm btn-outline-primary" (click)="openAttachment(rec.attachmentPath)">
                             Ouvrir
                           </button>
 
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-outline-success"
-                            (click)="downloadAttachment(rec.attachmentPath, rec.attachmentName)"
-                          >
+                          <button type="button" class="btn btn-sm btn-outline-success" (click)="downloadAttachment(rec.attachmentPath, rec.attachmentName)">
                             Télécharger
                           </button>
                         </div>
@@ -452,37 +388,29 @@ import {
                       </ng-template>
                     </td>
                     <td>
-                      <span
-                        class="badge"
+                      <span class="badge"
                         [ngClass]="{
                           'bg-success': rec.priority === 'LOW',
                           'bg-warning text-dark': rec.priority === 'MEDIUM',
                           'bg-danger': rec.priority === 'HIGH'
-                        }"
-                      >
+                        }">
                         {{ rec.priority }}
                       </span>
                     </td>
                     <td>
-                      <span
-                        class="badge"
+                      <span class="badge"
                         [ngClass]="{
                           'bg-success': rec.status === 'RESOLVED',
                           'bg-warning text-dark': rec.status === 'IN_PROGRESS',
                           'bg-danger': rec.status === 'REJECTED',
                           'bg-primary': rec.status === 'OPEN'
-                        }"
-                      >
+                        }">
                         {{ rec.status }}
                       </span>
                     </td>
                     <td>{{ rec.createdAt | date:'short' }}</td>
                     <td style="min-width: 180px;">
-                      <select
-                        class="form-control form-control-sm"
-                        [ngModel]="rec.status"
-                        (ngModelChange)="changeStatus(rec.id, $event)"
-                      >
+                      <select class="form-control form-control-sm" [ngModel]="rec.status" (ngModelChange)="changeStatus(rec.id, $event)">
                         <option value="OPEN">OPEN</option>
                         <option value="IN_PROGRESS">IN_PROGRESS</option>
                         <option value="RESOLVED">RESOLVED</option>
@@ -490,19 +418,11 @@ import {
                       </select>
                     </td>
                     <td class="text-center" style="min-width: 120px;">
-                      <button
-                        class="action-btn edit-btn"
-                        title="Modifier"
-                        (click)="editReclamation(rec)"
-                      >
+                      <button class="action-btn edit-btn" [title]="isAdmin() ? 'Répondre' : 'Modifier'" (click)="editReclamation(rec)">
                         <i class="feather icon-edit"></i>
                       </button>
 
-                      <button
-                        class="action-btn delete-btn"
-                        title="Supprimer"
-                        (click)="deleteReclamation(rec.id)"
-                      >
+                      <button class="action-btn delete-btn" title="Supprimer" (click)="deleteReclamation(rec.id)">
                         <i class="feather icon-trash-2"></i>
                       </button>
                     </td>
@@ -511,24 +431,17 @@ import {
               </table>
             </div>
 
-            <!-- PARENT VIEW = CARDS -->
             <div class="reclamation-list" *ngIf="!isAdmin() && filteredReclamations().length > 0">
               <div class="reclamation-card" *ngFor="let rec of filteredReclamations()">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                   <h5 class="mb-0">{{ rec.title }}</h5>
-                  <span class="badge category-badge">
-                    {{ getCategoryLabel(rec.category) }}
-                  </span>
+                  <span class="badge category-badge">{{ getCategoryLabel(rec.category) }}</span>
                 </div>
 
                 <p class="mb-2">{{ rec.description }}</p>
 
                 <div *ngIf="rec.imagePath" class="mb-3">
-                  <img
-                    [src]="getFileUrl(rec.imagePath)"
-                    [alt]="rec.imageName || 'image reclamation'"
-                    class="reclamation-image"
-                  />
+                  <img [src]="getFileUrl(rec.imagePath)" [alt]="rec.imageName || 'image reclamation'" class="reclamation-image" />
                 </div>
 
                 <div class="mb-3">
@@ -538,29 +451,17 @@ import {
                     <div class="attachment-top">
                       <span class="attachment-icon">{{ getAttachmentIcon(rec.attachmentName, rec.attachmentType) }}</span>
                       <div class="attachment-meta">
-                        <div class="attachment-name">
-                          {{ rec.attachmentName || 'Pièce jointe' }}
-                        </div>
-                        <small class="text-muted">
-                          {{ getAttachmentTypeLabel(rec.attachmentName, rec.attachmentType) }}
-                        </small>
+                        <div class="attachment-name">{{ rec.attachmentName || 'Pièce jointe' }}</div>
+                        <small class="text-muted">{{ getAttachmentTypeLabel(rec.attachmentName, rec.attachmentType) }}</small>
                       </div>
                     </div>
 
                     <div class="attachment-actions">
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-outline-primary"
-                        (click)="openAttachment(rec.attachmentPath)"
-                      >
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="openAttachment(rec.attachmentPath)">
                         Ouvrir
                       </button>
 
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-outline-secondary"
-                        (click)="downloadAttachment(rec.attachmentPath, rec.attachmentName)"
-                      >
+                      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="downloadAttachment(rec.attachmentPath, rec.attachmentName)">
                         Télécharger
                       </button>
                     </div>
@@ -571,6 +472,18 @@ import {
                   </ng-template>
                 </div>
 
+                <div class="admin-response-display mb-3">
+                  <div class="admin-response-title">Réponse de l’administration</div>
+
+                  <div *ngIf="rec.adminComment?.trim(); else noParentAdminComment" class="admin-response-content">
+                    {{ rec.adminComment }}
+                  </div>
+
+                  <ng-template #noParentAdminComment>
+                    <div class="admin-response-empty">Pas encore de réponse administrative.</div>
+                  </ng-template>
+                </div>
+
                 <p class="mb-1">
                   <strong>Priorité :</strong>
                   <span class="badge bg-secondary">{{ rec.priority }}</span>
@@ -578,24 +491,20 @@ import {
 
                 <p class="mb-2">
                   <strong>Statut actuel :</strong>
-                  <span
-                    class="badge"
+                  <span class="badge"
                     [ngClass]="{
                       'bg-success': rec.status === 'RESOLVED',
                       'bg-warning text-dark': rec.status === 'IN_PROGRESS',
                       'bg-danger': rec.status === 'REJECTED',
                       'bg-primary': rec.status === 'OPEN'
-                    }"
-                  >
+                    }">
                     {{ rec.status }}
                   </span>
                 </p>
 
                 <div class="mb-3">
                   <label class="form-label">Suivi de traitement</label>
-                  <div class="form-control bg-light">
-                    {{ rec.status }}
-                  </div>
+                  <div class="form-control bg-light">{{ rec.status }}</div>
                 </div>
 
                 <p class="mb-3 text-muted">
@@ -812,6 +721,59 @@ import {
       border: 1px solid #bfd6ff;
     }
 
+    .admin-comment-preview {
+      max-height: 90px;
+      overflow: auto;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      background: #f8fafc;
+      border: 1px solid #dbe7f5;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #334155;
+    }
+
+    .admin-response-box {
+      background: linear-gradient(180deg, #f8fbff 0%, #f3f7fb 100%);
+      border: 1px solid #d8e6f5;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .admin-response-header h5 {
+      color: #1e3a5f;
+      font-weight: 700;
+    }
+
+    .admin-comment-textarea {
+      resize: vertical;
+      min-height: 150px;
+    }
+
+    .admin-response-display {
+      background: linear-gradient(180deg, #f8fbff 0%, #f3f7fb 100%);
+      border: 1px solid #d8e6f5;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .admin-response-title {
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 8px;
+    }
+
+    .admin-response-content {
+      white-space: pre-wrap;
+      line-height: 1.55;
+      color: #334155;
+    }
+
+    .admin-response-empty {
+      color: #64748b;
+      font-style: italic;
+    }
+
     .attachment-preview-inline {
       display: flex;
       align-items: center;
@@ -865,12 +827,7 @@ import {
       line-height: 1.3;
     }
 
-    .attachment-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
+    .attachment-actions,
     .attachment-admin-actions {
       display: flex;
       flex-wrap: wrap;
@@ -885,6 +842,7 @@ import {
       cursor: pointer;
       transition: all 0.2s ease;
       font-size: 14px;
+      color: white;
     }
 
     .action-btn i {
@@ -893,22 +851,20 @@ import {
 
     .edit-btn {
       background: #fbbf24;
-      color: white;
     }
 
     .edit-btn:hover {
       background: #f59e0b;
-      transform: scale(1.1);
+      transform: scale(1.08);
     }
 
     .delete-btn {
       background: #ef4444;
-      color: white;
     }
 
     .delete-btn:hover {
       background: #dc2626;
-      transform: scale(1.1);
+      transform: scale(1.08);
     }
 
     .reclamation-list {
@@ -1001,6 +957,7 @@ export class ReclamationPageComponent implements OnInit {
   filterPriority = '';
 
   showStats = false;
+  exportExcelLoading = false;
 
   selectedReclamationImage: File | null = null;
   selectedReclamationImageName = '';
@@ -1019,7 +976,8 @@ export class ReclamationPageComponent implements OnInit {
     title: '',
     description: '',
     category: '',
-    priority: ''
+    priority: '',
+    adminComment: ''
   };
 
   constructor(
@@ -1039,30 +997,68 @@ export class ReclamationPageComponent implements OnInit {
     this.showStats = !this.showStats;
   }
 
+  exportExcel(): void {
+    if (!this.isAdmin()) {
+      return;
+    }
+
+    this.error = '';
+    this.exportExcelLoading = true;
+
+    this.messagerieService.exportReclamationsExcel().subscribe({
+      next: (blob: Blob) => {
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = blobUrl;
+        link.download = 'liste-reclamations.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(blobUrl);
+        this.exportExcelLoading = false;
+      },
+      error: (err: any) => {
+        console.log('Erreur export Excel = ', err);
+        this.error = 'Impossible d’exporter le fichier Excel.';
+        this.exportExcelLoading = false;
+      }
+    });
+  }
+
   getCategoryLabel(category?: string | null): string {
     switch (category) {
-      case 'REPAS':
-        return 'Repas';
-      case 'TRANSPORT':
-        return 'Transport';
-      case 'COMPORTEMENT':
-        return 'Comportement';
-      case 'HYGIENE':
-        return 'Hygiène';
-      case 'SECURITE':
-        return 'Sécurité';
-      case 'PERSONNEL':
-        return 'Personnel';
-      case 'AUTRE':
-        return 'Autre';
+      case 'REPAS': return 'Repas';
+      case 'TRANSPORT': return 'Transport';
+      case 'COMPORTEMENT': return 'Comportement';
+      case 'HYGIENE': return 'Hygiène';
+      case 'SECURITE': return 'Sécurité';
+      case 'PERSONNEL': return 'Personnel';
+      case 'AUTRE': return 'Autre';
+      default: return category || 'Non définie';
+    }
+  }
+
+  getAdminCommentPlaceholder(): string {
+    const current = this.reclamations.find(r => r.id === this.editingReclamationId);
+
+    switch (current?.status) {
+      case 'OPEN':
+        return 'Ex : Réclamation bien reçue, en attente d’analyse.';
+      case 'IN_PROGRESS':
+        return 'Ex : Le dossier est en cours de traitement par l’équipe administrative.';
+      case 'RESOLVED':
+        return 'Ex : Le problème a été traité et corrigé.';
+      case 'REJECTED':
+        return 'Ex : Après vérification, la demande n’a pas pu être retenue.';
       default:
-        return category || 'Non définie';
+        return 'Ajoutez une réponse administrative claire et professionnelle.';
     }
   }
 
   onReclamationImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-
     if (input.files && input.files.length > 0) {
       this.selectedReclamationImage = input.files[0];
       this.selectedReclamationImageName = input.files[0].name;
@@ -1074,7 +1070,6 @@ export class ReclamationPageComponent implements OnInit {
 
   onAttachmentSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-
     if (input.files && input.files.length > 0) {
       this.selectedAttachment = input.files[0];
       this.selectedAttachmentName = input.files[0].name;
@@ -1089,18 +1084,12 @@ export class ReclamationPageComponent implements OnInit {
   }
 
   openAttachment(path?: string | null): void {
-    if (!path) {
-      return;
-    }
-
-    const fileUrl = this.getFileUrl(path);
-    window.open(fileUrl, '_blank');
+    if (!path) return;
+    window.open(this.getFileUrl(path), '_blank');
   }
 
   downloadAttachment(path?: string | null, fileName?: string | null): void {
-    if (!path) {
-      return;
-    }
+    if (!path) return;
 
     this.error = '';
 
@@ -1166,18 +1155,10 @@ export class ReclamationPageComponent implements OnInit {
 
   filteredReclamations(): Reclamation[] {
     return this.reclamations.filter((rec) => {
-      const matchTitle =
-        !this.searchTitle ||
-        rec.title.toLowerCase().includes(this.searchTitle.toLowerCase());
-
-      const matchCategory =
-        !this.filterCategory || rec.category === this.filterCategory;
-
-      const matchStatus =
-        !this.filterStatus || rec.status === this.filterStatus;
-
-      const matchPriority =
-        !this.filterPriority || rec.priority === this.filterPriority;
+      const matchTitle = !this.searchTitle || rec.title.toLowerCase().includes(this.searchTitle.toLowerCase());
+      const matchCategory = !this.filterCategory || rec.category === this.filterCategory;
+      const matchStatus = !this.filterStatus || rec.status === this.filterStatus;
+      const matchPriority = !this.filterPriority || rec.priority === this.filterPriority;
 
       return matchTitle && matchCategory && matchStatus && matchPriority;
     });
@@ -1196,7 +1177,6 @@ export class ReclamationPageComponent implements OnInit {
     const inProgress = this.getStatusCount('IN_PROGRESS');
     const resolved = this.getStatusCount('RESOLVED');
     const rejected = this.getStatusCount('REJECTED');
-
     const total = open + inProgress + resolved + rejected;
 
     if (total === 0) {
@@ -1312,7 +1292,8 @@ export class ReclamationPageComponent implements OnInit {
       title: rec.title,
       description: rec.description,
       category: rec.category || '',
-      priority: rec.priority
+      priority: rec.priority,
+      adminComment: rec.adminComment || ''
     };
     this.updateError = '';
     this.updateSuccess = '';
@@ -1324,7 +1305,8 @@ export class ReclamationPageComponent implements OnInit {
       title: '',
       description: '',
       category: '',
-      priority: ''
+      priority: '',
+      adminComment: ''
     };
     this.updateError = '';
     this.updateSuccess = '';
@@ -1336,6 +1318,23 @@ export class ReclamationPageComponent implements OnInit {
 
     if (this.editingReclamationId === null) {
       this.updateError = 'Aucune réclamation sélectionnée.';
+      return;
+    }
+
+    if (this.isAdmin()) {
+      this.messagerieService.updateReclamation(this.editingReclamationId, {
+        adminComment: this.editedReclamation.adminComment
+      }).subscribe({
+        next: () => {
+          this.updateSuccess = 'Réponse administrative enregistrée avec succès.';
+          this.cancelEdit();
+          this.loadReclamations();
+        },
+        error: (err: any) => {
+          console.log('Erreur update adminComment = ', err);
+          this.updateError = 'Impossible d’enregistrer la réponse administrative.';
+        }
+      });
       return;
     }
 
@@ -1367,13 +1366,7 @@ export class ReclamationPageComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.updateSuccess = 'Réclamation modifiée avec succès.';
-        this.editingReclamationId = null;
-        this.editedReclamation = {
-          title: '',
-          description: '',
-          category: '',
-          priority: ''
-        };
+        this.cancelEdit();
         this.loadReclamations();
       },
       error: (err: any) => {
