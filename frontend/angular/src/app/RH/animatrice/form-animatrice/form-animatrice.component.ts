@@ -55,7 +55,7 @@ export class FormAnimatriceComponent implements OnInit {
       next: (data) => {
         this.animatrice = data;
         if (data.photoUrl) {
-          this.previewUrl = `http://localhost:8081/uploads/${data.photoUrl}`;
+          this.previewUrl = `http://localhost:8081/uploads/animatrices/${data.photoUrl}`;
         }
         this.cdr.detectChanges();
       },

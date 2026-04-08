@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/animatrice/profil")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:4201"})
 public class AnimatriceProfileController {
 
     private final AnimatriceService animatriceService;
@@ -24,5 +24,11 @@ public class AnimatriceProfileController {
     public ResponseEntity<AnimatriceDTO> updateMonProfil(@PathVariable Long id,
                                                          @Valid @RequestBody AnimatriceDTO dto) {
         return ResponseEntity.ok(animatriceService.updateMonProfil(id, dto));
+    }
+
+    // ✅ NOUVEL ENDPOINT — récupérer animatrice par email
+    @GetMapping("/par-email")
+    public ResponseEntity<AnimatriceDTO> getByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(animatriceService.getAnimatriceByEmail(email));
     }
 }

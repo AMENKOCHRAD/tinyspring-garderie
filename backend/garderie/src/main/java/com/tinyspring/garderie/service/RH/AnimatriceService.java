@@ -27,17 +27,20 @@ public class AnimatriceService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public AnimatriceService(AnimatriceRepository animatriceRepository,
                              FileStorageService fileStorageService,
                              UserRepository userRepository,
                              RoleRepository roleRepository,
-                             PasswordEncoder passwordEncoder) {
+                             PasswordEncoder passwordEncoder,
+                             EmailService emailService) {
         this.animatriceRepository = animatriceRepository;
         this.fileStorageService = fileStorageService;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     // ========== ADMIN ==========
@@ -65,8 +68,10 @@ public class AnimatriceService {
         animatrice.setStatut(StatutAnimatrice.ACTIVE);
         Animatrice savedAnimatrice = animatriceRepository.save(animatrice);
 
-        // Créer automatiquement le compte User
+        // Générer le mot de passe temporaire
         String motDePasseTemporaire = genererMotDePasse();
+
+        // Créer le compte User associé
         Role roleAnimatrice = roleRepository.findByName(RoleName.ANIMATRICE)
                 .orElseThrow(() -> new RuntimeException("Rôle ANIMATRICE non trouvé"));
 
@@ -79,7 +84,16 @@ public class AnimatriceService {
         );
         userRepository.save(user);
 
-        // Stocker le mot de passe temporaire dans le DTO pour l'afficher à l'admin
+        // ✅ Envoyer l'email avec les credentials
+        emailService.envoyerCredentiels(
+                dto.getEmail(),
+                dto.getPrenom(),
+                dto.getNom(),
+                dto.getEmail(),
+                motDePasseTemporaire
+        );
+
+        // Retourner le DTO avec le mot de passe temporaire pour l'afficher à l'admin
         AnimatriceDTO result = toDTO(savedAnimatrice);
         result.setMotDePasseTemporaire(motDePasseTemporaire);
         return result;
@@ -127,7 +141,6 @@ public class AnimatriceService {
         Animatrice animatrice = animatriceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée"));
 
-        // Supprimer l'ancienne photo si elle existe
         if (animatrice.getPhotoUrl() != null && !animatrice.getPhotoUrl().isEmpty()) {
             fileStorageService.deleteFile(animatrice.getPhotoUrl());
         }
@@ -181,5 +194,11 @@ public class AnimatriceService {
                 .specialite(dto.getSpecialite())
                 .photoUrl(dto.getPhotoUrl())
                 .build();
+    }
+
+    public AnimatriceDTO getAnimatriceByEmail(String email) {
+        Animatrice animatrice = animatriceRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée avec l'email : " + email));
+        return toDTO(animatrice);
     }
 }
