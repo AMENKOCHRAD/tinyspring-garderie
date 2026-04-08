@@ -25,6 +25,7 @@ import com.tinyspring.garderie.repository.ConversationRepository;
 import com.tinyspring.garderie.repository.ReclamationHistoryRepository;
 import com.tinyspring.garderie.repository.ReclamationRepository;
 import com.tinyspring.garderie.repository.UserRepository;
+import com.tinyspring.garderie.service.BadWordFilterService;
 import com.tinyspring.garderie.service.ReclamationService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -58,15 +59,18 @@ public class ReclamationServiceImpl implements ReclamationService {
     private final ReclamationHistoryRepository reclamationHistoryRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final BadWordFilterService badWordFilterService;
 
     public ReclamationServiceImpl(ReclamationRepository reclamationRepository,
                                   ReclamationHistoryRepository reclamationHistoryRepository,
                                   ConversationRepository conversationRepository,
-                                  UserRepository userRepository) {
+                                  UserRepository userRepository,
+                                  BadWordFilterService badWordFilterService) {
         this.reclamationRepository = reclamationRepository;
         this.reclamationHistoryRepository = reclamationHistoryRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        this.badWordFilterService = badWordFilterService;
     }
 
     @Override
@@ -96,8 +100,11 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new RuntimeException("La catégorie est obligatoire");
         }
 
+        String cleanTitle = badWordFilterService.censorText(title.trim());
+        String cleanDescription = badWordFilterService.censorText(description.trim());
+
         Conversation conversation = new Conversation();
-        conversation.setSubject("Réclamation : " + title.trim());
+        conversation.setSubject("Réclamation : " + cleanTitle);
         conversation.setType(ConversationType.RECLAMATION);
         conversation.setStatus(ConversationStatus.OPEN);
         conversation.setCreatedBy(currentUser);
@@ -106,8 +113,8 @@ public class ReclamationServiceImpl implements ReclamationService {
         Conversation savedConversation = conversationRepository.save(conversation);
 
         Reclamation reclamation = new Reclamation();
-        reclamation.setTitle(title.trim());
-        reclamation.setDescription(description.trim());
+        reclamation.setTitle(cleanTitle);
+        reclamation.setDescription(cleanDescription);
         reclamation.setParent(currentUser);
         reclamation.setConversation(savedConversation);
         reclamation.setStatus(ReclamationStatus.OPEN);
@@ -489,13 +496,16 @@ public class ReclamationServiceImpl implements ReclamationService {
                 throw new RuntimeException("La catégorie est obligatoire");
             }
 
+            String cleanTitle = badWordFilterService.censorText(request.getTitle().trim());
+            String cleanDescription = badWordFilterService.censorText(request.getDescription().trim());
+
             String oldTitle = reclamation.getTitle();
             String oldDescription = reclamation.getDescription();
             String oldCategory = reclamation.getCategory() != null ? reclamation.getCategory().name() : null;
             String oldPriority = reclamation.getPriority() != null ? reclamation.getPriority().name() : null;
 
-            reclamation.setTitle(request.getTitle().trim());
-            reclamation.setDescription(request.getDescription().trim());
+            reclamation.setTitle(cleanTitle);
+            reclamation.setDescription(cleanDescription);
 
             try {
                 reclamation.setCategory(
@@ -516,7 +526,7 @@ public class ReclamationServiceImpl implements ReclamationService {
             }
 
             if (reclamation.getConversation() != null) {
-                reclamation.getConversation().setSubject("Réclamation : " + request.getTitle().trim());
+                reclamation.getConversation().setSubject("Réclamation : " + cleanTitle);
                 conversationRepository.save(reclamation.getConversation());
             }
 

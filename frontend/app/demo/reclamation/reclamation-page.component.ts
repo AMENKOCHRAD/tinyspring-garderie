@@ -128,6 +128,9 @@ import {
 
             <div *ngIf="createError" class="alert alert-danger">{{ createError }}</div>
             <div *ngIf="createSuccess" class="alert alert-success">{{ createSuccess }}</div>
+            <div *ngIf="contentModeratedInfo" class="alert alert-warning">
+              {{ contentModeratedInfo }}
+            </div>
 
             <div class="mb-3">
               <label class="form-label">Titre</label>
@@ -202,6 +205,9 @@ import {
 
             <div *ngIf="updateError" class="alert alert-danger">{{ updateError }}</div>
             <div *ngIf="updateSuccess" class="alert alert-success">{{ updateSuccess }}</div>
+            <div *ngIf="updateModeratedInfo" class="alert alert-warning">
+              {{ updateModeratedInfo }}
+            </div>
 
             <ng-container *ngIf="!isAdmin()">
               <div class="mb-3">
@@ -330,13 +336,17 @@ import {
                     <th>Pièce jointe</th>
                     <th>Priorité</th>
                     <th>Statut</th>
+                    <th>SLA</th>
                     <th>Date création</th>
                     <th>Changer statut</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let rec of filteredReclamations()">
+                  <tr
+                    *ngFor="let rec of filteredReclamations()"
+                    [class.overdue-row]="isOverdue(rec)"
+                  >
                     <td>{{ rec.id }}</td>
                     <td>{{ rec.title }}</td>
                     <td>{{ rec.description }}</td>
@@ -406,6 +416,11 @@ import {
                           'bg-primary': rec.status === 'OPEN'
                         }">
                         {{ rec.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="getSlaBadgeClass(rec)">
+                        {{ getSlaLabel(rec) }}
                       </span>
                     </td>
                     <td>{{ rec.createdAt | date:'short' }}</td>
@@ -867,6 +882,14 @@ import {
       transform: scale(1.08);
     }
 
+    .overdue-row {
+      background: #fff5f5 !important;
+    }
+
+    .overdue-row td {
+      border-color: #f5c2c7 !important;
+    }
+
     .reclamation-list {
       display: flex;
       flex-direction: column;
@@ -945,6 +968,9 @@ export class ReclamationPageComponent implements OnInit {
 
   updateError = '';
   updateSuccess = '';
+
+  contentModeratedInfo = '';
+  updateModeratedInfo = '';
 
   deleteSuccess = '';
   statusSuccess = '';
@@ -1214,6 +1240,78 @@ export class ReclamationPageComponent implements OnInit {
     return (value / this.getMaxPriorityCount()) * 100;
   }
 
+  wasContentModerated(
+    originalTitle: string,
+    originalDescription: string,
+    savedReclamation: Reclamation
+  ): boolean {
+    const sentTitle = (originalTitle || '').trim();
+    const sentDescription = (originalDescription || '').trim();
+
+    const returnedTitle = (savedReclamation.title || '').trim();
+    const returnedDescription = (savedReclamation.description || '').trim();
+
+    return sentTitle !== returnedTitle || sentDescription !== returnedDescription;
+  }
+
+  isOverdue(rec: Reclamation): boolean {
+    if (!rec.createdAt || !rec.status) {
+      return false;
+    }
+
+    const untreatedStatuses = ['OPEN', 'IN_PROGRESS'];
+
+    if (!untreatedStatuses.includes(rec.status)) {
+      return false;
+    }
+
+    const createdDate = new Date(rec.createdAt);
+    const now = new Date();
+
+    const diffMs = now.getTime() - createdDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    return diffDays > 2;
+  }
+
+  getElapsedDays(rec: Reclamation): number {
+    if (!rec.createdAt) {
+      return 0;
+    }
+
+    const createdDate = new Date(rec.createdAt);
+    const now = new Date();
+
+    const diffMs = now.getTime() - createdDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    return Math.floor(diffDays);
+  }
+
+  getSlaLabel(rec: Reclamation): string {
+    if (rec.status === 'RESOLVED' || rec.status === 'REJECTED') {
+      return 'Traité';
+    }
+
+    if (this.isOverdue(rec)) {
+      return `En retard (${this.getElapsedDays(rec)} j)`;
+    }
+
+    return 'Dans le délai';
+  }
+
+  getSlaBadgeClass(rec: Reclamation): string {
+    if (rec.status === 'RESOLVED' || rec.status === 'REJECTED') {
+      return 'bg-success';
+    }
+
+    if (this.isOverdue(rec)) {
+      return 'bg-danger';
+    }
+
+    return 'bg-warning text-dark';
+  }
+
   loadReclamations(): void {
     this.loading = true;
     this.error = '';
@@ -1236,6 +1334,7 @@ export class ReclamationPageComponent implements OnInit {
   createReclamation(): void {
     this.createError = '';
     this.createSuccess = '';
+    this.contentModeratedInfo = '';
 
     if (!this.newReclamation.title.trim()) {
       this.createError = 'Le titre est obligatoire.';
@@ -1257,16 +1356,24 @@ export class ReclamationPageComponent implements OnInit {
       return;
     }
 
+    const originalTitle = this.newReclamation.title.trim();
+    const originalDescription = this.newReclamation.description.trim();
+
     this.messagerieService.createReclamation(
-      this.newReclamation.title.trim(),
-      this.newReclamation.description.trim(),
+      originalTitle,
+      originalDescription,
       this.newReclamation.priority,
       this.newReclamation.category,
       this.selectedReclamationImage,
       this.selectedAttachment
     ).subscribe({
-      next: () => {
+      next: (savedReclamation) => {
         this.createSuccess = 'Réclamation créée avec succès.';
+
+        if (this.wasContentModerated(originalTitle, originalDescription, savedReclamation)) {
+          this.contentModeratedInfo = 'Certains mots inappropriés ont été filtrés automatiquement.';
+        }
+
         this.newReclamation = {
           title: '',
           description: '',
@@ -1297,6 +1404,7 @@ export class ReclamationPageComponent implements OnInit {
     };
     this.updateError = '';
     this.updateSuccess = '';
+    this.updateModeratedInfo = '';
   }
 
   cancelEdit(): void {
@@ -1310,11 +1418,13 @@ export class ReclamationPageComponent implements OnInit {
     };
     this.updateError = '';
     this.updateSuccess = '';
+    this.updateModeratedInfo = '';
   }
 
   updateReclamation(): void {
     this.updateError = '';
     this.updateSuccess = '';
+    this.updateModeratedInfo = '';
 
     if (this.editingReclamationId === null) {
       this.updateError = 'Aucune réclamation sélectionnée.';
@@ -1358,15 +1468,22 @@ export class ReclamationPageComponent implements OnInit {
       return;
     }
 
+    const originalTitle = this.editedReclamation.title.trim();
+    const originalDescription = this.editedReclamation.description.trim();
+
     this.messagerieService.updateReclamation(this.editingReclamationId, {
-      title: this.editedReclamation.title.trim(),
-      description: this.editedReclamation.description.trim(),
+      title: originalTitle,
+      description: originalDescription,
       category: this.editedReclamation.category,
       priority: this.editedReclamation.priority
     }).subscribe({
-      next: () => {
+      next: (savedReclamation) => {
         this.updateSuccess = 'Réclamation modifiée avec succès.';
-        this.cancelEdit();
+
+        if (this.wasContentModerated(originalTitle, originalDescription, savedReclamation)) {
+          this.updateModeratedInfo = 'Certains mots inappropriés ont été filtrés automatiquement.';
+        }
+
         this.loadReclamations();
       },
       error: (err: any) => {
