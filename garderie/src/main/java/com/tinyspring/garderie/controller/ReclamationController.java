@@ -3,8 +3,12 @@ package com.tinyspring.garderie.controller;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Reclamation;
+import com.tinyspring.garderie.entity.ReclamationHistory;
 import com.tinyspring.garderie.service.ReclamationService;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,6 +44,28 @@ public class ReclamationController {
     @GetMapping("/{id}")
     public Reclamation getReclamation(@PathVariable Long id) {
         return reclamationService.getReclamationById(id);
+    }
+
+    @GetMapping("/{id}/history")
+    public List<ReclamationHistory> getReclamationHistory(@PathVariable Long id) {
+        return reclamationService.getReclamationHistory(id);
+    }
+
+    @GetMapping("/{id}/history/export-pdf")
+    public ResponseEntity<byte[]> exportReclamationHistoryPdf(@PathVariable Long id) {
+        byte[] pdfBytes = reclamationService.exportReclamationHistoryPdf(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+                ContentDisposition.attachment()
+                        .filename("historique-reclamation-" + id + ".pdf")
+                        .build()
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 
     @PutMapping("/{id}")

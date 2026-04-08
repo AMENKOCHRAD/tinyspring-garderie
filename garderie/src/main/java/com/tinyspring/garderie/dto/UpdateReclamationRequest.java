@@ -13,4 +13,5 @@ public class UpdateReclamationRequest {
     private String description;
     private String priority;
     private String category;
+    private String adminComment;
 }

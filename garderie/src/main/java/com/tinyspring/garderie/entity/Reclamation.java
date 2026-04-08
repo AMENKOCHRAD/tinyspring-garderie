@@ -35,6 +35,9 @@ public class Reclamation {
     @Enumerated(EnumType.STRING)
     private ReclamationCategory category;
 
+    @Column(columnDefinition = "TEXT")
+    private String adminComment;
+
     private String imageName;
     private String imagePath;
 

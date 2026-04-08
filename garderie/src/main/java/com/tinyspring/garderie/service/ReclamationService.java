@@ -3,6 +3,7 @@ package com.tinyspring.garderie.service;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Reclamation;
+import com.tinyspring.garderie.entity.ReclamationHistory;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -19,6 +20,10 @@ public interface ReclamationService {
     List<Reclamation> getMyReclamations();
 
     Reclamation getReclamationById(Long id);
+
+    List<ReclamationHistory> getReclamationHistory(Long reclamationId);
+
+    byte[] exportReclamationHistoryPdf(Long reclamationId);
 
     Reclamation updateReclamation(Long id, UpdateReclamationRequest request);
 
