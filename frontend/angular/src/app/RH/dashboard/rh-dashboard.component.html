@@ -7,20 +7,62 @@
 
   <div *ngIf="!isLoading && stats">
 
-    <!-- Header -->
+    <!-- ===== HEADER avec CLOCHE ===== -->
     <div class="dashboard-header">
       <div>
         <h2 class="dashboard-title">Tableau de bord RH</h2>
         <p class="dashboard-subtitle">Vue d'ensemble de la gestion des ressources humaines</p>
       </div>
-      <div class="header-actions">
+      <div class="header-right">
         <a routerLink="/rh/animatrices" class="btn-action blue">👥 Animatrices</a>
         <a routerLink="/rh/absences-conges" class="btn-action orange">📋 Absences</a>
         <a routerLink="/rh/formations" class="btn-action purple">📚 Formations</a>
+
+        <!-- 🔔 CLOCHE NOTIFICATIONS -->
+        <div class="notif-wrapper">
+          <button class="bell-btn" (click)="toggleNotif()">
+            🔔
+            <span class="badge-count" *ngIf="notifCount > 0">
+              {{ notifCount > 9 ? '9+' : notifCount }}
+            </span>
+          </button>
+
+          <!-- Dropdown notifications -->
+          <div class="notif-dropdown" *ngIf="notifOpen">
+            <div class="notif-header">
+              <span class="notif-title">🔔 Notifications</span>
+              <button class="btn-tout-lire" (click)="marquerToutLu()" *ngIf="notifCount > 0">
+                Tout lire
+              </button>
+            </div>
+
+            <div class="notif-list">
+              <div
+                *ngFor="let notif of notifications"
+                class="notif-item"
+                [class.non-lue]="!notif.read"
+                (click)="marquerLue(notif)">
+                <span class="notif-icon">{{ getNotifIcon(notif.type) }}</span>
+                <div class="notif-content">
+                  <p class="notif-message">{{ notif.message }}</p>
+                  <span class="notif-time">{{ getTemps(notif.createdAt) }}</span>
+                </div>
+                <button class="btn-suppr" (click)="supprimerNotif($event, notif.id)">✕</button>
+              </div>
+
+              <div class="notif-empty" *ngIf="notifications.length === 0">
+                Aucune notification 🎉
+              </div>
+            </div>
+          </div>
+
+          <!-- Overlay pour fermer -->
+          <div class="overlay" *ngIf="notifOpen" (click)="notifOpen = false"></div>
+        </div>
       </div>
     </div>
 
-    <!-- ===== STATS CARDS ===== -->
+    <!-- ===== STATS ANIMATRICES ===== -->
     <div class="stats-section">
       <h3 class="section-label">Animatrices</h3>
       <div class="stats-row">
@@ -48,6 +90,7 @@
       </div>
     </div>
 
+    <!-- ===== STATS ABSENCES ===== -->
     <div class="stats-section">
       <h3 class="section-label">Absences & Congés</h3>
       <div class="stats-row">
@@ -82,6 +125,7 @@
       </div>
     </div>
 
+    <!-- ===== STATS FORMATIONS ===== -->
     <div class="stats-section">
       <h3 class="section-label">Formations</h3>
       <div class="stats-row">
@@ -130,7 +174,6 @@
           [plotOptions]="chartAbsencesStatut.plotOptions!"
         ></apx-chart>
       </div>
-
       <div class="chart-card">
         <h4 class="chart-title">Absences par type</h4>
         <apx-chart
@@ -142,7 +185,6 @@
           [dataLabels]="chartAbsencesType.dataLabels!"
         ></apx-chart>
       </div>
-
       <div class="chart-card">
         <h4 class="chart-title">Animatrices</h4>
         <apx-chart
@@ -154,7 +196,6 @@
           [dataLabels]="chartAnimatrices.dataLabels!"
         ></apx-chart>
       </div>
-
       <div class="chart-card">
         <h4 class="chart-title">Formations par statut</h4>
         <apx-chart
@@ -172,7 +213,6 @@
     <!-- ===== TABLES ===== -->
     <div class="tables-row">
 
-      <!-- Dernières demandes en attente -->
       <div class="table-card">
         <div class="table-header">
           <h4 class="table-title">⏳ Demandes en attente</h4>
@@ -203,7 +243,6 @@
         </div>
       </div>
 
-      <!-- Dernières animatrices -->
       <div class="table-card">
         <div class="table-header">
           <h4 class="table-title">👥 Animatrices récentes</h4>
@@ -238,6 +277,5 @@
       </div>
 
     </div>
-
   </div>
 </div>

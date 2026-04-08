@@ -21,6 +21,7 @@ public class AbsenceCongeService {
     private final AbsenceCongeRepository absenceCongeRepository;
     private final AnimatriceRepository animatriceRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     // ========== ADMIN ==========
 
@@ -99,7 +100,16 @@ public class AbsenceCongeService {
         AbsenceConge absenceConge = toEntity(dto, animatrice);
         absenceConge.setStatut(StatutAbsenceConge.EN_ATTENTE);
         absenceConge.setNbJours((int) ChronoUnit.DAYS.between(dto.getDateDebut(), dto.getDateFin()) + 1);
-        return toDTO(absenceCongeRepository.save(absenceConge));
+        AbsenceCongeDTO result = toDTO(absenceCongeRepository.save(absenceConge));
+
+        // ✅ Notification temps réel à l'admin
+        notificationService.creerNotification(
+                "🔔 Nouvelle demande de " + animatrice.getPrenom() + " " + animatrice.getNom()
+                        + " — " + dto.getType().name().replace("_", " "),
+                "ABSENCE"
+        );
+
+        return result;
     }
 
     public List<AbsenceCongeDTO> getMesAbsenceConges(Long animatriceId) {

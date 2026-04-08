@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { Subscription } from 'rxjs';
+import { NotificationService, Notification } from '../../services/RH/notification.service';
 
 interface ChartConfig {
   series: any[];
@@ -33,6 +35,13 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
   isLoading = true;
   private refreshInterval: any;
 
+  // ===== NOTIFICATIONS =====
+  notifications: Notification[] = [];
+  notifCount = 0;
+  notifOpen = false;
+  private subs: Subscription[] = [];
+
+  // ===== CHARTS =====
   chartAbsencesStatut!: ChartConfig;
   chartAbsencesType!: ChartConfig;
   chartFormations!: ChartConfig;
@@ -40,17 +49,99 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.loadStats();
     this.refreshInterval = setInterval(() => this.loadStats(), 20000);
+    this.initNotifications();
   }
 
   ngOnDestroy(): void {
     if (this.refreshInterval) clearInterval(this.refreshInterval);
+    this.subs.forEach(s => s.unsubscribe());
+    this.notificationService.disconnectSSE();
   }
+
+  // ===== NOTIFICATIONS =====
+
+  initNotifications(): void {
+    // Charger les notifications existantes
+    this.notificationService.chargerNotifications().subscribe({
+      next: (notifs) => {
+        this.notificationService.setNotifications(notifs);
+      }
+    });
+
+    // S'abonner aux mises à jour
+    this.subs.push(
+      this.notificationService.notifications$.subscribe(notifs => {
+        this.notifications = notifs;
+        this.cdr.detectChanges();
+      })
+    );
+
+    this.subs.push(
+      this.notificationService.count$.subscribe(count => {
+        this.notifCount = count;
+        this.cdr.detectChanges();
+      })
+    );
+
+    // Démarrer SSE
+    this.notificationService.connectSSE();
+  }
+
+  toggleNotif(): void {
+    this.notifOpen = !this.notifOpen;
+  }
+
+  marquerLue(notif: Notification): void {
+    if (!notif.read) {
+      this.notificationService.marquerLue(notif.id).subscribe(() => {
+        notif.read = true;
+        this.notificationService.setNotifications(this.notifications);
+      });
+    }
+  }
+
+  marquerToutLu(): void {
+    this.notificationService.marquerToutLu().subscribe(() => {
+      this.notifications.forEach(n => n.read = true);
+      this.notificationService.setNotifications(this.notifications);
+    });
+  }
+
+  supprimerNotif(event: Event, id: number): void {
+    event.stopPropagation();
+    this.notificationService.supprimer(id).subscribe(() => {
+      this.notifications = this.notifications.filter(n => n.id !== id);
+      this.notificationService.setNotifications(this.notifications);
+    });
+  }
+
+  getNotifIcon(type: string): string {
+    switch (type) {
+      case 'ABSENCE': return '📋';
+      case 'ANIMATRICE': return '👤';
+      case 'FORMATION': return '📚';
+      default: return '🔔';
+    }
+  }
+
+  getTemps(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return 'À l\'instant';
+    if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
+    return `Il y a ${Math.floor(diff / 86400)} j`;
+  }
+
+  // ===== STATS =====
 
   private getHeaders(): HttpHeaders {
     const credentials = btoa('admin@garderie.com:admin123');
@@ -75,11 +166,7 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
 
   buildCharts(): void {
     this.chartAbsencesStatut = {
-      series: [
-        this.stats.absencesEnAttente,
-        this.stats.absencesApprouvees,
-        this.stats.absencesRefusees
-      ],
+      series: [this.stats.absencesEnAttente, this.stats.absencesApprouvees, this.stats.absencesRefusees],
       chart: { type: 'donut', height: 280 },
       labels: ['En attente', 'Approuvées', 'Refusées'],
       colors: ['#f59e0b', '#10b981', '#ef4444'],
@@ -89,12 +176,7 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.chartAbsencesType = {
-      series: [
-        this.stats.absences,
-        this.stats.congesAnnuels,
-        this.stats.congesMaladie,
-        this.stats.congesMaternite
-      ],
+      series: [this.stats.absences, this.stats.congesAnnuels, this.stats.congesMaladie, this.stats.congesMaternite],
       chart: { type: 'donut', height: 280 },
       labels: ['Absence', 'Congé annuel', 'Congé maladie', 'Congé maternité'],
       colors: ['#6366f1', '#3b82f6', '#06b6d4', '#ec4899'],
@@ -112,14 +194,7 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.chartFormations = {
-      series: [{
-        name: 'Formations',
-        data: [
-          this.stats.formationsInscrites,
-          this.stats.formationsEnCours,
-          this.stats.formationsTerminees
-        ]
-      }],
+      series: [{ name: 'Formations', data: [this.stats.formationsInscrites, this.stats.formationsEnCours, this.stats.formationsTerminees] }],
       chart: { type: 'bar', height: 280, toolbar: { show: false } },
       plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
       colors: ['#4f46e5'],
