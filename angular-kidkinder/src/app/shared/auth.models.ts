@@ -1,47 +1,30 @@
-/**
- * LOGIN REQUEST
- * Payload sent to backend for authentication
- */
+export type UserRole = 'PARENT' | 'ANIMATRICE';
+
 export interface LoginRequest {
   email: string;
   password: string;
+  selectedRole: UserRole;
 }
 
-/**
- * LOGIN RESPONSE
- * Response from backend after successful login
- */
-export interface LoginResponse {
-  id: number;
-  name: string;
-  message: string;
-  email: string;
-  role: UserRole;
-}
-
-/**
- * AUTH USER
- * Internal representation of authenticated user
- */
 export interface AuthUser {
-  id: number;
-  name: string;
+  id: string;
+  nom: string;
   email: string;
   role: UserRole;
-  isAuthenticated: boolean;
+  initiales: string;
+  token: string;
+  tokenType: string;
+  expiresIn: number;
+  isAuthenticated: true;
 }
 
-/**
- * USER ROLE
- * Available user roles in the system
- */
-export type UserRole = 'PARENT' | 'ANIMATRICE' | 'ADMIN';
-
-/**
- * AUTH ERROR
- * Error response from backend
- */
-export interface AuthError {
-  status: number;
+export interface LoginApiResponse {
   message: string;
+  id: number | string;
+  nom: string;
+  email: string;
+  role: UserRole | string;
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
 }

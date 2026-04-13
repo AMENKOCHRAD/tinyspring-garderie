@@ -13,6 +13,7 @@ export interface EventRequest {
   maxCapacity: number;
   requiresAuthorization: boolean;
   classroomId: number;
+  targetClassroomIds?: number[];
   createdBy: number;
   eventPrice: number;
   photoEvent?: string;

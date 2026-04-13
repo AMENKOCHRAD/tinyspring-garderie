@@ -16,6 +16,9 @@ export interface Event {
   maxCapacity: number;
   requiresAuthorization: boolean;
   classroomId: number;
+  classroomName?: string;
+  targetClassroomIds?: number[];
+  targetedClassroomNames?: string[];
   createdBy: number;
   createdAt?: string;
   updatedAt?: string;

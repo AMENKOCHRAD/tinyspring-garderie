@@ -18,10 +18,11 @@ public interface EventMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "eventPrice", source = "eventPrice")
-    @Mapping(target = "targetClassroomIds", ignore = true)
+    @Mapping(target = "targetClassroomIds", expression = "java(serializeClassroomIds(request.getTargetClassroomIds()))")
     Event toEntity(EventRequest request);
 
     @Mapping(target = "eventPrice", source = "eventPrice")
+    @Mapping(target = "classroomName", expression = "java(event.getClassroom() != null ? event.getClassroom().getNiveau() : null)")
     @Mapping(target = "targetClassroomIds", expression = "java(deserializeClassroomIds(event.getTargetClassroomIds()))")
     EventResponse toResponse(Event event);
 
@@ -29,7 +30,7 @@ public interface EventMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "eventPrice", source = "eventPrice")
-    @Mapping(target = "targetClassroomIds", ignore = true)
+    @Mapping(target = "targetClassroomIds", expression = "java(serializeClassroomIds(request.getTargetClassroomIds()))")
     void updateEntityFromRequest(EventRequest request, @MappingTarget Event event);
 
     default String serializeClassroomIds(List<Long> classroomIds) {

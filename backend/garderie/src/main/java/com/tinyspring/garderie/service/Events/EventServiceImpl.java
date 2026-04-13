@@ -6,6 +6,7 @@ import com.tinyspring.garderie.entity.Events.EventStatus;
 import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
 import com.tinyspring.garderie.mappeer.EventMapper;
+import com.tinyspring.garderie.repository.Classes.ClasseRepository;
 import com.tinyspring.garderie.repository.Events.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -27,11 +29,14 @@ public class EventServiceImpl implements EventService {
     private static final Path EVENT_UPLOAD_DIRECTORY =
             Paths.get("uploads", "events").toAbsolutePath().normalize();
 
+    private final ClasseRepository classeRepository;
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
 
     @Override
     public Event create(EventRequest request) {
+        validateClassroomReferences(request.getClassroomId(), request.getTargetClassroomIds());
+
         Event event = eventMapper.toEntity(request);
         event.setStatus(request.getStatus() != null ? request.getStatus() : EventStatus.DRAFT);
         event.setRequiresAuthorization(Boolean.TRUE.equals(request.getRequiresAuthorization()));
@@ -85,6 +90,8 @@ public class EventServiceImpl implements EventService {
             );
         }
 
+        validateClassroomReferences(request.getClassroomId(), request.getTargetClassroomIds());
+
         EventStatus previousStatus = existing.getStatus();
 
         eventMapper.updateEntityFromRequest(request, existing);
@@ -134,6 +141,10 @@ public class EventServiceImpl implements EventService {
             );
         }
 
+        validateClassroomReferences(
+                event.getClassroomId(),
+                eventMapper.deserializeClassroomIds(event.getTargetClassroomIds())
+        );
         validateDates(event);
 
         event.setStatus(EventStatus.PUBLISHED);
@@ -219,6 +230,28 @@ public class EventServiceImpl implements EventService {
             throw new InvalidStatusTransitionException(
                     "Latitude et longitude doivent etre fournies ensemble"
             );
+        }
+    }
+
+    private void validateClassroomReferences(Long classroomId, List<Long> targetClassroomIds) {
+        validateClassroomExists(classroomId, "La classe principale selectionnee est introuvable");
+
+        if (targetClassroomIds == null || targetClassroomIds.isEmpty()) {
+            return;
+        }
+
+        targetClassroomIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .forEach(targetId -> validateClassroomExists(
+                        targetId,
+                        "La classe ciblee avec l'id " + targetId + " est introuvable"
+                ));
+    }
+
+    private void validateClassroomExists(Long classroomId, String errorMessage) {
+        if (classroomId == null || !classeRepository.existsById(classroomId)) {
+            throw new InvalidStatusTransitionException(errorMessage);
         }
     }
 }

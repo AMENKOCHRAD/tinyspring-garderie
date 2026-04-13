@@ -1,168 +1,136 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
-import { LoginRequest, LoginResponse, AuthUser, UserRole } from '../shared/auth.models';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { AuthUser, LoginApiResponse, LoginRequest, UserRole } from './auth.models';
 
-/**
- * AuthService
- * Handles authentication with real Spring Boot backend
- * No JWT at this stage - stores minimal auth state in localStorage
- */
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly BACKEND_URL = 'http://localhost:8081/api/auth';
-  private readonly STORAGE_KEY = 'auth_user';
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly apiUrl = '/api/auth';
+  private readonly storageKey = 'tinyspring.auth.user';
 
-  private authSubject = new BehaviorSubject<AuthUser | null>(this.getStoredAuth());
-  public auth$ = this.authSubject.asObservable();
+  private readonly currentUserSignal = signal<AuthUser | null>(this.getUserFromStorage());
 
-  constructor(private http: HttpClient) {
-    // Restore auth state from localStorage on service initialization
-    const stored = this.getStoredAuth();
-    if (stored) {
-      this.authSubject.next(stored);
-    }
-  }
+  readonly currentUser = computed(() => this.currentUserSignal());
+  readonly isLoggedIn = computed(() => this.currentUserSignal() !== null);
 
-  /**
-   * Authenticate user with backend
-   * @param email User email
-   * @param password User password
-   * @returns Observable of login response
-   */
-  public login(email: string, password: string): Observable<LoginResponse> {
-    const request: LoginRequest = { email, password };
-
-    return this.http.post<LoginResponse>(`${this.BACKEND_URL}/login`, request).pipe(
-      tap((response: LoginResponse) => {
-        // Store auth state in memory and localStorage
-        const authUser: AuthUser = {
-          id: response.id,
-          name: response.name,
-          email: response.email,
-          role: response.role,
-          isAuthenticated: true
-        };
-        this.authSubject.next(authUser);
-        this.storeAuth(authUser);
-      }),
-      catchError((error: HttpErrorResponse) => {
-        // Handle specific errors from backend
-        const errorMsg = this.getErrorMessage(error);
-        return throwError(() => new Error(errorMsg));
+  login(payload: LoginRequest): Observable<AuthUser> {
+    return this.http
+      .post<LoginApiResponse>(`${this.apiUrl}/login`, {
+        email: payload.email,
+        password: payload.password
       })
-    );
+      .pipe(
+        map((response) => {
+          const role = response.role as UserRole;
+
+          if (!this.isAllowedRole(role)) {
+            throw new Error('Seuls les parents et les animatrices peuvent acceder a cet espace.');
+          }
+
+          if (payload.selectedRole !== role) {
+            throw new Error('Le role selectionne ne correspond pas a votre compte.');
+          }
+
+          if (!response.accessToken) {
+            throw new Error('Le serveur n a pas retourne de token JWT valide.');
+          }
+
+          const user = this.buildSessionUser(response, role);
+          localStorage.setItem(this.storageKey, JSON.stringify(user));
+          this.currentUserSignal.set(user);
+
+          return user;
+        }),
+        catchError((error) => {
+          const message =
+            typeof error?.error === 'string'
+              ? error.error
+              : error?.error?.message || error?.message || 'Connexion impossible pour le moment.';
+
+          return throwError(() => new Error(message));
+        })
+      );
   }
 
-  /**
-   * Logout user
-   * Clears auth state and localStorage
-   */
-  public logout(): void {
-    this.authSubject.next(null);
-    this.clearAuth();
+  logout(): void {
+    localStorage.removeItem(this.storageKey);
+    this.currentUserSignal.set(null);
+    void this.router.navigate(['/connexion']);
   }
 
-  /**
-   * Check if user is authenticated
-   * @returns true if authenticated, false otherwise
-   */
-  public isAuthenticated(): boolean {
-    return this.authSubject.value?.isAuthenticated ?? false;
+  hasRole(role: UserRole): boolean {
+    return this.currentUserSignal()?.role === role;
   }
 
-  /**
-   * Get current authenticated user
-   * @returns AuthUser or null
-   */
-  public getCurrentUser(): AuthUser | null {
-    return this.authSubject.value;
+  getCurrentUser(): AuthUser | null {
+    return this.currentUserSignal();
   }
 
-  /**
-   * Get current user role
-   * @returns UserRole or null
-   */
-  public getCurrentRole(): UserRole | null {
-    return this.authSubject.value?.role ?? null;
+  getToken(): string | null {
+    return this.currentUserSignal()?.token ?? null;
   }
 
-  /**
-   * Check if user has specific role
-   * @param role Role to check
-   * @returns true if user has the role
-   */
-  public hasRole(role: UserRole): boolean {
-    return this.authSubject.value?.role === role;
+  redirectAfterLogin(user: AuthUser): Promise<boolean> {
+    return this.router.navigate([this.getHomeRouteForRole(user.role)]);
   }
 
-  /**
-   * Store auth data in localStorage
-   * @param authUser Auth data to store
-   */
-  private storeAuth(authUser: AuthUser): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(authUser));
+  getHomeRouteForRole(role: UserRole): string {
+    return role === 'PARENT' ? '/parent/tableau-de-bord' : '/animateur/tableau-de-bord';
   }
 
-  /**
-   * Retrieve stored auth data from localStorage
-   * @returns Stored AuthUser or null
-   */
-  private getStoredAuth(): AuthUser | null {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Partial<AuthUser>;
-        if (
-          typeof parsed.id !== 'number' ||
-          typeof parsed.name !== 'string' ||
-          typeof parsed.email !== 'string' ||
-          typeof parsed.role !== 'string'
-        ) {
-          this.clearAuth();
-          return null;
-        }
+  private getUserFromStorage(): AuthUser | null {
+    const raw = localStorage.getItem(this.storageKey);
 
-        return {
-          id: parsed.id,
-          name: parsed.name,
-          email: parsed.email,
-          role: parsed.role as UserRole,
-          isAuthenticated: Boolean(parsed.isAuthenticated)
-        };
-      } catch {
-        // Invalid JSON in localStorage, clear it
-        this.clearAuth();
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const user = JSON.parse(raw) as AuthUser;
+
+      if (!user?.token || !this.isAllowedRole(user.role)) {
+        localStorage.removeItem(this.storageKey);
         return null;
       }
+
+      return user;
+    } catch {
+      localStorage.removeItem(this.storageKey);
+      return null;
     }
-    return null;
   }
 
-  /**
-   * Clear auth data from localStorage
-   */
-  private clearAuth(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
+  private isAllowedRole(role: string): role is UserRole {
+    return role === 'PARENT' || role === 'ANIMATRICE';
   }
 
-  /**
-   * Parse HTTP error responses and provide user-friendly messages
-   * @param error HttpErrorResponse
-   * @returns Error message string
-   */
-  private getErrorMessage(error: HttpErrorResponse): string {
-    if (error.status === 404) {
-      return 'Utilisateur introuvable';
-    } else if (error.status === 401) {
-      return 'Mot de passe incorrect';
-    } else if (error.status === 0) {
-      return 'Erreur de connexion au serveur. Veuillez vérifier que le backend est disponible sur http://localhost:8081';
-    } else {
-      return error.error?.message || 'Une erreur est survenue lors de la connexion';
-    }
+  private buildSessionUser(response: LoginApiResponse, role: UserRole): AuthUser {
+    const nom = response.nom?.trim() || (role === 'PARENT' ? 'Parent TinySpring' : 'Animatrice TinySpring');
+
+    return {
+      id: String(response.id ?? response.email).toLowerCase(),
+      nom,
+      email: response.email,
+      role,
+      initiales: this.getInitiales(nom),
+      token: response.accessToken,
+      tokenType: response.tokenType || 'Bearer',
+      expiresIn: response.expiresIn ?? 0,
+      isAuthenticated: true
+    };
+  }
+
+  private getInitiales(value: string): string {
+    return value
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
   }
 }

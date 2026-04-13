@@ -9,25 +9,29 @@ import { SiteHeaderComponent } from './components/site-header.component';
   standalone: true,
   imports: [CommonModule, RouterOutlet, SiteHeaderComponent, SiteFooterComponent],
   template: `
-    <app-site-header *ngIf="!isDashboardRoute()"></app-site-header>
+    <app-site-header *ngIf="showPublicChrome()"></app-site-header>
     <router-outlet></router-outlet>
-    <app-site-footer *ngIf="!isDashboardRoute()"></app-site-footer>
+    <app-site-footer *ngIf="showPublicChrome()"></app-site-footer>
 
-    <a href="#" class="btn btn-primary p-3 back-to-top" [style.display]="showBackToTop() && !isDashboardRoute() ? 'inline-flex' : 'none'" (click)="scrollToTop($event)">
-      <i class="fa fa-angle-double-up"></i>
-    </a>
+    <button
+      type="button"
+      class="back-to-top"
+      [class.visible]="showBackToTop() && showPublicChrome()"
+      (click)="scrollToTop($event)">
+      ↑
+    </button>
   `
 })
 export class AppComponent {
   private readonly router = inject(Router);
   protected readonly showBackToTop = signal(false);
-  protected readonly isDashboardRoute = signal(false);
+  protected readonly showPublicChrome = signal(true);
 
   public constructor() {
-    this.isDashboardRoute.set(this.router.url.startsWith('/dashboard'));
+    this.showPublicChrome.set(this.shouldShowPublicChrome(this.router.url));
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
-        this.isDashboardRoute.set(event.urlAfterRedirects.startsWith('/dashboard'));
+        this.showPublicChrome.set(this.shouldShowPublicChrome(event.urlAfterRedirects));
       }
     });
   }
@@ -40,5 +44,13 @@ export class AppComponent {
   protected scrollToTop(event: Event): void {
     event.preventDefault();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private shouldShowPublicChrome(url: string): boolean {
+    return !(
+      url.startsWith('/connexion') ||
+      url.startsWith('/parent') ||
+      url.startsWith('/animateur')
+    );
   }
 }

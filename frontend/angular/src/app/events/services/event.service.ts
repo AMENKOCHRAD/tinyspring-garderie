@@ -23,6 +23,9 @@ interface EventApiResponse {
   maxCapacity?: number | null;
   requiresAuthorization?: boolean | null;
   classroomId?: number | null;
+  classroomName?: string | null;
+  targetClassroomIds?: number[] | null;
+  targetedClassroomNames?: string[] | null;
   createdBy?: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -159,6 +162,9 @@ export class EventService {
       maxCapacity: event.maxCapacity ?? 0,
       requiresAuthorization: Boolean(event.requiresAuthorization),
       classroomId: event.classroomId ?? 0,
+      classroomName: event.classroomName ?? undefined,
+      targetClassroomIds: event.targetClassroomIds ?? [],
+      targetedClassroomNames: event.targetedClassroomNames ?? [],
       createdBy: event.createdBy ?? 0,
       createdAt: event.createdAt ?? undefined,
       updatedAt: event.updatedAt ?? undefined,

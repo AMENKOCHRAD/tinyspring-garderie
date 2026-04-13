@@ -427,6 +427,7 @@ export class EventListComponent implements OnInit, OnDestroy {
       maxCapacity: event.maxCapacity,
       requiresAuthorization: event.requiresAuthorization,
       classroomId: event.classroomId,
+      targetClassroomIds: event.targetClassroomIds,
       createdBy: event.createdBy,
       eventPrice: event.eventPrice,
       photoEvent: event.photoEvent
