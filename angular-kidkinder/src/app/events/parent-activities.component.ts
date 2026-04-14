@@ -32,7 +32,7 @@ export class ParentActivitiesComponent {
   protected readonly parentNotes = signal('');
   protected readonly selectedAuthorizationFile = signal<File | null>(null);
   protected readonly isSubmitting = signal(false);
-  protected readonly isCancelling = signal(false);
+  protected readonly cancellingParticipationId = signal<number | null>(null);
   protected readonly activitiesData = signal<ParentActivitiesData | null>(null);
 
   protected readonly filters: Array<{ key: ActivityFilter; label: string }> = [
@@ -53,18 +53,12 @@ export class ParentActivitiesComponent {
   });
 
   protected readonly selectedEvent = computed(() => {
-    const currentId = this.selectedEventId();
-    if (currentId == null) {
+    const selectedId = this.selectedEventId();
+    if (selectedId == null) {
       return null;
     }
 
-    const events = this.filteredEvents();
-    const found = events.find((event) => event.id === currentId);
-    if (found) {
-      return found;
-    }
-
-    return null;
+    return this.filteredEvents().find((event) => event.id === selectedId) ?? null;
   });
 
   protected readonly classSummary = computed(() => this.buildClassSummary(this.activitiesData()?.children ?? []));
@@ -167,8 +161,7 @@ export class ParentActivitiesComponent {
 
   protected onAuthorizationFileChange(event: Event): void {
     const input = event.target as HTMLInputElement | null;
-    const file = input?.files?.item(0) ?? null;
-    this.selectedAuthorizationFile.set(file);
+    this.selectedAuthorizationFile.set(input?.files?.item(0) ?? null);
   }
 
   protected participate(event: DecoratedParentEvent): void {
@@ -205,7 +198,7 @@ export class ParentActivitiesComponent {
   }
 
   protected cancelParticipation(participation: ParentParticipation): void {
-    this.isCancelling.set(true);
+    this.cancellingParticipationId.set(participation.id);
     this.successMessage.set('');
     this.errorMessage.set('');
 
@@ -214,14 +207,18 @@ export class ParentActivitiesComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.isCancelling.set(false);
+          this.cancellingParticipationId.set(null);
           this.successMessage.set('La participation a ete annulee.');
         },
         error: (error: HttpErrorResponse | Error) => {
-          this.isCancelling.set(false);
+          this.cancellingParticipationId.set(null);
           this.errorMessage.set(this.getErrorMessage(error, "L'annulation n'a pas pu etre effectuee."));
         }
       });
+  }
+
+  protected isCancelling(participationId: number): boolean {
+    return this.cancellingParticipationId() === participationId;
   }
 
   protected openDirections(event: DecoratedParentEvent): void {
@@ -310,12 +307,39 @@ export class ParentActivitiesComponent {
       .join('');
   }
 
-  protected getSelectedParticipation(): ParentParticipation | null {
-    return this.selectedEvent()?.activeParticipations[0] ?? null;
+  protected getSelectedParticipations(): ParentParticipation[] {
+    return this.selectedEvent()?.activeParticipations ?? [];
+  }
+
+  protected getRegisteredChildrenMessage(): string {
+    const names = this.getSelectedParticipations().map((participation) => participation.childFullName);
+
+    if (!names.length) {
+      return '';
+    }
+
+    if (names.length === 1) {
+      return `${names[0]} est inscrit a cet evenement.`;
+    }
+
+    return `${names.join(', ')} sont inscrits a cet evenement.`;
+  }
+
+  protected hasSelectedParticipations(): boolean {
+    return this.getSelectedParticipations().length > 0;
   }
 
   protected getSelectedChildOptions(): ParentChild[] {
     return this.selectedEvent()?.availableChildren ?? [];
+  }
+
+  protected hasAvailableChildrenToRegister(): boolean {
+    return this.getSelectedChildOptions().length > 0;
+  }
+
+  protected areAllParticipationsLocked(): boolean {
+    const participations = this.getSelectedParticipations();
+    return participations.length > 0 && participations.every((participation) => !participation.cancellableByParent);
   }
 
   protected getSelectedFileName(): string {
@@ -364,11 +388,11 @@ export class ParentActivitiesComponent {
 
   protected getUnavailableMessage(event: DecoratedParentEvent): string {
     if (event.status === 'CANCELLED') {
-      return "Cet evenement est annule.";
+      return 'Cet evenement est annule.';
     }
 
     if (event.hasStarted || event.status === 'COMPLETED') {
-      return "La date de debut est passee.";
+      return 'La date de debut est passee.';
     }
 
     if (event.remainingCapacity === 0 || event.full) {
@@ -376,7 +400,7 @@ export class ParentActivitiesComponent {
     }
 
     if (!event.availableChildren.length) {
-      return "Tous les enfants eligibles sont deja inscrits.";
+      return 'Tous les enfants eligibles sont deja inscrits.';
     }
 
     return "L'inscription n'est pas disponible pour cet evenement.";

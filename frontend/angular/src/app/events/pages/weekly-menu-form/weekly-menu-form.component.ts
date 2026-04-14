@@ -22,6 +22,10 @@ interface WeeklyMenuFormVm {
   errorMessage: string;
 }
 
+type DraftDayInput = Omit<Partial<DailyMenu>, 'dishes'> & {
+  dishes?: Partial<Dish>[];
+};
+
 @Component({
   selector: 'app-weekly-menu-form',
   standalone: true,
@@ -41,6 +45,7 @@ export class WeeklyMenuFormComponent {
   private originalMenu: WeeklyMenu | null = null;
 
   saving = false;
+  generatingAi = false;
   currentStep = 1;
   expandedDayIndex = 0;
   private hasGeneratedInitialDays = false;
@@ -191,7 +196,7 @@ export class WeeklyMenuFormComponent {
     this.currentStep = 1;
   }
 
-  addDay(day?: Partial<DailyMenu>): void {
+  addDay(day?: DraftDayInput): void {
     const defaultDay = day ?? this.buildDefaultDay();
     const group = this.fb.group({
       id: [defaultDay.id ?? null],
@@ -433,7 +438,7 @@ export class WeeklyMenuFormComponent {
       title: menu.title,
       weekStartDate: menu.weekStartDate ?? '',
       weekEndDate: menu.weekEndDate ?? '',
-      status: (menu.status === 'TEMPLATE' ? 'DRAFT' : menu.status),
+      status: menu.status === 'TEMPLATE' ? 'DRAFT' : menu.status,
       isTemplate: Boolean(menu.isTemplate || menu.status === 'TEMPLATE'),
       templateName: menu.templateName ?? ''
     });
@@ -494,6 +499,7 @@ export class WeeklyMenuFormComponent {
       const currentDate = new Date(start);
       currentDate.setDate(start.getDate() + index);
       control.get('menuDate')?.setValue(this.toDateInputValue(currentDate));
+
       const orderedDays: MenuDayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
       control.get('dayOfWeek')?.setValue(orderedDays[Math.min(index, orderedDays.length - 1)]);
     });
@@ -519,7 +525,11 @@ export class WeeklyMenuFormComponent {
   }
 
   private hasGeneralInfoErrors(): boolean {
-    return Boolean(this.form.get('title')?.invalid || this.form.get('weekStartDate')?.invalid || this.form.get('status')?.invalid);
+    return Boolean(
+      this.form.get('title')?.invalid ||
+      this.form.get('weekStartDate')?.invalid ||
+      this.form.get('status')?.invalid
+    );
   }
 
   private hasPlanningErrors(): boolean {
@@ -539,7 +549,7 @@ export class WeeklyMenuFormComponent {
     });
   }
 
-  private buildDefaultDay(): Partial<DailyMenu> {
+  private buildDefaultDay(): DraftDayInput {
     const startDate = this.form.get('weekStartDate')?.value;
     const start = startDate ? new Date(`${startDate}T00:00:00`) : new Date();
     const nextIndex = this.dailyMenusArray.length;
@@ -596,5 +606,72 @@ export class WeeklyMenuFormComponent {
       default:
         return 'DESSERT';
     }
+  }
+
+  async generateWithAI(): Promise<void> {
+    const startDate = this.form.get('weekStartDate')?.value;
+
+    if (!startDate) {
+      this.notificationService.showError('Veuillez choisir une date de début');
+      return;
+    }
+
+    this.generatingAi = true;
+
+    try {
+      const aiResult = await firstValueFrom(
+        this.weeklyMenuService.generateWithAI({
+          weekStartDate: startDate
+        })
+      );
+
+      console.log('AI RESULT:', aiResult);
+
+      this.applyAiResult(aiResult);
+      this.notificationService.showSuccess('Menu généré avec IA');
+    } catch (error) {
+      console.error(error);
+      this.notificationService.showError('Erreur génération IA');
+    } finally {
+      this.generatingAi = false;
+    }
+  }
+
+  private applyAiResult(data: WeeklyMenuRequest): void {
+    if (data.title) {
+      this.form.get('title')?.setValue(data.title);
+    }
+
+    if (data.weekStartDate) {
+      this.form.get('weekStartDate')?.setValue(data.weekStartDate);
+    }
+
+    if (data.weekEndDate) {
+      this.form.get('weekEndDate')?.setValue(data.weekEndDate);
+    }
+
+    this.dailyMenusArray.clear();
+
+    data.dailyMenus?.forEach((day) => {
+      const mappedDishes: Partial<Dish>[] = (day.dishes ?? []).map((dish) => ({
+        mealType: this.normalizeMealType(dish.mealType ?? 'ENTREE'),
+        name: dish.name ?? '',
+        description: dish.description ?? '',
+        allergens: dish.allergens ?? ''
+      }));
+
+      this.addDay({
+        dayOfWeek: day.dayOfWeek ?? 'MONDAY',
+        menuDate: day.menuDate ?? '',
+        isVisibleToParents: day.isVisibleToParents ?? true,
+        dishes: mappedDishes
+      });
+    });
+
+    this.syncDaysWithWeekStartDate(this.form.get('weekStartDate')?.value);
+
+    this.hasGeneratedInitialDays = true;
+    this.currentStep = 2;
+    this.expandedDayIndex = 0;
   }
 }

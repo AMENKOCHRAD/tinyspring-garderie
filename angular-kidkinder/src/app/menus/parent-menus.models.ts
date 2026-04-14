@@ -1,5 +1,6 @@
 export type MenuStatus = 'DRAFT' | 'PUBLISHED' | 'TEMPLATE' | string;
 export type MealType = 'ENTREE' | 'PLAT_PRINCIPAL' | 'DESSERT' | 'GOUTER' | string;
+export type MenuSectionKey = 'ENTREE' | 'PLAT_PRINCIPAL' | 'ACCOMPAGNEMENT' | 'DESSERT' | 'GOUTER';
 
 export interface MenuDish {
   id: number;
@@ -34,14 +35,27 @@ export interface WeeklyMenu {
 }
 
 export interface DecoratedDailyMenu extends DailyMenu {
-  displayDay: string;
+  displayDayShort: string;
+  displayDayLong: string;
   displayDate: string;
-  dishesByMealType: Record<string, MenuDish[]>;
+  displayDateLong: string;
+  dayColor: string;
+  isToday: boolean;
+  sections: Record<MenuSectionKey, MenuDish[]>;
+  summaryDish: string;
+  allergens: string[];
+  conflictFlags: string[];
+}
+
+export interface DecoratedWeeklyMenu extends WeeklyMenu {
+  weekLabel: string;
+  weekRangeLabel: string;
+  isCurrentWeek: boolean;
+  visibleDailyMenus: DecoratedDailyMenu[];
+  todayMenu: DecoratedDailyMenu | null;
 }
 
 export interface ParentMenusData {
-  weeklyMenus: WeeklyMenu[];
-  visibleDailyMenus: DecoratedDailyMenu[];
-  todayMenu: DecoratedDailyMenu | null;
-  currentWeekMenu: WeeklyMenu | null;
+  weeklyMenus: DecoratedWeeklyMenu[];
+  currentWeekIndex: number;
 }

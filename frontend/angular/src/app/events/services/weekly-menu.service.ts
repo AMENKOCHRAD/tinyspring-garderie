@@ -35,4 +35,9 @@ export class WeeklyMenuService {
   duplicate(id: number): Observable<WeeklyMenu> {
     return this.http.post<WeeklyMenu>(`${this.apiUrl}/${id}/duplicate`, {});
   }
+
+
+generateWithAI(payload: { weekStartDate: string }): Observable<WeeklyMenuRequest> {
+  return this.http.post<WeeklyMenuRequest>(`${this.apiUrl}/ai/generate`, payload);
+}
 }

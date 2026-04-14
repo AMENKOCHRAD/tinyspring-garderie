@@ -65,9 +65,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/events/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/registrations/**").permitAll()
+
+
+
+                        .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/post-test").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menus/weekly/ai/ping").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/generate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/echo").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/generate-test").permitAll()
                         .requestMatchers("/api/menus/weekly/**").permitAll()
                         .requestMatchers("/api/menus/daily/**").permitAll()
                         .requestMatchers("/api/menus/dishes/**").permitAll()
+
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")

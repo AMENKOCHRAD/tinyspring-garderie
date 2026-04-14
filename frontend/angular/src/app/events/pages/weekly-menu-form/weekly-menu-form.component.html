@@ -81,9 +81,25 @@
             </div>
 
             <div class="step-actions">
-              <button type="button" class="btn btn-outline-primary" (click)="continueToStep2()">
-                Continuer vers les jours ->
-              </button>
+              <button
+  type="button"
+  class="btn btn-outline-success d-flex align-items-center gap-2"
+  (click)="generateWithAI()"
+  [disabled]="generatingAi"
+>
+  <ng-container *ngIf="!generatingAi; else loading">
+    🤖 Générer avec IA
+  </ng-container>
+
+  <ng-template #loading>
+    <span class="spinner-border spinner-border-sm"></span>
+    Génération en cours...
+  </ng-template>
+</button>
+            <button type="button" class="btn btn-outline-primary" (click)="continueToStep2()">
+                    Continuer vers les jours ->
+            </button>
+
             </div>
           </div>
         } @else {
@@ -93,6 +109,7 @@
                 <h2>{{ getWeekRangeLabel() }}</h2>
                 <p>Configurez les jours puis ajoutez les plats.</p>
               </div>
+              
               <button type="button" class="btn btn-outline-primary add-day-button" (click)="addDay()">
                 + Ajouter un jour
               </button>

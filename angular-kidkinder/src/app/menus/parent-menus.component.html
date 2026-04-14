@@ -1,13 +1,4 @@
 <section class="menus-shell">
-  <article class="menus-hero">
-    <div>
-      <span class="hero-chip">Menus</span>
-      <h2>Menus hebdomadaires</h2>
-      <p>Retrouvez le plat du jour, les repas de la semaine et les allergenes utiles pour vos enfants.</p>
-    </div>
-    <div class="hero-date">{{ todayLabel }}</div>
-  </article>
-
   <div *ngIf="errorMessage()" class="feedback feedback--error">{{ errorMessage() }}</div>
 
   <div *ngIf="loading()" class="empty-state">
@@ -15,99 +6,179 @@
     <span>Nous recuperons les menus publies visibles pour les parents.</span>
   </div>
 
-  <div *ngIf="!loading() && !(menusData()?.visibleDailyMenus?.length)" class="empty-state">
+  <div *ngIf="!loading() && !(menusData()?.weeklyMenus?.length)" class="empty-state">
     <strong>Aucun menu publie pour le moment.</strong>
     <span>Les repas visibles pour les parents apparaitront ici des qu'ils seront publies.</span>
   </div>
 
-  <ng-container *ngIf="!loading() && menusData() as data">
-    <article *ngIf="selectedDailyMenu() as todayMenu" class="today-menu-card">
-      <div class="today-menu-card__header">
+  <ng-container *ngIf="!loading() && currentWeek() as week">
+    <ng-container *ngIf="!detailOpen(); else detailView">
+      <article class="menus-hero">
         <div>
-          <span class="section-chip">Plat du jour</span>
-          <h3>{{ todayMenu.displayDay }} {{ todayMenu.displayDate }}</h3>
-          <p>{{ data.currentWeekMenu?.title || 'Menu de la semaine' }}</p>
+          <span class="hero-chip">Menus</span>
+          <h2>Menus hebdomadaires</h2>
+          <p>Suivez les repas et les reperes mensuels dans un espace dedie.</p>
         </div>
-      </div>
+        <div class="hero-date">{{ todayLabel }}</div>
+      </article>
 
-      <div class="today-menu-grid">
-        <article class="today-main-dish">
-          <span class="today-main-dish__label">Plat du jour</span>
-          <h4>{{ getDishSummary(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || []) }}</h4>
-          <p *ngIf="(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || [])[0]?.description">
-            {{ (todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || [])[0]?.description }}
-          </p>
+      <article class="week-overview-card">
+        <header class="week-navigation">
+          <button type="button" class="nav-arrow" [disabled]="selectedWeekIndex() >= (menusData()?.weeklyMenus?.length ?? 0) - 1" (click)="goToPreviousWeek()">
+            &#8249;
+          </button>
+          <div class="week-navigation__title">
+            <span class="week-state-chip">{{ week.isCurrentWeek ? 'Semaine en cours' : 'Semaine publiee' }}</span>
+            <h3>{{ week.weekLabel }}</h3>
+            <span>{{ week.weekRangeLabel }}</span>
+          </div>
+          <button type="button" class="nav-arrow" [disabled]="selectedWeekIndex() === 0" (click)="goToNextWeek()">
+            &#8250;
+          </button>
+        </header>
 
-          <div class="allergen-row" *ngIf="getAllergens(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || []).length">
-            <span class="allergen-chip" *ngFor="let allergen of getAllergens(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || [])">
-              {{ allergen }}
-            </span>
+        <article *ngIf="week.todayMenu as todayMenu" class="today-summary-card">
+          <span class="today-summary-card__dot" [style.background]="todayMenu.dayColor"></span>
+          <div class="today-summary-card__content">
+            <strong>Aujourd'hui: {{ todayMenu.displayDayLong }} {{ todayMenu.displayDateLong }}</strong>
+            <p>Plat du jour : {{ todayMenu.summaryDish }}</p>
+            <div class="today-summary-card__meta">
+              <span class="soft-pill" *ngIf="getAllergenCount(todayMenu)">{{ getAllergenCount(todayMenu) }} allergene(s)</span>
+              <span class="soft-pill soft-pill--alert" *ngIf="hasConflict(todayMenu)">Attention allergenes</span>
+            </div>
           </div>
         </article>
 
-        <div class="today-side-dishes">
-          <article class="mini-meal-card" *ngIf="(todayMenu.dishesByMealType['ENTREE'] || []).length">
-            <span class="mini-meal-card__title">Entree</span>
-            <strong>{{ getDishSummary(todayMenu.dishesByMealType['ENTREE'] || []) }}</strong>
-          </article>
+        <section class="day-cards">
+          <article
+            *ngFor="let dayMenu of week.visibleDailyMenus"
+            class="day-card"
+            [class.day-card--today]="dayMenu.isToday"
+            (click)="openDayDetails(dayMenu)">
+            <header class="day-card__header">
+              <div class="day-card__title">
+                <span class="day-card__dot" [style.background]="getDayBulletStyle(dayMenu)"></span>
+                <div>
+                  <h4>{{ dayMenu.displayDayLong }}</h4>
+                  <small>{{ dayMenu.displayDateLong }}</small>
+                </div>
+              </div>
+              <span *ngIf="dayMenu.isToday" class="today-badge">Aujourd'hui</span>
+              <span *ngIf="!dayMenu.isToday" class="day-card__chevron">&#8250;</span>
+            </header>
 
-          <article class="mini-meal-card" *ngIf="(todayMenu.dishesByMealType['DESSERT'] || []).length">
-            <span class="mini-meal-card__title">Dessert</span>
-            <strong>{{ getDishSummary(todayMenu.dishesByMealType['DESSERT'] || []) }}</strong>
-          </article>
+            <div class="day-card__rows">
+              <div class="meal-row" *ngFor="let mealType of mealOrder">
+                <span>{{ getMealTitle(mealType) }}</span>
+                <strong>{{ getMealValue(dayMenu, mealType) }}</strong>
+              </div>
+            </div>
 
-          <article class="mini-meal-card" *ngIf="(todayMenu.dishesByMealType['GOUTER'] || []).length">
-            <span class="mini-meal-card__title">Gouter</span>
-            <strong>{{ getDishSummary(todayMenu.dishesByMealType['GOUTER'] || []) }}</strong>
-          </article>
-        </div>
-      </div>
-    </article>
-
-    <article class="week-menus-card">
-      <header class="week-menus-card__header">
-        <div>
-          <h3>Menus de la semaine</h3>
-          <p *ngIf="data.currentWeekMenu">
-            {{ formatWeekRange(data.currentWeekMenu.weekStartDate, data.currentWeekMenu.weekEndDate) }}
-          </p>
-        </div>
-      </header>
-
-      <div class="week-days-grid">
-        <button
-          *ngFor="let dayMenu of data.visibleDailyMenus"
-          type="button"
-          class="week-day-card"
-          [class.week-day-card--active]="selectedDailyMenu()?.id === dayMenu.id"
-          (click)="selectDay(dayMenu)">
-          <span class="week-day-card__label">{{ dayMenu.displayDay }}</span>
-          <strong>{{ dayMenu.displayDate }}</strong>
-          <small>{{ getDishSummary(dayMenu.dishesByMealType['PLAT_PRINCIPAL'] || []) }}</small>
-        </button>
-      </div>
-
-      <div *ngIf="selectedDailyMenu() as selectedMenu" class="week-detail-grid">
-        <article class="meal-card" *ngFor="let mealType of ['ENTREE', 'PLAT_PRINCIPAL', 'DESSERT', 'GOUTER']">
-          <h4>{{ getMealTitle(mealType) }}</h4>
-
-          <ng-container *ngIf="(selectedMenu.dishesByMealType[mealType] || []).length; else noDish">
-            <div class="dish-stack" *ngFor="let dish of selectedMenu.dishesByMealType[mealType] || []">
-              <strong>{{ dish.name }}</strong>
-              <p *ngIf="dish.description">{{ dish.description }}</p>
-              <div class="allergen-row" *ngIf="getAllergens([dish]).length">
-                <span class="allergen-chip" *ngFor="let allergen of getAllergens([dish])">
+            <div class="day-card__footer">
+              <div class="allergen-row" *ngIf="dayMenu.allergens.length">
+                <span class="allergen-chip" *ngFor="let allergen of dayMenu.allergens">
                   {{ allergen }}
                 </span>
               </div>
+              <span class="day-card__hint">Voir le detail</span>
             </div>
-          </ng-container>
+          </article>
+        </section>
+      </article>
 
-          <ng-template #noDish>
-            <p class="muted-placeholder">Aucun plat renseigne</p>
-          </ng-template>
+      <article *ngIf="archivedWeeks().length" class="archives-card">
+        <header class="archives-card__header">
+          <div>
+            <h3>Menus precedents</h3>
+            <p>Archives des semaines passees</p>
+          </div>
+        </header>
+
+        <div class="archives-list">
+          <article *ngFor="let archivedWeek of archivedWeeks(); let archiveIndex = index" class="archive-item" (click)="openArchivedWeek(archiveIndex)">
+            <div class="archive-item__top">
+              <div>
+                <strong>{{ archivedWeek.title || archivedWeek.weekLabel }}</strong>
+                <p>{{ archivedWeek.weekRangeLabel }}</p>
+              </div>
+              <span class="archive-status">Publie</span>
+            </div>
+
+            <div class="archive-days">
+              <span class="archive-day-pill" *ngFor="let dayMenu of archivedWeek.visibleDailyMenus">
+                {{ dayMenu.displayDayShort }}
+              </span>
+            </div>
+          </article>
+        </div>
+      </article>
+    </ng-container>
+
+    <ng-template #detailView>
+      <section *ngIf="selectedDailyMenu() as selectedMenu" class="menu-detail-page">
+        <article class="menu-detail-card">
+          <header class="menu-detail-card__topbar">
+            <button type="button" class="detail-back" (click)="closeDetails()">
+              &#8249; Retour
+            </button>
+            <span class="menu-avatar">SM</span>
+          </header>
+
+          <div class="menu-detail-card__head">
+            <span class="week-state-chip">{{ week.isCurrentWeek ? 'Semaine en cours' : 'Archive publiee' }}</span>
+            <h3>{{ week.weekLabel }}</h3>
+            <p>{{ week.title || 'Menu hebdomadaire - TinySpring' }}</p>
+          </div>
+
+          <div class="menu-tabs">
+            <button
+              *ngFor="let dayMenu of week.visibleDailyMenus"
+              type="button"
+              class="menu-tab"
+              [class.menu-tab--active]="selectedMenu.id === dayMenu.id"
+              (click)="selectDetailTab(dayMenu)">
+              {{ dayMenu.displayDayShort }}
+            </button>
+          </div>
+
+          <article *ngIf="hasConflict(selectedMenu)" class="conflict-alert">
+            <strong>Attention allergenes</strong>
+            <p>Conflit detecte pour : {{ getConflictSummary(selectedMenu) }}</p>
+          </article>
+
+          <header class="detail-day-header">
+            <div class="detail-day-header__title">
+              <span class="day-card__dot" [style.background]="selectedMenu.dayColor"></span>
+              <div>
+                <h4>{{ selectedMenu.displayDayLong }}</h4>
+                <small>{{ selectedMenu.displayDateLong }}</small>
+              </div>
+            </div>
+            <div class="detail-day-header__meta">
+              <span class="soft-pill" *ngIf="getAllergenCount(selectedMenu)">{{ getAllergenCount(selectedMenu) }} allergene(s)</span>
+              <span class="soft-pill" *ngIf="selectedMenu.isToday">Aujourd'hui</span>
+            </div>
+          </header>
+
+          <section class="detail-menu-list">
+            <article class="detail-meal-row" *ngFor="let mealType of mealOrder">
+              <div class="detail-meal-row__top">
+                <div>
+                  <span class="detail-meal-row__label">{{ getMealTitle(mealType) }}</span>
+                  <strong>{{ getMealValue(selectedMenu, mealType) }}</strong>
+                </div>
+                <span class="detail-meal-row__dot" [style.background]="selectedMenu.dayColor"></span>
+              </div>
+
+              <div class="allergen-row" *ngIf="getAllergens(selectedMenu.sections[mealType]).length">
+                <span class="allergen-chip" *ngFor="let allergen of getAllergens(selectedMenu.sections[mealType])">
+                  {{ allergen }}
+                </span>
+              </div>
+            </article>
+          </section>
         </article>
-      </div>
-    </article>
+      </section>
+    </ng-template>
   </ng-container>
 </section>

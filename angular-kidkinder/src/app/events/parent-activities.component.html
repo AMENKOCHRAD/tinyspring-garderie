@@ -91,7 +91,7 @@
 
               <div class="event-card__actions">
                 <button type="button" class="icon-button icon-button--ghost" (click)="showDetails(event)" aria-label="Voir le detail">
-                  👁
+                  &#128065;
                 </button>
                 <button
                   type="button"
@@ -138,8 +138,8 @@
           <span class="badge badge--soft">{{ (event.eventPrice ?? 0) > 0 ? (event.eventPrice + ' DT') : 'Gratuit' }}</span>
         </div>
 
-        <div *ngIf="getSelectedParticipation() as participation" class="detail-success">
-          {{ participation.childFullName }} est inscrit a cet evenement.
+        <div *ngIf="hasSelectedParticipations()" class="detail-success">
+          {{ getRegisteredChildrenMessage() }}
         </div>
 
         <article class="detail-card">
@@ -186,12 +186,12 @@
           <p>{{ getDescriptionPreview(event.description) }}</p>
         </article>
 
-        <article *ngIf="event.requiresAuthorization && !getSelectedParticipation()" class="detail-alert">
+        <article *ngIf="event.requiresAuthorization && event.canParticipate && hasAvailableChildrenToRegister()" class="detail-alert">
           Autorisation parentale obligatoire. Votre signature numerique sera demandee lors de l'inscription.
         </article>
 
-        <article *ngIf="!getSelectedParticipation() && event.canParticipate" class="detail-card">
-          <h4>Participer</h4>
+        <article *ngIf="event.canParticipate && hasAvailableChildrenToRegister()" class="detail-card">
+          <h4>{{ hasSelectedParticipations() ? 'Inscrire un autre enfant' : 'Participer' }}</h4>
 
           <label class="detail-label">Enfant concerne</label>
           <select class="detail-input" [ngModel]="selectedChildId()" (ngModelChange)="onChildSelectionChange($event)">
@@ -215,26 +215,33 @@
             placeholder="Informations utiles pour l'equipe."></textarea>
 
           <button type="button" class="cta-button" [disabled]="isSubmitting()" (click)="participate(event)">
-            {{ isSubmitting() ? 'Enregistrement...' : "S'inscrire maintenant" }}
+            {{ isSubmitting() ? 'Enregistrement...' : "Inscrire l'enfant" }}
           </button>
         </article>
 
-        <div *ngIf="getSelectedParticipation() as participation" class="detail-actions">
-          <button type="button" class="secondary-button" (click)="resetSelection()">Voir mes participations</button>
-          <button
-            type="button"
-            class="danger-button"
-            [disabled]="!participation.cancellableByParent || isCancelling()"
-            (click)="cancelParticipation(participation)">
-            {{ isCancelling() ? 'Annulation...' : 'Annuler' }}
-          </button>
-        </div>
+        <section *ngIf="hasSelectedParticipations()" class="detail-participations">
+          <article *ngFor="let participation of getSelectedParticipations()" class="detail-card participation-card">
+            <div class="participation-card__header">
+              <div>
+                <h4>{{ participation.childFullName }}</h4>
+                <p>Statut : {{ participation.status }}</p>
+              </div>
+              <button
+                type="button"
+                class="danger-button"
+                [disabled]="!participation.cancellableByParent || isCancelling(participation.id)"
+                (click)="cancelParticipation(participation)">
+                {{ isCancelling(participation.id) ? 'Annulation...' : 'Annuler' }}
+              </button>
+            </div>
+          </article>
+        </section>
 
-        <div *ngIf="getSelectedParticipation() && !getSelectedParticipation()?.cancellableByParent" class="detail-disabled">
+        <div *ngIf="hasSelectedParticipations() && areAllParticipationsLocked()" class="detail-disabled">
           L'annulation est possible seulement jusqu'a 24h avant le debut de l'evenement.
         </div>
 
-        <div *ngIf="!getSelectedParticipation() && !event.canParticipate" class="detail-disabled">
+        <div *ngIf="!hasSelectedParticipations() && !event.canParticipate" class="detail-disabled">
           {{ getUnavailableMessage(event) }}
         </div>
       </article>

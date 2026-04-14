@@ -2,7 +2,15 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DailyMenu, DecoratedDailyMenu, ParentMenusData, WeeklyMenu } from './parent-menus.models';
+import {
+  DecoratedDailyMenu,
+  DecoratedWeeklyMenu,
+  DailyMenu,
+  MenuDish,
+  MenuSectionKey,
+  ParentMenusData,
+  WeeklyMenu
+} from './parent-menus.models';
 
 @Injectable({
   providedIn: 'root'
@@ -13,87 +21,196 @@ export class ParentMenusService {
 
   getMenus(): Observable<ParentMenusData> {
     return this.http.get<WeeklyMenu[]>(this.apiUrl).pipe(
-      map((weeklyMenus) => {
-        const publishedMenus = weeklyMenus
+      map((menus) => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const weeklyMenus = menus
           .filter((menu) => menu.status === 'PUBLISHED')
+          .map((menu) => this.decorateWeeklyMenu(menu, today))
+          .filter((menu) => menu.visibleDailyMenus.length > 0)
           .sort((left, right) => this.toTime(right.weekStartDate) - this.toTime(left.weekStartDate));
 
-        const visibleDailyMenus = publishedMenus
-          .flatMap((menu) => menu.dailyMenus ?? [])
-          .filter((dailyMenu) => dailyMenu.isVisibleToParents !== false)
-          .map((dailyMenu) => this.decorateDailyMenu(dailyMenu))
-          .sort((left, right) => this.toTime(left.menuDate) - this.toTime(right.menuDate));
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const todayMenu =
-          visibleDailyMenus.find((menu) => this.isSameDay(menu.menuDate, today)) ??
-          visibleDailyMenus.find((menu) => this.toTime(menu.menuDate) >= today.getTime()) ??
-          visibleDailyMenus[0] ??
-          null;
-
-        const currentWeekMenu =
-          publishedMenus.find((menu) => this.isDateWithinWeek(today, menu.weekStartDate, menu.weekEndDate)) ??
-          publishedMenus[0] ??
-          null;
+        const currentWeekIndex = Math.max(
+          0,
+          weeklyMenus.findIndex((menu) => menu.isCurrentWeek)
+        );
 
         return {
-          weeklyMenus: publishedMenus,
-          visibleDailyMenus,
-          todayMenu,
-          currentWeekMenu
+          weeklyMenus,
+          currentWeekIndex
         };
       })
     );
   }
 
-  private decorateDailyMenu(dailyMenu: DailyMenu): DecoratedDailyMenu {
-    const date = dailyMenu.menuDate ? new Date(dailyMenu.menuDate) : null;
-    const dishesByMealType: Record<string, typeof dailyMenu.dishes> = {
+  private decorateWeeklyMenu(menu: WeeklyMenu, today: Date): DecoratedWeeklyMenu {
+    const visibleDailyMenus = (menu.dailyMenus ?? [])
+      .filter((dailyMenu) => dailyMenu.isVisibleToParents !== false)
+      .map((dailyMenu) => this.decorateDailyMenu(dailyMenu, today))
+      .sort((left, right) => this.toTime(left.menuDate) - this.toTime(right.menuDate));
+
+    const isCurrentWeek = this.isDateWithinWeek(today, menu.weekStartDate, menu.weekEndDate);
+
+    return {
+      ...menu,
+      weekLabel: this.buildWeekLabel(menu.weekStartDate, menu.weekEndDate),
+      weekRangeLabel: this.buildWeekRangeLabel(menu.weekStartDate, menu.weekEndDate),
+      isCurrentWeek,
+      visibleDailyMenus,
+      todayMenu:
+        visibleDailyMenus.find((dailyMenu) => dailyMenu.isToday) ??
+        visibleDailyMenus[0] ??
+        null
+    };
+  }
+
+  private decorateDailyMenu(dailyMenu: DailyMenu, today: Date): DecoratedDailyMenu {
+    const date = this.parseDateValue(dailyMenu.menuDate);
+    const sections: Record<MenuSectionKey, MenuDish[]> = {
       ENTREE: [],
       PLAT_PRINCIPAL: [],
+      ACCOMPAGNEMENT: [],
       DESSERT: [],
       GOUTER: []
     };
 
     for (const dish of dailyMenu.dishes ?? []) {
-      const bucket = dishesByMealType[dish.mealType] ?? [];
-      bucket.push(dish);
-      dishesByMealType[dish.mealType] = bucket;
+      if (dish.mealType === 'PLAT_PRINCIPAL') {
+        if (sections.PLAT_PRINCIPAL.length === 0) {
+          sections.PLAT_PRINCIPAL.push(dish);
+        } else {
+          sections.ACCOMPAGNEMENT.push(dish);
+        }
+        continue;
+      }
+
+      const key = this.resolveSectionKey(dish.mealType);
+      sections[key].push(dish);
     }
+
+    const allergens = this.extractDistinctValues((dailyMenu.dishes ?? []).flatMap((dish) => this.splitCsv(dish.allergens)));
+    const conflictFlags = this.extractDistinctValues(
+      (dailyMenu.dishes ?? []).flatMap((dish) => this.splitCsv(dish.allergenConflictFlags))
+    );
 
     return {
       ...dailyMenu,
-      displayDay: date
+      displayDayShort: date
         ? new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(date)
-        : this.getDayLabel(dailyMenu.dayOfWeek),
-      displayDate: date
-        ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' }).format(date)
+        : this.getDayLabel(dailyMenu.dayOfWeek, 'short'),
+      displayDayLong: date
+        ? new Intl.DateTimeFormat('fr-FR', { weekday: 'long' }).format(date)
+        : this.getDayLabel(dailyMenu.dayOfWeek, 'long'),
+      displayDate: date ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date) : '',
+      displayDateLong: date
+        ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
         : '',
-      dishesByMealType
+      dayColor: this.getDayColor(date),
+      isToday: this.isSameDay(dailyMenu.menuDate, today),
+      sections,
+      summaryDish: sections.PLAT_PRINCIPAL[0]?.name || this.getSummaryDish(dailyMenu.dishes ?? []),
+      allergens,
+      conflictFlags
     };
   }
 
-  private getDayLabel(dayOfWeek: string | null): string {
-    switch ((dayOfWeek ?? '').toUpperCase()) {
-      case 'MONDAY':
-        return 'Lun';
-      case 'TUESDAY':
-        return 'Mar';
-      case 'WEDNESDAY':
-        return 'Mer';
-      case 'THURSDAY':
-        return 'Jeu';
-      case 'FRIDAY':
-        return 'Ven';
-      case 'SATURDAY':
-        return 'Sam';
-      case 'SUNDAY':
-        return 'Dim';
-      default:
-        return 'Jour';
+  private buildWeekLabel(start: string | null, end: string | null): string {
+    if (!start || !end) {
+      return 'Semaine publiee';
     }
+
+    const startDate = this.parseDateValue(start);
+    const endDate = this.parseDateValue(end);
+    const sameMonth = startDate.getMonth() === endDate.getMonth();
+    const sameYear = startDate.getFullYear() === endDate.getFullYear();
+    const endFormat = new Intl.DateTimeFormat('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      ...(sameYear ? {} : { year: 'numeric' })
+    });
+
+    const startLabel = new Intl.DateTimeFormat('fr-FR', { day: 'numeric' }).format(startDate);
+    const endLabel = sameMonth
+      ? endFormat.format(endDate)
+      : new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', ...(sameYear ? {} : { year: 'numeric' }) }).format(endDate);
+
+    return `Semaine du ${startLabel} au ${endLabel}`;
+  }
+
+  private buildWeekRangeLabel(start: string | null, end: string | null): string {
+    if (!start || !end) {
+      return '';
+    }
+
+    const startDate = this.parseDateValue(start);
+    const endDate = this.parseDateValue(end);
+    const sameYear = startDate.getFullYear() === endDate.getFullYear();
+    const startLabel = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(startDate);
+    const endLabel = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(endDate);
+
+    return sameYear ? `${startLabel} au ${endLabel} ${startDate.getFullYear()}` : `${startLabel} au ${endLabel}`;
+  }
+
+  private resolveSectionKey(type: string): MenuSectionKey {
+    switch ((type || '').toUpperCase()) {
+      case 'ENTREE':
+        return 'ENTREE';
+      case 'DESSERT':
+        return 'DESSERT';
+      case 'GOUTER':
+        return 'GOUTER';
+      default:
+        return 'PLAT_PRINCIPAL';
+    }
+  }
+
+  private getSummaryDish(dishes: MenuDish[]): string {
+    return dishes[0]?.name || 'Plat a venir';
+  }
+
+  private getDayLabel(dayOfWeek: string | null, mode: 'short' | 'long'): string {
+    const map = {
+      MONDAY: { short: 'Lun', long: 'Lundi' },
+      TUESDAY: { short: 'Mar', long: 'Mardi' },
+      WEDNESDAY: { short: 'Mer', long: 'Mercredi' },
+      THURSDAY: { short: 'Jeu', long: 'Jeudi' },
+      FRIDAY: { short: 'Ven', long: 'Vendredi' },
+      SATURDAY: { short: 'Sam', long: 'Samedi' },
+      SUNDAY: { short: 'Dim', long: 'Dimanche' }
+    } as const;
+
+    const label = map[(dayOfWeek ?? '').toUpperCase() as keyof typeof map];
+    return label ? label[mode] : mode === 'short' ? 'Jour' : 'Jour';
+  }
+
+  private getDayColor(date: Date | null): string {
+    const day = date?.getDay();
+    switch (day) {
+      case 1:
+        return '#2d6ecc';
+      case 2:
+        return '#2da36b';
+      case 3:
+        return '#6b57c8';
+      case 4:
+        return '#c67f1e';
+      case 5:
+        return '#d95989';
+      default:
+        return '#6f8b93';
+    }
+  }
+
+  private splitCsv(value: string | null | undefined): string[] {
+    return `${value || ''}`
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+
+  private extractDistinctValues(values: string[]): string[] {
+    return Array.from(new Set(values));
   }
 
   private isSameDay(value: string | null, target: Date): boolean {
@@ -101,7 +218,7 @@ export class ParentMenusService {
       return false;
     }
 
-    const date = new Date(value);
+    const date = this.parseDateValue(value);
     return (
       date.getFullYear() === target.getFullYear() &&
       date.getMonth() === target.getMonth() &&
@@ -114,8 +231,8 @@ export class ParentMenusService {
       return false;
     }
 
-    const start = new Date(weekStartDate);
-    const end = new Date(weekEndDate);
+    const start = this.parseDateValue(weekStartDate);
+    const end = this.parseDateValue(weekEndDate);
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
@@ -127,7 +244,20 @@ export class ParentMenusService {
       return Number.MIN_SAFE_INTEGER;
     }
 
-    const timestamp = new Date(value).getTime();
+    const timestamp = this.parseDateValue(value).getTime();
     return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
+  }
+
+  private parseDateValue(value: string | null): Date {
+    if (!value) {
+      return new Date(Number.NaN);
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    return new Date(value);
   }
 }

@@ -531,6 +531,23 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.detail-participations {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.participation-card__header {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.participation-card__header h4 {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
 @media (max-width: 768px) {
   .activities-hero {
     flex-direction: column;
@@ -550,5 +567,10 @@
 
   .detail-actions {
     grid-template-columns: 1fr;
+  }
+
+  .participation-card__header {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
