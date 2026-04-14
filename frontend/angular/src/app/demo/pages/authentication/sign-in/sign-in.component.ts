@@ -48,7 +48,8 @@ export class SignInComponent {
 
     this.authService.login(credentials).subscribe({
       next: (response) => {
-        this.authService.saveUser(response);
+        // ✅ saveUser() supprimé — le token est sauvegardé automatiquement
+        // dans AuthService.login() via tap()
 
         if (response.role === 'ADMIN') {
           this.router.navigate(['/analytics']);
@@ -63,22 +64,22 @@ export class SignInComponent {
         this.cd.detectChanges();
       },
       error: (err) => {
-  console.log('ERREUR COMPLETE = ', err);
-  console.log('status = ', err.status);
-  console.log('error body = ', err.error);
+        console.log('ERREUR COMPLETE = ', err);
+        console.log('status = ', err.status);
+        console.log('error body = ', err.error);
 
-  if (err.status === 0) {
-    this.error.set('Problème CORS ou backend inaccessible');
-  } else if (err.status === 401) {
-    this.error.set('Mot de passe incorrect');
-  } else if (err.status === 404) {
-    this.error.set('Utilisateur introuvable');
-  } else {
-    this.error.set('Erreur serveur : ' + err.status);
-  }
+        if (err.status === 0) {
+          this.error.set('Problème CORS ou backend inaccessible');
+        } else if (err.status === 401) {
+          this.error.set('Mot de passe incorrect');
+        } else if (err.status === 404) {
+          this.error.set('Utilisateur introuvable');
+        } else {
+          this.error.set('Erreur serveur : ' + err.status);
+        }
 
-  this.cd.detectChanges();
-}
+        this.cd.detectChanges();
+      }
     });
   }
 

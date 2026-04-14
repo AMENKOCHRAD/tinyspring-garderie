@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/calendrier")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:4201"})
 public class CalendrierController {
 
     private final AbsenceCongeRepository absenceCongeRepository;
@@ -25,7 +24,6 @@ public class CalendrierController {
     public ResponseEntity<List<CalendrierEventDTO>> getEvents() {
         List<CalendrierEventDTO> events = new ArrayList<>();
 
-        // ===== Absences =====
         for (AbsenceConge ac : absenceCongeRepository.findAll()) {
             String color = switch (ac.getStatut()) {
                 case APPROUVE -> "#10b981";
@@ -47,7 +45,6 @@ public class CalendrierController {
                     .build());
         }
 
-        // ===== Formations =====
         for (Formation f : formationRepository.findAll()) {
             if (f.getDateDebut() != null) {
                 events.add(CalendrierEventDTO.builder()

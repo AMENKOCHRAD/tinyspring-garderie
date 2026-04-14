@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Subscription } from 'rxjs';
 import { NotificationService, Notification } from '../../services/RH/notification.service';
@@ -68,14 +68,12 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
   // ===== NOTIFICATIONS =====
 
   initNotifications(): void {
-    // Charger les notifications existantes
     this.notificationService.chargerNotifications().subscribe({
       next: (notifs) => {
         this.notificationService.setNotifications(notifs);
       }
     });
 
-    // S'abonner aux mises à jour
     this.subs.push(
       this.notificationService.notifications$.subscribe(notifs => {
         this.notifications = notifs;
@@ -90,7 +88,6 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Démarrer SSE
     this.notificationService.connectSSE();
   }
 
@@ -143,14 +140,10 @@ export class RhDashboardComponent implements OnInit, OnDestroy {
 
   // ===== STATS =====
 
-  private getHeaders(): HttpHeaders {
-    const credentials = btoa('admin@garderie.com:admin123');
-    return new HttpHeaders({ 'Authorization': `Basic ${credentials}` });
-  }
+  // ✅ Supprimé getHeaders() — l'intercepteur JWT gère ça automatiquement
 
   loadStats(): void {
-    this.http.get<any>('http://localhost:8081/api/admin/dashboard/stats',
-      { headers: this.getHeaders() }).subscribe({
+    this.http.get<any>('http://localhost:8081/api/admin/dashboard/stats').subscribe({
       next: (data) => {
         this.stats = data;
         this.buildCharts();

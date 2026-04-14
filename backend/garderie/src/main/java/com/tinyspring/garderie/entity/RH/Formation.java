@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.entity.RH;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tinyspring.garderie.entity.RH.enums.StatutFormation;
 import com.tinyspring.garderie.entity.RH.enums.TypeFormation;
 import jakarta.persistence.*;
@@ -44,6 +45,8 @@ public class Formation {
     @Column(name = "statut_inscription")
     private StatutFormation statutInscription;
 
+    // ✅ JsonIgnore pour éviter la boucle infinie JSON
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "formation_animatrice",

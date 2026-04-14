@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -29,16 +29,11 @@ export class RhCalendrierComponent implements OnInit {
     this.loadEvents();
   }
 
-  private getHeaders(): HttpHeaders {
-    const credentials = btoa('admin@garderie.com:admin123');
-    return new HttpHeaders({ 'Authorization': `Basic ${credentials}` });
-  }
+  // ✅ Supprimé getHeaders() — l'intercepteur JWT gère ça automatiquement
 
   loadEvents(): void {
-    this.http.get<any[]>(
-      'http://localhost:8081/api/admin/calendrier/events',
-      { headers: this.getHeaders() }
-    ).subscribe({
+    this.http.get<any[]>('http://localhost:8081/api/admin/calendrier/events')
+    .subscribe({
       next: (events) => {
         this.calendarOptions = {
           plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],

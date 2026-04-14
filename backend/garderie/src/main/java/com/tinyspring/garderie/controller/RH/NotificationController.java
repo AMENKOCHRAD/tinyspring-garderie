@@ -14,12 +14,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/notifications")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:4201"})
 public class NotificationController {
 
     private final NotificationService notificationService;
 
-    // ✅ Endpoint SSE — Angular s'abonne ici
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream() {
         return notificationService.createEmitter();

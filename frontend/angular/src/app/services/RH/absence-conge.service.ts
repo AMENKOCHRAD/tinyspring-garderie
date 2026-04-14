@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AbsenceConge, StatutAbsenceConge } from '../../RH/absence-conge/absence-conge.model';
 
@@ -12,56 +12,36 @@ export class AbsenceCongeService {
 
   constructor(private http: HttpClient) {}
 
-  private getAdminHeaders(): HttpHeaders {
-    const credentials = btoa('admin@garderie.com:admin123');
-    return new HttpHeaders({
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json'
-    });
-  }
-
-  private getAnimatriceHeaders(): HttpHeaders {
-    const credentials = btoa('animatrice@garderie.com:anim123');
-    return new HttpHeaders({
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json'
-    });
-  }
+  // ✅ Supprimé getAdminHeaders() et getAnimatriceHeaders()
+  // L'intercepteur JWT ajoute le token automatiquement
 
   // ===== ADMIN =====
   getAllAbsenceConges(): Observable<AbsenceConge[]> {
-    return this.http.get<AbsenceConge[]>(`${this.apiUrl}/admin/absences-conges`,
-      { headers: this.getAdminHeaders() });
+    return this.http.get<AbsenceConge[]>(`${this.apiUrl}/admin/absences-conges`);
   }
 
   getByStatut(statut: StatutAbsenceConge): Observable<AbsenceConge[]> {
-    return this.http.get<AbsenceConge[]>(`${this.apiUrl}/admin/absences-conges/statut/${statut}`,
-      { headers: this.getAdminHeaders() });
+    return this.http.get<AbsenceConge[]>(`${this.apiUrl}/admin/absences-conges/statut/${statut}`);
   }
 
   validerDemande(id: number): Observable<AbsenceConge> {
-    return this.http.put<AbsenceConge>(`${this.apiUrl}/admin/absences-conges/${id}/valider`,
-      {}, { headers: this.getAdminHeaders() });
+    return this.http.put<AbsenceConge>(`${this.apiUrl}/admin/absences-conges/${id}/valider`, {});
   }
 
   refuserDemande(id: number): Observable<AbsenceConge> {
-    return this.http.put<AbsenceConge>(`${this.apiUrl}/admin/absences-conges/${id}/refuser`,
-      {}, { headers: this.getAdminHeaders() });
+    return this.http.put<AbsenceConge>(`${this.apiUrl}/admin/absences-conges/${id}/refuser`, {});
   }
 
   deleteAbsenceConge(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/admin/absences-conges/${id}`,
-      { headers: this.getAdminHeaders() });
+    return this.http.delete<void>(`${this.apiUrl}/admin/absences-conges/${id}`);
   }
 
   // ===== ANIMATRICE =====
   getMesAbsenceConges(animatriceId: number): Observable<AbsenceConge[]> {
-    return this.http.get<AbsenceConge[]>(`${this.apiUrl}/animatrice/absences-conges/${animatriceId}`,
-      { headers: this.getAnimatriceHeaders() });
+    return this.http.get<AbsenceConge[]>(`${this.apiUrl}/animatrice/absences-conges/${animatriceId}`);
   }
 
   soumettreDemande(absenceConge: AbsenceConge): Observable<AbsenceConge> {
-    return this.http.post<AbsenceConge>(`${this.apiUrl}/animatrice/absences-conges`,
-      absenceConge, { headers: this.getAnimatriceHeaders() });
+    return this.http.post<AbsenceConge>(`${this.apiUrl}/animatrice/absences-conges`, absenceConge);
   }
 }

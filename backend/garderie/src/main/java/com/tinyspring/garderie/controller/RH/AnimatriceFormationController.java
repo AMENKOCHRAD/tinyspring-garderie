@@ -11,7 +11,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/animatrice/formations")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class AnimatriceFormationController {
 
     private final FormationService formationService;

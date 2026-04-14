@@ -16,7 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/animatrices")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class AdminAnimatriceController {
 
     private final AnimatriceService animatriceService;
@@ -53,7 +52,6 @@ public class AdminAnimatriceController {
         return ResponseEntity.noContent().build();
     }
 
-    // ✅ NOUVEL ENDPOINT : upload photo
     @PostMapping("/{id}/upload-photo")
     public ResponseEntity<AnimatriceDTO> uploadPhoto(
             @PathVariable Long id,

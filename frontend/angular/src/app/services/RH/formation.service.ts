@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Formation, StatutFormation } from '../../RH/formation/formation.model';
 
@@ -12,66 +12,47 @@ export class FormationService {
 
   constructor(private http: HttpClient) {}
 
-  private getAdminHeaders(): HttpHeaders {
-    const credentials = btoa('admin@garderie.com:admin123');
-    return new HttpHeaders({
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json'
-    });
-  }
-
-  private getAnimatriceHeaders(): HttpHeaders {
-    const credentials = btoa('animatrice@garderie.com:anim123');
-    return new HttpHeaders({
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json'
-    });
-  }
+  // ✅ Supprimé getAdminHeaders() et getAnimatriceHeaders()
+  // L'intercepteur JWT ajoute le token automatiquement
 
   // ===== ADMIN =====
   getAllFormations(): Observable<Formation[]> {
-    return this.http.get<Formation[]>(`${this.apiUrl}/admin/formations`,
-      { headers: this.getAdminHeaders() });
+    return this.http.get<Formation[]>(`${this.apiUrl}/admin/formations`);
   }
 
   getFormationById(id: number): Observable<Formation> {
-    return this.http.get<Formation>(`${this.apiUrl}/admin/formations/${id}`,
-      { headers: this.getAdminHeaders() });
+    return this.http.get<Formation>(`${this.apiUrl}/admin/formations/${id}`);
   }
 
   createFormation(formation: Formation): Observable<Formation> {
-    return this.http.post<Formation>(`${this.apiUrl}/admin/formations`,
-      formation, { headers: this.getAdminHeaders() });
+    return this.http.post<Formation>(`${this.apiUrl}/admin/formations`, formation);
   }
 
   updateFormation(id: number, formation: Formation): Observable<Formation> {
-    return this.http.put<Formation>(`${this.apiUrl}/admin/formations/${id}`,
-      formation, { headers: this.getAdminHeaders() });
+    return this.http.put<Formation>(`${this.apiUrl}/admin/formations/${id}`, formation);
   }
 
   updateStatutFormation(id: number, statut: StatutFormation): Observable<Formation> {
-    return this.http.put<Formation>(`${this.apiUrl}/admin/formations/${id}/statut/${statut}`,
-      {}, { headers: this.getAdminHeaders() });
+    return this.http.put<Formation>(`${this.apiUrl}/admin/formations/${id}/statut/${statut}`, {});
   }
 
   deleteFormation(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/admin/formations/${id}`,
-      { headers: this.getAdminHeaders() });
+    return this.http.delete<void>(`${this.apiUrl}/admin/formations/${id}`);
   }
 
   // ===== ANIMATRICE =====
   getFormationsDisponibles(): Observable<Formation[]> {
-    return this.http.get<Formation[]>(`${this.apiUrl}/animatrice/formations/disponibles`,
-      { headers: this.getAnimatriceHeaders() });
+    return this.http.get<Formation[]>(`${this.apiUrl}/animatrice/formations/disponibles`);
   }
 
   getMesFormations(animatriceId: number): Observable<Formation[]> {
-    return this.http.get<Formation[]>(`${this.apiUrl}/animatrice/formations/mes-formations/${animatriceId}`,
-      { headers: this.getAnimatriceHeaders() });
+    return this.http.get<Formation[]>(`${this.apiUrl}/animatrice/formations/mes-formations/${animatriceId}`);
   }
 
   sInscrireFormation(formationId: number, animatriceId: number): Observable<Formation> {
-    return this.http.post<Formation>(`${this.apiUrl}/animatrice/formations/${formationId}/inscrire/${animatriceId}`,
-      {}, { headers: this.getAnimatriceHeaders() });
+    return this.http.post<Formation>(
+      `${this.apiUrl}/animatrice/formations/${formationId}/inscrire/${animatriceId}`,
+      {}
+    );
   }
 }

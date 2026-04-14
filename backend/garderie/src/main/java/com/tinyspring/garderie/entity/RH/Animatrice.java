@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.entity.RH;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,9 +42,13 @@ public class Animatrice {
     @Column(name = "photo_url")
     private String photoUrl;
 
+    // ✅ JsonIgnore pour éviter la boucle infinie JSON
+    @JsonIgnore
     @OneToMany(mappedBy = "animatrice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AbsenceConge> absenceConges;
 
+    // ✅ JsonIgnore pour éviter la boucle infinie JSON
+    @JsonIgnore
     @ManyToMany(mappedBy = "animatrices", fetch = FetchType.LAZY)
     private List<Formation> formations;
 }

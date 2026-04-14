@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 
 export interface Notification {
@@ -16,7 +16,6 @@ export class NotificationService {
   private apiUrl = 'http://localhost:8081/api/admin/notifications';
   private eventSource!: EventSource;
 
-  // ✅ Signal réactif — tous les composants s'y abonnent
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   public notifications$ = this.notificationsSubject.asObservable();
 
@@ -25,18 +24,17 @@ export class NotificationService {
 
   constructor(private http: HttpClient, private zone: NgZone) {}
 
-  private getHeaders(): HttpHeaders {
-    const credentials = btoa('admin@garderie.com:admin123');
-    return new HttpHeaders({ 'Authorization': `Basic ${credentials}` });
-  }
+  // ✅ Supprimé getHeaders() — l'intercepteur JWT gère ça automatiquement
 
-  // ✅ Connexion SSE
+  // ✅ SSE — EventSource ne supporte pas les headers custom
+  // On passe le token en query param pour contourner cette limitation
   connectSSE(): void {
-    const credentials = btoa('admin@garderie.com:admin123');
-    this.eventSource = new EventSource(
-      `${this.apiUrl}/stream`,
-      { withCredentials: false }
-    );
+    const token = localStorage.getItem('auth_token');
+    const url = token
+      ? `${this.apiUrl}/stream?token=${token}`
+      : `${this.apiUrl}/stream`;
+
+    this.eventSource = new EventSource(url);
 
     this.eventSource.addEventListener('notification', (event: any) => {
       this.zone.run(() => {
@@ -49,7 +47,6 @@ export class NotificationService {
 
     this.eventSource.onerror = () => {
       this.eventSource.close();
-      // Reconnexion après 5 secondes
       setTimeout(() => this.connectSSE(), 5000);
     };
   }
@@ -60,24 +57,25 @@ export class NotificationService {
     }
   }
 
+  // ✅ Requêtes HTTP — intercepteur ajoute Bearer token automatiquement
   chargerNotifications(): Observable<Notification[]> {
-    return this.http.get<Notification[]>(this.apiUrl, { headers: this.getHeaders() });
+    return this.http.get<Notification[]>(this.apiUrl);
   }
 
   chargerCount(): Observable<{ count: number }> {
-    return this.http.get<{ count: number }>(`${this.apiUrl}/count`, { headers: this.getHeaders() });
+    return this.http.get<{ count: number }>(`${this.apiUrl}/count`);
   }
 
   marquerLue(id: number): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}/lire`, {}, { headers: this.getHeaders() });
+    return this.http.put<void>(`${this.apiUrl}/${id}/lire`, {});
   }
 
   marquerToutLu(): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/lire-tout`, {}, { headers: this.getHeaders() });
+    return this.http.put<void>(`${this.apiUrl}/lire-tout`, {});
   }
 
   supprimer(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   setNotifications(notifs: Notification[]): void {

@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/animatrice/absences-conges")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class AnimatriceAbsenceCongeController {
 
     private final AbsenceCongeService absenceCongeService;

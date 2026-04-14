@@ -1,0 +1,89 @@
+<div class="demande-wrapper">
+
+  <div class="demande-header">
+    <div>
+      <h2 class="rh-title">Nouvelle demande d'absence</h2>
+      <p class="rh-subtitle">Remplissez le formulaire ci-dessous</p>
+    </div>
+    <a routerLink="/animateur/rh/mes-absences" class="btn-retour">
+      ← Retour à mes absences
+    </a>
+  </div>
+
+  <div class="alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+  <div class="alert-error" *ngIf="errorMessage">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <div class="form-card">
+    <form (ngSubmit)="onSubmit()" #demandeForm="ngForm">
+
+      <div class="form-group">
+        <label class="form-label">Type de demande <span class="required">*</span></label>
+        <div class="type-grid">
+          <div
+            *ngFor="let type of typesDisponibles"
+            class="type-option"
+            [class.selected]="demande.type === type.value"
+            (click)="demande.type = type.value">
+            {{ type.label }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date de début <span class="required">*</span></label>
+          <input
+            type="date"
+            class="form-input"
+            [(ngModel)]="demande.dateDebut"
+            name="dateDebut"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de fin <span class="required">*</span></label>
+          <input
+            type="date"
+            class="form-input"
+            [(ngModel)]="demande.dateFin"
+            name="dateFin"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="nb-jours-info" *ngIf="nbJoursCalcule > 0">
+        Durée calculée : <strong>{{ nbJoursCalcule }} jour(s)</strong>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Motif (optionnel)</label>
+        <textarea
+          class="form-input textarea"
+          [(ngModel)]="demande.motif"
+          name="motif"
+          rows="4"
+          placeholder="Décrivez brièvement la raison de votre demande..."
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-annuler" (click)="onCancel()">
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn-soumettre"
+          [disabled]="isLoading || demandeForm.invalid">
+          {{ isLoading ? 'Envoi en cours...' : 'Soumettre la demande' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
