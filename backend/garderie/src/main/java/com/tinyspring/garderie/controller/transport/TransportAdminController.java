@@ -1,6 +1,8 @@
 package com.tinyspring.garderie.controller.transport;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
+import com.tinyspring.garderie.dto.transport.admin.DemandeAffectationRecommendationResponse;
+import com.tinyspring.garderie.dto.transport.admin.NouveauTrajetRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
 import com.tinyspring.garderie.dto.transport.admin.TrajetResponse;
 import com.tinyspring.garderie.dto.transport.admin.TransportRequest;
@@ -73,5 +75,15 @@ public class TransportAdminController {
     @GetMapping("/affectations")
     public List<AffectationTransportResponse> getAffectations() {
         return transportAdminService.listerAffectations();
+    }
+
+    @GetMapping("/recommandations/affectations")
+    public List<DemandeAffectationRecommendationResponse> getRecommandationsAffectation() {
+        return transportAdminService.listerRecommandationsAffectation();
+    }
+
+    @GetMapping("/recommandations/nouveaux-trajets")
+    public List<NouveauTrajetRecommendationResponse> getRecommandationsNouveauxTrajets() {
+        return transportAdminService.listerRecommandationsNouveauxTrajets();
     }
 }

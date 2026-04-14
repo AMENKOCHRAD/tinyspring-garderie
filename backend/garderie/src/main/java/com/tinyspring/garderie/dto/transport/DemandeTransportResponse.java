@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.dto.transport;
 
+import com.tinyspring.garderie.entity.transport.SensTrajetDemandeTransport;
 import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 
 import java.time.LocalDate;
@@ -18,6 +19,12 @@ public record DemandeTransportResponse(
         LocalDate dateTrajet,
         LocalTime heureDepart,
         StatutDemandeTransport statut,
-        String pointRamassage
+        String pointRamassage,
+        String destinationSouhaitee,
+        SensTrajetDemandeTransport sensTrajet,
+        String adresseMaison,
+        Double latitudeMaison,
+        Double longitudeMaison,
+        String adresseGarderie
 ) {
 }

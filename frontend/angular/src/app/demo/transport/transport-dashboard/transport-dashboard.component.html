@@ -186,6 +186,18 @@
                     <small class="text-danger">La destination contient des caracteres non autorises.</small>
                   }
 
+                  <label>Zone desservie (optionnel)</label>
+                  <input class="form-control" formControlName="zoneDesservie" type="text" maxlength="120" />
+                  @if (hasTrajetError('zoneDesservie', 'maxlength')) {
+                    <small class="text-danger">La zone desservie ne doit pas depasser 120 caracteres.</small>
+                  }
+
+                  <label>Latitude destination (optionnel)</label>
+                  <input class="form-control" formControlName="latitudeDestination" type="number" step="0.000001" />
+
+                  <label>Longitude destination (optionnel)</label>
+                  <input class="form-control" formControlName="longitudeDestination" type="number" step="0.000001" />
+
                   <label>Date du trajet</label>
                   <input class="form-control" formControlName="dateTrajet" type="date" [min]="tomorrowDate" />
                   @if (hasTrajetError('dateTrajet')) {
@@ -228,6 +240,7 @@
                         <tr>
                           <th>Point de depart</th>
                           <th>Destination</th>
+                          <th>Zone desservie</th>
                           <th>Date</th>
                           <th>Heure</th>
                           <th>Transport</th>
@@ -239,6 +252,7 @@
                           <tr>
                             <td>{{ trajet.pointDepart }}</td>
                             <td>{{ trajet.destination }}</td>
+                            <td>{{ trajet.zoneDesservie || '-' }}</td>
                             <td>{{ trajet.dateTrajet }}</td>
                             <td>{{ trajet.heureDepart }}</td>
                             <td>{{ trajet.transportNom }}</td>
@@ -248,7 +262,7 @@
                             </td>
                           </tr>
                         } @empty {
-                          <tr><td colspan="6" class="text-center">Aucun trajet disponible.</td></tr>
+                          <tr><td colspan="7" class="text-center">Aucun trajet disponible.</td></tr>
                         }
                       </tbody>
                     </table>
@@ -308,15 +322,7 @@
                         <td>
                           @if (demande.statut === 'EN_ATTENTE') {
                             <div class="demand-actions">
-                              <select class="form-select form-select-sm" [formControl]="getTransportControl(demande.id)">
-                                <option [ngValue]="null">Choisir un transport</option>
-                                @for (transport of transports; track transport.id) {
-                                  <option [ngValue]="transport.id">{{ transport.nom }}</option>
-                                }
-                              </select>
-                              @if (getTransportControl(demande.id).invalid && getTransportControl(demande.id).touched) {
-                                <small class="text-danger">Choisissez un transport.</small>
-                              }
+                              <small class="text-muted d-block mb-2">Le systeme choisira automatiquement le trajet admin le plus adequat et non sature.</small>
                               <div class="actions-cell">
                                 <button class="btn btn-sm btn-success" type="button" [disabled]="actionDemandeId === demande.id" (click)="accepterDemande(demande)">
                                   Accepter
@@ -324,10 +330,17 @@
                                 <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="refuserDemande(demande)">
                                   Refuser
                                 </button>
+                                <button class="btn btn-sm btn-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="supprimerDemande(demande)">
+                                  Supprimer
+                                </button>
                               </div>
                             </div>
                           } @else {
-                            <span class="text-muted">Aucune action</span>
+                            <div class="actions-cell">
+                              <button class="btn btn-sm btn-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="supprimerDemande(demande)">
+                                Supprimer
+                              </button>
+                            </div>
                           }
                         </td>
                       </tr>
@@ -374,6 +387,91 @@
                     }
                   </tbody>
                 </table>
+              </div>
+            }
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="5">
+          <button ngbNavLink>Suggestions</button>
+          <ng-template ngbNavContent>
+            @if (loading.recommandations) {
+              <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <div class="recommendation-layout">
+                <div class="recommendation-panel">
+                  <h5>Recommandations d'affectation</h5>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Enfant</th>
+                          <th>Zone analysee</th>
+                          <th>Trajet recommande</th>
+                          <th>Score</th>
+                          <th>Distance</th>
+                          <th>Decision</th>
+                          <th>Motif</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (item of recommandationsAffectation; track item.demandeId) {
+                          <tr>
+                            <td>{{ item.enfantNomComplet }}</td>
+                            <td>{{ item.zoneRecherchee }}</td>
+                            <td>
+                              @if (item.trajetRecommandeId) {
+                                <div>{{ item.trajetRecommandePointDepart }} -> {{ item.trajetRecommandeDestination }}</div>
+                                <small class="text-muted">{{ item.transportRecommandeNom || '-' }} | {{ item.trajetRecommandeDate }} {{ item.trajetRecommandeHeure }}</small>
+                              } @else {
+                                <span>-</span>
+                              }
+                            </td>
+                            <td>{{ item.scorePertinence }}/100</td>
+                            <td>{{ formatRecommendationDistance(item.distanceEstimeeKm) }}</td>
+                            <td>
+                              <span class="badge transport-badge" [ngClass]="item.affectationAutomatiquePossible ? 'badge-light-success' : 'badge-light-warning'">
+                                {{ formatRecommendationStatus(item) }}
+                              </span>
+                            </td>
+                            <td>{{ item.motifRefus || 'Compatible avec les seuils configures' }}</td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="7" class="text-center">Aucune demande en attente de recommandation.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="recommendation-panel">
+                  <h5>Suggestions de nouveaux trajets</h5>
+                  <div class="route-suggestion-list">
+                    @for (item of recommandationsNouveauxTrajets; track item.zoneCentrale + item.nombreDemandes) {
+                      <div class="route-suggestion-card">
+                        <div class="route-suggestion-header">
+                          <strong>{{ item.zoneCentrale }}</strong>
+                          <span class="badge badge-light-warning">{{ item.nombreDemandes }} demandes</span>
+                        </div>
+                        <p class="mb-2">{{ item.recommandation }}</p>
+                        <p class="mb-2 text-muted">
+                          Centre estime :
+                          {{ item.latitudeCentre ?? '-' }},
+                          {{ item.longitudeCentre ?? '-' }}
+                          | Ecart moyen au trajet le plus proche :
+                          {{ formatRecommendationDistance(item.distanceMoyenneAuTrajetLePlusProcheKm) }}
+                        </p>
+                        <ul class="recommendation-demand-list">
+                          @for (demande of item.demandes; track demande.demandeId) {
+                            <li>{{ demande.enfantNomComplet }} - {{ demande.zoneRecherchee }}</li>
+                          }
+                        </ul>
+                      </div>
+                    } @empty {
+                      <div class="alert alert-light mb-0">Aucun regroupement de demandes ne justifie la creation d'un nouveau trajet pour l'instant.</div>
+                    }
+                  </div>
+                </div>
               </div>
             }
           </ng-template>

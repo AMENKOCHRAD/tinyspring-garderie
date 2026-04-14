@@ -1,6 +1,8 @@
 package com.tinyspring.garderie.service.transport.admin.impl;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
+import com.tinyspring.garderie.dto.transport.admin.DemandeAffectationRecommendationResponse;
+import com.tinyspring.garderie.dto.transport.admin.NouveauTrajetRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
 import com.tinyspring.garderie.dto.transport.admin.TrajetResponse;
 import com.tinyspring.garderie.dto.transport.admin.TransportRequest;
@@ -17,6 +19,7 @@ import com.tinyspring.garderie.repository.transport.TrajetRepository;
 import com.tinyspring.garderie.repository.transport.TransportRepository;
 import com.tinyspring.garderie.service.transport.TransportService;
 import com.tinyspring.garderie.service.transport.admin.TransportAdminService;
+import com.tinyspring.garderie.service.transport.recommendation.TransportRecommendationService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -31,17 +34,20 @@ public class TransportAdminServiceImpl implements TransportAdminService {
     private final AffectationTransportRepository affectationTransportRepository;
     private final DemandeTransportRepository demandeTransportRepository;
     private final TransportService transportService;
+    private final TransportRecommendationService transportRecommendationService;
 
     public TransportAdminServiceImpl(TransportRepository transportRepository,
                                      TrajetRepository trajetRepository,
                                      AffectationTransportRepository affectationTransportRepository,
                                      DemandeTransportRepository demandeTransportRepository,
-                                     TransportService transportService) {
+                                     TransportService transportService,
+                                     TransportRecommendationService transportRecommendationService) {
         this.transportRepository = transportRepository;
         this.trajetRepository = trajetRepository;
         this.affectationTransportRepository = affectationTransportRepository;
         this.demandeTransportRepository = demandeTransportRepository;
         this.transportService = transportService;
+        this.transportRecommendationService = transportRecommendationService;
     }
 
     @Override
@@ -99,6 +105,9 @@ public class TransportAdminServiceImpl implements TransportAdminService {
                 request.getHeureDepart(),
                 transport
         );
+        trajet.setZoneDesservie(request.getZoneDesservie());
+        trajet.setLatitudeDestination(request.getLatitudeDestination());
+        trajet.setLongitudeDestination(request.getLongitudeDestination());
         return toTrajetResponse(trajetRepository.save(trajet));
     }
 
@@ -110,6 +119,9 @@ public class TransportAdminServiceImpl implements TransportAdminService {
         trajet.setDateTrajet(request.getDateTrajet());
         trajet.setHeureDepart(request.getHeureDepart());
         trajet.setTransport(getTransport(request.getTransportId()));
+        trajet.setZoneDesservie(request.getZoneDesservie());
+        trajet.setLatitudeDestination(request.getLatitudeDestination());
+        trajet.setLongitudeDestination(request.getLongitudeDestination());
         return toTrajetResponse(trajetRepository.save(trajet));
     }
 
@@ -130,6 +142,16 @@ public class TransportAdminServiceImpl implements TransportAdminService {
                 .stream()
                 .map(this::toAffectationResponse)
                 .toList();
+    }
+
+    @Override
+    public List<DemandeAffectationRecommendationResponse> listerRecommandationsAffectation() {
+        return transportRecommendationService.getRecommendationsAffectation();
+    }
+
+    @Override
+    public List<NouveauTrajetRecommendationResponse> listerRecommandationsNouveauxTrajets() {
+        return transportRecommendationService.getRecommendationsNouveauxTrajets();
     }
 
     private Transport getTransport(Long id) {
@@ -158,6 +180,9 @@ public class TransportAdminServiceImpl implements TransportAdminService {
                 trajet.getId(),
                 trajet.getPointDepart(),
                 trajet.getDestination(),
+                trajet.getZoneDesservie(),
+                trajet.getLatitudeDestination(),
+                trajet.getLongitudeDestination(),
                 trajet.getDateTrajet(),
                 trajet.getHeureDepart(),
                 trajet.getTransport().getId(),

@@ -32,7 +32,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const authReq = req.clone({
     setHeaders: {
-      Authorization: `Basic ${authToken}`
+      Authorization: `Bearer ${authToken}`
     }
   });
 

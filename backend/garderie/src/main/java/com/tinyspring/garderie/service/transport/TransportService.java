@@ -18,8 +18,9 @@ public interface TransportService {
     List<DemandeTransportResponse> listerDemandesParParent(Long parentId);
     List<ParentTrajetResponse> listerTrajetsDisponibles();
     List<ParentEnfantResponse> listerEnfantsParParent(Long parentId);
-    TraitementDemandeTransportResponse accepterDemande(Long demandeId, Long transportId);
+    TraitementDemandeTransportResponse accepterDemande(Long demandeId);
     TraitementDemandeTransportResponse refuserDemande(Long demandeId);
+    void supprimerDemandeTransportAdmin(Long demandeId);
     TrajetDetailsResponse listerEnfantsParTrajet(Long trajetId);
     double calculerTauxRemplissage(Long transportId);
 }

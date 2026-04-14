@@ -11,8 +11,13 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message: string;
+  id: number | string;
+  nom: string;
   email: string;
   role: string;
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
 }
 
 export interface StoredUser extends LoginResponse {
@@ -32,8 +37,8 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data);
   }
 
-  saveUser(user: LoginResponse, credentials: LoginRequest): void {
-    const authToken = btoa(`${credentials.email}:${credentials.password}`);
+  saveUser(user: LoginResponse): void {
+    const authToken = user.accessToken;
     const storedUser: StoredUser = {
       ...user,
       authToken
@@ -64,9 +69,9 @@ export class AuthService {
       case 'ADMIN':
         return `${environment.adminAppUrl}/analytics`;
       case 'PARENT':
-        return `${environment.userAppUrl}/parent`;
+        return `${environment.userAppUrl}/connexion`;
       case 'ANIMATRICE':
-        return `${environment.userAppUrl}/animatrice`;
+        return `${environment.userAppUrl}/connexion`;
       default:
         return `${environment.adminAppUrl}/login`;
     }

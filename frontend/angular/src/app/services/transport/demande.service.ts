@@ -16,11 +16,15 @@ export class DemandeService {
     return this.http.get<DemandeTransport[]>(`${this.apiUrl}/demandes`);
   }
 
-  accepterDemande(id: number, transportId: number): Observable<TraitementDemandeTransportResponse> {
-    return this.http.put<TraitementDemandeTransportResponse>(`${this.apiUrl}/accepter/${id}`, { transportId });
+  accepterDemande(id: number): Observable<TraitementDemandeTransportResponse> {
+    return this.http.put<TraitementDemandeTransportResponse>(`${this.apiUrl}/accepter/${id}`, {});
   }
 
   refuserDemande(id: number): Observable<TraitementDemandeTransportResponse> {
     return this.http.put<TraitementDemandeTransportResponse>(`${this.apiUrl}/refuser/${id}`, {});
+  }
+
+  supprimerDemande(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/demandes/${id}`);
   }
 }

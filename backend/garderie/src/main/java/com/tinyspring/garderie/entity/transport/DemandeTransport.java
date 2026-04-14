@@ -33,7 +33,7 @@ public class DemandeTransport {
     private User parent;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trajet_id", nullable = false)
+    @JoinColumn(name = "trajet_id")
     private Trajet trajet;
 
     @Column(nullable = false)
@@ -46,15 +46,45 @@ public class DemandeTransport {
     @Column(nullable = false)
     private String pointRamassage;
 
+    @Column(nullable = false)
+    private String destinationSouhaitee;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sens_trajet", nullable = false)
+    private SensTrajetDemandeTransport sensTrajet = SensTrajetDemandeTransport.MAISON_VERS_GARDERIE;
+
+    @Column(name = "adresse_maison", nullable = false, length = 255)
+    private String adresseMaison;
+
+    @Column(name = "latitude_maison", nullable = false)
+    private Double latitudeMaison;
+
+    @Column(name = "longitude_maison", nullable = false)
+    private Double longitudeMaison;
+
     public DemandeTransport() {
     }
 
-    public DemandeTransport(Enfant enfant, User parent, Trajet trajet, StatutDemandeTransport statut, String pointRamassage) {
+    public DemandeTransport(Enfant enfant,
+                            User parent,
+                            Trajet trajet,
+                            StatutDemandeTransport statut,
+                            String pointRamassage,
+                            String destinationSouhaitee,
+                            SensTrajetDemandeTransport sensTrajet,
+                            String adresseMaison,
+                            Double latitudeMaison,
+                            Double longitudeMaison) {
         this.enfant = enfant;
         this.parent = parent;
         this.trajet = trajet;
         this.statut = statut;
         this.pointRamassage = pointRamassage;
+        this.destinationSouhaitee = destinationSouhaitee;
+        this.sensTrajet = sensTrajet;
+        this.adresseMaison = adresseMaison;
+        this.latitudeMaison = latitudeMaison;
+        this.longitudeMaison = longitudeMaison;
         this.dateDemande = LocalDate.now();
     }
 
@@ -108,5 +138,45 @@ public class DemandeTransport {
 
     public void setPointRamassage(String pointRamassage) {
         this.pointRamassage = pointRamassage;
+    }
+
+    public String getDestinationSouhaitee() {
+        return destinationSouhaitee;
+    }
+
+    public void setDestinationSouhaitee(String destinationSouhaitee) {
+        this.destinationSouhaitee = destinationSouhaitee;
+    }
+
+    public SensTrajetDemandeTransport getSensTrajet() {
+        return sensTrajet;
+    }
+
+    public void setSensTrajet(SensTrajetDemandeTransport sensTrajet) {
+        this.sensTrajet = sensTrajet;
+    }
+
+    public String getAdresseMaison() {
+        return adresseMaison;
+    }
+
+    public void setAdresseMaison(String adresseMaison) {
+        this.adresseMaison = adresseMaison;
+    }
+
+    public Double getLatitudeMaison() {
+        return latitudeMaison;
+    }
+
+    public void setLatitudeMaison(Double latitudeMaison) {
+        this.latitudeMaison = latitudeMaison;
+    }
+
+    public Double getLongitudeMaison() {
+        return longitudeMaison;
+    }
+
+    public void setLongitudeMaison(Double longitudeMaison) {
+        this.longitudeMaison = longitudeMaison;
     }
 }

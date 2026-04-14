@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface AffectationTransportRepository extends JpaRepository<AffectationTransport, Long> {
     boolean existsByEnfantId(Long enfantId);
     long countByTransportId(Long transportId);
+    long countByTrajetId(Long trajetId);
     List<AffectationTransport> findByTrajetId(Long trajetId);
     Optional<AffectationTransport> findByEnfantId(Long enfantId);
 }

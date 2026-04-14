@@ -27,6 +27,15 @@ public class Trajet {
     @Column(nullable = false)
     private String destination;
 
+    @Column(name = "zone_desservie")
+    private String zoneDesservie;
+
+    @Column(name = "latitude_destination")
+    private Double latitudeDestination;
+
+    @Column(name = "longitude_destination")
+    private Double longitudeDestination;
+
     @Column(nullable = false)
     private LocalTime heureDepart;
 
@@ -66,6 +75,30 @@ public class Trajet {
 
     public void setDestination(String destination) {
         this.destination = destination;
+    }
+
+    public String getZoneDesservie() {
+        return zoneDesservie;
+    }
+
+    public void setZoneDesservie(String zoneDesservie) {
+        this.zoneDesservie = zoneDesservie;
+    }
+
+    public Double getLatitudeDestination() {
+        return latitudeDestination;
+    }
+
+    public void setLatitudeDestination(Double latitudeDestination) {
+        this.latitudeDestination = latitudeDestination;
+    }
+
+    public Double getLongitudeDestination() {
+        return longitudeDestination;
+    }
+
+    public void setLongitudeDestination(Double longitudeDestination) {
+        this.longitudeDestination = longitudeDestination;
     }
 
     public LocalTime getHeureDepart() {

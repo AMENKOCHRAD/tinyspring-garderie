@@ -18,16 +18,22 @@ export interface TrajetItem {
   id: number;
   pointDepart: string;
   destination: string;
+  zoneDesservie: string | null;
+  latitudeDestination: number | null;
+  longitudeDestination: number | null;
   dateTrajet: string;
   heureDepart: string;
-  transportId: number;
-  transportNom: string;
-  transportMatricule: string;
+  transportId: number | null;
+  transportNom: string | null;
+  transportMatricule: string | null;
 }
 
 export interface TrajetPayload {
   pointDepart: string;
   destination: string;
+  zoneDesservie?: string | null;
+  latitudeDestination?: number | null;
+  longitudeDestination?: number | null;
   dateTrajet: string;
   heureDepart: string;
   transportId: number;
@@ -39,13 +45,14 @@ export interface DemandeTransport {
   enfantNomComplet: string;
   parentId: number;
   parentNom: string;
-  trajetId: number;
+  trajetId: number | null;
   pointDepart: string;
   destination: string;
-  dateTrajet: string;
-  heureDepart: string;
+  dateTrajet: string | null;
+  heureDepart: string | null;
   statut: StatutTransport;
   pointRamassage: string;
+  destinationSouhaitee: string;
 }
 
 export interface TraitementDemandeTransportResponse {
@@ -68,4 +75,46 @@ export interface AffectationTransport {
   dateTrajet: string;
   heureDepart: string;
   pointRamassage: string;
+}
+
+export interface DemandeAffectationRecommendation {
+  demandeId: number;
+  enfantId: number;
+  enfantNomComplet: string;
+  statutDemande: StatutTransport;
+  sensTrajet: 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
+  zoneRecherchee: string;
+  destinationSouhaitee: string;
+  affectationAutomatiquePossible: boolean;
+  scorePertinence: number;
+  distanceEstimeeKm: number | null;
+  modeEvaluation: string;
+  motifRefus: string | null;
+  trajetRecommandeId: number | null;
+  trajetRecommandePointDepart: string | null;
+  trajetRecommandeDestination: string | null;
+  trajetRecommandeDate: string | null;
+  trajetRecommandeHeure: string | null;
+  transportRecommandeId: number | null;
+  transportRecommandeNom: string | null;
+  zoneDesservieTrajet: string | null;
+}
+
+export interface NouveauTrajetSuggestionDemande {
+  demandeId: number;
+  enfantId: number;
+  enfantNomComplet: string;
+  sensTrajet: 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
+  zoneRecherchee: string;
+  destinationSouhaitee: string;
+}
+
+export interface NouveauTrajetRecommendation {
+  zoneCentrale: string;
+  latitudeCentre: number | null;
+  longitudeCentre: number | null;
+  nombreDemandes: number;
+  distanceMoyenneAuTrajetLePlusProcheKm: number | null;
+  recommandation: string;
+  demandes: NouveauTrajetSuggestionDemande[];
 }

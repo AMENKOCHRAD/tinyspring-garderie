@@ -78,6 +78,45 @@
   font-weight: 600;
 }
 
+.recommendation-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+}
+
+.recommendation-panel {
+  padding: 18px;
+  border: 1px solid #e8edf7;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.route-suggestion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.route-suggestion-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: #fffaf0;
+  border: 1px solid #ffe0a3;
+}
+
+.route-suggestion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.recommendation-demand-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
 .badge-light-warning {
   background: rgba(255, 193, 7, 0.15);
   color: #c88700;
@@ -96,5 +135,9 @@
 @media (max-width: 768px) {
   .demand-actions {
     min-width: 100%;
+  }
+
+  .recommendation-layout {
+    grid-template-columns: 1fr;
   }
 }

@@ -31,6 +31,13 @@ public class TrajetRequest {
     @NotNull(message = "Le transport est obligatoire")
     private Long transportId;
 
+    @Size(max = 120, message = "La zone desservie ne doit pas depasser 120 caracteres")
+    private String zoneDesservie;
+
+    private Double latitudeDestination;
+
+    private Double longitudeDestination;
+
     public String getPointDepart() {
         return pointDepart;
     }
@@ -69,5 +76,29 @@ public class TrajetRequest {
 
     public void setTransportId(Long transportId) {
         this.transportId = transportId;
+    }
+
+    public String getZoneDesservie() {
+        return zoneDesservie;
+    }
+
+    public void setZoneDesservie(String zoneDesservie) {
+        this.zoneDesservie = zoneDesservie;
+    }
+
+    public Double getLatitudeDestination() {
+        return latitudeDestination;
+    }
+
+    public void setLatitudeDestination(Double latitudeDestination) {
+        this.latitudeDestination = latitudeDestination;
+    }
+
+    public Double getLongitudeDestination() {
+        return longitudeDestination;
+    }
+
+    public void setLongitudeDestination(Double longitudeDestination) {
+        this.longitudeDestination = longitudeDestination;
     }
 }

@@ -1,6 +1,8 @@
 package com.tinyspring.garderie.service.transport.admin;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
+import com.tinyspring.garderie.dto.transport.admin.DemandeAffectationRecommendationResponse;
+import com.tinyspring.garderie.dto.transport.admin.NouveauTrajetRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
 import com.tinyspring.garderie.dto.transport.admin.TrajetResponse;
 import com.tinyspring.garderie.dto.transport.admin.TransportRequest;
@@ -18,4 +20,6 @@ public interface TransportAdminService {
     TrajetResponse modifierTrajet(Long id, TrajetRequest request);
     void supprimerTrajet(Long id);
     List<AffectationTransportResponse> listerAffectations();
+    List<DemandeAffectationRecommendationResponse> listerRecommandationsAffectation();
+    List<NouveauTrajetRecommendationResponse> listerRecommandationsNouveauxTrajets();
 }

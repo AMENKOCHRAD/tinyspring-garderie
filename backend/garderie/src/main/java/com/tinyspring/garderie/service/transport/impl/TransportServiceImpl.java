@@ -13,6 +13,7 @@ import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.entity.transport.AffectationTransport;
 import com.tinyspring.garderie.entity.transport.DemandeTransport;
 import com.tinyspring.garderie.entity.transport.Enfant;
+import com.tinyspring.garderie.entity.transport.SensTrajetDemandeTransport;
 import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 import com.tinyspring.garderie.entity.transport.Trajet;
 import com.tinyspring.garderie.entity.transport.Transport;
@@ -25,6 +26,7 @@ import com.tinyspring.garderie.repository.transport.EnfantRepository;
 import com.tinyspring.garderie.repository.transport.TrajetRepository;
 import com.tinyspring.garderie.repository.transport.TransportRepository;
 import com.tinyspring.garderie.service.transport.TransportService;
+import com.tinyspring.garderie.service.transport.recommendation.TransportRecommendationService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,7 @@ import java.util.List;
 public class TransportServiceImpl implements TransportService {
 
     private static final Logger logger = LoggerFactory.getLogger(TransportServiceImpl.class);
+    private static final String ADRESSE_GARDERIE_EXACTE = "15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie";
 
     private final DemandeTransportRepository demandeTransportRepository;
     private final AffectationTransportRepository affectationTransportRepository;
@@ -45,19 +48,22 @@ public class TransportServiceImpl implements TransportService {
     private final TransportRepository transportRepository;
     private final TrajetRepository trajetRepository;
     private final UserRepository userRepository;
+    private final TransportRecommendationService transportRecommendationService;
 
     public TransportServiceImpl(DemandeTransportRepository demandeTransportRepository,
                                 AffectationTransportRepository affectationTransportRepository,
                                 EnfantRepository enfantRepository,
                                 TransportRepository transportRepository,
                                 TrajetRepository trajetRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                TransportRecommendationService transportRecommendationService) {
         this.demandeTransportRepository = demandeTransportRepository;
         this.affectationTransportRepository = affectationTransportRepository;
         this.enfantRepository = enfantRepository;
         this.transportRepository = transportRepository;
         this.trajetRepository = trajetRepository;
         this.userRepository = userRepository;
+        this.transportRecommendationService = transportRecommendationService;
     }
 
     @Override
@@ -69,11 +75,6 @@ public class TransportServiceImpl implements TransportService {
 
         Enfant enfant = enfantRepository.findByIdAndParentId(request.getEnfantId(), parentId)
                 .orElseThrow(() -> new BusinessException("Cet enfant n'appartient pas au parent connecte"));
-        Trajet trajet = getTrajet(request.getTrajetId());
-        if (!trajet.getDateTrajet().isAfter(LocalDate.now())) {
-            throw new BusinessException("Le parent ne peut faire une demande que pour un trajet a partir de demain");
-        }
-
         boolean demandeActive = demandeTransportRepository.existsByEnfantIdAndStatut(enfant.getId(), StatutDemandeTransport.EN_ATTENTE)
                 || demandeTransportRepository.existsByEnfantIdAndStatut(enfant.getId(), StatutDemandeTransport.ACCEPTEE);
         if (demandeActive) {
@@ -83,9 +84,14 @@ public class TransportServiceImpl implements TransportService {
         DemandeTransport demande = new DemandeTransport(
                 enfant,
                 parent,
-                trajet,
+                null,
                 StatutDemandeTransport.EN_ATTENTE,
-                request.getPointRamassage()
+                resolvePointRamassage(request.getSensTrajet(), request.getAdresseMaison()),
+                resolveDestinationSouhaitee(request.getSensTrajet(), request.getAdresseMaison()),
+                request.getSensTrajet(),
+                request.getAdresseMaison().trim(),
+                request.getLatitudeMaison(),
+                request.getLongitudeMaison()
         );
 
         DemandeTransport savedDemande = demandeTransportRepository.save(demande);
@@ -109,14 +115,14 @@ public class TransportServiceImpl implements TransportService {
 
         Enfant enfant = enfantRepository.findByIdAndParentId(request.getEnfantId(), parentId)
                 .orElseThrow(() -> new BusinessException("Cet enfant n'appartient pas au parent connecte"));
-        Trajet trajet = getTrajet(request.getTrajetId());
-        if (!trajet.getDateTrajet().isAfter(LocalDate.now())) {
-            throw new BusinessException("Le parent ne peut modifier une demande que pour un trajet a partir de demain");
-        }
-
         demande.setEnfant(enfant);
-        demande.setTrajet(trajet);
-        demande.setPointRamassage(request.getPointRamassage());
+        demande.setTrajet(null);
+        demande.setSensTrajet(request.getSensTrajet());
+        demande.setAdresseMaison(request.getAdresseMaison().trim());
+        demande.setLatitudeMaison(request.getLatitudeMaison());
+        demande.setLongitudeMaison(request.getLongitudeMaison());
+        demande.setPointRamassage(resolvePointRamassage(request.getSensTrajet(), request.getAdresseMaison()));
+        demande.setDestinationSouhaitee(resolveDestinationSouhaitee(request.getSensTrajet(), request.getAdresseMaison()));
         logger.info("Demande de transport modifiee. demandeId={}, parentId={}", demandeId, parentId);
 
         return toDemandeResponse(demandeTransportRepository.save(demande));
@@ -128,8 +134,12 @@ public class TransportServiceImpl implements TransportService {
         if (!demande.getParent().getId().equals(parentId)) {
             throw new BusinessException("Le parent connecte ne peut supprimer que ses propres demandes");
         }
-        if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE) {
-            throw new BusinessException("Seules les demandes en attente peuvent etre supprimees");
+
+        if (demande.getStatut() == StatutDemandeTransport.ACCEPTEE) {
+            affectationTransportRepository.findByEnfantId(demande.getEnfant().getId())
+                    .ifPresent(affectationTransportRepository::delete);
+            logger.info("Affectation transport supprimee suite a la suppression parent. demandeId={}, enfantId={}",
+                    demandeId, demande.getEnfant().getId());
         }
 
         demandeTransportRepository.delete(demande);
@@ -178,9 +188,8 @@ public class TransportServiceImpl implements TransportService {
     }
 
     @Override
-    public TraitementDemandeTransportResponse accepterDemande(Long demandeId, Long transportId) {
+    public TraitementDemandeTransportResponse accepterDemande(Long demandeId) {
         DemandeTransport demande = getDemande(demandeId);
-        Transport transport = getTransport(transportId);
 
         if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE) {
             throw new BusinessException("Seules les demandes en attente peuvent etre acceptees");
@@ -189,24 +198,23 @@ public class TransportServiceImpl implements TransportService {
             throw new BusinessException("Cet enfant est deja affecte a un transport");
         }
 
-        long nbAffectations = affectationTransportRepository.countByTransportId(transport.getId());
-        if (nbAffectations >= transport.getCapacite()) {
-            throw new BusinessException("La capacite de ce transport est atteinte");
-        }
+        Trajet trajet = transportRecommendationService.validerEtRetournerTrajetPourAffectation(demande);
+        Transport transport = trajet.getTransport();
 
         AffectationTransport savedAffectation = affectationTransportRepository.save(new AffectationTransport(
                 demande.getEnfant(),
                 transport,
-                demande.getTrajet(),
+                trajet,
                 demande.getPointRamassage()
         ));
 
+        demande.setTrajet(trajet);
         demande.setStatut(StatutDemandeTransport.ACCEPTEE);
         demandeTransportRepository.save(demande);
 
-        double tauxRemplissage = calculerTauxRemplissage(transportId);
+        double tauxRemplissage = calculerTauxRemplissage(transport.getId());
         logger.info("Demande acceptee. demandeId={}, affectationId={}, transportId={}, tauxRemplissage={}",
-                demandeId, savedAffectation.getId(), transportId, tauxRemplissage);
+                demandeId, savedAffectation.getId(), transport.getId(), tauxRemplissage);
 
         return new TraitementDemandeTransportResponse(
                 demande.getId(),
@@ -233,6 +241,21 @@ public class TransportServiceImpl implements TransportService {
                 null,
                 null
         );
+    }
+
+    @Override
+    public void supprimerDemandeTransportAdmin(Long demandeId) {
+        DemandeTransport demande = getDemande(demandeId);
+
+        if (demande.getStatut() == StatutDemandeTransport.ACCEPTEE) {
+            affectationTransportRepository.findByEnfantId(demande.getEnfant().getId())
+                    .ifPresent(affectationTransportRepository::delete);
+            logger.info("Affectation transport supprimee par admin. demandeId={}, enfantId={}",
+                    demandeId, demande.getEnfant().getId());
+        }
+
+        demandeTransportRepository.delete(demande);
+        logger.info("Demande de transport supprimee par admin. demandeId={}", demandeId);
     }
 
     @Override
@@ -296,24 +319,43 @@ public class TransportServiceImpl implements TransportService {
     }
 
     private DemandeTransportResponse toDemandeResponse(DemandeTransport demande) {
+        Trajet trajet = demande.getTrajet();
         return new DemandeTransportResponse(
                 demande.getId(),
                 demande.getEnfant().getId(),
                 getNomCompletEnfant(demande.getEnfant()),
                 demande.getParent().getId(),
                 demande.getParent().getNom(),
-                demande.getTrajet().getId(),
+                trajet != null ? trajet.getId() : null,
                 demande.getDateDemande(),
-                demande.getTrajet().getPointDepart(),
-                demande.getTrajet().getDestination(),
-                demande.getTrajet().getDateTrajet(),
-                demande.getTrajet().getHeureDepart(),
+                trajet != null ? trajet.getPointDepart() : demande.getPointRamassage(),
+                trajet != null ? trajet.getDestination() : demande.getDestinationSouhaitee(),
+                trajet != null ? trajet.getDateTrajet() : null,
+                trajet != null ? trajet.getHeureDepart() : null,
                 demande.getStatut(),
-                demande.getPointRamassage()
+                demande.getPointRamassage(),
+                demande.getDestinationSouhaitee(),
+                demande.getSensTrajet(),
+                demande.getAdresseMaison(),
+                demande.getLatitudeMaison(),
+                demande.getLongitudeMaison(),
+                ADRESSE_GARDERIE_EXACTE
         );
     }
 
     private String getNomCompletEnfant(Enfant enfant) {
         return enfant.getPrenom() + " " + enfant.getNom();
+    }
+
+    private String resolvePointRamassage(SensTrajetDemandeTransport sensTrajet, String adresseMaison) {
+        return sensTrajet == SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
+                ? ADRESSE_GARDERIE_EXACTE
+                : adresseMaison.trim();
+    }
+
+    private String resolveDestinationSouhaitee(SensTrajetDemandeTransport sensTrajet, String adresseMaison) {
+        return sensTrajet == SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
+                ? adresseMaison.trim()
+                : ADRESSE_GARDERIE_EXACTE;
     }
 }

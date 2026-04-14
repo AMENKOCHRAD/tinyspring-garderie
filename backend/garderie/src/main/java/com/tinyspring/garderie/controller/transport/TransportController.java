@@ -1,12 +1,11 @@
 package com.tinyspring.garderie.controller.transport;
 
-import com.tinyspring.garderie.dto.transport.AccepterDemandeTransportRequest;
 import com.tinyspring.garderie.dto.transport.DemandeTransportResponse;
 import com.tinyspring.garderie.dto.transport.TrajetDetailsResponse;
 import com.tinyspring.garderie.dto.transport.TraitementDemandeTransportResponse;
 import com.tinyspring.garderie.service.transport.TransportService;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -33,14 +32,18 @@ public class TransportController {
     }
 
     @PutMapping("/accepter/{id}")
-    public TraitementDemandeTransportResponse accepterDemande(@PathVariable Long id,
-                                                              @Valid @RequestBody AccepterDemandeTransportRequest request) {
-        return transportService.accepterDemande(id, request.getTransportId());
+    public TraitementDemandeTransportResponse accepterDemande(@PathVariable Long id) {
+        return transportService.accepterDemande(id);
     }
 
     @PutMapping("/refuser/{id}")
     public TraitementDemandeTransportResponse refuserDemande(@PathVariable Long id) {
         return transportService.refuserDemande(id);
+    }
+
+    @DeleteMapping("/demandes/{id}")
+    public void supprimerDemande(@PathVariable Long id) {
+        transportService.supprimerDemandeTransportAdmin(id);
     }
 
     @GetMapping("/trajet/{id}")
