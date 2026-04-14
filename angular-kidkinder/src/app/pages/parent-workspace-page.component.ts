@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ParentActivitiesComponent } from '../events/parent-activities.component';
+import { ParentMenusComponent } from '../menus/parent-menus.component';
 import { AuthService } from '../shared/auth.service';
 
 type ParentPageKey =
@@ -65,7 +67,7 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
 @Component({
   selector: 'app-parent-workspace-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ParentActivitiesComponent, ParentMenusComponent],
   templateUrl: './parent-workspace-page.component.html',
   styleUrl: './parent-workspace-page.component.css'
 })

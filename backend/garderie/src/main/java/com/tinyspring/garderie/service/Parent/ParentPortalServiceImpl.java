@@ -166,9 +166,9 @@ public class ParentPortalServiceImpl implements ParentPortalService {
             );
         }
 
-        if (event.getStartDatetime() == null || !event.getStartDatetime().isAfter(LocalDateTime.now().plusHours(12))) {
+        if (event.getStartDatetime() == null || !event.getStartDatetime().isAfter(LocalDateTime.now().plusHours(24))) {
             throw new InvalidStatusTransitionException(
-                    "L'annulation parentale n'est possible que plus de 12 heures avant le debut de l'evenement"
+                    "L'annulation parentale n'est possible que plus de 24 heures avant le debut de l'evenement"
             );
         }
 
@@ -342,7 +342,7 @@ public class ParentPortalServiceImpl implements ParentPortalService {
         return registration.getStatus() == RegistrationStatus.CONFIRMED
                 && event != null
                 && event.getStartDatetime() != null
-                && event.getStartDatetime().isAfter(LocalDateTime.now().plusHours(12));
+                && event.getStartDatetime().isAfter(LocalDateTime.now().plusHours(24));
     }
 
     private String resolveEventTitle(EventRegistration registration) {

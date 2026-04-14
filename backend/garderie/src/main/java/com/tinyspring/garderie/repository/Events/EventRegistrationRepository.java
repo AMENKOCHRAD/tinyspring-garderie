@@ -11,6 +11,7 @@ import java.util.Collection;
 public interface EventRegistrationRepository  extends JpaRepository<EventRegistration, Long> {
     List<EventRegistration> findByEventIdOrderByRegisteredAtAsc(Long eventId);
     List<EventRegistration> findByParentIdOrderByRegisteredAtDesc(Long parentId);
+    boolean existsByEventId(Long eventId);
 
     Optional<EventRegistration> findFirstByEventIdAndStatusOrderByRegisteredAtAsc(
             Long eventId,

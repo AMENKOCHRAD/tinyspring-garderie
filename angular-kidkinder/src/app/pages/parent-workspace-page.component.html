@@ -1,5 +1,5 @@
 <div class="ts-container workspace-page">
-  <section class="page-header-card">
+  <section *ngIf="page() !== 'activites' && page() !== 'menus'" class="page-header-card">
     <div>
       <span class="section-chip">{{ pageMeta().chip }}</span>
       <h1>{{ pageTitle() }}</h1>
@@ -49,7 +49,7 @@
             <span class="profile-avatar">L</span>
             <div>
               <h3>Lina Ben Salah</h3>
-              <p class="muted">4 ans • Groupe Papillons</p>
+              <p class="muted">4 ans &bull; Groupe Papillons</p>
             </div>
           </div>
           <div class="badge-row">
@@ -62,7 +62,7 @@
             <span class="profile-avatar">A</span>
             <div>
               <h3>Adam Ben Salah</h3>
-              <p class="muted">2 ans • Groupe Tournesols</p>
+              <p class="muted">2 ans &bull; Groupe Tournesols</p>
             </div>
           </div>
           <div class="badge-row">
@@ -115,7 +115,7 @@
         <div class="stack-list">
           <article class="stack-item">
             <strong>Lina Ben Salah</strong>
-            <p class="muted">Arachides • Pollen</p>
+            <p class="muted">Arachides &bull; Pollen</p>
           </article>
           <article class="stack-item">
             <strong>Adam Ben Salah</strong>
@@ -129,7 +129,7 @@
         <div class="stack-list">
           <article class="stack-item">
             <strong>Sirop anti-allergique</strong>
-            <p class="muted">Lina • 5 ml • 12h00</p>
+            <p class="muted">Lina &bull; 5 ml &bull; 12h00</p>
           </article>
         </div>
       </section>
@@ -167,91 +167,11 @@
     </section>
 
     <section *ngSwitchCase="'activites'" class="workspace-page">
-      <section id="calendrier" class="calendar-card">
-        <h3>Calendrier des activites</h3>
-        <div class="calendar-grid">
-          <div class="calendar-day">1</div>
-          <div class="calendar-day">2</div>
-          <div class="calendar-day calendar-day--selected">3</div>
-          <div class="calendar-day">4</div>
-          <div class="calendar-day">5</div>
-          <div class="calendar-day">6</div>
-          <div class="calendar-day">7</div>
-        </div>
-      </section>
-
-      <div class="two-column-grid">
-        <section id="evenements" class="table-card">
-          <h3>Evenements</h3>
-          <div class="stack-list">
-            <article class="stack-item">
-              <span class="tag tag--mint">Sortie</span>
-              <strong>Visite du jardin botanique</strong>
-              <p class="muted">Mardi a 10h00 avec autorisation parentale.</p>
-            </article>
-            <article class="stack-item">
-              <span class="tag tag--blush">Fete</span>
-              <strong>Gouter du printemps</strong>
-              <p class="muted">Jeudi a 15h30 pour tous les groupes.</p>
-            </article>
-          </div>
-        </section>
-
-        <section id="autorisations" class="table-card">
-          <h3>Autorisations</h3>
-          <div class="stack-list">
-            <article class="stack-item">
-              <strong>Jardin botanique</strong>
-              <p class="muted">Lina • En attente de validation</p>
-            </article>
-            <article class="stack-item">
-              <strong>Gouter du printemps</strong>
-              <p class="muted">Adam • Validation deja envoyee</p>
-            </article>
-          </div>
-        </section>
-      </div>
+      <app-parent-activities></app-parent-activities>
     </section>
 
     <section *ngSwitchCase="'menus'" class="workspace-page">
-      <section id="menus" class="table-card">
-        <h3>Menus de la semaine</h3>
-        <div class="menu-grid">
-          <div></div>
-          <div class="menu-grid__header">Lun</div>
-          <div class="menu-grid__header">Mar</div>
-          <div class="menu-grid__header">Mer</div>
-          <div class="menu-grid__header">Jeu</div>
-          <div class="menu-grid__header">Ven</div>
-
-          <div class="menu-grid__row-label">Dejeuner</div>
-          <div class="menu-cell">Poulet et carottes</div>
-          <div class="menu-cell">Pates et legumes</div>
-          <div class="menu-cell">Riz et lentilles</div>
-          <div class="menu-cell">Semoule et dinde</div>
-          <div class="menu-cell">Gratin doux</div>
-
-          <div class="menu-grid__row-label">Gouter</div>
-          <div class="menu-cell">Pomme</div>
-          <div class="menu-cell">Yaourt</div>
-          <div class="menu-cell">Gateau maison</div>
-          <div class="menu-cell">Compote</div>
-          <div class="menu-cell">Fruit de saison</div>
-        </div>
-      </section>
-
-      <section id="mensuel" class="calendar-card">
-        <h3>Calendrier mensuel</h3>
-        <div class="calendar-grid">
-          <div class="calendar-day">1</div>
-          <div class="calendar-day">2</div>
-          <div class="calendar-day calendar-day--selected">3</div>
-          <div class="calendar-day">4</div>
-          <div class="calendar-day">5</div>
-          <div class="calendar-day">6</div>
-          <div class="calendar-day">7</div>
-        </div>
-      </section>
+      <app-parent-menus></app-parent-menus>
     </section>
 
     <section *ngSwitchCase="'messages'" class="workspace-page">
@@ -299,11 +219,11 @@
       <section id="mes-trajets" class="stack-list">
         <article class="trip-card">
           <strong>Lina Ben Salah</strong>
-          <p class="muted">Lac 1 vers TinySpring • 07h30 • En attente</p>
+          <p class="muted">Lac 1 vers TinySpring &bull; 07h30 &bull; En attente</p>
         </article>
         <article class="trip-card">
           <strong>Adam Ben Salah</strong>
-          <p class="muted">Ennasr vers TinySpring • 08h00 • Confirme</p>
+          <p class="muted">Ennasr vers TinySpring &bull; 08h00 &bull; Confirme</p>
         </article>
       </section>
 

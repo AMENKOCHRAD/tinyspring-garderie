@@ -1,0 +1,113 @@
+<section class="menus-shell">
+  <article class="menus-hero">
+    <div>
+      <span class="hero-chip">Menus</span>
+      <h2>Menus hebdomadaires</h2>
+      <p>Retrouvez le plat du jour, les repas de la semaine et les allergenes utiles pour vos enfants.</p>
+    </div>
+    <div class="hero-date">{{ todayLabel }}</div>
+  </article>
+
+  <div *ngIf="errorMessage()" class="feedback feedback--error">{{ errorMessage() }}</div>
+
+  <div *ngIf="loading()" class="empty-state">
+    <strong>Chargement des menus...</strong>
+    <span>Nous recuperons les menus publies visibles pour les parents.</span>
+  </div>
+
+  <div *ngIf="!loading() && !(menusData()?.visibleDailyMenus?.length)" class="empty-state">
+    <strong>Aucun menu publie pour le moment.</strong>
+    <span>Les repas visibles pour les parents apparaitront ici des qu'ils seront publies.</span>
+  </div>
+
+  <ng-container *ngIf="!loading() && menusData() as data">
+    <article *ngIf="selectedDailyMenu() as todayMenu" class="today-menu-card">
+      <div class="today-menu-card__header">
+        <div>
+          <span class="section-chip">Plat du jour</span>
+          <h3>{{ todayMenu.displayDay }} {{ todayMenu.displayDate }}</h3>
+          <p>{{ data.currentWeekMenu?.title || 'Menu de la semaine' }}</p>
+        </div>
+      </div>
+
+      <div class="today-menu-grid">
+        <article class="today-main-dish">
+          <span class="today-main-dish__label">Plat du jour</span>
+          <h4>{{ getDishSummary(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || []) }}</h4>
+          <p *ngIf="(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || [])[0]?.description">
+            {{ (todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || [])[0]?.description }}
+          </p>
+
+          <div class="allergen-row" *ngIf="getAllergens(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || []).length">
+            <span class="allergen-chip" *ngFor="let allergen of getAllergens(todayMenu.dishesByMealType['PLAT_PRINCIPAL'] || [])">
+              {{ allergen }}
+            </span>
+          </div>
+        </article>
+
+        <div class="today-side-dishes">
+          <article class="mini-meal-card" *ngIf="(todayMenu.dishesByMealType['ENTREE'] || []).length">
+            <span class="mini-meal-card__title">Entree</span>
+            <strong>{{ getDishSummary(todayMenu.dishesByMealType['ENTREE'] || []) }}</strong>
+          </article>
+
+          <article class="mini-meal-card" *ngIf="(todayMenu.dishesByMealType['DESSERT'] || []).length">
+            <span class="mini-meal-card__title">Dessert</span>
+            <strong>{{ getDishSummary(todayMenu.dishesByMealType['DESSERT'] || []) }}</strong>
+          </article>
+
+          <article class="mini-meal-card" *ngIf="(todayMenu.dishesByMealType['GOUTER'] || []).length">
+            <span class="mini-meal-card__title">Gouter</span>
+            <strong>{{ getDishSummary(todayMenu.dishesByMealType['GOUTER'] || []) }}</strong>
+          </article>
+        </div>
+      </div>
+    </article>
+
+    <article class="week-menus-card">
+      <header class="week-menus-card__header">
+        <div>
+          <h3>Menus de la semaine</h3>
+          <p *ngIf="data.currentWeekMenu">
+            {{ formatWeekRange(data.currentWeekMenu.weekStartDate, data.currentWeekMenu.weekEndDate) }}
+          </p>
+        </div>
+      </header>
+
+      <div class="week-days-grid">
+        <button
+          *ngFor="let dayMenu of data.visibleDailyMenus"
+          type="button"
+          class="week-day-card"
+          [class.week-day-card--active]="selectedDailyMenu()?.id === dayMenu.id"
+          (click)="selectDay(dayMenu)">
+          <span class="week-day-card__label">{{ dayMenu.displayDay }}</span>
+          <strong>{{ dayMenu.displayDate }}</strong>
+          <small>{{ getDishSummary(dayMenu.dishesByMealType['PLAT_PRINCIPAL'] || []) }}</small>
+        </button>
+      </div>
+
+      <div *ngIf="selectedDailyMenu() as selectedMenu" class="week-detail-grid">
+        <article class="meal-card" *ngFor="let mealType of ['ENTREE', 'PLAT_PRINCIPAL', 'DESSERT', 'GOUTER']">
+          <h4>{{ getMealTitle(mealType) }}</h4>
+
+          <ng-container *ngIf="(selectedMenu.dishesByMealType[mealType] || []).length; else noDish">
+            <div class="dish-stack" *ngFor="let dish of selectedMenu.dishesByMealType[mealType] || []">
+              <strong>{{ dish.name }}</strong>
+              <p *ngIf="dish.description">{{ dish.description }}</p>
+              <div class="allergen-row" *ngIf="getAllergens([dish]).length">
+                <span class="allergen-chip" *ngFor="let allergen of getAllergens([dish])">
+                  {{ allergen }}
+                </span>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #noDish>
+            <p class="muted-placeholder">Aucun plat renseigne</p>
+          </ng-template>
+        </article>
+      </div>
+    </article>
+  </ng-container>
+</section>

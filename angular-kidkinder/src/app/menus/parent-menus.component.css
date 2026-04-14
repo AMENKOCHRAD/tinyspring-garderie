@@ -1,0 +1,234 @@
+:host {
+  display: block;
+}
+
+.menus-shell {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.menus-hero,
+.today-menu-card,
+.week-menus-card {
+  background: #fff;
+  border: 1px solid rgba(200, 219, 222, 0.85);
+  border-radius: 28px;
+  box-shadow: 0 22px 52px rgba(57, 95, 118, 0.1);
+}
+
+.menus-hero {
+  align-items: flex-start;
+  background:
+    radial-gradient(circle at top right, rgba(127, 216, 243, 0.22), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f4fcfd 100%);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.hero-chip,
+.section-chip {
+  background: #e6f4f3;
+  border-radius: 999px;
+  color: #547a82;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+}
+
+.menus-hero h2,
+.today-menu-card h3,
+.week-menus-card h3,
+.meal-card h4 {
+  color: #3f6972;
+  margin: 0;
+}
+
+.menus-hero h2 {
+  font-size: 2rem;
+  margin-top: 0.75rem;
+}
+
+.menus-hero p,
+.today-menu-card p,
+.week-menus-card p,
+.meal-card p,
+.muted-placeholder,
+.week-day-card small {
+  color: #75959b;
+}
+
+.hero-date {
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 18px;
+  color: #8aa4a6;
+  padding: 0.9rem 1rem;
+  white-space: nowrap;
+}
+
+.feedback,
+.empty-state {
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+}
+
+.feedback--error {
+  background: #fff2f2;
+  border: 1px solid #f1c6c6;
+  color: #bc4d4d;
+}
+
+.empty-state {
+  background: #f8fbfb;
+  border: 1px dashed #d7e7e9;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.today-menu-card,
+.week-menus-card {
+  padding: 1.5rem;
+}
+
+.today-menu-card__header,
+.week-menus-card__header {
+  margin-bottom: 1rem;
+}
+
+.today-menu-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.9fr);
+}
+
+.today-main-dish,
+.mini-meal-card,
+.meal-card {
+  background: #f9fcfc;
+  border: 1px solid #dbe7e9;
+  border-radius: 20px;
+  padding: 1rem;
+}
+
+.today-main-dish {
+  background:
+    radial-gradient(circle at top right, rgba(255, 214, 148, 0.2), transparent 35%),
+    linear-gradient(135deg, #fffef7 0%, #fffaf0 100%);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.today-main-dish__label,
+.mini-meal-card__title {
+  color: #6b7f84;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.today-main-dish h4 {
+  color: #143043;
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+.today-side-dishes {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.mini-meal-card {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.week-days-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.week-day-card {
+  background: #fff;
+  border: 1px solid #d7e7e9;
+  border-radius: 18px;
+  color: #35505a;
+  display: grid;
+  gap: 0.35rem;
+  min-height: 120px;
+  padding: 1rem;
+  text-align: left;
+}
+
+.week-day-card--active {
+  background: #eef7f7;
+  border-color: #b7d8d9;
+}
+
+.week-day-card__label {
+  color: #4c7177;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.week-detail-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1.25rem;
+}
+
+.meal-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.meal-card h4 {
+  font-size: 1rem;
+}
+
+.dish-stack {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.dish-stack strong {
+  color: #153142;
+}
+
+.allergen-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.allergen-chip {
+  background: #fff2de;
+  border-radius: 999px;
+  color: #bb7b22;
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .today-menu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .menus-hero {
+    flex-direction: column;
+  }
+
+  .week-days-grid,
+  .week-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

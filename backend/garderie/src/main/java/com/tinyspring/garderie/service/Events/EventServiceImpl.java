@@ -7,6 +7,7 @@ import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
 import com.tinyspring.garderie.mappeer.EventMapper;
 import com.tinyspring.garderie.repository.Classes.ClasseRepository;
+import com.tinyspring.garderie.repository.Events.EventRegistrationRepository;
 import com.tinyspring.garderie.repository.Events.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class EventServiceImpl implements EventService {
 
     private final ClasseRepository classeRepository;
     private final EventRepository eventRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
     private final EventMapper eventMapper;
 
     @Override
@@ -113,6 +115,13 @@ public class EventServiceImpl implements EventService {
     @Override
     public void delete(Long id) {
         Event existing = getById(id);
+
+        if (eventRegistrationRepository.existsByEventId(existing.getId())) {
+            throw new InvalidStatusTransitionException(
+                    "Impossible de supprimer cet evenement car des participations y sont deja rattachees. Annulez l'evenement a la place si vous souhaitez le retirer des parcours actifs."
+            );
+        }
+
         eventRepository.delete(existing);
     }
 
