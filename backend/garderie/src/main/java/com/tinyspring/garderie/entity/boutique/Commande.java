@@ -22,9 +22,13 @@ public class Commande {
     @Column(name = "date_commande", nullable = false)
     private LocalDateTime dateCommande;
 
-    // Valeurs possibles : EN_ATTENTE | CONFIRMEE | EXPEDIEE | LIVREE | ANNULEE
+    // Statuts : PENDING | CONFIRMEE | EXPEDIEE | LIVREE | ANNULEE
     @Column(nullable = false)
     private String statut;
+
+    // Statut paiement Stripe : PENDING | PAID | FAILED | CANCELED
+    @Column(name = "payment_status")
+    private String paymentStatus;
 
     @Column(name = "montant_total", nullable = false)
     private Double montantTotal;
@@ -32,27 +36,30 @@ public class Commande {
     @Column(name = "adresse_livraison", nullable = false)
     private String adresseLivraison;
 
-    // Lié à l'utilisateur connecté du projet existant
+    @Column(name = "stripe_session_id")
+    private String stripeSessionId;
+
+    @Column(name = "stripe_payment_intent_id")
+    private String stripePaymentIntentId;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // ✅ Remplace @ManyToMany — permet de stocker la quantité par produit
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "commande_produit",
-            joinColumns = @JoinColumn(name = "commande_id"),
-            inverseJoinColumns = @JoinColumn(name = "produit_id")
-    )
+    @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL,
+            orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Produit> produits = new ArrayList<>();
+    private List<CommandeProduit> items = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
-        if (this.dateCommande == null) this.dateCommande = LocalDateTime.now();
-        if (this.statut == null)       this.statut = "EN_ATTENTE";
+        if (this.dateCommande == null)  this.dateCommande = LocalDateTime.now();
+        if (this.statut == null)        this.statut = "PENDING";
+        if (this.paymentStatus == null) this.paymentStatus = "PENDING";
     }
 }

@@ -13,6 +13,10 @@ export class ProduitService {
     return this.http.get<Produit[]>(this.publicUrl);
   }
 
+  getAllAdmin(): Observable<Produit[]> {
+    return this.http.get<Produit[]>(this.adminUrl);
+  }
+
   getLowStock(): Observable<Produit[]> {
     return this.http.get<Produit[]>(`${this.adminUrl}/low-stock`);
   }

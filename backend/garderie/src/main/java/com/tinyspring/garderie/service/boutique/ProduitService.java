@@ -3,8 +3,10 @@ package com.tinyspring.garderie.service.boutique;
 import com.tinyspring.garderie.dto.boutique.ProduitDto;
 import com.tinyspring.garderie.entity.boutique.Categorie;
 import com.tinyspring.garderie.entity.boutique.Commande;
+import com.tinyspring.garderie.entity.boutique.CommandeProduit;
 import com.tinyspring.garderie.entity.boutique.Produit;
 import com.tinyspring.garderie.repository.boutique.CategorieRepository;
+import com.tinyspring.garderie.repository.boutique.CommandeProduitRepository;
 import com.tinyspring.garderie.repository.boutique.CommandeRepository;
 import com.tinyspring.garderie.repository.boutique.ProduitRepository;
 import org.springframework.stereotype.Service;
@@ -19,13 +21,16 @@ public class ProduitService {
     private final ProduitRepository produitRepository;
     private final CategorieRepository categorieRepository;
     private final CommandeRepository commandeRepository;
+    private final CommandeProduitRepository commandeProduitRepository;
 
     public ProduitService(ProduitRepository produitRepository,
                           CategorieRepository categorieRepository,
-                          CommandeRepository commandeRepository) {
+                          CommandeRepository commandeRepository,
+                          CommandeProduitRepository commandeProduitRepository) {
         this.produitRepository = produitRepository;
         this.categorieRepository = categorieRepository;
         this.commandeRepository = commandeRepository;
+        this.commandeProduitRepository = commandeProduitRepository;
     }
 
     // ── Mapping entité → DTO ──────────────────────────────────────────────────
@@ -48,7 +53,8 @@ public class ProduitService {
 
     public Produit toEntity(ProduitDto dto) {
         Categorie categorie = categorieRepository.findById(dto.getCategorieId())
-                .orElseThrow(() -> new RuntimeException("Catégorie introuvable avec l'id : " + dto.getCategorieId()));
+                .orElseThrow(() -> new RuntimeException(
+                        "Catégorie introuvable avec l'id : " + dto.getCategorieId()));
         return Produit.builder()
                 .nom(dto.getNom())
                 .description(dto.getDescription())
@@ -63,49 +69,50 @@ public class ProduitService {
 
     public List<ProduitDto> findAll() {
         return produitRepository.findAll()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public ProduitDto findById(Long id) {
-        Produit produit = produitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit introuvable avec l'id : " + id));
-        return toDto(produit);
+        return toDto(produitRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "Produit introuvable avec l'id : " + id)));
     }
 
     public List<ProduitDto> findByCategorie(Long categorieId) {
         return produitRepository.findByCategorieId(categorieId)
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public List<ProduitDto> search(String nom) {
         return produitRepository.findByNomContainingIgnoreCase(nom)
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public List<ProduitDto> findEnStock() {
         return produitRepository.findByStockGreaterThan(0)
+                .stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    public List<ProduitDto> findLowStock() {
+        return produitRepository.findAll()
                 .stream()
+                .filter(p -> p.getStock() <= p.getSeuilAlerte())
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     public ProduitDto create(ProduitDto dto) {
-        Produit saved = produitRepository.save(toEntity(dto));
-        return toDto(saved);
+        return toDto(produitRepository.save(toEntity(dto)));
     }
 
     public ProduitDto update(Long id, ProduitDto dto) {
         Produit existing = produitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit introuvable avec l'id : " + id));
+                .orElseThrow(() -> new RuntimeException(
+                        "Produit introuvable avec l'id : " + id));
 
         Categorie categorie = categorieRepository.findById(dto.getCategorieId())
-                .orElseThrow(() -> new RuntimeException("Catégorie introuvable avec l'id : " + dto.getCategorieId()));
+                .orElseThrow(() -> new RuntimeException(
+                        "Catégorie introuvable avec l'id : " + dto.getCategorieId()));
 
         existing.setNom(dto.getNom());
         existing.setDescription(dto.getDescription());
@@ -119,32 +126,30 @@ public class ProduitService {
 
     // ── Vérifie si le produit est lié à des commandes ─────────────────────────
     public boolean hasCommandes(Long id) {
-        return produitRepository.existsInCommandes(id);
-    }
-
-    public List<ProduitDto> findLowStock() {
-        return produitRepository.findAll()
+        // ✅ Vérifie via CommandeProduit (nouveau système)
+        return commandeProduitRepository.findAll()
                 .stream()
-                .filter(p -> p.getStock() <= p.getSeuilAlerte())
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .anyMatch(cp -> cp.getProduit().getId().equals(id));
     }
 
     // ── Suppression : détache d'abord de toutes les commandes ─────────────────
     @Transactional
     public void delete(Long id) {
         Produit produit = produitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit introuvable avec l'id : " + id));
+                .orElseThrow(() -> new RuntimeException(
+                        "Produit introuvable avec l'id : " + id));
 
-        // Détacher le produit de toutes les commandes liées
-        // pour éviter la contrainte FK sur commande_produit
+        // ✅ Utilise commande.getItems() au lieu de commande.getProduits()
+        // car la relation est maintenant OneToMany via CommandeProduit
         List<Commande> commandes = commandeRepository.findAll()
                 .stream()
-                .filter(c -> c.getProduits().stream().anyMatch(p -> p.getId().equals(id)))
+                .filter(c -> c.getItems().stream()
+                        .anyMatch(cp -> cp.getProduit().getId().equals(id)))
                 .collect(Collectors.toList());
 
         for (Commande commande : commandes) {
-            commande.getProduits().removeIf(p -> p.getId().equals(id));
+            // ✅ Supprimer les CommandeProduit liés à ce produit
+            commande.getItems().removeIf(cp -> cp.getProduit().getId().equals(id));
             commandeRepository.save(commande);
         }
 

@@ -1,0 +1,27 @@
+<header class="site-header" [class.site-header--scrolled]="isScrolled()">
+  <div class="ts-container site-header__row">
+    <a routerLink="/" class="brand">
+      <span class="brand__mark">TS</span>
+      <span>TinySpring</span>
+    </a>
+
+    <button type="button" class="site-header__toggle" (click)="toggleMenu()">
+      Menu
+    </button>
+
+    <nav class="site-header__nav" [class.site-header__nav--open]="menuOpen()">
+      <a
+        *ngFor="let item of navItems"
+        [routerLink]="['/']"
+        [fragment]="item.fragment"
+        class="site-header__link"
+        (click)="closeMenu()">
+        {{ item.label }}
+      </a>
+    </nav>
+
+    <a routerLink="/connexion" class="ts-button ts-button--primary site-header__cta">
+      Se connecter
+    </a>
+  </div>
+</header>

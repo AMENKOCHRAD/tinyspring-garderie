@@ -1,22 +1,33 @@
-export type StatutCommande = 'EN_ATTENTE' | 'CONFIRMEE' | 'EXPEDIEE' | 'LIVREE' | 'ANNULEE';
+export type StatutCommande = 'PENDING' | 'CONFIRMEE' | 'EXPEDIEE' | 'LIVREE' | 'ANNULEE';
 
-export interface CommandeProduit {
-  id: number;
-  nom: string;
-  prix: number;
+export type PaymentStatusCommande = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELED';
+
+export interface CommandeItemDto {
+  produitId: number;
+  produitNom: string;
+  produitImageUrl: string;
+  quantite: number;
+  prixUnitaire: number;
+  sousTotal: number;
 }
 
-export interface Commande {
+export interface CommandeDto {
   id: number;
   dateCommande: string;
   statut: StatutCommande;
+  paymentStatus: PaymentStatusCommande;
   montantTotal: number;
   adresseLivraison: string;
+  stripeSessionId?: string;
+  stripePaymentIntentId?: string;
   userId: number;
   userNom: string;
   userEmail: string;
-  produits: CommandeProduit[];
+  items: CommandeItemDto[];
 }
+
+export type CommandeItem = CommandeItemDto;
+export type Commande = CommandeDto;
 
 export interface CommandeRequest {
   adresseLivraison: string;

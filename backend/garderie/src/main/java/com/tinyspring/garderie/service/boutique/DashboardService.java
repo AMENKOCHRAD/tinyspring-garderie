@@ -47,6 +47,11 @@ public class DashboardService {
                 .stream()
                 .map(row -> DashboardTopProduitDto.builder()
                         .id((Long) row[0])
+
+
+
+
+
                         .nom((String) row[1])
                         .imageUrl((String) row[2])
                         .totalCommandes((Long) row[3])

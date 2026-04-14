@@ -6,19 +6,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
   if (req.url.includes('/api/admin/')) {
-    const token = authService.getToken();
+    const authUser = authService.getUser();
+    const token = authUser?.token?.trim() || null;
+
+    console.log('[AuthInterceptor] token trouve:', !!token, '| URL:', req.url);
 
     if (!token) {
-      console.warn('[AuthInterceptor] Aucun JWT disponible pour la requete admin.', {
-        url: req.url
-      });
+      console.warn('[AuthInterceptor] Aucun JWT disponible pour la requete admin.', req.url);
       return next(req);
     }
 
-    if (!authService.isAdmin()) {
+    if (!authService.isAdminRole(authUser?.role)) {
       console.warn('[AuthInterceptor] Session non ADMIN sur une requete admin.', {
         url: req.url,
-        role: authService.getUser()?.role ?? null
+        role: authUser?.role ?? null
       });
     }
 

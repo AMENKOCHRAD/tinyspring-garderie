@@ -1,0 +1,14 @@
+<div class="ts-container workspace-page">
+  <section class="table-card payment-state payment-state--success">
+    <div class="payment-state__icon">✓</div>
+    <h1>Paiement confirme !</h1>
+    <p class="muted">Votre commande a ete enregistree avec succes.</p>
+    <p class="muted">Vous recevrez une confirmation apres validation.</p>
+    <p class="muted" *ngIf="sessionId()">Session Stripe: {{ sessionId() }}</p>
+
+    <div class="payment-state__actions">
+      <a routerLink="/parent/boutique/orders" class="ts-button ts-button--primary">Voir mes commandes</a>
+      <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Continuer mes achats</a>
+    </div>
+  </section>
+</div>

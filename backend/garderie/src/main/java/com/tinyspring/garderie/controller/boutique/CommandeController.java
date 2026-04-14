@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.controller.boutique;
 
 import com.tinyspring.garderie.dto.boutique.CommandeDto;
+import com.tinyspring.garderie.dto.boutique.CommandeItemRequest;
 import com.tinyspring.garderie.dto.boutique.CommandeRequest;
 import com.tinyspring.garderie.service.boutique.CommandeService;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {
+        "http://localhost:4200",
+        "http://localhost:21065"
+})
 public class CommandeController {
 
     private final CommandeService commandeService;
@@ -20,15 +24,27 @@ public class CommandeController {
         this.commandeService = commandeService;
     }
 
-    // ── FRONT-OFFICE (authentifié) ────────────────────────────────────────────
+    // ── FRONT-OFFICE ──────────────────────────────────────────────────────────
 
+    // ÉTAPE 1 : Créer la commande (statut PENDING)
     @PostMapping("/api/boutique/commandes")
     public ResponseEntity<?> create(@RequestBody CommandeRequest request) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(commandeService.create(request));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // ÉTAPE 2 : Créer la session Stripe → retourne { checkoutUrl: "..." }
+    @PostMapping("/api/boutique/commandes/{id}/checkout-session")
+    public ResponseEntity<?> createCheckoutSession(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(commandeService.createCheckoutSession(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
         }
     }
@@ -70,13 +86,14 @@ public class CommandeController {
         return ResponseEntity.ok(commandeService.findByStatut(statut));
     }
 
+    // ✅ Admin change statut manuellement (transitions validées dans le service)
     @PatchMapping("/api/admin/boutique/commandes/{id}/statut")
     public ResponseEntity<?> updateStatut(@PathVariable Long id,
                                           @RequestParam String statut) {
         try {
             return ResponseEntity.ok(commandeService.updateStatut(id, statut));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
         }
     }
@@ -91,7 +108,7 @@ public class CommandeController {
                     .body(Map.of("message", "Impossible de supprimer cette commande."));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Erreur lors de la suppression : " + e.getMessage()));
+                    .body(Map.of("message", "Erreur : " + e.getMessage()));
         }
     }
 }

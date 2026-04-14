@@ -74,7 +74,7 @@ public class EmailService {
         ctx.setVariable("nomParent",   commande.getUser().getNom());
         ctx.setVariable("commandeId",  commande.getId());
         ctx.setVariable("adresse",     commande.getAdresseLivraison());
-        ctx.setVariable("produits",    commande.getProduits());
+        ctx.setVariable("produits",    commande.getItems());
         ctx.setVariable("montantTotal",commande.getMontantTotal());
         return ctx;
     }

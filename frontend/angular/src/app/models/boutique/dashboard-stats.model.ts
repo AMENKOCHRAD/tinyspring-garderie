@@ -26,7 +26,7 @@ export interface DashboardStats {
   produitsStockFaible: number;
   totalCategories: number;
   totalCommandes: number;
-  commandesEnAttente: number;
+  commandesPendingPayment: number;
   commandesConfirmees: number;
   commandesExpediees: number;
   commandesLivrees: number;

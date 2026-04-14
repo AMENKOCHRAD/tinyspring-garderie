@@ -55,7 +55,7 @@ export class AdminCategoriesComponent implements OnInit {
 
   loadCategories(): void {
     this.errorMsg = '';
-    this.categorieService.getAll().subscribe({
+    this.categorieService.getAllAdmin().subscribe({
       next: (data) => {
         this.categories = data;
         this.cdr.detectChanges();

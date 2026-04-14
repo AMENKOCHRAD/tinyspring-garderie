@@ -1,0 +1,74 @@
+<section class="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand brand--center">
+        <span class="brand__mark">🌱</span>
+        <span>TinySpring</span>
+      </div>
+      <h1>Bon retour !</h1>
+      <p>Connectez-vous pour accéder à votre espace parent ou animateur.</p>
+    </div>
+
+    <div class="role-toggle">
+      <button
+        type="button"
+        class="role-toggle__button"
+        [class.role-toggle__button--active]="selectedRole() === 'PARENT'"
+        (click)="setRole('PARENT')">
+        Parent
+      </button>
+      <button
+        type="button"
+        class="role-toggle__button"
+        [class.role-toggle__button--active]="selectedRole() === 'ANIMATRICE'"
+        (click)="setRole('ANIMATRICE')">
+        Animatrice
+      </button>
+    </div>
+
+    <form class="login-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <label for="email">Adresse e-mail</label>
+      <input id="email" type="email" formControlName="email" placeholder="vous@exemple.com" />
+
+      <label for="password">Mot de passe</label>
+      <div class="password-field">
+        <input
+          id="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="Votre mot de passe" />
+        <button type="button" class="password-toggle" (click)="togglePassword()">
+          {{ showPassword() ? 'Masquer' : 'Afficher' }}
+        </button>
+      </div>
+
+      <a routerLink="/" class="login-help-link">Mot de passe oublié ?</a>
+
+      <div class="error-box" *ngIf="errorMessage()">
+        {{ errorMessage() }}
+      </div>
+
+      <button type="submit" class="ts-button ts-button--primary login-submit" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+
+    <div class="demo-accounts">
+      <h2>Comptes de démonstration</h2>
+      <button type="button" class="demo-account demo-account--mint" (click)="fillDemoAccount('PARENT')">
+        <strong>Parent</strong>
+        <span>parent&#64;garderie.com</span>
+        <span>parent123</span>
+      </button>
+      <button type="button" class="demo-account demo-account--blush" (click)="fillDemoAccount('ANIMATRICE')">
+        <strong>Animatrice</strong>
+        <span>animatrice&#64;garderie.com</span>
+        <span>anim123</span>
+      </button>
+    </div>
+
+    <p class="login-footnote">
+      Aucun espace d’inscription n’est affiché ici. Les accès sont créés par la garderie.
+    </p>
+  </div>
+</section>

@@ -1,0 +1,70 @@
+<div class="workspace-shell">
+  <app-toast-outlet></app-toast-outlet>
+
+  <header class="workspace-header" [class.workspace-header--scrolled]="isScrolled()">
+    <div class="ts-container workspace-header__row">
+      <a routerLink="/" class="brand brand--compact">
+        <span class="brand__mark">TS</span>
+        <span>TinySpring</span>
+      </a>
+
+      <nav class="workspace-main-nav">
+        <a
+          *ngFor="let item of navGroups()"
+          [routerLink]="item.route"
+          [class.workspace-main-nav__link--active]="isGroupActive(item)"
+          class="workspace-main-nav__link">
+          {{ item.label }}
+        </a>
+      </nav>
+
+      <div class="workspace-tools">
+        <a
+          *ngIf="role() === 'PARENT'"
+          routerLink="/parent/boutique/cart"
+          class="icon-chip icon-chip--link cart-chip"
+          [class.cart-chip--bounce]="cartIconBounce()"
+          aria-label="Voir le panier"
+          data-cart-icon="true">
+          🛒
+          <span class="icon-chip__badge" [class.icon-chip__badge--pulse]="cartBadgePulse()">{{ cartItemCount() }}</span>
+        </a>
+
+        <button type="button" class="icon-chip">
+          N
+          <span class="icon-chip__badge">{{ notificationCount() }}</span>
+        </button>
+
+        <button type="button" class="profile-trigger" (click)="toggleMenu()">
+          <span class="profile-trigger__avatar">{{ currentUser()?.initiales }}</span>
+          <span class="profile-trigger__meta">
+            <strong>{{ currentUser()?.nom }}</strong>
+            <small>{{ roleLabel() }}</small>
+          </span>
+        </button>
+
+        <div class="profile-menu" *ngIf="menuOpen()">
+          <button type="button">Mon profil</button>
+          <button type="button">Parametres</button>
+          <button type="button" (click)="logout()">Se deconnecter</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="workspace-subnav" *ngIf="subnavItems().length">
+    <div class="ts-container workspace-subnav__row">
+      <a
+        *ngFor="let item of subnavItems()"
+        [routerLink]="item.route"
+        routerLinkActive="workspace-subnav__link--active"
+        class="workspace-subnav__link">
+        {{ item.label }}
+      </a>
+    </div>
+  </nav>
+
+  <main class="workspace-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

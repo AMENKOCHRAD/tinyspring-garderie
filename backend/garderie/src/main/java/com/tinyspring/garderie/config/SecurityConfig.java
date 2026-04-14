@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.config;
 
 import com.tinyspring.garderie.security.CustomUserDetailsService;
+import com.tinyspring.garderie.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,14 +9,13 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.tinyspring.garderie.security.JwtAuthenticationFilter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.List;
 
@@ -47,26 +47,33 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
+                // ✅ JWT filter appliqué SAUF sur le webhook Stripe
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
 
-                        // ── Auth ───────────────────────────────────────────
+                        // ── Auth publique ──────────────────────────────────
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // ── Images statiques publiques ─────────────────────
-                        .requestMatchers("/images/**").permitAll()           // ✅ AJOUT
+                        // ── Webhook Stripe — DOIT être en premier et permitAll ──
+                        .requestMatchers(HttpMethod.POST, "/api/stripe/webhook").permitAll()
 
-                        // ── Boutique front-office ──────────────────────────
+                        // ── Ressources publiques ───────────────────────────
+                        .requestMatchers("/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boutique/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boutique/produits/**").permitAll()
-                        .requestMatchers("/api/boutique/commandes/**").authenticated()
 
-                        // ── Boutique back-office → ADMIN uniquement ────────
+                        // ── Boutique front-office authentifiée ─────────────
+                        .requestMatchers(HttpMethod.POST, "/api/boutique/commandes").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/boutique/commandes/*/checkout-session").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/boutique/commandes/**").authenticated()
+
+                        // ── Boutique back-office admin ─────────────────────
                         .requestMatchers("/api/admin/boutique/**").hasRole("ADMIN")
 
-                        // ── Autres routes existantes ───────────────────────
+                        // ── Autres routes ──────────────────────────────────
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
@@ -81,15 +88,29 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:4200",
                 "http://localhost:21065"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
+        // ✅ Config CORS séparée pour le webhook Stripe
+        // Stripe n'envoie pas de header Origin → pas de CORS check
+        CorsConfiguration stripeConfig = new CorsConfiguration();
+        stripeConfig.setAllowedOrigins(List.of("*"));
+        stripeConfig.setAllowedMethods(List.of("POST"));
+        stripeConfig.setAllowedHeaders(List.of("*"));
+        stripeConfig.setAllowCredentials(false);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/stripe/webhook", stripeConfig); // ✅ webhook en premier
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

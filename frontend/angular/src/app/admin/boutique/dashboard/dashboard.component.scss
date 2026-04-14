@@ -127,6 +127,11 @@ $lime:          #84cc16;
     .b-stat-card__number { color: #2ca87f; }
   }
 
+  &--gray {
+    .b-stat-card__icon { background: #6b7280; }
+    .b-stat-card__number { color: #6b7280; }
+  }
+
   &--red {
     .b-stat-card__icon { background: #dc3545; }
     .b-stat-card__number { color: #dc3545; }

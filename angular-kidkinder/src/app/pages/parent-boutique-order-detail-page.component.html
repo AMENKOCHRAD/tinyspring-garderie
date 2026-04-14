@@ -1,0 +1,82 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">Commande</span>
+      <h1>Detail de commande</h1>
+      <p class="muted">Consultez la progression, les informations de livraison et les articles de votre commande.</p>
+    </div>
+    <a routerLink="/parent/boutique/orders" class="ts-button ts-button--ghost">Retour aux commandes</a>
+  </section>
+
+  <section class="table-card" *ngIf="!isLoading(); else loadingState">
+    <p class="muted" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+    <ng-container *ngIf="commande() as order">
+      <div class="detail-grid">
+        <article class="summary-card">
+          <h3>Commande #{{ order.id }}</h3>
+          <p class="muted">{{ formatDate(order.dateCommande) }}</p>
+          <p><strong>Statut commande:</strong> {{ order.statut }}</p>
+          <p><strong>Statut paiement:</strong> {{ order.paymentStatus }}</p>
+          <p><strong>Total:</strong> {{ order.montantTotal | number: '1.2-2' }} TND</p>
+          <p><strong>Livraison:</strong> {{ order.adresseLivraison }}</p>
+        </article>
+
+        <article class="summary-card">
+          <h3>Client</h3>
+          <p><strong>{{ order.userNom }}</strong></p>
+          <p class="muted">{{ order.userEmail }}</p>
+          <p class="muted">{{ order.items.length }} ligne(s) dans cette commande.</p>
+        </article>
+      </div>
+
+      <section class="timeline-shell">
+        <div
+          class="timeline-step"
+          *ngFor="let step of getTimelineSteps()"
+          [class.timeline-step--done]="getTimelineState(step.key, order.statut) === 'done'"
+          [class.timeline-step--active]="getTimelineState(step.key, order.statut) === 'active'">
+          <span class="timeline-step__dot">
+            {{ getTimelineState(step.key, order.statut) === 'done' ? '✓' : step.label.charAt(0) }}
+          </span>
+          <strong>{{ step.label }}</strong>
+        </div>
+      </section>
+
+      <div class="stack-list">
+        <article class="cart-line" *ngFor="let item of order.items">
+          <img
+            *ngIf="hasImage(item.produitImageUrl); else productFallback"
+            [src]="getImageUrl(item.produitImageUrl)"
+            [alt]="item.produitNom"
+            class="cart-line__image" />
+          <ng-template #productFallback>
+            <div class="product-card__image cart-line__placeholder">{{ item.produitNom.charAt(0) }}</div>
+          </ng-template>
+
+          <div class="cart-line__content">
+            <strong>{{ item.produitNom }}</strong>
+            <p class="muted">{{ item.quantite }} × {{ item.prixUnitaire | number: '1.2-2' }} TND</p>
+            <div class="chip-row">
+              <span class="tag tag--mint">Quantite: {{ item.quantite }}</span>
+              <span class="tag tag--lime">Sous-total: {{ item.sousTotal | number: '1.2-2' }} TND</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <section class="detail-total">
+        <strong>Total general</strong>
+        <span>{{ order.montantTotal | number: '1.2-2' }} TND</span>
+      </section>
+    </ng-container>
+  </section>
+</div>
+
+<ng-template #loadingState>
+  <div class="ts-container">
+    <section class="table-card">
+      <p class="muted">Chargement du detail de commande...</p>
+    </section>
+  </div>
+</ng-template>

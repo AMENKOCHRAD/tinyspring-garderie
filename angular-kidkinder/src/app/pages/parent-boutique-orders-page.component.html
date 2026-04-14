@@ -1,0 +1,73 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">Mes commandes</span>
+      <h1>Suivi des commandes</h1>
+      <p class="muted">Retrouvez chaque commande avec son statut, ses articles et un acces rapide au detail.</p>
+    </div>
+    <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Retour au catalogue</a>
+  </section>
+
+  <section class="workspace-page" *ngIf="isLoading(); else ordersState">
+    <article class="table-card order-card order-card--skeleton" *ngFor="let _ of skeletonCards">
+      <div class="skeleton skeleton--title"></div>
+      <div class="skeleton skeleton--text"></div>
+      <div class="skeleton skeleton--thumbs"></div>
+      <div class="skeleton skeleton--button"></div>
+    </article>
+  </section>
+
+  <ng-template #ordersState>
+    <section class="table-card">
+      <p class="muted" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <div class="stack-list" *ngIf="commandes().length; else emptyOrders">
+        <article class="order-card" *ngFor="let commande of commandes()">
+          <div class="order-card__top">
+            <div>
+              <strong>Commande #{{ commande.id }}</strong>
+              <p class="muted">{{ formatDate(commande.dateCommande) }}</p>
+            </div>
+            <span [class]="getStatusMeta(commande.statut).className">{{ getStatusMeta(commande.statut).label }}</span>
+          </div>
+
+          <div class="order-card__middle">
+            <div class="order-card__thumbs">
+              <ng-container *ngFor="let item of commande.items | slice: 0 : 3; let index = index">
+                <img
+                  *ngIf="item.produitImageUrl"
+                  [src]="getImageUrl(item.produitImageUrl)"
+                  [alt]="item.produitNom"
+                  class="order-thumb"
+                  [style.zIndex]="10 - index" />
+                <div *ngIf="!item.produitImageUrl" class="order-thumb order-thumb--fallback" [style.zIndex]="10 - index">
+                  {{ item.produitNom.charAt(0) }}
+                </div>
+              </ng-container>
+              <span *ngIf="commande.items.length > 3" class="order-thumb order-thumb--count">
+                +{{ commande.items.length - 3 }}
+              </span>
+            </div>
+
+            <div class="order-card__meta">
+              <span>{{ commande.items.length }} ligne(s)</span>
+              <strong class="order-card__amount">{{ commande.montantTotal | number: '1.2-2' }} TND</strong>
+              <span>{{ commande.adresseLivraison }}</span>
+            </div>
+          </div>
+
+          <a [routerLink]="['/parent/boutique/orders', commande.id]" class="mini-button mini-button--primary">
+            Voir le detail
+          </a>
+        </article>
+      </div>
+    </section>
+  </ng-template>
+</div>
+
+<ng-template #emptyOrders>
+  <div class="empty-state">
+    <p class="muted">Aucune commande n a encore ete enregistree.</p>
+    <a routerLink="/parent/boutique" class="ts-button ts-button--primary">Decouvrir la boutique</a>
+  </div>
+</ng-template>

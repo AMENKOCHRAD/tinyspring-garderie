@@ -9,18 +9,16 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CommandeDto {
-
     private Long id;
     private LocalDateTime dateCommande;
     private String statut;
+    private String paymentStatus;
     private Double montantTotal;
     private String adresseLivraison;
-
-    // Infos user (pas l'objet User entier)
+    private String stripeSessionId;
+    private String stripePaymentIntentId;
     private Long userId;
     private String userNom;
     private String userEmail;
-
-    // Liste des produits dans la commande (résumé)
-    private List<ProduitDto> produits;
+    private List<CommandeItemDto> items; // ✅ avec quantités
 }

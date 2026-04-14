@@ -58,7 +58,7 @@ export class AdminProduitsComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.categorieService.getAll().subscribe({
+    this.categorieService.getAllAdmin().subscribe({
       next: (data) => {
         this.categories = data;
         this.cdr.detectChanges();
@@ -72,7 +72,7 @@ export class AdminProduitsComponent implements OnInit {
 
   loadProduits(): void {
     this.errorMsg = '';
-    this.produitService.getAll().subscribe({
+    this.produitService.getAllAdmin().subscribe({
       next: (data) => {
         this.produits = data;
         this.applyFilter();

@@ -21,8 +21,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     // Démarre le polling si un admin est déjà connecté (page refresh)
-    const user = this.authService.getUser();
-    if (user?.role === 'ADMIN') {
+    if (this.authService.isAdmin()) {
       this.notifService.startPolling();
     }
 
@@ -32,7 +31,7 @@ export class AppComponent implements OnInit {
       window.scrollTo(0, 0);
 
       // Arrête le polling quand on revient sur la page de connexion (logout)
-      if (evt.url === '/sign-in' || evt.url === '/') {
+      if (evt.url === '/sign-in' || evt.url === '/login' || evt.url === '/') {
         this.notifService.stopPolling();
       }
     });

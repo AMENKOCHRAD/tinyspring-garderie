@@ -5,6 +5,7 @@ import { Routes, RouterModule } from '@angular/router';
 // project import
 import { AdminComponent } from './theme/layout/admin/admin.component';
 import { GuestComponent } from './theme/layout/guest/guest.component';
+import { adminBoutiqueGuard } from './guards/admin-boutique.guard';
 
 const routes: Routes = [
   {
@@ -60,6 +61,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/boutique/dashboard',
+        canActivate: [adminBoutiqueGuard],
         loadComponent: () =>
           import('./admin/boutique/dashboard/dashboard.component').then(
             (c) => c.AdminDashboardComponent
@@ -67,6 +69,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/boutique/categories',
+        canActivate: [adminBoutiqueGuard],
         loadComponent: () =>
           import('./admin/boutique/categories/categories.component').then(
             (c) => c.AdminCategoriesComponent
@@ -74,6 +77,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/boutique/produits',
+        canActivate: [adminBoutiqueGuard],
         loadComponent: () =>
           import('./admin/boutique/produits/produits.component').then(
             (c) => c.AdminProduitsComponent
@@ -81,6 +85,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/boutique/commandes',
+        canActivate: [adminBoutiqueGuard],
         loadComponent: () =>
           import('./admin/boutique/commandes/commandes.component').then(
             (c) => c.AdminCommandesComponent

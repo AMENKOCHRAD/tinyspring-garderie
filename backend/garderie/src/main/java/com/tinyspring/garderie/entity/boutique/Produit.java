@@ -2,7 +2,6 @@ package com.tinyspring.garderie.entity.boutique;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
 
 @Entity
 @Table(name = "produits")
@@ -40,8 +39,5 @@ public class Produit {
     @JoinColumn(name = "categorie_id", nullable = false)
     private Categorie categorie;
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @ManyToMany(mappedBy = "produits", fetch = FetchType.LAZY)
-    private List<Commande> commandes;
+    // ✅ Supprimé : @ManyToMany commandes — maintenant via CommandeProduit
 }

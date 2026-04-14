@@ -13,6 +13,10 @@ export class CategorieService {
     return this.http.get<Categorie[]>(this.publicUrl);
   }
 
+  getAllAdmin(): Observable<Categorie[]> {
+    return this.http.get<Categorie[]>(this.adminUrl);
+  }
+
   getById(id: number): Observable<Categorie> {
     return this.http.get<Categorie>(`${this.publicUrl}/${id}`);
   }
