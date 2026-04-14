@@ -296,11 +296,23 @@
             {{ demande.pointDepart }} vers {{ demande.destination }}
             <span *ngIf="demande.heureDepart">• {{ demande.heureDepart }}</span>
           </p>
+          <p class="muted">Souhaite: {{ demande.dateSouhaitee }} a {{ demande.heureSouhaitee }}</p>
           <div class="badge-row">
             <span [class]="getStatusClass(demande.statut)">{{ formatStatus(demande.statut) }}</span>
             <span class="tag tag--mint">{{ getSensLabel(demande.sensTrajet) }}</span>
+            <span class="tag" [ngClass]="getAiStatusClass(demande)">{{ getAiStatusLabel(demande) }}</span>
             <button type="button" class="ts-button ts-button--ghost" (click)="edit(demande)">Modifier</button>
             <button type="button" class="ts-button ts-button--ghost" (click)="remove(demande.id)">Supprimer</button>
+          </div>
+          <div *ngIf="demande.aiAnalysisAvailable || demande.aiAnalysisError" class="stack-item">
+            <strong>Analyse IA transport</strong>
+            <p class="muted">
+              {{ getAiAnalysisLabel(demande) }}
+              <span *ngIf="demande.anomalyLevel">â€¢ Niveau: {{ demande.anomalyLevel }}</span>
+              <span *ngIf="demande.anomalyScore !== null">â€¢ Score: {{ formatAnomalyScore(demande.anomalyScore) }}</span>
+            </p>
+            <p *ngIf="demande.anomalyReasons.length" class="muted">Raisons: {{ demande.anomalyReasons.join(' | ') }}</p>
+            <p *ngIf="demande.aiAnalysisError" class="muted">Erreur IA: {{ demande.aiAnalysisError }}</p>
           </div>
         </article>
         <article *ngIf="!demandes().length" class="trip-card">
@@ -364,6 +376,18 @@
           <div class="route-preview-card">
             <strong>Adresse maison selectionnee</strong>
             <p class="muted">{{ adresseMaisonSelectionnee() || 'Aucune adresse selectionnee pour le moment.' }}</p>
+          </div>
+
+          <div>
+            <label>Date souhaitee</label>
+            <input type="date" formControlName="dateSouhaitee" [min]="tomorrowDate" />
+            <p *ngIf="isFieldInvalid('dateSouhaitee')" class="muted">La date souhaitee est obligatoire.</p>
+          </div>
+
+          <div>
+            <label>Heure souhaitee</label>
+            <input type="time" formControlName="heureSouhaitee" />
+            <p *ngIf="isFieldInvalid('heureSouhaitee')" class="muted">L heure souhaitee est obligatoire.</p>
           </div>
 
           <div class="badge-row">

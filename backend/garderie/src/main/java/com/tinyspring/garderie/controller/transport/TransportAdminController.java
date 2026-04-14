@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.controller.transport;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
+import com.tinyspring.garderie.dto.transport.admin.AdminDemandPredictionResponse;
 import com.tinyspring.garderie.dto.transport.admin.DemandeAffectationRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.NouveauTrajetRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
@@ -19,7 +20,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/transport")
@@ -85,5 +89,15 @@ public class TransportAdminController {
     @GetMapping("/recommandations/nouveaux-trajets")
     public List<NouveauTrajetRecommendationResponse> getRecommandationsNouveauxTrajets() {
         return transportAdminService.listerRecommandationsNouveauxTrajets();
+    }
+
+    @GetMapping("/recommandations/prediction-demande")
+    public AdminDemandPredictionResponse getPredictionDemande(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @RequestParam(required = false) Integer hour,
+            @RequestParam(defaultValue = "false") boolean rainFlag,
+            @RequestParam(defaultValue = "false") boolean schoolBreakFlag
+    ) {
+        return transportAdminService.predireDemandeAdmin(targetDate, hour, rainFlag, schoolBreakFlag);
     }
 }

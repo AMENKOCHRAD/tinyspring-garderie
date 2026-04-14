@@ -8,7 +8,7 @@ import { DemandeTransport, TraitementDemandeTransportResponse } from './transpor
   providedIn: 'root'
 })
 export class DemandeService {
-  private readonly apiUrl = 'http://localhost:8081/api/transport';
+  private readonly apiUrl = 'http://localhost:8082/api/transport';
 
   constructor(private readonly http: HttpClient) {}
 

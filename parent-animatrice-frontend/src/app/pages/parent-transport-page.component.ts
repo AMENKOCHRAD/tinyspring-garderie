@@ -33,7 +33,7 @@ import { DemandeTransport, ParentChild } from '../shared/transport.models';
           <div class="col-lg-5 mb-4">
             <div class="bg-white rounded shadow-sm p-4 h-100">
               <h4 class="mb-3">{{ editingId() ? 'Modifier une demande' : 'Nouvelle demande de transport' }}</h4>
-              <p>Choisissez un enfant, saisissez librement le point de ramassage et la destination souhaitee. L affectation au trajet admin sera faite apres acceptation.</p>
+              <p>Choisissez un enfant, renseignez l adresse maison et l horaire souhaite. L analyse IA et l affectation au trajet admin se feront ensuite cote backend.</p>
 
               <div *ngIf="message()" class="alert" [ngClass]="hasError() ? 'alert-danger' : 'alert-success'">
                 {{ message() }}
@@ -54,19 +54,43 @@ import { DemandeTransport, ParentChild } from '../shared/transport.models';
                 </div>
 
                 <div class="form-group">
-                  <label>Point de ramassage</label>
-                  <input class="form-control" type="text" formControlName="pointRamassage" placeholder="Ex: Lac 1, porte principale">
-                  <small class="text-danger" *ngIf="isFieldInvalid('pointRamassage')">
-                    Le point de ramassage est obligatoire et doit contenir au moins 3 caracteres.
-                  </small>
+                  <label>Sens du trajet</label>
+                  <select class="form-control" formControlName="sensTrajet">
+                    <option value="MAISON_VERS_GARDERIE">Maison -> Garderie</option>
+                    <option value="GARDERIE_VERS_MAISON">Garderie -> Maison</option>
+                  </select>
                 </div>
 
                 <div class="form-group">
-                  <label>Destination souhaitee</label>
-                  <input class="form-control" type="text" formControlName="destinationSouhaitee" placeholder="Ex: Garderie Les Petits, Jardin d enfants...">
-                  <small class="text-danger" *ngIf="isFieldInvalid('destinationSouhaitee')">
-                    La destination souhaitee est obligatoire et doit contenir au moins 3 caracteres.
+                  <label>Adresse maison</label>
+                  <input class="form-control" type="text" formControlName="adresseMaison" placeholder="Ex: 45 Avenue Habib Bourguiba, Tunis">
+                  <small class="text-danger" *ngIf="isFieldInvalid('adresseMaison')">
+                    L adresse maison est obligatoire et doit contenir au moins 8 caracteres.
                   </small>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <label>Latitude</label>
+                    <input class="form-control" type="number" step="0.000001" formControlName="latitudeMaison">
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label>Longitude</label>
+                    <input class="form-control" type="number" step="0.000001" formControlName="longitudeMaison">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <label>Date souhaitee</label>
+                    <input class="form-control" type="date" formControlName="dateSouhaitee">
+                    <small class="text-danger" *ngIf="isFieldInvalid('dateSouhaitee')">Date obligatoire.</small>
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label>Heure souhaitee</label>
+                    <input class="form-control" type="time" formControlName="heureSouhaitee">
+                    <small class="text-danger" *ngIf="isFieldInvalid('heureSouhaitee')">Heure obligatoire.</small>
+                  </div>
                 </div>
 
                 <button class="btn btn-primary mr-2" type="submit" [disabled]="form.invalid || selectedChildHasActiveRequest()">
@@ -102,12 +126,21 @@ import { DemandeTransport, ParentChild } from '../shared/transport.models';
                     <tr *ngFor="let demande of demandes()">
                       <td>#{{ demande.id }}</td>
                       <td>{{ demande.enfantNomComplet }}</td>
-                      <td>{{ demande.pointDepart }} -> {{ demande.destination }}</td>
-                      <td>{{ demande.dateTrajet ? (demande.dateTrajet + ' a ' + demande.heureDepart) : 'En attente d affectation' }}</td>
+                      <td>
+                        {{ demande.pointDepart }} -> {{ demande.destination }}
+                        <div class="text-muted small">Souhaite: {{ demande.dateSouhaitee }} a {{ demande.heureSouhaitee }}</div>
+                      </td>
+                      <td>{{ demande.dateTrajet ? (demande.dateTrajet + ' a ' + demande.heureDepart) : (demande.dateSouhaitee + ' a ' + demande.heureSouhaitee) }}</td>
                       <td>
                         <span class="badge px-3 py-2" [ngClass]="getStatusClass(demande.statut)">
                           {{ formatStatus(demande.statut) }}
                         </span>
+                        <div class="small mt-2" [class.text-danger]="demande.suspicious" [class.text-muted]="!demande.suspicious">
+                          {{ getAiStatusLabel(demande) }}
+                          <span *ngIf="demande.anomalyScore !== null">| Score: {{ formatAnomalyScore(demande.anomalyScore) }}</span>
+                        </div>
+                        <div class="small text-muted" *ngIf="demande.anomalyReasons.length">{{ demande.anomalyReasons.join(' | ') }}</div>
+                        <div class="small text-danger" *ngIf="demande.aiAnalysisError">{{ demande.aiAnalysisError }}</div>
                       </td>
                       <td class="text-right">
                         <button class="btn btn-sm btn-outline-primary mr-2" type="button" (click)="edit(demande)">Modifier</button>
@@ -143,8 +176,12 @@ export class ParentTransportPageComponent {
 
   protected readonly form = this.fb.nonNullable.group({
     enfantId: [0, [Validators.required, Validators.min(1)]],
-    pointRamassage: ['', [Validators.required, Validators.minLength(3)]],
-    destinationSouhaitee: ['', [Validators.required, Validators.minLength(3)]]
+    sensTrajet: ['MAISON_VERS_GARDERIE' as const, [Validators.required]],
+    adresseMaison: ['', [Validators.required, Validators.minLength(8)]],
+    latitudeMaison: [36.8065, [Validators.required]],
+    longitudeMaison: [10.1815, [Validators.required]],
+    dateSouhaitee: [this.getTomorrowDate(), [Validators.required]],
+    heureSouhaitee: ['07:30', [Validators.required]]
   });
 
   constructor() {
@@ -182,8 +219,12 @@ export class ParentTransportPageComponent {
     this.message.set('');
     this.form.patchValue({
       enfantId: demande.enfantId,
-      pointRamassage: demande.pointRamassage,
-      destinationSouhaitee: demande.destinationSouhaitee
+      sensTrajet: demande.sensTrajet,
+      adresseMaison: demande.adresseMaison,
+      latitudeMaison: demande.latitudeMaison,
+      longitudeMaison: demande.longitudeMaison,
+      dateSouhaitee: demande.dateSouhaitee,
+      heureSouhaitee: demande.heureSouhaitee?.slice(0, 5) ?? '07:30'
     });
   }
 
@@ -209,10 +250,20 @@ export class ParentTransportPageComponent {
 
   protected resetForm(): void {
     this.editingId.set(null);
-    this.form.reset({ enfantId: 0, pointRamassage: '', destinationSouhaitee: '' });
+    this.form.reset({
+      enfantId: 0,
+      sensTrajet: 'MAISON_VERS_GARDERIE',
+      adresseMaison: '',
+      latitudeMaison: 36.8065,
+      longitudeMaison: 10.1815,
+      dateSouhaitee: this.getTomorrowDate(),
+      heureSouhaitee: '07:30'
+    });
   }
 
-  protected isFieldInvalid(fieldName: 'enfantId' | 'pointRamassage' | 'destinationSouhaitee'): boolean {
+  protected isFieldInvalid(
+    fieldName: 'enfantId' | 'adresseMaison' | 'dateSouhaitee' | 'heureSouhaitee'
+  ): boolean {
     const control = this.form.controls[fieldName];
     return control.invalid && control.touched;
   }
@@ -249,6 +300,18 @@ export class ParentTransportPageComponent {
     }
   }
 
+  protected getAiStatusLabel(demande: DemandeTransport): string {
+    if (!demande.aiAnalysisAvailable) {
+      return 'IA indisponible';
+    }
+
+    return demande.suspicious ? `Demande suspecte (${demande.anomalyLevel || 'UNKNOWN'})` : 'Demande analysee';
+  }
+
+  protected formatAnomalyScore(score: number | null): string {
+    return score == null ? 'N/A' : score.toFixed(3);
+  }
+
   private loadDemandes(): void {
     this.demandesService
       .getMine()
@@ -261,6 +324,12 @@ export class ParentTransportPageComponent {
       .getMine()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((children) => this.children.set(children));
+  }
+
+  private getTomorrowDate(): string {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
   }
 
   private extractErrorMessage(error: any, fallback = 'Operation impossible.'): string {

@@ -46,6 +46,7 @@ export interface DemandeTransport {
   parentId: number;
   parentNom: string;
   trajetId: number | null;
+  dateDemande?: string;
   pointDepart: string;
   destination: string;
   dateTrajet: string | null;
@@ -53,6 +54,34 @@ export interface DemandeTransport {
   statut: StatutTransport;
   pointRamassage: string;
   destinationSouhaitee: string;
+  sensTrajet?: 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
+  adresseMaison?: string;
+  latitudeMaison?: number | null;
+  longitudeMaison?: number | null;
+  adresseGarderie?: string | null;
+  dateSouhaitee?: string | null;
+  heureSouhaitee?: string | null;
+  suspicious?: boolean;
+  anomalyScore?: number | null;
+  anomalyLevel?: string | null;
+  anomalyReasons?: string[];
+  duplicateDetected?: boolean;
+  aiAnalysisAvailable?: boolean;
+  aiModelVersion?: string | null;
+  aiAnalysisError?: string | null;
+}
+
+export interface AdminDemandPredictionResponse {
+  targetDate: string;
+  hour: number;
+  activeChildrenCount: number;
+  availableTransportCount: number;
+  avgRouteDistanceKm: number;
+  predictedDemandCount: number | null;
+  demandLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+  aiAvailable: boolean;
+  modelVersion: string | null;
+  message: string;
 }
 
 export interface TraitementDemandeTransportResponse {

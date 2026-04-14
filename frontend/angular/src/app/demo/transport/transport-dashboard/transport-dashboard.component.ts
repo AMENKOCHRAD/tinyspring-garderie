@@ -7,6 +7,7 @@ import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { AffectationService } from 'src/app/services/transport/affectation.service';
 import { DemandeService } from 'src/app/services/transport/demande.service';
 import {
+  AdminDemandPredictionResponse,
   AffectationTransport,
   DemandeAffectationRecommendation,
   DemandeTransport,
@@ -20,6 +21,7 @@ import {
 import { TrajetService } from 'src/app/services/transport/trajet.service';
 import { TransportRecommendationService } from 'src/app/services/transport/transport-recommendation.service';
 import { TransportService } from 'src/app/services/transport/transport.service';
+import { LocationMapPickerComponent, PickedLocation } from './location-map-picker.component';
 import { noEdgeSpacesValidator, trimmedRequiredValidator } from './transport-form.validators';
 
 interface DemandeStatCard {
@@ -29,15 +31,22 @@ interface DemandeStatCard {
   cardClass: string;
 }
 
+type TrajetSense = 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
+
 @Component({
   selector: 'app-transport-dashboard',
-  imports: [SharedModule],
+  imports: [SharedModule, LocationMapPickerComponent],
   templateUrl: './transport-dashboard.component.html',
   styleUrls: ['./transport-dashboard.component.scss']
 })
 export class TransportDashboardComponent implements OnInit {
   activeTabId = 1;
   readonly tomorrowDate = this.getTomorrowDate();
+  readonly adresseGarderieFixe = '15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie';
+  readonly garderieLatitude = 36.8065;
+  readonly garderieLongitude = 10.1815;
+  trajetAutrePointLatitude: number | null = null;
+  trajetAutrePointLongitude: number | null = null;
 
   transports: TransportItem[] = [];
   trajets: TrajetItem[] = [];
@@ -45,6 +54,7 @@ export class TransportDashboardComponent implements OnInit {
   affectations: AffectationTransport[] = [];
   recommandationsAffectation: DemandeAffectationRecommendation[] = [];
   recommandationsNouveauxTrajets: NouveauTrajetRecommendation[] = [];
+  predictionDemande: AdminDemandPredictionResponse | null = null;
 
   loading = {
     transports: false,
@@ -93,6 +103,18 @@ export class TransportDashboardComponent implements OnInit {
   });
 
   readonly trajetForm = this.fb.group({
+    sensTrajet: ['MAISON_VERS_GARDERIE' as TrajetSense, [Validators.required]],
+    autrePoint: [
+      '',
+      [
+        Validators.required,
+        trimmedRequiredValidator(),
+        noEdgeSpacesValidator(),
+        Validators.minLength(3),
+        Validators.maxLength(80),
+        Validators.pattern(/^[\p{L}0-9\s\-()',]+$/u)
+      ]
+    ],
     pointDepart: [
       '',
       [
@@ -105,7 +127,7 @@ export class TransportDashboardComponent implements OnInit {
       ]
     ],
     destination: [
-      '',
+      this.adresseGarderieFixe,
       [
         Validators.required,
         trimmedRequiredValidator(),
@@ -115,9 +137,11 @@ export class TransportDashboardComponent implements OnInit {
         Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s\-()',]+$/)
       ]
     ],
+    latitudeAutrePoint: [null as number | null],
+    longitudeAutrePoint: [null as number | null],
     zoneDesservie: ['', [Validators.maxLength(120)]],
-    latitudeDestination: [null as number | null],
-    longitudeDestination: [null as number | null],
+    latitudeDestination: [this.garderieLatitude as number | null],
+    longitudeDestination: [this.garderieLongitude as number | null],
     dateTrajet: [this.tomorrowDate, [Validators.required]],
     heureDepart: ['', [Validators.required]],
     transportId: [null as number | null, [Validators.required]]
@@ -177,15 +201,17 @@ export class TransportDashboardComponent implements OnInit {
       demandes: this.demandeService.getDemandes(),
       affectations: this.affectationService.getAffectations(),
       recommandationsAffectation: this.transportRecommendationService.getAffectationRecommendations(),
-      recommandationsNouveauxTrajets: this.transportRecommendationService.getNewRouteRecommendations()
+      recommandationsNouveauxTrajets: this.transportRecommendationService.getNewRouteRecommendations(),
+      predictionDemande: this.transportRecommendationService.getDemandPrediction(this.tomorrowDate, 8)
     }).subscribe({
-      next: ({ transports, trajets, demandes, affectations, recommandationsAffectation, recommandationsNouveauxTrajets }) => {
+      next: ({ transports, trajets, demandes, affectations, recommandationsAffectation, recommandationsNouveauxTrajets, predictionDemande }) => {
         this.transports = transports;
         this.trajets = trajets;
         this.demandes = demandes;
         this.affectations = affectations;
         this.recommandationsAffectation = recommandationsAffectation;
         this.recommandationsNouveauxTrajets = recommandationsNouveauxTrajets;
+        this.predictionDemande = predictionDemande;
         this.setAllLoading(false);
       },
       error: (error) => {
@@ -262,7 +288,7 @@ export class TransportDashboardComponent implements OnInit {
       return;
     }
 
-    const payload = this.normalizeTrajetPayload(this.trajetForm.getRawValue() as TrajetPayload);
+    const payload = this.buildTrajetPayload();
     this.loading.trajets = true;
     this.clearMessages();
 
@@ -288,9 +314,20 @@ export class TransportDashboardComponent implements OnInit {
 
   editTrajet(trajet: TrajetItem): void {
     this.editingTrajetId = trajet.id;
+    const sensTrajet = this.inferTrajetSense(trajet);
+    const autrePoint = sensTrajet === 'GARDERIE_VERS_MAISON' ? trajet.destination : trajet.pointDepart;
+    const autrePointLatitude = sensTrajet === 'GARDERIE_VERS_MAISON' ? trajet.latitudeDestination : null;
+    const autrePointLongitude = sensTrajet === 'GARDERIE_VERS_MAISON' ? trajet.longitudeDestination : null;
+
+    this.trajetAutrePointLatitude = autrePointLatitude;
+    this.trajetAutrePointLongitude = autrePointLongitude;
     this.trajetForm.patchValue({
+      sensTrajet,
+      autrePoint,
       pointDepart: trajet.pointDepart,
       destination: trajet.destination,
+      latitudeAutrePoint: autrePointLatitude,
+      longitudeAutrePoint: autrePointLongitude,
       zoneDesservie: trajet.zoneDesservie,
       latitudeDestination: trajet.latitudeDestination,
       longitudeDestination: trajet.longitudeDestination,
@@ -298,7 +335,37 @@ export class TransportDashboardComponent implements OnInit {
       heureDepart: trajet.heureDepart,
       transportId: trajet.transportId
     });
+    this.syncTrajetEndpoints();
     this.activeTabId = 2;
+  }
+
+  onTrajetSenseChanged(): void {
+    this.syncTrajetEndpoints();
+  }
+
+  onTrajetOtherLocationSelected(location: PickedLocation): void {
+    this.trajetAutrePointLatitude = location.latitude;
+    this.trajetAutrePointLongitude = location.longitude;
+    this.trajetForm.patchValue({
+      autrePoint: location.address,
+      latitudeAutrePoint: location.latitude,
+      longitudeAutrePoint: location.longitude
+    });
+    this.trajetForm.get('autrePoint')?.markAsDirty();
+    this.trajetForm.get('autrePoint')?.markAsTouched();
+    this.syncTrajetEndpoints();
+  }
+
+  clearTrajetOtherLocation(): void {
+    this.trajetAutrePointLatitude = null;
+    this.trajetAutrePointLongitude = null;
+    this.trajetForm.patchValue({
+      autrePoint: '',
+      latitudeAutrePoint: null,
+      longitudeAutrePoint: null
+    });
+    this.trajetForm.get('autrePoint')?.markAsTouched();
+    this.syncTrajetEndpoints();
   }
 
   deleteTrajet(id: number): void {
@@ -402,12 +469,18 @@ export class TransportDashboardComponent implements OnInit {
 
   resetTrajetForm(): void {
     this.editingTrajetId = null;
+    this.trajetAutrePointLatitude = null;
+    this.trajetAutrePointLongitude = null;
     this.trajetForm.reset({
+      sensTrajet: 'MAISON_VERS_GARDERIE',
+      autrePoint: '',
       pointDepart: '',
-      destination: '',
+      destination: this.adresseGarderieFixe,
+      latitudeAutrePoint: null,
+      longitudeAutrePoint: null,
       zoneDesservie: '',
-      latitudeDestination: null,
-      longitudeDestination: null,
+      latitudeDestination: this.garderieLatitude,
+      longitudeDestination: this.garderieLongitude,
       dateTrajet: this.tomorrowDate,
       heureDepart: '',
       transportId: null
@@ -425,6 +498,30 @@ export class TransportDashboardComponent implements OnInit {
     }
   }
 
+  getAnomalyBadgeClass(demande: DemandeTransport): string {
+    if (demande.aiAnalysisAvailable === false) {
+      return 'badge-light-secondary';
+    }
+
+    if (demande.suspicious) {
+      return 'badge-light-danger';
+    }
+
+    return 'badge-light-info';
+  }
+
+  formatAiStatus(demande: DemandeTransport): string {
+    if (demande.aiAnalysisAvailable === false) {
+      return 'Analyse IA indisponible';
+    }
+
+    return demande.suspicious ? 'Demande suspecte' : 'Demande analysee';
+  }
+
+  formatAnomalyScore(score: number | null | undefined): string {
+    return score == null ? 'N/A' : score.toFixed(3);
+  }
+
   hasTransportError(
     field: 'nom' | 'matricule' | 'capacite',
     error: 'required' | 'trimmedRequired' | 'edgeSpaces' | 'min' | 'max' | 'minlength' | 'maxlength' | 'pattern'
@@ -434,7 +531,7 @@ export class TransportDashboardComponent implements OnInit {
   }
 
   hasTrajetError(
-    field: 'pointDepart' | 'destination' | 'zoneDesservie' | 'dateTrajet' | 'heureDepart' | 'transportId',
+    field: 'sensTrajet' | 'autrePoint' | 'pointDepart' | 'destination' | 'zoneDesservie' | 'dateTrajet' | 'heureDepart' | 'transportId',
     error: 'required' | 'trimmedRequired' | 'edgeSpaces' | 'minlength' | 'maxlength' | 'pattern' = 'required'
   ): boolean {
     const control = this.trajetForm.get(field);
@@ -501,11 +598,13 @@ export class TransportDashboardComponent implements OnInit {
     this.loading.recommandations = true;
     forkJoin({
       affectations: this.transportRecommendationService.getAffectationRecommendations(),
-      nouveauxTrajets: this.transportRecommendationService.getNewRouteRecommendations()
+      nouveauxTrajets: this.transportRecommendationService.getNewRouteRecommendations(),
+      predictionDemande: this.transportRecommendationService.getDemandPrediction(this.tomorrowDate, 8)
     }).subscribe({
-      next: ({ affectations, nouveauxTrajets }) => {
+      next: ({ affectations, nouveauxTrajets, predictionDemande }) => {
         this.recommandationsAffectation = affectations;
         this.recommandationsNouveauxTrajets = nouveauxTrajets;
+        this.predictionDemande = predictionDemande;
         this.loading.recommandations = false;
       },
       error: (error) => {
@@ -538,6 +637,38 @@ export class TransportDashboardComponent implements OnInit {
     };
   }
 
+  getTrajetDepartLabel(): string {
+    return this.trajetForm.controls.pointDepart.value || 'Adresse non definie pour le moment.';
+  }
+
+  getTrajetArriveeLabel(): string {
+    return this.trajetForm.controls.destination.value || 'Adresse non definie pour le moment.';
+  }
+
+  getTrajetOtherPointLabel(): string {
+    return this.trajetForm.controls.autrePoint.value || 'Aucun autre point selectionne pour le moment.';
+  }
+
+  getTrajetOtherPointTitle(): string {
+    return this.trajetForm.controls.sensTrajet.value === 'GARDERIE_VERS_MAISON' ? 'Maison / destination' : 'Maison / point de depart';
+  }
+
+  private buildTrajetPayload(): TrajetPayload {
+    this.syncTrajetEndpoints();
+    const payload = this.trajetForm.getRawValue();
+
+    return this.normalizeTrajetPayload({
+      pointDepart: payload.pointDepart ?? '',
+      destination: payload.destination ?? '',
+      zoneDesservie: payload.zoneDesservie,
+      latitudeDestination: payload.latitudeDestination,
+      longitudeDestination: payload.longitudeDestination,
+      dateTrajet: payload.dateTrajet ?? this.tomorrowDate,
+      heureDepart: payload.heureDepart ?? '',
+      transportId: payload.transportId as number
+    });
+  }
+
   private normalizeTrajetPayload(payload: TrajetPayload): TrajetPayload {
     return {
       ...payload,
@@ -547,6 +678,44 @@ export class TransportDashboardComponent implements OnInit {
       latitudeDestination: payload.latitudeDestination ?? null,
       longitudeDestination: payload.longitudeDestination ?? null
     };
+  }
+
+  private syncTrajetEndpoints(): void {
+    const sensTrajet = this.trajetForm.controls.sensTrajet.value ?? 'MAISON_VERS_GARDERIE';
+    const autrePoint = this.trajetForm.controls.autrePoint.value?.trim() ?? '';
+    const latitudeAutrePoint = this.trajetForm.controls.latitudeAutrePoint.value ?? null;
+    const longitudeAutrePoint = this.trajetForm.controls.longitudeAutrePoint.value ?? null;
+
+    if (sensTrajet === 'GARDERIE_VERS_MAISON') {
+      this.trajetForm.patchValue(
+        {
+          pointDepart: this.adresseGarderieFixe,
+          destination: autrePoint,
+          latitudeDestination: latitudeAutrePoint,
+          longitudeDestination: longitudeAutrePoint
+        },
+        { emitEvent: false }
+      );
+      return;
+    }
+
+    this.trajetForm.patchValue(
+      {
+        pointDepart: autrePoint,
+        destination: this.adresseGarderieFixe,
+        latitudeDestination: this.garderieLatitude,
+        longitudeDestination: this.garderieLongitude
+      },
+      { emitEvent: false }
+    );
+  }
+
+  private inferTrajetSense(trajet: TrajetItem): TrajetSense {
+    return this.isGarderieAddress(trajet.pointDepart) ? 'GARDERIE_VERS_MAISON' : 'MAISON_VERS_GARDERIE';
+  }
+
+  private isGarderieAddress(address: string | null | undefined): boolean {
+    return (address ?? '').trim().toLowerCase() === this.adresseGarderieFixe.trim().toLowerCase();
   }
 
   formatRecommendationDistance(distanceKm: number | null): string {

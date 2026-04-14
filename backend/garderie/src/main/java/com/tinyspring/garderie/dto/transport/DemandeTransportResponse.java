@@ -5,6 +5,7 @@ import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public record DemandeTransportResponse(
         Long id,
@@ -25,6 +26,16 @@ public record DemandeTransportResponse(
         String adresseMaison,
         Double latitudeMaison,
         Double longitudeMaison,
-        String adresseGarderie
+        String adresseGarderie,
+        LocalDate dateSouhaitee,
+        LocalTime heureSouhaitee,
+        Boolean suspicious,
+        Double anomalyScore,
+        String anomalyLevel,
+        List<String> anomalyReasons,
+        Boolean duplicateDetected,
+        Boolean aiAnalysisAvailable,
+        String aiModelVersion,
+        String aiAnalysisError
 ) {
 }

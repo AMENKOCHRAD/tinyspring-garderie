@@ -144,47 +144,26 @@
                 <form [formGroup]="trajetForm" (ngSubmit)="submitTrajet()" class="simple-form">
                   <h5>{{ editingTrajetId ? 'Modifier trajet' : 'Ajouter trajet' }}</h5>
 
-                  <label>Point de depart</label>
-                  <input class="form-control" formControlName="pointDepart" type="text" maxlength="80" />
-                  @if (hasTrajetError('pointDepart')) {
-                    <small class="text-danger">Le point de depart est obligatoire.</small>
-                  }
-                  @if (hasTrajetError('pointDepart', 'trimmedRequired')) {
-                    <small class="text-danger">Le point de depart ne peut pas contenir uniquement des espaces.</small>
-                  }
-                  @if (hasTrajetError('pointDepart', 'edgeSpaces')) {
-                    <small class="text-danger">Le point de depart ne doit pas commencer ou finir par un espace.</small>
-                  }
-                  @if (hasTrajetError('pointDepart', 'minlength')) {
-                    <small class="text-danger">Le point de depart doit contenir au moins 3 caracteres.</small>
-                  }
-                  @if (hasTrajetError('pointDepart', 'maxlength')) {
-                    <small class="text-danger">Le point de depart ne doit pas depasser 80 caracteres.</small>
-                  }
-                  @if (hasTrajetError('pointDepart', 'pattern')) {
-                    <small class="text-danger">Le point de depart contient des caracteres non autorises.</small>
-                  }
+                  <div class="route-preview-card">
+                    <strong>Adresse exacte de la garderie</strong>
+                    <p class="mb-0 text-muted">{{ adresseGarderieFixe }}</p>
+                  </div>
 
-                  <label>Destination</label>
-                  <input class="form-control" formControlName="destination" type="text" maxlength="80" />
-                  @if (hasTrajetError('destination')) {
-                    <small class="text-danger">La destination est obligatoire.</small>
-                  }
-                  @if (hasTrajetError('destination', 'trimmedRequired')) {
-                    <small class="text-danger">La destination ne peut pas contenir uniquement des espaces.</small>
-                  }
-                  @if (hasTrajetError('destination', 'edgeSpaces')) {
-                    <small class="text-danger">La destination ne doit pas commencer ou finir par un espace.</small>
-                  }
-                  @if (hasTrajetError('destination', 'minlength')) {
-                    <small class="text-danger">La destination doit contenir au moins 3 caracteres.</small>
-                  }
-                  @if (hasTrajetError('destination', 'maxlength')) {
-                    <small class="text-danger">La destination ne doit pas depasser 80 caracteres.</small>
-                  }
-                  @if (hasTrajetError('destination', 'pattern')) {
-                    <small class="text-danger">La destination contient des caracteres non autorises.</small>
-                  }
+                  <label>Sens du trajet</label>
+                  <select class="form-select" formControlName="sensTrajet" (change)="onTrajetSenseChanged()">
+                    <option value="MAISON_VERS_GARDERIE">Autre point -> Garderie</option>
+                    <option value="GARDERIE_VERS_MAISON">Garderie -> Autre point</option>
+                  </select>
+
+                  <div class="route-preview-card">
+                    <strong>Depart automatique</strong>
+                    <p class="mb-0 text-muted">{{ getTrajetDepartLabel() }}</p>
+                  </div>
+
+                  <div class="route-preview-card">
+                    <strong>Arrivee automatique</strong>
+                    <p class="mb-0 text-muted">{{ getTrajetArriveeLabel() }}</p>
+                  </div>
 
                   <label>Zone desservie (optionnel)</label>
                   <input class="form-control" formControlName="zoneDesservie" type="text" maxlength="120" />
@@ -192,11 +171,49 @@
                     <small class="text-danger">La zone desservie ne doit pas depasser 120 caracteres.</small>
                   }
 
-                  <label>Latitude destination (optionnel)</label>
-                  <input class="form-control" formControlName="latitudeDestination" type="number" step="0.000001" />
-
-                  <label>Longitude destination (optionnel)</label>
-                  <input class="form-control" formControlName="longitudeDestination" type="number" step="0.000001" />
+                  <div class="map-field-block">
+                    <div class="map-field-header">
+                      <label class="mb-0">{{ getTrajetOtherPointTitle() }}</label>
+                      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="clearTrajetOtherLocation()">
+                        Effacer
+                      </button>
+                    </div>
+                    <app-location-map-picker
+                      [latitude]="trajetAutrePointLatitude"
+                      [longitude]="trajetAutrePointLongitude"
+                      [selectedAddress]="trajetForm.controls.autrePoint.value || ''"
+                      helperText="Cliquez sur la carte pour choisir l'autre adresse du trajet. L'adresse de la garderie sera appliquee automatiquement de l'autre cote."
+                      resultLabel="Autre point detecte"
+                      (locationSelected)="onTrajetOtherLocationSelected($event)"
+                    />
+                    <div class="map-coordinates" *ngIf="trajetAutrePointLatitude !== null && trajetAutrePointLongitude !== null">
+                      Coordonnees enregistrees :
+                      {{ trajetAutrePointLatitude | number: '1.4-4' }},
+                      {{ trajetAutrePointLongitude | number: '1.4-4' }}
+                    </div>
+                    <div class="route-preview-card">
+                      <strong>{{ getTrajetOtherPointTitle() }}</strong>
+                      <p class="mb-0 text-muted">{{ getTrajetOtherPointLabel() }}</p>
+                    </div>
+                  </div>
+                  @if (hasTrajetError('autrePoint')) {
+                    <small class="text-danger">L autre point du trajet est obligatoire.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'trimmedRequired')) {
+                    <small class="text-danger">L autre point ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'edgeSpaces')) {
+                    <small class="text-danger">L autre point ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'minlength')) {
+                    <small class="text-danger">L autre point doit contenir au moins 3 caracteres.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'maxlength')) {
+                    <small class="text-danger">L autre point ne doit pas depasser 80 caracteres.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'pattern')) {
+                    <small class="text-danger">L autre point contient des caracteres non autorises.</small>
+                  }
 
                   <label>Date du trajet</label>
                   <input class="form-control" formControlName="dateTrajet" type="date" [min]="tomorrowDate" />
@@ -313,11 +330,30 @@
                       <tr>
                         <td>{{ demande.enfantNomComplet }}</td>
                         <td>{{ demande.parentNom }}</td>
-                        <td>{{ demande.pointDepart }} -> {{ demande.destination }}</td>
-                        <td>{{ demande.dateTrajet }}</td>
-                        <td>{{ demande.heureDepart }}</td>
+                        <td>
+                          <div>{{ demande.pointDepart }} -> {{ demande.destination }}</div>
+                          <small class="text-muted" *ngIf="demande.dateSouhaitee || demande.heureSouhaitee">
+                            Souhaite: {{ demande.dateSouhaitee || '-' }} {{ demande.heureSouhaitee || '' }}
+                          </small>
+                        </td>
+                        <td>{{ demande.dateTrajet || demande.dateSouhaitee || '-' }}</td>
+                        <td>{{ demande.heureDepart || demande.heureSouhaitee || '-' }}</td>
                         <td>
                           <span class="badge transport-badge" [ngClass]="getStatutBadgeClass(demande.statut)">{{ demande.statut }}</span>
+                          <div class="anomaly-summary mt-2">
+                            <span class="badge transport-badge" [ngClass]="getAnomalyBadgeClass(demande)">
+                              {{ formatAiStatus(demande) }}
+                            </span>
+                            <small class="d-block text-muted" *ngIf="demande.anomalyLevel || demande.anomalyScore !== null">
+                              Niveau: {{ demande.anomalyLevel || 'UNKNOWN' }} | Score: {{ formatAnomalyScore(demande.anomalyScore) }}
+                            </small>
+                            <small class="d-block text-muted" *ngIf="demande.anomalyReasons?.length">
+                              {{ demande.anomalyReasons?.join(' | ') }}
+                            </small>
+                            <small class="d-block text-danger" *ngIf="demande.aiAnalysisError">
+                              {{ demande.aiAnalysisError }}
+                            </small>
+                          </div>
                         </td>
                         <td>
                           @if (demande.statut === 'EN_ATTENTE') {
@@ -398,6 +434,33 @@
             @if (loading.recommandations) {
               <div class="loading-state"><div class="spinner-border text-primary"></div></div>
             } @else {
+              <div class="recommendation-panel ai-insight-card" *ngIf="predictionDemande">
+                <h5>Prediction de la demande</h5>
+                <div class="ai-meta">
+                  <div>
+                    <strong>{{ predictionDemande.predictedDemandCount ?? '-' }}</strong>
+                    <span>Demandes prevues</span>
+                  </div>
+                  <div>
+                    <strong>{{ predictionDemande.demandLevel }}</strong>
+                    <span>Niveau</span>
+                  </div>
+                  <div>
+                    <strong>{{ predictionDemande.targetDate }}</strong>
+                    <span>Date cible</span>
+                  </div>
+                  <div>
+                    <strong>{{ predictionDemande.hour }}:00</strong>
+                    <span>Heure analysee</span>
+                  </div>
+                </div>
+                <p class="mb-1 text-muted">{{ predictionDemande.message }}</p>
+                <small [ngClass]="predictionDemande.aiAvailable ? 'text-success' : 'text-danger'">
+                  {{ predictionDemande.aiAvailable ? 'Prediction IA disponible' : 'Prediction IA indisponible' }}
+                  <span *ngIf="predictionDemande.modelVersion">| Modele: {{ predictionDemande.modelVersion }}</span>
+                </small>
+              </div>
+
               <div class="recommendation-layout">
                 <div class="recommendation-panel">
                   <h5>Recommandations d'affectation</h5>

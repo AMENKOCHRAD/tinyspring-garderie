@@ -6,6 +6,9 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 public class CreateDemandeTransportRequest {
 
     @NotNull(message = "L'identifiant de l'enfant est obligatoire")
@@ -26,6 +29,10 @@ public class CreateDemandeTransportRequest {
     @DecimalMin(value = "-180.0", message = "Longitude invalide")
     @DecimalMax(value = "180.0", message = "Longitude invalide")
     private Double longitudeMaison;
+
+    private LocalDate dateSouhaitee;
+
+    private LocalTime heureSouhaitee;
 
     public Long getEnfantId() {
         return enfantId;
@@ -65,5 +72,21 @@ public class CreateDemandeTransportRequest {
 
     public void setLongitudeMaison(Double longitudeMaison) {
         this.longitudeMaison = longitudeMaison;
+    }
+
+    public LocalDate getDateSouhaitee() {
+        return dateSouhaitee;
+    }
+
+    public void setDateSouhaitee(LocalDate dateSouhaitee) {
+        this.dateSouhaitee = dateSouhaitee;
+    }
+
+    public LocalTime getHeureSouhaitee() {
+        return heureSouhaitee;
+    }
+
+    public void setHeureSouhaitee(LocalTime heureSouhaitee) {
+        this.heureSouhaitee = heureSouhaitee;
     }
 }

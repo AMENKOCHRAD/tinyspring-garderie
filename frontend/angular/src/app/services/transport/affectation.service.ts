@@ -8,7 +8,7 @@ import { AffectationTransport } from './transport.models';
   providedIn: 'root'
 })
 export class AffectationService {
-  private readonly apiUrl = 'http://localhost:8081/api/transport/affectations';
+  private readonly apiUrl = 'http://localhost:8082/api/transport/affectations';
 
   constructor(private readonly http: HttpClient) {}
 

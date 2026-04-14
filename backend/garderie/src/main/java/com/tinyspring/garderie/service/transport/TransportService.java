@@ -5,9 +5,11 @@ import com.tinyspring.garderie.dto.transport.DemandeTransportResponse;
 import com.tinyspring.garderie.dto.transport.TrajetDetailsResponse;
 import com.tinyspring.garderie.dto.transport.TraitementDemandeTransportResponse;
 import com.tinyspring.garderie.dto.transport.UpdateDemandeTransportRequest;
+import com.tinyspring.garderie.dto.transport.admin.AdminDemandPredictionResponse;
 import com.tinyspring.garderie.dto.transport.parent.ParentEnfantResponse;
 import com.tinyspring.garderie.dto.transport.parent.ParentTrajetResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface TransportService {
@@ -23,4 +25,5 @@ public interface TransportService {
     void supprimerDemandeTransportAdmin(Long demandeId);
     TrajetDetailsResponse listerEnfantsParTrajet(Long trajetId);
     double calculerTauxRemplissage(Long transportId);
+    AdminDemandPredictionResponse predireDemandeAdmin(LocalDate targetDate, Integer hour, boolean rainFlag, boolean schoolBreakFlag);
 }

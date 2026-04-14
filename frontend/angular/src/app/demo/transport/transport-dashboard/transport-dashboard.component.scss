@@ -39,6 +39,40 @@
   flex-wrap: wrap;
 }
 
+.map-field-block {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.map-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.map-coordinates {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eef5ff;
+  color: #47617d;
+  font-size: 13px;
+}
+
+.route-preview-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f7fbff;
+  border: 1px solid #d9e8f7;
+}
+
+.route-preview-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #32536d;
+}
+
 .actions-cell {
   display: flex;
   gap: 8px;
@@ -76,6 +110,44 @@
   padding: 7px 10px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.anomaly-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.ai-insight-card {
+  margin-bottom: 20px;
+}
+
+.ai-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.ai-meta div {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8faff;
+  border: 1px solid #e6eefc;
+}
+
+.ai-meta strong {
+  display: block;
+  font-size: 18px;
+  color: #23395b;
+}
+
+.ai-meta span {
+  display: block;
+  margin-top: 4px;
+  color: #6b7a90;
+  font-size: 12px;
 }
 
 .recommendation-layout {
@@ -132,7 +204,22 @@
   color: #b02a37;
 }
 
+.badge-light-info {
+  background: rgba(23, 162, 184, 0.14);
+  color: #0c7489;
+}
+
+.badge-light-secondary {
+  background: rgba(108, 117, 125, 0.14);
+  color: #4f5964;
+}
+
 @media (max-width: 768px) {
+  .map-field-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .demand-actions {
     min-width: 100%;
   }

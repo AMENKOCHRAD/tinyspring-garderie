@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "demandes_transport")
@@ -62,6 +63,36 @@ public class DemandeTransport {
     @Column(name = "longitude_maison", nullable = false)
     private Double longitudeMaison;
 
+    @Column(name = "date_souhaitee", nullable = false)
+    private LocalDate dateSouhaitee;
+
+    @Column(name = "heure_souhaitee", nullable = false)
+    private LocalTime heureSouhaitee;
+
+    @Column(name = "suspicious", nullable = false)
+    private Boolean suspicious = Boolean.FALSE;
+
+    @Column(name = "ai_analysis_available", nullable = false)
+    private Boolean aiAnalysisAvailable = Boolean.FALSE;
+
+    @Column(name = "duplicate_detected", nullable = false)
+    private Boolean duplicateDetected = Boolean.FALSE;
+
+    @Column(name = "anomaly_score")
+    private Double anomalyScore;
+
+    @Column(name = "anomaly_level", length = 30)
+    private String anomalyLevel;
+
+    @Column(name = "anomaly_reasons", length = 2000)
+    private String anomalyReasons;
+
+    @Column(name = "ai_model_version", length = 50)
+    private String aiModelVersion;
+
+    @Column(name = "ai_analysis_error", length = 500)
+    private String aiAnalysisError;
+
     public DemandeTransport() {
     }
 
@@ -74,7 +105,9 @@ public class DemandeTransport {
                             SensTrajetDemandeTransport sensTrajet,
                             String adresseMaison,
                             Double latitudeMaison,
-                            Double longitudeMaison) {
+                            Double longitudeMaison,
+                            LocalDate dateSouhaitee,
+                            LocalTime heureSouhaitee) {
         this.enfant = enfant;
         this.parent = parent;
         this.trajet = trajet;
@@ -85,6 +118,8 @@ public class DemandeTransport {
         this.adresseMaison = adresseMaison;
         this.latitudeMaison = latitudeMaison;
         this.longitudeMaison = longitudeMaison;
+        this.dateSouhaitee = dateSouhaitee;
+        this.heureSouhaitee = heureSouhaitee;
         this.dateDemande = LocalDate.now();
     }
 
@@ -178,5 +213,85 @@ public class DemandeTransport {
 
     public void setLongitudeMaison(Double longitudeMaison) {
         this.longitudeMaison = longitudeMaison;
+    }
+
+    public LocalDate getDateSouhaitee() {
+        return dateSouhaitee;
+    }
+
+    public void setDateSouhaitee(LocalDate dateSouhaitee) {
+        this.dateSouhaitee = dateSouhaitee;
+    }
+
+    public LocalTime getHeureSouhaitee() {
+        return heureSouhaitee;
+    }
+
+    public void setHeureSouhaitee(LocalTime heureSouhaitee) {
+        this.heureSouhaitee = heureSouhaitee;
+    }
+
+    public Boolean getSuspicious() {
+        return suspicious;
+    }
+
+    public void setSuspicious(Boolean suspicious) {
+        this.suspicious = suspicious;
+    }
+
+    public Boolean getAiAnalysisAvailable() {
+        return aiAnalysisAvailable;
+    }
+
+    public void setAiAnalysisAvailable(Boolean aiAnalysisAvailable) {
+        this.aiAnalysisAvailable = aiAnalysisAvailable;
+    }
+
+    public Boolean getDuplicateDetected() {
+        return duplicateDetected;
+    }
+
+    public void setDuplicateDetected(Boolean duplicateDetected) {
+        this.duplicateDetected = duplicateDetected;
+    }
+
+    public Double getAnomalyScore() {
+        return anomalyScore;
+    }
+
+    public void setAnomalyScore(Double anomalyScore) {
+        this.anomalyScore = anomalyScore;
+    }
+
+    public String getAnomalyLevel() {
+        return anomalyLevel;
+    }
+
+    public void setAnomalyLevel(String anomalyLevel) {
+        this.anomalyLevel = anomalyLevel;
+    }
+
+    public String getAnomalyReasons() {
+        return anomalyReasons;
+    }
+
+    public void setAnomalyReasons(String anomalyReasons) {
+        this.anomalyReasons = anomalyReasons;
+    }
+
+    public String getAiModelVersion() {
+        return aiModelVersion;
+    }
+
+    public void setAiModelVersion(String aiModelVersion) {
+        this.aiModelVersion = aiModelVersion;
+    }
+
+    public String getAiAnalysisError() {
+        return aiAnalysisError;
+    }
+
+    public void setAiAnalysisError(String aiAnalysisError) {
+        this.aiAnalysisError = aiAnalysisError;
     }
 }

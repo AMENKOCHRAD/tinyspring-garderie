@@ -8,7 +8,7 @@ import { TransportItem, TransportPayload } from './transport.models';
   providedIn: 'root'
 })
 export class TransportService {
-  private readonly apiUrl = 'http://localhost:8081/api/transport/transports';
+  private readonly apiUrl = 'http://localhost:8082/api/transport/transports';
 
   constructor(private readonly http: HttpClient) {}
 

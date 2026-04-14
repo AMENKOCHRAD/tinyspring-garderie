@@ -21,6 +21,16 @@ export interface DemandeTransport {
   latitudeMaison: number;
   longitudeMaison: number;
   adresseGarderie: string;
+  dateSouhaitee: string;
+  heureSouhaitee: string;
+  suspicious: boolean;
+  anomalyScore: number | null;
+  anomalyLevel: string | null;
+  anomalyReasons: string[];
+  duplicateDetected: boolean;
+  aiAnalysisAvailable: boolean;
+  aiModelVersion: string | null;
+  aiAnalysisError: string | null;
 }
 
 export interface DemandeTransportPayload {
@@ -29,6 +39,8 @@ export interface DemandeTransportPayload {
   adresseMaison: string;
   latitudeMaison: number;
   longitudeMaison: number;
+  dateSouhaitee: string;
+  heureSouhaitee: string;
 }
 
 export interface Trajet {

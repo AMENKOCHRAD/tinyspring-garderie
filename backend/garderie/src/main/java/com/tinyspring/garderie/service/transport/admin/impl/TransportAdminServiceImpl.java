@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.service.transport.admin.impl;
 
 import com.tinyspring.garderie.dto.transport.admin.AffectationTransportResponse;
+import com.tinyspring.garderie.dto.transport.admin.AdminDemandPredictionResponse;
 import com.tinyspring.garderie.dto.transport.admin.DemandeAffectationRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.NouveauTrajetRecommendationResponse;
 import com.tinyspring.garderie.dto.transport.admin.TrajetRequest;
@@ -23,6 +24,7 @@ import com.tinyspring.garderie.service.transport.recommendation.TransportRecomme
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -152,6 +154,11 @@ public class TransportAdminServiceImpl implements TransportAdminService {
     @Override
     public List<NouveauTrajetRecommendationResponse> listerRecommandationsNouveauxTrajets() {
         return transportRecommendationService.getRecommendationsNouveauxTrajets();
+    }
+
+    @Override
+    public AdminDemandPredictionResponse predireDemandeAdmin(LocalDate targetDate, Integer hour, boolean rainFlag, boolean schoolBreakFlag) {
+        return transportService.predireDemandeAdmin(targetDate, hour, rainFlag, schoolBreakFlag);
     }
 
     private Transport getTransport(Long id) {

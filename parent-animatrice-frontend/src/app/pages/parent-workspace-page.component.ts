@@ -113,6 +113,7 @@ export class ParentWorkspacePageComponent {
   protected readonly childrenWithTransportCount = computed(
     () => new Set(this.demandes().filter((demande) => demande.statut !== 'REFUSEE').map((demande) => demande.enfantId)).size
   );
+  protected readonly tomorrowDate = this.getTomorrowDate();
   protected readonly adresseGarderie = computed(
     () => this.demandes()[0]?.adresseGarderie || this.adresseGarderieFixe
   );
@@ -121,7 +122,9 @@ export class ParentWorkspacePageComponent {
     sensTrajet: ['MAISON_VERS_GARDERIE' as SensTrajet, [Validators.required]],
     adresseMaison: ['', [Validators.required, Validators.minLength(8)]],
     latitudeMaison: [0, [Validators.required]],
-    longitudeMaison: [0, [Validators.required]]
+    longitudeMaison: [0, [Validators.required]],
+    dateSouhaitee: [this.getTomorrowDate(), [Validators.required]],
+    heureSouhaitee: ['07:30', [Validators.required]]
   });
 
   public constructor() {
@@ -167,7 +170,9 @@ export class ParentWorkspacePageComponent {
       sensTrajet: demande.sensTrajet,
       adresseMaison: demande.adresseMaison,
       latitudeMaison: demande.latitudeMaison,
-      longitudeMaison: demande.longitudeMaison
+      longitudeMaison: demande.longitudeMaison,
+      dateSouhaitee: demande.dateSouhaitee,
+      heureSouhaitee: demande.heureSouhaitee.slice(0, 5)
     });
   }
 
@@ -213,11 +218,13 @@ export class ParentWorkspacePageComponent {
       sensTrajet: 'MAISON_VERS_GARDERIE',
       adresseMaison: '',
       latitudeMaison: 0,
-      longitudeMaison: 0
+      longitudeMaison: 0,
+      dateSouhaitee: this.getTomorrowDate(),
+      heureSouhaitee: '07:30'
     });
   }
 
-  protected isFieldInvalid(fieldName: 'enfantId' | 'adresseMaison'): boolean {
+  protected isFieldInvalid(fieldName: 'enfantId' | 'adresseMaison' | 'dateSouhaitee' | 'heureSouhaitee'): boolean {
     const control = this.form.controls[fieldName];
     return control.invalid && control.touched;
   }
@@ -289,6 +296,42 @@ export class ParentWorkspacePageComponent {
     this.form.controls.adresseMaison.markAsTouched();
   }
 
+  protected formatAnomalyScore(score: number | null): string {
+    return score == null ? 'N/A' : score.toFixed(3);
+  }
+
+  protected getAiStatusLabel(demande: DemandeTransport): string {
+    if (!demande.aiAnalysisAvailable) {
+      return 'IA indisponible';
+    }
+    return demande.suspicious ? 'Demande suspecte' : 'Demande normale';
+  }
+
+  protected getAiStatusClass(demande: DemandeTransport): string {
+    if (!demande.aiAnalysisAvailable) {
+      return 'tag tag--blush';
+    }
+    return demande.suspicious ? 'tag tag--blush' : 'tag tag--mint';
+  }
+
+  protected getAiAnalysisLabel(demande: DemandeTransport): string {
+    if (!demande.aiAnalysisAvailable) {
+      return 'Analyse indisponible pour le moment.';
+    }
+
+    const parts = [`Demande ${demande.suspicious ? 'suspecte' : 'normale'}`];
+
+    if (demande.anomalyLevel && demande.anomalyLevel !== 'UNKNOWN') {
+      parts.push(`Niveau: ${demande.anomalyLevel}`);
+    }
+
+    if (demande.anomalyScore !== null) {
+      parts.push(`Score: ${this.formatAnomalyScore(demande.anomalyScore)}`);
+    }
+
+    return parts.join(' | ');
+  }
+
   private loadChildren(): void {
     this.childrenService
       .getMine()
@@ -307,7 +350,19 @@ export class ParentWorkspacePageComponent {
       .getMine()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (demandes) => this.demandes.set(demandes),
+        next: (demandes) =>
+          this.demandes.set(
+            demandes.map((demande) =>
+              demande.aiAnalysisAvailable
+                ? demande
+                : {
+                    ...demande,
+                    anomalyLevel: null,
+                    anomalyScore: null,
+                    anomalyReasons: []
+                  }
+            )
+          ),
         error: () => {
           this.hasError.set(true);
           this.message.set('Chargement des demandes impossible.');
@@ -321,5 +376,11 @@ export class ParentWorkspacePageComponent {
     }
 
     return error?.error?.message ?? (typeof error?.error === 'string' ? error.error : fallback);
+  }
+
+  private getTomorrowDate(): string {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
   }
 }

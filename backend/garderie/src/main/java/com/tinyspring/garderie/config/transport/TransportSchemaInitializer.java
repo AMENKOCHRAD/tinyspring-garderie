@@ -61,6 +61,16 @@ public class TransportSchemaInitializer implements ApplicationRunner {
         ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN adresse_maison VARCHAR(255) NULL", "adresse_maison");
         ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN latitude_maison DOUBLE NULL", "latitude_maison");
         ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN longitude_maison DOUBLE NULL", "longitude_maison");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN date_souhaitee DATE NULL", "date_souhaitee");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN heure_souhaitee TIME NULL", "heure_souhaitee");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN suspicious BIT(1) NULL", "suspicious");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN ai_analysis_available BIT(1) NULL", "ai_analysis_available");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN duplicate_detected BIT(1) NULL", "duplicate_detected");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN anomaly_score DOUBLE NULL", "anomaly_score");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN anomaly_level VARCHAR(30) NULL", "anomaly_level");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN anomaly_reasons VARCHAR(2000) NULL", "anomaly_reasons");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN ai_model_version VARCHAR(50) NULL", "ai_model_version");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN ai_analysis_error VARCHAR(500) NULL", "ai_analysis_error");
         ajouterColonneTrajetSiAbsente("ALTER TABLE trajets ADD COLUMN zone_desservie VARCHAR(120) NULL", "zone_desservie");
         ajouterColonneTrajetSiAbsente("ALTER TABLE trajets ADD COLUMN latitude_destination DOUBLE NULL", "latitude_destination");
         ajouterColonneTrajetSiAbsente("ALTER TABLE trajets ADD COLUMN longitude_destination DOUBLE NULL", "longitude_destination");
@@ -71,7 +81,12 @@ public class TransportSchemaInitializer implements ApplicationRunner {
                 SET sens_trajet = COALESCE(sens_trajet, 'MAISON_VERS_GARDERIE'),
                     adresse_maison = COALESCE(adresse_maison, point_ramassage),
                     latitude_maison = COALESCE(latitude_maison, 36.8065),
-                    longitude_maison = COALESCE(longitude_maison, 10.1815)
+                    longitude_maison = COALESCE(longitude_maison, 10.1815),
+                    date_souhaitee = COALESCE(date_souhaitee, CURDATE() + INTERVAL 1 DAY),
+                    heure_souhaitee = COALESCE(heure_souhaitee, '07:30:00'),
+                    suspicious = COALESCE(suspicious, 0),
+                    ai_analysis_available = COALESCE(ai_analysis_available, 0),
+                    duplicate_detected = COALESCE(duplicate_detected, 0)
                 """
         );
 
@@ -79,6 +94,11 @@ public class TransportSchemaInitializer implements ApplicationRunner {
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN adresse_maison VARCHAR(255) NOT NULL");
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN latitude_maison DOUBLE NOT NULL");
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN longitude_maison DOUBLE NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN date_souhaitee DATE NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN heure_souhaitee TIME NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN suspicious BIT(1) NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN ai_analysis_available BIT(1) NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN duplicate_detected BIT(1) NOT NULL");
     }
 
     private void ajouterColonneSiAbsente(String sql, String columnName) {

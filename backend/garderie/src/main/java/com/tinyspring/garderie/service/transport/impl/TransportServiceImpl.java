@@ -6,6 +6,7 @@ import com.tinyspring.garderie.dto.transport.EnfantTrajetResponse;
 import com.tinyspring.garderie.dto.transport.TrajetDetailsResponse;
 import com.tinyspring.garderie.dto.transport.TraitementDemandeTransportResponse;
 import com.tinyspring.garderie.dto.transport.UpdateDemandeTransportRequest;
+import com.tinyspring.garderie.dto.transport.admin.AdminDemandPredictionResponse;
 import com.tinyspring.garderie.dto.transport.parent.ParentEnfantResponse;
 import com.tinyspring.garderie.dto.transport.parent.ParentTrajetResponse;
 import com.tinyspring.garderie.entity.RoleName;
@@ -26,6 +27,8 @@ import com.tinyspring.garderie.repository.transport.EnfantRepository;
 import com.tinyspring.garderie.repository.transport.TrajetRepository;
 import com.tinyspring.garderie.repository.transport.TransportRepository;
 import com.tinyspring.garderie.service.transport.TransportService;
+import com.tinyspring.garderie.service.transport.ai.AiAnomalyAnalysisResult;
+import com.tinyspring.garderie.service.transport.ai.TransportAiService;
 import com.tinyspring.garderie.service.transport.recommendation.TransportRecommendationService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -33,6 +36,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -49,6 +55,7 @@ public class TransportServiceImpl implements TransportService {
     private final TrajetRepository trajetRepository;
     private final UserRepository userRepository;
     private final TransportRecommendationService transportRecommendationService;
+    private final TransportAiService transportAiService;
 
     public TransportServiceImpl(DemandeTransportRepository demandeTransportRepository,
                                 AffectationTransportRepository affectationTransportRepository,
@@ -56,7 +63,8 @@ public class TransportServiceImpl implements TransportService {
                                 TransportRepository transportRepository,
                                 TrajetRepository trajetRepository,
                                 UserRepository userRepository,
-                                TransportRecommendationService transportRecommendationService) {
+                                TransportRecommendationService transportRecommendationService,
+                                TransportAiService transportAiService) {
         this.demandeTransportRepository = demandeTransportRepository;
         this.affectationTransportRepository = affectationTransportRepository;
         this.enfantRepository = enfantRepository;
@@ -64,6 +72,7 @@ public class TransportServiceImpl implements TransportService {
         this.trajetRepository = trajetRepository;
         this.userRepository = userRepository;
         this.transportRecommendationService = transportRecommendationService;
+        this.transportAiService = transportAiService;
     }
 
     @Override
@@ -91,8 +100,11 @@ public class TransportServiceImpl implements TransportService {
                 request.getSensTrajet(),
                 request.getAdresseMaison().trim(),
                 request.getLatitudeMaison(),
-                request.getLongitudeMaison()
+                request.getLongitudeMaison(),
+                resolveDateSouhaitee(request.getDateSouhaitee()),
+                resolveHeureSouhaitee(request.getSensTrajet(), request.getHeureSouhaitee())
         );
+        applyAiAnalysis(demande, null);
 
         DemandeTransport savedDemande = demandeTransportRepository.save(demande);
         logger.info("Demande de transport creee. demandeId={}, enfantId={}, parentId={}",
@@ -121,8 +133,11 @@ public class TransportServiceImpl implements TransportService {
         demande.setAdresseMaison(request.getAdresseMaison().trim());
         demande.setLatitudeMaison(request.getLatitudeMaison());
         demande.setLongitudeMaison(request.getLongitudeMaison());
+        demande.setDateSouhaitee(resolveDateSouhaitee(request.getDateSouhaitee()));
+        demande.setHeureSouhaitee(resolveHeureSouhaitee(request.getSensTrajet(), request.getHeureSouhaitee()));
         demande.setPointRamassage(resolvePointRamassage(request.getSensTrajet(), request.getAdresseMaison()));
         demande.setDestinationSouhaitee(resolveDestinationSouhaitee(request.getSensTrajet(), request.getAdresseMaison()));
+        applyAiAnalysis(demande, demandeId);
         logger.info("Demande de transport modifiee. demandeId={}, parentId={}", demandeId, parentId);
 
         return toDemandeResponse(demandeTransportRepository.save(demande));
@@ -298,6 +313,11 @@ public class TransportServiceImpl implements TransportService {
         return (nbAffectations * 100.0) / transport.getCapacite();
     }
 
+    @Override
+    public AdminDemandPredictionResponse predireDemandeAdmin(LocalDate targetDate, Integer hour, boolean rainFlag, boolean schoolBreakFlag) {
+        return transportAiService.predireDemandePourDashboard(targetDate, hour, rainFlag, schoolBreakFlag);
+    }
+
     private User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable avec l'id " + userId));
@@ -339,7 +359,17 @@ public class TransportServiceImpl implements TransportService {
                 demande.getAdresseMaison(),
                 demande.getLatitudeMaison(),
                 demande.getLongitudeMaison(),
-                ADRESSE_GARDERIE_EXACTE
+                ADRESSE_GARDERIE_EXACTE,
+                demande.getDateSouhaitee(),
+                demande.getHeureSouhaitee(),
+                demande.getSuspicious(),
+                demande.getAnomalyScore(),
+                demande.getAnomalyLevel(),
+                splitReasons(demande.getAnomalyReasons()),
+                demande.getDuplicateDetected(),
+                demande.getAiAnalysisAvailable(),
+                demande.getAiModelVersion(),
+                demande.getAiAnalysisError()
         );
     }
 
@@ -357,5 +387,60 @@ public class TransportServiceImpl implements TransportService {
         return sensTrajet == SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
                 ? adresseMaison.trim()
                 : ADRESSE_GARDERIE_EXACTE;
+    }
+
+    private LocalDate resolveDateSouhaitee(LocalDate dateSouhaitee) {
+        return dateSouhaitee != null ? dateSouhaitee : LocalDate.now().plusDays(1);
+    }
+
+    private LocalTime resolveHeureSouhaitee(SensTrajetDemandeTransport sensTrajet, LocalTime heureSouhaitee) {
+        if (heureSouhaitee != null) {
+            return heureSouhaitee;
+        }
+        return sensTrajet == SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
+                ? LocalTime.of(16, 30)
+                : LocalTime.of(7, 30);
+    }
+
+    private void applyAiAnalysis(DemandeTransport demande, Long currentDemandeId) {
+        AiAnomalyAnalysisResult analysis = transportAiService.analyserDemande(demande, currentDemandeId);
+        demande.setAiAnalysisAvailable(analysis.aiAvailable());
+        demande.setSuspicious(analysis.suspicious());
+        demande.setAnomalyScore(analysis.anomalyScore());
+        demande.setAnomalyLevel(analysis.anomalyLevel());
+        demande.setAnomalyReasons(joinReasons(analysis.anomalyReasons()));
+        demande.setDuplicateDetected(analysis.duplicateFound());
+        demande.setAiModelVersion(analysis.modelVersion());
+        demande.setAiAnalysisError(analysis.errorMessage());
+
+        if (analysis.aiAvailable() && analysis.suspicious()) {
+            logger.warn("Demande transport marquee suspecte par l'IA. enfantId={}, score={}, level={}, reasons={}",
+                    demande.getEnfant().getId(),
+                    analysis.anomalyScore(),
+                    analysis.anomalyLevel(),
+                    analysis.anomalyReasons());
+        }
+        if (!analysis.aiAvailable()) {
+            logger.warn("Creation/modification poursuivie sans analyse IA. enfantId={}, raison={}",
+                    demande.getEnfant().getId(),
+                    analysis.errorMessage());
+        }
+    }
+
+    private String joinReasons(List<String> reasons) {
+        if (reasons == null || reasons.isEmpty()) {
+            return null;
+        }
+        return String.join(" | ", reasons);
+    }
+
+    private List<String> splitReasons(String reasons) {
+        if (reasons == null || reasons.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(reasons.split("\\|"))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .toList();
     }
 }
