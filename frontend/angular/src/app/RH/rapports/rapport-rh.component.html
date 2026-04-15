@@ -1,0 +1,151 @@
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">🤖 Rapports RH — IA Locale</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span>
+        <span class="separator">/</span>
+        <span>RH & Formations</span>
+        <span class="separator">/</span>
+        <span class="active">Rapports IA</span>
+      </nav>
+    </div>
+    <button class="btn-nouveau" (click)="nouveauRapport()" *ngIf="rapportActuel">
+      + Nouveau rapport
+    </button>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">❌ {{ errorMessage }}</div>
+
+  <div class="rapport-layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="rapport-sidebar">
+
+      <div class="input-card">
+        <div class="input-card__header">
+          <span class="ai-badge">✨ IA Locale</span>
+          <span class="input-hint">Posez votre question</span>
+        </div>
+        <textarea
+          [(ngModel)]="question"
+          (keydown)="onKeyDown($event)"
+          placeholder="Ex: Génère un bilan RH complet..."
+          class="question-input"
+          rows="3">
+        </textarea>
+        <button class="btn-generer"
+                (click)="genererRapport()"
+                [disabled]="isGenerating || !question.trim()">
+          <span *ngIf="!isGenerating">🚀 Générer le rapport</span>
+          <span *ngIf="isGenerating" class="generating-dots">
+            ⏳ Analyse en cours
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Suggestions compactes -->
+      <div class="suggestions-card">
+        <h4 class="suggestions-title">💡 Suggestions</h4>
+        <div class="suggestions-list">
+          <button *ngFor="let s of suggestions.slice(0, 4)"
+                  class="suggestion-btn"
+                  (click)="utiliserSuggestion(s)">
+            {{ s }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Historique compact -->
+      <div class="historique-card" *ngIf="historiqueRapports.length > 0">
+        <h4 class="historique-title">🕐 Récents</h4>
+        <div class="historique-list">
+          <div *ngFor="let r of historiqueRapports.slice(0, 4)"
+               class="historique-item"
+               [class.historique-item--active]="rapportActuel?.id === r.id"
+               (click)="voirRapport(r)">
+            <span class="historique-item__icon">{{ getTypeIcon(r.typeRapport) }}</span>
+            <div class="historique-item__info">
+              <span class="historique-item__question">{{ r.question | slice:0:35 }}...</span>
+              <span class="historique-item__date">{{ formatDate(r.dateGeneration) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ===== CONTENU ===== -->
+    <main class="rapport-content">
+
+      <!-- État initial -->
+      <div class="empty-state" *ngIf="!rapportActuel && !isGenerating">
+        <div class="empty-state__icon">🤖</div>
+        <h3>Assistant RH — Modèle IA Local</h3>
+        <p>Posez une question en langage naturel pour générer un rapport basé sur vos données temps réel.</p>
+        <div class="empty-state__examples">
+          <p><strong>Exemples :</strong></p>
+          <span>"Génère un bilan RH complet"</span>
+          <span>"Qui a dépassé son quota de congés ?"</span>
+          <span>"Analyse les décisions du moteur"</span>
+        </div>
+      </div>
+
+      <!-- Chargement -->
+      <div class="loading-state" *ngIf="isGenerating">
+        <div class="loading-animation">
+          <div class="loading-circle"></div>
+        </div>
+        <h3>Modèle IA en cours d'analyse...</h3>
+        <p>Collecte des données RH et génération du rapport en local.</p>
+        <div class="loading-steps">
+          <div class="loading-step loading-step--done">✅ Collecte des données DB</div>
+          <div class="loading-step loading-step--active">⏳ Analyse par le modèle local</div>
+          <div class="loading-step">⬜ Génération du rapport</div>
+        </div>
+      </div>
+
+      <!-- Rapport généré -->
+      <div class="rapport-display" *ngIf="rapportActuel && !isGenerating">
+
+        <div class="rapport-header">
+          <div class="rapport-header__meta">
+            <span class="rapport-type-badge">
+              {{ getTypeIcon(rapportActuel.typeRapport) }} {{ rapportActuel.typeRapport }}
+            </span>
+            <span class="rapport-periode">{{ rapportActuel.periode }}</span>
+          </div>
+          <div class="rapport-header__actions">
+            <span class="rapport-header__date">{{ formatDate(rapportActuel.dateGeneration) }}</span>
+            <!-- ✅ BOUTON PDF -->
+            <button class="btn-pdf"
+                    (click)="telechargerPDF()"
+                    [disabled]="isExportingPDF">
+              <span *ngIf="!isExportingPDF">📄 Télécharger PDF</span>
+              <span *ngIf="isExportingPDF">⏳ Export...</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rapport-question">
+          <span class="question-label">Question :</span>
+          <span class="question-text">{{ rapportActuel.question }}</span>
+        </div>
+
+        <div class="rapport-body"
+             [innerHTML]="formatContenu(rapportActuel.contenu)">
+        </div>
+
+        <div class="rapport-footer">
+          <span>🤖 Généré par TinySpring-RH — Modèle IA local — Données temps réel</span>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</div>

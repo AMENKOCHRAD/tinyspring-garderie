@@ -95,54 +95,71 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'feather icon-message-circle'
       },
       {
-  id: 'rh',
-  title: 'RH & Formations',
-  type: 'collapse',
-  classes: 'nav-item',
-  icon: 'feather icon-book',
-  children: [
-    {
-      id: 'rh-animatrices',
-      title: 'Animatrices',
-      type: 'item',
-      url: '/rh/animatrices',
-      classes: 'nav-item',
-      icon: 'feather icon-user'
-    },
-    {
-      id: 'rh-absences-conges',
-      title: 'Absences & Congés',
-      type: 'item',
-      url: '/rh/absences-conges',
-      classes: 'nav-item',
-      icon: 'feather icon-calendar'
-    },
-    {
-      id: 'rh-formations',
-      title: 'Formations',
-      type: 'item',
-      url: '/rh/formations',
-      classes: 'nav-item',
-      icon: 'feather icon-award'
-    },
-    {
-  id: 'rh-dashboard',
-  title: 'Dashboard RH',
+        id: 'rh',
+        title: 'RH & Formations',
+        type: 'collapse',
+        classes: 'nav-item',
+        icon: 'feather icon-book',
+        children: [
+          {
+            id: 'rh-dashboard',
+            title: 'Dashboard RH',
+            type: 'item',
+            url: '/rh/dashboard',
+            classes: 'nav-item',
+            icon: 'feather icon-pie-chart'
+          },
+          {
+            id: 'rh-animatrices',
+            title: 'Animatrices',
+            type: 'item',
+            url: '/rh/animatrices',
+            classes: 'nav-item',
+            icon: 'feather icon-user'
+          },
+          {
+            id: 'rh-absences-conges',
+            title: 'Absences & Congés',
+            type: 'item',
+            url: '/rh/absences-conges',
+            classes: 'nav-item',
+            icon: 'feather icon-calendar'
+          },
+          {
+            id: 'rh-formations',
+            title: 'Formations',
+            type: 'item',
+            url: '/rh/formations',
+            classes: 'nav-item',
+            icon: 'feather icon-award'
+          },
+          {
+            id: 'rh-calendrier',
+            title: 'Calendrier',
+            type: 'item',
+            url: '/rh/calendrier',
+            classes: 'nav-item',
+            icon: 'feather icon-calendar'
+          },
+          // ✅ NOUVEAU — Moteur de règles
+          {
+            id: 'rh-quotas',
+            title: '⚙️ Moteur de règles',
+            type: 'item',
+            url: '/rh/quotas',
+            classes: 'nav-item',
+            icon: 'feather icon-settings'
+          },
+          {
+  id: 'rh-rapports',
+  title: '🤖 Rapports IA',
   type: 'item',
-  url: '/rh/dashboard',
+  url: '/rh/rapports',
   classes: 'nav-item',
-  icon: 'feather icon-pie-chart'
-},
-{
-  id: 'rh-calendrier',
-  title: 'Calendrier',
-  type: 'item',
-  url: '/rh/calendrier',
-  classes: 'nav-item',
-  icon: 'feather icon-calendar'
-},
-  ]
-},
+  icon: 'feather icon-file-text'
+}
+        ]
+      },
       {
         id: 'boutique',
         title: 'Boutique en ligne',

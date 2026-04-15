@@ -1,0 +1,132 @@
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">⚙️ Moteur de Règles — Quotas Congés</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span>
+        <span class="separator">/</span>
+        <span>RH & Formations</span>
+        <span class="separator">/</span>
+        <span class="active">Quotas & Règles</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Info banner -->
+  <div class="info-banner">
+    <span class="info-icon">🤖</span>
+    <div>
+      <strong>Moteur de règles automatique</strong>
+      <p>Ces règles sont évaluées automatiquement à chaque soumission de demande.
+         Si toutes les règles passent et que l'auto-approbation est activée,
+         la demande est approuvée sans intervention humaine.</p>
+    </div>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="loading-state" *ngIf="isLoading">Chargement...</div>
+
+  <div class="quotas-grid" *ngIf="!isLoading">
+    <div class="quota-card" *ngFor="let quota of quotas"
+         [ngClass]="'quota-card--' + typeColors[quota.type]">
+
+      <!-- Header carte -->
+      <div class="quota-card__header">
+        <h3>{{ typeLabels[quota.type] }}</h3>
+        <span class="auto-badge"
+              [ngClass]="quota.autoApprobation ? 'auto-badge--on' : 'auto-badge--off'">
+          {{ quota.autoApprobation ? '🤖 Auto' : '👤 Manuel' }}
+        </span>
+      </div>
+
+      <!-- Mode affichage -->
+      <div *ngIf="editingType !== quota.type">
+
+        <!-- Barre de progression quota utilisé -->
+        <div class="quota-progress">
+          <div class="quota-progress__labels">
+            <span>Utilisé cette année</span>
+            <span><strong>{{ quota.joursUtilisesAnneeEnCours }}</strong> / {{ quota.nbJoursMax }} jours</span>
+          </div>
+          <div class="quota-progress__bar">
+            <div class="quota-progress__fill"
+                 [ngClass]="'quota-progress__fill--' + getProgressClass(getPourcentage(quota))"
+                 [style.width.%]="getPourcentage(quota)">
+            </div>
+          </div>
+          <div class="quota-progress__remaining">
+            {{ quota.joursRestants }} jour(s) restant(s)
+          </div>
+        </div>
+
+        <!-- Règles configurées -->
+        <div class="rules-list">
+          <div class="rule-item">
+            <span class="rule-icon">📅</span>
+            <span>Max <strong>{{ quota.nbJoursMax }}</strong> jours/an</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">⏰</span>
+            <span>Prévenance <strong>{{ quota.delaiPrevenanceJours }}</strong> jour(s)</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">👥</span>
+            <span>Min <strong>{{ quota.effectifMinimum }}</strong> animatrice(s) présente(s)</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">🤖</span>
+            <span>{{ quota.autoApprobation ? 'Approbation automatique activée' : 'Validation manuelle requise' }}</span>
+          </div>
+        </div>
+
+        <button class="btn-edit-quota" (click)="startEdit(quota.type)">
+          ✏️ Modifier les règles
+        </button>
+      </div>
+
+      <!-- Mode édition -->
+      <div *ngIf="editingType === quota.type" class="edit-form">
+
+        <div class="form-group">
+          <label>Nombre de jours max / an</label>
+          <input type="number" [(ngModel)]="quota.nbJoursMax" min="1" max="365" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label>Délai de prévenance (jours)</label>
+          <input type="number" [(ngModel)]="quota.delaiPrevenanceJours" min="0" max="60" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label>Effectif minimum requis</label>
+          <input type="number" [(ngModel)]="quota.effectifMinimum" min="0" max="20" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label class="toggle-label">
+            <span>Approbation automatique</span>
+            <div class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="quota.autoApprobation" id="auto-{{ quota.type }}" />
+              <label for="auto-{{ quota.type }}" class="toggle-slider"></label>
+            </div>
+          </label>
+          <small class="hint">
+            {{ quota.autoApprobation
+              ? '🤖 La demande sera approuvée automatiquement si toutes les règles passent'
+              : '👤 La demande sera transmise à l\'admin même si toutes les règles passent' }}
+          </small>
+        </div>
+
+        <div class="edit-actions">
+          <button class="btn-cancel" (click)="cancelEdit()">Annuler</button>
+          <button class="btn-save" (click)="saveQuota(quota)">💾 Sauvegarder</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

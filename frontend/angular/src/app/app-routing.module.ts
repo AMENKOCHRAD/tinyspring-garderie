@@ -129,6 +129,22 @@ const routes: Routes = [
           import('./RH/formation/form-formation/form-formation.component').then(
             (c) => c.FormFormationComponent
           )
+      },
+      // ✅ Moteur de règles / Quotas
+      {
+        path: 'rh/quotas',
+        loadComponent: () =>
+          import('./RH/quota/list-quota/list-quota.component').then(
+            (c) => c.ListQuotaComponent
+          )
+      },
+      // ✅ NOUVEAU — Rapports RH IA
+      {
+        path: 'rh/rapports',
+        loadComponent: () =>
+          import('./RH/rapports/rapport-rh.component').then(
+            (c) => c.RapportRHComponent
+          )
       }
     ]
   },

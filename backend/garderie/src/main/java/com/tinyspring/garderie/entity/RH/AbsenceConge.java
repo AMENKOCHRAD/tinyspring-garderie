@@ -40,4 +40,12 @@ public class AbsenceConge {
 
     @Column(name = "nb_jours")
     private Integer nbJours;
+
+    // ✅ Boolean objet (nullable) au lieu de boolean primitif
+    @Column(name = "decision_automatique", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean decisionAutomatique = false;
+
+    // ✅ Motif de la décision automatique
+    @Column(name = "motif_decision", columnDefinition = "TEXT")
+    private String motifDecision;
 }

@@ -34,4 +34,11 @@ public class AbsenceCongeDTO {
     private StatutAbsenceConge statut;
 
     private Integer nbJours;
+
+    // ✅ NOUVEAU — résultat du moteur de règles
+    private Boolean decisionAutomatique;
+    private String motifDecision;
+
+    // ✅ NOUVEAU — résultat évaluation (retourné après soumission)
+    private ResultatEvaluationDTO resultatEvaluation;
 }

@@ -14,7 +14,7 @@ export interface AnimatriceInfo {
 export class AbsenceCongeService {
 
   // ✅ URL relative — le proxy redirige vers localhost:8081
-  private apiUrl = '/api';
+  private apiUrl = 'http://localhost:8081/api';
 
   constructor(private http: HttpClient) {}
 

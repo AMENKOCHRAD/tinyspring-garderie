@@ -1,89 +1,125 @@
-<div class="demande-wrapper">
+<div class="ts-container workspace-page">
 
-  <div class="demande-header">
+  <!-- Header -->
+  <section class="page-header-card">
     <div>
-      <h2 class="rh-title">Nouvelle demande d'absence</h2>
-      <p class="rh-subtitle">Remplissez le formulaire ci-dessous</p>
+      <span class="section-chip">📋 Nouvelle demande</span>
+      <h1>Demande d'absence ou congé</h1>
+      <p class="muted">Le moteur de règles évaluera automatiquement votre demande.</p>
     </div>
-    <a routerLink="/animateur/rh/mes-absences" class="btn-retour">
-      ← Retour à mes absences
-    </a>
-  </div>
+    <a routerLink="/animateur/rh/mes-absences" class="btn-back">← Mes absences</a>
+  </section>
 
-  <div class="alert-success" *ngIf="successMessage">
-    {{ successMessage }}
-  </div>
-  <div class="alert-error" *ngIf="errorMessage">
-    ⚠️ {{ errorMessage }}
-  </div>
+  <!-- Résultat moteur de règles — affiché après soumission -->
+  <section *ngIf="demandeTraitee && resultatMoteur" class="result-card" [ngClass]="decisionClass">
+    <div class="result-header">
+      <span class="result-icon">{{ decisionIcon }}</span>
+      <div>
+        <h3>{{ decisionLabel }}</h3>
+        <p>Évaluation automatique par le moteur de règles</p>
+      </div>
+    </div>
 
-  <div class="form-card">
-    <form (ngSubmit)="onSubmit()" #demandeForm="ngForm">
+    <div class="result-explication">
+      {{ resultatMoteur.explication }}
+    </div>
 
-      <div class="form-group">
-        <label class="form-label">Type de demande <span class="required">*</span></label>
-        <div class="type-grid">
-          <div
-            *ngFor="let type of typesDisponibles"
-            class="type-option"
-            [class.selected]="demande.type === type.value"
-            (click)="demande.type = type.value">
-            {{ type.label }}
-          </div>
+    <!-- Stats quota -->
+    <div class="result-stats" *ngIf="resultatMoteur.quotaMax > 0">
+      <div class="stat-item">
+        <span class="stat-value">{{ resultatMoteur.quotaMax }}</span>
+        <span class="stat-label">Quota max / an</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ resultatMoteur.joursDejaUtilises }}</span>
+        <span class="stat-label">Jours utilisés</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ resultatMoteur.joursRestants }}</span>
+        <span class="stat-label">Jours restants</span>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="ts-button ts-button--primary" (click)="retourListe()">
+        Voir mes absences
+      </button>
+    </div>
+  </section>
+
+  <!-- Message simple si pas de résultat moteur -->
+  <div class="alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Formulaire — caché après soumission -->
+  <section class="form-card" *ngIf="!demandeTraitee">
+
+    <div class="form-grid form-grid--two">
+
+      <!-- Type -->
+      <div class="form-field">
+        <label>Type de demande</label>
+        <select [(ngModel)]="demande.type" class="form-select">
+          <option *ngFor="let t of typesDisponibles" [value]="t.value">
+            {{ t.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Nb jours calculé -->
+      <div class="form-field">
+        <label>Durée calculée</label>
+        <div class="jours-display" [class.jours-display--active]="nbJoursCalcule > 0">
+          <span class="jours-count">{{ nbJoursCalcule }}</span>
+          <span class="jours-label">jour(s)</span>
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Date de début <span class="required">*</span></label>
-          <input
-            type="date"
-            class="form-input"
-            [(ngModel)]="demande.dateDebut"
-            name="dateDebut"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Date de fin <span class="required">*</span></label>
-          <input
-            type="date"
-            class="form-input"
-            [(ngModel)]="demande.dateFin"
-            name="dateFin"
-            required
-          />
-        </div>
+      <!-- Date début -->
+      <div class="form-field">
+        <label>Date de début</label>
+        <input type="date" [(ngModel)]="demande.dateDebut" class="form-input" />
       </div>
 
-      <div class="nb-jours-info" *ngIf="nbJoursCalcule > 0">
-        Durée calculée : <strong>{{ nbJoursCalcule }} jour(s)</strong>
+      <!-- Date fin -->
+      <div class="form-field">
+        <label>Date de fin</label>
+        <input type="date" [(ngModel)]="demande.dateFin" class="form-input" />
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Motif (optionnel)</label>
-        <textarea
-          class="form-input textarea"
-          [(ngModel)]="demande.motif"
-          name="motif"
-          rows="4"
-          placeholder="Décrivez brièvement la raison de votre demande..."
-        ></textarea>
-      </div>
+    </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn-annuler" (click)="onCancel()">
-          Annuler
-        </button>
-        <button
-          type="submit"
-          class="btn-soumettre"
-          [disabled]="isLoading || demandeForm.invalid">
-          {{ isLoading ? 'Envoi en cours...' : 'Soumettre la demande' }}
-        </button>
-      </div>
+    <!-- Motif -->
+    <div class="form-field">
+      <label>Motif (optionnel)</label>
+      <textarea [(ngModel)]="demande.motif" rows="3"
+                placeholder="Précisez le motif de votre demande..."
+                class="form-textarea"></textarea>
+    </div>
 
-    </form>
-  </div>
+    <!-- Info moteur -->
+    <div class="moteur-info">
+      <span>🤖</span>
+      <div>
+        <strong>Évaluation automatique</strong>
+        <p>Votre demande sera évaluée automatiquement : quota annuel,
+           délai de prévenance, chevauchement et effectif minimum.
+           Vous recevrez une réponse immédiate.</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="onCancel()">
+        Annuler
+      </button>
+      <button type="button" class="btn-submit"
+              [disabled]="isLoading || animatriceId === 0"
+              (click)="onSubmit()">
+        {{ isLoading ? '⏳ Évaluation en cours...' : '🚀 Soumettre la demande' }}
+      </button>
+    </div>
+
+  </section>
 
 </div>

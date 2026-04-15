@@ -66,7 +66,7 @@ public class SecurityConfig {
                         // ✅ Routes protégées par rôle
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
-                        .requestMatchers("/api/animatrice/**").hasAnyAuthority("ROLE_ANIMATRICE")
+                        .requestMatchers("/api/animatrice/**").permitAll()
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
                         .anyRequest().authenticated()
                 )

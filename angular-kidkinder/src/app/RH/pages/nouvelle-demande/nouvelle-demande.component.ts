@@ -6,6 +6,16 @@ import { AbsenceConge, TypeAbsenceConge } from '../../models/absence-conge.model
 import { AbsenceCongeService } from '../../services/absence-conge.service';
 import { AuthService } from '../../../shared/auth.service';
 
+// ✅ Interface résultat moteur de règles
+export interface ResultatEvaluation {
+  decision: string; // AUTO_APPROUVE | AUTO_REFUSE | TRANSMIS_ADMIN
+  regleDeclenchee: string;
+  explication: string;
+  joursDejaUtilises: number;
+  joursRestants: number;
+  quotaMax: number;
+}
+
 @Component({
   selector: 'app-nouvelle-demande',
   standalone: true,
@@ -20,6 +30,10 @@ export class NouvelleDemande implements OnInit {
   errorMessage = '';
   animatriceId = 0;
 
+  // ✅ Résultat du moteur de règles
+  resultatMoteur: ResultatEvaluation | null = null;
+  demandeTraitee = false;
+
   demande: AbsenceConge = {
     animatriceId: 0,
     type: 'CONGE_ANNUEL',
@@ -29,10 +43,10 @@ export class NouvelleDemande implements OnInit {
   };
 
   typesDisponibles: { value: TypeAbsenceConge; label: string }[] = [
-    { value: 'CONGE_ANNUEL', label: '🌴 Congé annuel' },
-    { value: 'CONGE_MALADIE', label: '🏥 Congé maladie' },
+    { value: 'CONGE_ANNUEL',    label: '🌴 Congé annuel' },
+    { value: 'CONGE_MALADIE',   label: '🏥 Congé maladie' },
     { value: 'CONGE_MATERNITE', label: '👶 Congé maternité' },
-    { value: 'ABSENCE', label: '📋 Absence' }
+    { value: 'ABSENCE',         label: '📋 Absence' }
   ];
 
   constructor(
@@ -42,7 +56,6 @@ export class NouvelleDemande implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // ✅ Nouvelle template — getCurrentUser() retourne directement l'objet
     const user = this.authService.getCurrentUser();
     if (user?.email) {
       this.absenceCongeService.getMonProfil(user.email).subscribe({
@@ -52,7 +65,7 @@ export class NouvelleDemande implements OnInit {
         },
         error: (err: any) => {
           console.error('Erreur profil', err);
-          this.errorMessage = 'Impossible de récupérer votre profil.';
+          this.errorMessage = '⚠️ Impossible de récupérer votre profil.';
         }
       });
     }
@@ -64,6 +77,38 @@ export class NouvelleDemande implements OnInit {
     const fin = new Date(this.demande.dateFin);
     const diff = Math.ceil((fin.getTime() - debut.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     return diff > 0 ? diff : 0;
+  }
+
+  // ✅ Icône selon la décision du moteur
+  get decisionIcon(): string {
+    if (!this.resultatMoteur) return '';
+    switch (this.resultatMoteur.decision) {
+      case 'AUTO_APPROUVE':  return '✅';
+      case 'AUTO_REFUSE':    return '❌';
+      case 'TRANSMIS_ADMIN': return '⏳';
+      default: return '🔍';
+    }
+  }
+
+  // ✅ Classe CSS selon la décision
+  get decisionClass(): string {
+    if (!this.resultatMoteur) return '';
+    switch (this.resultatMoteur.decision) {
+      case 'AUTO_APPROUVE':  return 'result-approved';
+      case 'AUTO_REFUSE':    return 'result-refused';
+      case 'TRANSMIS_ADMIN': return 'result-pending';
+      default: return '';
+    }
+  }
+
+  get decisionLabel(): string {
+    if (!this.resultatMoteur) return '';
+    switch (this.resultatMoteur.decision) {
+      case 'AUTO_APPROUVE':  return 'Approuvée automatiquement';
+      case 'AUTO_REFUSE':    return 'Refusée automatiquement';
+      case 'TRANSMIS_ADMIN': return 'En attente de validation admin';
+      default: return '';
+    }
   }
 
   onSubmit(): void {
@@ -82,12 +127,19 @@ export class NouvelleDemande implements OnInit {
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.resultatMoteur = null;
 
     this.absenceCongeService.soumettreDemande(this.demande).subscribe({
-      next: () => {
-        this.successMessage = '✅ Demande soumise ! En attente de validation.';
+      next: (response: any) => {
         this.isLoading = false;
-        setTimeout(() => this.router.navigate(['/animateur/rh/mes-absences']), 2000);
+        this.demandeTraitee = true;
+
+        // ✅ Afficher le résultat du moteur de règles
+        if (response.resultatEvaluation) {
+          this.resultatMoteur = response.resultatEvaluation;
+        } else {
+          this.successMessage = '✅ Demande soumise avec succès !';
+        }
       },
       error: (err: any) => {
         console.error('Erreur', err);
@@ -95,6 +147,10 @@ export class NouvelleDemande implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  retourListe(): void {
+    this.router.navigate(['/animateur/rh/mes-absences']);
   }
 
   onCancel(): void {
