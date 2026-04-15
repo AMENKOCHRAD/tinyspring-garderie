@@ -10,6 +10,8 @@ import { DashboardProfilsEnfants } from './enfant/dashboard-profils-enfants/dash
 import { GestionEnfantsComponent } from './enfant/gestion-enfants/gestion-enfants';
 import { EtatSanitaireComponent } from './enfant/etat-sanitaire/etat-sanitaire';
 import { ValidationTraitementsComponent } from './enfant/validation-traitements/validation-traitements';
+import { DetailEnfantComponent } from './enfant/detail-enfant/detail-enfant';
+import { ModifierEnfantComponent } from './enfant/modifier-enfant/modifier-enfant';
 
 const routes: Routes = [
   {
@@ -37,6 +39,14 @@ const routes: Routes = [
             redirectTo: 'liste',
             pathMatch: 'full'
           },
+          {
+  path: 'detail/:id',
+  component: DetailEnfantComponent
+},
+{
+  path: 'modifier/:id',
+  component: ModifierEnfantComponent
+},
            {
       path: 'validation-traitements',
       component: ValidationTraitementsComponent

@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ValidationTraitementsService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/traitements';
+  private apiUrl = '/api/traitements';
 
   getTraitementsEnAttente(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/en-attente-validation`);

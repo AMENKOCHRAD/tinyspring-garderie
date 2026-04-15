@@ -11,35 +11,43 @@ export interface LoginResponse {
   message: string;
   email: string;
   role: string;
+  token?: string;
+  id?: number;
+  nom?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8081/api/auth';
+  private apiUrl = '/api/auth';
 
   constructor(private http: HttpClient) {}
 
-  login(data: LoginRequest): Observable<LoginResponse>{
-  // Stocke les credentials pour Basic Auth
-  const credentials = btoa(`${data.email}:${data.password}`);
-  localStorage.setItem('basicAuth', credentials); // ← ajoute cette ligne
-  
-  return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data);
-}
+  login(data: LoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data);
+  }
 
   saveUser(user: LoginResponse): void {
     localStorage.setItem('user', JSON.stringify(user));
+    if (user?.token) {
+      localStorage.setItem('token', user.token);
+    }
   }
 
   getUser(): LoginResponse | null {
     const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    return user ? (JSON.parse(user) as LoginResponse) : null;
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   logout(): void {
     localStorage.removeItem('user');
-    localStorage.removeItem('basicAuth'); // ← ajoute cette ligne
+    localStorage.removeItem('token');
+    localStorage.removeItem('basicAuth');
   }
 }
+

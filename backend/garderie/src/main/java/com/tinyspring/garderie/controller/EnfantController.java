@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.controller;
 
 import com.tinyspring.garderie.dto.EnfantDTO;
+import com.tinyspring.garderie.dto.EnfantResponseDTO;
 import com.tinyspring.garderie.entity.Enfant;
 import com.tinyspring.garderie.service.EnfantService;
 import org.springframework.http.ResponseEntity;
@@ -8,10 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import com.tinyspring.garderie.dto.EnfantResponseDTO;
 
-
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"})
 @RestController
 @RequestMapping("/api/enfants")
 public class EnfantController {
@@ -33,8 +32,8 @@ public class EnfantController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Enfant> getEnfant(@PathVariable Long id) {
-        return enfantService.getEnfantParId(id);
+    public EnfantResponseDTO getEnfant(@PathVariable Long id) {
+        return enfantService.getEnfantDTOById(id);
     }
 
     @PutMapping("/{id}")
@@ -42,11 +41,11 @@ public class EnfantController {
         return enfantService.modifierEnfant(id, dto);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> supprimerEnfant(@PathVariable Long id) {
-        enfantService.supprimerEnfant(id);
-        return ResponseEntity.noContent().build(); // retourne 204
+    @PutMapping("/{id}/archiver")
+    public ResponseEntity<Enfant> archiverEnfant(@PathVariable Long id) {
+        return ResponseEntity.ok(enfantService.archiverEnfant(id));
     }
+
     @GetMapping
     public List<EnfantResponseDTO> getAllEnfants() {
         return enfantService.getAllEnfants();

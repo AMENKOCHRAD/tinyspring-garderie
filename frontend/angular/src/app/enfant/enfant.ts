@@ -21,12 +21,22 @@ export interface Enfant {
   parent: Parent;
 }
 
+export interface EnfantUpdateDTO {
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  groupeSanguin: string;
+  allergies: string;
+  contactUrgence: string;
+  photo: string;
+  parentId: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class EnfantService {
-
-  private apiUrl = 'http://localhost:8081/api/enfants';
+  private apiUrl = '/api/enfants';
 
   constructor(private http: HttpClient) {}
 
@@ -34,7 +44,15 @@ export class EnfantService {
     return this.http.get<Enfant[]>(this.apiUrl);
   }
 
-  deleteEnfant(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  getEnfantById(id: number): Observable<Enfant> {
+    return this.http.get<Enfant>(`${this.apiUrl}/${id}`);
+  }
+
+  updateEnfant(id: number, enfant: EnfantUpdateDTO): Observable<Enfant> {
+    return this.http.put<Enfant>(`${this.apiUrl}/${id}`, enfant);
+  }
+
+  archiverEnfant(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/archiver`, {});
   }
 }

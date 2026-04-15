@@ -1,0 +1,52 @@
+<div class="container mt-4">
+  <a class="btn btn-secondary mb-3" [routerLink]="['/gestion-enfants/liste']">
+    Retour
+  </a>
+
+  <h2>Modifier un enfant</h2>
+
+  <div *ngIf="isLoading">Chargement...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+  <form *ngIf="!isLoading" (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+      <label class="form-label">Nom</label>
+      <input class="form-control" [(ngModel)]="formData.nom" name="nom" required />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Prénom</label>
+      <input class="form-control" [(ngModel)]="formData.prenom" name="prenom" required />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Date de naissance</label>
+      <input type="date" class="form-control" [(ngModel)]="formData.dateNaissance" name="dateNaissance" required />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Groupe sanguin</label>
+      <input class="form-control" [(ngModel)]="formData.groupeSanguin" name="groupeSanguin" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Allergies</label>
+      <input class="form-control" [(ngModel)]="formData.allergies" name="allergies" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Contact d’urgence</label>
+      <input class="form-control" [(ngModel)]="formData.contactUrgence" name="contactUrgence" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Photo</label>
+      <input class="form-control" [(ngModel)]="formData.photo" name="photo" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      Enregistrer les modifications
+    </button>
+  </form>
+</div>

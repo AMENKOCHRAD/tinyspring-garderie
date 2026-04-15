@@ -1,17 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { EnfantService, Enfant } from '../enfant';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-profils-enfants',
-  imports: [CommonModule], // ← ajouter ici
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard-profils-enfants.html',
-  styleUrl: './dashboard-profils-enfants.css',
+  styleUrls: ['./dashboard-profils-enfants.css']
 })
-export class DashboardProfilsEnfants  implements OnInit {
-
+export class DashboardProfilsEnfants implements OnInit {
   enfants: Enfant[] = [];
-  isLoading = true;
+  isLoading = false;
   error = '';
 
   constructor(private enfantService: EnfantService) {}
@@ -21,25 +22,35 @@ export class DashboardProfilsEnfants  implements OnInit {
   }
 
   loadEnfants(): void {
+    this.isLoading = true;
+    this.error = '';
+
     this.enfantService.getAllEnfants().subscribe({
-      next: (data) => {
+      next: (data: Enfant[]) => {
         this.enfants = data;
         this.isLoading = false;
       },
       error: (err) => {
+        console.error(err);
         this.error = 'Erreur lors du chargement';
         this.isLoading = false;
-        console.error(err);
       }
     });
   }
 
-  supprimerEnfant(id: number): void {
-    if (confirm('Supprimer cet enfant ?')) {
-      this.enfantService.deleteEnfant(id).subscribe(() => {
-        this.enfants = this.enfants.filter(e => e.id !== id);
+  archiverEnfant(id: number): void {
+    if (confirm('Archiver cet enfant ?')) {
+      this.error = '';
+
+      this.enfantService.archiverEnfant(id).subscribe({
+        next: () => {
+          this.enfants = this.enfants.filter((e) => e.id !== id);
+        },
+        error: (err) => {
+          console.error(err);
+          this.error = 'Erreur lors de l’archivage';
+        }
       });
     }
   }
 }
-

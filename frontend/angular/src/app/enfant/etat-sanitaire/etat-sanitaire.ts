@@ -80,7 +80,7 @@ export class EtatSanitaireComponent implements OnInit {
   }
 
   chargerEtatSanitaire(): void {
-    this.isLoading = true;
+    this.isLoading = false;
     this.error = '';
 
     this.etatSanitaireService.getAllEnfants().subscribe({

@@ -8,9 +8,9 @@ import { Observable } from 'rxjs';
 export class EtatSanitaireService {
   private http = inject(HttpClient);
 
-  private apiEnfants = 'http://localhost:8081/api/enfants';
-  private apiConditions = 'http://localhost:8081/api/conditions';
-  private apiTraitements = 'http://localhost:8081/api/traitements';
+  private apiEnfants = '/api/enfants';
+  private apiConditions = '/api/conditions';
+  private apiTraitements = '/api/traitements';
 
   getAllEnfants(): Observable<any[]> {
     return this.http.get<any[]>(this.apiEnfants);

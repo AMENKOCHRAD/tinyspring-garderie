@@ -1,0 +1,28 @@
+<div class="container mt-4">
+  <a class="btn btn-secondary mb-3" [routerLink]="['/gestion-enfants/liste']">
+    Retour
+  </a>
+
+  <div *ngIf="isLoading">Chargement...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div class="card" *ngIf="!isLoading && enfant">
+    <div class="card-header">
+      <h3>{{ enfant.nom }} {{ enfant.prenom }}</h3>
+    </div>
+
+    <div class="card-body">
+      <p><strong>Date de naissance :</strong> {{ enfant.dateNaissance }}</p>
+      <p><strong>Groupe sanguin :</strong> {{ enfant.groupeSanguin || 'Non renseigné' }}</p>
+      <p><strong>Allergies :</strong> {{ enfant.allergies || 'Aucune' }}</p>
+      <p><strong>Contact d’urgence :</strong> {{ enfant.contactUrgence || 'Non renseigné' }}</p>
+      <p><strong>Photo :</strong> {{ enfant.photo || 'Aucune photo' }}</p>
+
+      <hr>
+
+      <h5>Parent associé</h5>
+      <p><strong>Nom :</strong> {{ enfant.parent.nom }}</p>
+      <p><strong>Email :</strong> {{ enfant.parent.email }}</p>
+    </div>
+  </div>
+</div>

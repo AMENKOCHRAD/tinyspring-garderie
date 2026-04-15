@@ -28,7 +28,9 @@ public class Enfant {
 
     private String photo;
 
-    // Relation avec Parent
+    @Column(nullable = false)
+    private boolean archive = false;
+
     @ManyToOne
     @JoinColumn(name = "parent_id", nullable = false)
     private User parent;
@@ -47,7 +49,6 @@ public class Enfant {
         this.parent = parent;
     }
 
-    // Getters et Setters
     public Long getId() { return id; }
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }
@@ -65,8 +66,14 @@ public class Enfant {
     public void setPhoto(String photo) { this.photo = photo; }
     public User getParent() { return parent; }
     public void setParent(User parent) { this.parent = parent; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
+    public boolean isArchive() {
+        return archive;
     }
+
+    public void setArchive(boolean archive) {
+        this.archive = archive;
+    }
+
 }

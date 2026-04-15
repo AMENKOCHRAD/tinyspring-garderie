@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface EnfantRepository extends JpaRepository<Enfant, Long> {
 
-    // Récupérer les enfants directement par l'ID du parent
     List<Enfant> findByParentId(Long parentId);
+
+    List<Enfant> findByArchiveFalse();
 }

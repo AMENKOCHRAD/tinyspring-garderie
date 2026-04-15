@@ -11,6 +11,14 @@ import { RouterModule } from '@angular/router';
 })
 export class DashAnalyticsComponent {
   cards = [
+    
+  {
+    background: 'bg-gradient-green',
+    icon: 'icon-user',
+    title: 'Gestion des enfants',
+    route: '/gestion-enfants'
+  }
+,
     {
       background: 'bg-gradient-blue',
       icon: 'icon-users',

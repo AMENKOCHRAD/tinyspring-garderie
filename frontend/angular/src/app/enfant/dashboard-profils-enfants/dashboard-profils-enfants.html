@@ -4,7 +4,7 @@
   <div *ngIf="isLoading">Chargement...</div>
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-  <table class="table table-bordered table-striped" *ngIf="!isLoading">
+  <table class="table table-bordered table-striped" *ngIf="!isLoading && !error">
     <thead>
       <tr>
         <th>Nom</th>
@@ -13,6 +13,7 @@
         <th>Parent</th>
         <th>Contact</th>
         <th>Email Parent</th>
+        <th>Allergies</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -22,11 +23,30 @@
         <td>{{ enfant.prenom }}</td>
         <td>{{ enfant.dateNaissance }}</td>
         <td>{{ enfant.parent.nom }}</td>
-         <td>{{ enfant.contactUrgence}}</td>
+        <td>{{ enfant.contactUrgence }}</td>
         <td>{{ enfant.parent.email }}</td>
-        <td>
-          <button class="btn btn-danger btn-sm" (click)="supprimerEnfant(enfant.id)">
-            Supprimer
+        <td>{{ enfant.allergies || 'Aucune' }}</td>
+        <td class="d-flex gap-2 flex-wrap">
+          <a
+            class="btn btn-info btn-sm text-white"
+            [routerLink]="['/gestion-enfants/detail', enfant.id]"
+          >
+            Détails
+          </a>
+
+          <a
+            class="btn btn-warning btn-sm"
+            [routerLink]="['/gestion-enfants/modifier', enfant.id]"
+          >
+            Modifier
+          </a>
+
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            (click)="archiverEnfant(enfant.id)"
+          >
+            Archiver
           </button>
         </td>
       </tr>

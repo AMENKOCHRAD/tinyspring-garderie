@@ -1,12 +1,14 @@
 package com.tinyspring.garderie.service;
 
 import com.tinyspring.garderie.dto.EnfantDTO;
+import com.tinyspring.garderie.dto.EnfantResponseDTO;
 import com.tinyspring.garderie.entity.Enfant;
 import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.repository.EnfantRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import com.tinyspring.garderie.dto.EnfantResponseDTO;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,6 +38,7 @@ public class EnfantService {
         enfant.setContactUrgence(dto.contactUrgence);
         enfant.setPhoto(dto.photo);
         enfant.setParent(parent);
+        enfant.setArchive(false);
 
         return enfantRepository.save(enfant);
     }
@@ -67,13 +70,14 @@ public class EnfantService {
         return enfantRepository.save(enfant);
     }
 
-    public void supprimerEnfant(Long id) {
-        enfantRepository.deleteById(id);
+    public Enfant archiverEnfant(Long id) {
+        Enfant enfant = enfantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enfant introuvable"));
+
+        enfant.setArchive(true);
+        return enfantRepository.save(enfant);
     }
 
-
-
-    // Ajoute cette méthode privée dans EnfantService
     private EnfantResponseDTO toDTO(Enfant enfant) {
         EnfantResponseDTO dto = new EnfantResponseDTO();
         dto.id = enfant.getId();
@@ -95,11 +99,16 @@ public class EnfantService {
         return dto;
     }
 
-    // Modifie getAllEnfants()
     public List<EnfantResponseDTO> getAllEnfants() {
-        return enfantRepository.findAll()
+        return enfantRepository.findByArchiveFalse()
                 .stream()
                 .map(this::toDTO)
                 .collect(java.util.stream.Collectors.toList());
+    }
+ 
+    public EnfantResponseDTO getEnfantDTOById(Long id) {
+        Enfant enfant = enfantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enfant introuvable"));
+        return toDTO(enfant);
     }
 }

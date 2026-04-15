@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"})
 @RestController
 @RequestMapping("/api/conditions")
 public class ConditionSanitaireController {

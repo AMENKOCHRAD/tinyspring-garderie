@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -12,46 +13,74 @@ public class ConditionSanitaire {
     private Long id;
 
     @Column(nullable = false)
-    private String nomCondition;  // ex: "Asthme"
+    private String nomCondition;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;  // "Chronique" ou "Temporaire"
+    private TypeConditionSanitaire type;
 
     private String description;
 
     private LocalDate dateDebut;
 
-    private LocalDate dateFin; // pour les conditions temporaires
+    private LocalDate dateFin;
 
-    // Relation avec Enfant
     @ManyToOne
     @JoinColumn(name = "enfant_id", nullable = false)
+    @JsonIgnore
     private Enfant enfant;
 
     public ConditionSanitaire() {}
 
-    public ConditionSanitaire(String nomCondition, String type, String description, LocalDate dateDebut,
-                              LocalDate dateFin, Enfant enfant) {
-        this.nomCondition = nomCondition;
-        this.type = type;
-        this.description = description;
-        this.dateDebut = dateDebut;
-        this.dateFin = dateFin;
-        this.enfant = enfant;
+    public Long getId() {
+        return id;
     }
 
-    // Getters et Setters
-    public Long getId() { return id; }
-    public String getNomCondition() { return nomCondition; }
-    public void setNomCondition(String nomCondition) { this.nomCondition = nomCondition; }
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public LocalDate getDateDebut() { return dateDebut; }
-    public void setDateDebut(LocalDate dateDebut) { this.dateDebut = dateDebut; }
-    public LocalDate getDateFin() { return dateFin; }
-    public void setDateFin(LocalDate dateFin) { this.dateFin = dateFin; }
-    public Enfant getEnfant() { return enfant; }
-    public void setEnfant(Enfant enfant) { this.enfant = enfant; }
+    public String getNomCondition() {
+        return nomCondition;
+    }
+
+    public void setNomCondition(String nomCondition) {
+        this.nomCondition = nomCondition;
+    }
+
+    public TypeConditionSanitaire getType() {
+        return type;
+    }
+
+    public void setType(TypeConditionSanitaire type) {
+        this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDate getDateDebut() {
+        return dateDebut;
+    }
+
+    public void setDateDebut(LocalDate dateDebut) {
+        this.dateDebut = dateDebut;
+    }
+
+    public LocalDate getDateFin() {
+        return dateFin;
+    }
+
+    public void setDateFin(LocalDate dateFin) {
+        this.dateFin = dateFin;
+    }
+
+    public Enfant getEnfant() {
+        return enfant;
+    }
+
+    public void setEnfant(Enfant enfant) {
+        this.enfant = enfant;
+    }
 }

@@ -4,5 +4,7 @@ public enum StatutTraitement {
     EN_ATTENTE_VALIDATION,
     VALIDE,
     ACTIF,
+    REFUSE,
+    ANNULE,
 
 }
