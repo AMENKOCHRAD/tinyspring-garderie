@@ -62,7 +62,7 @@ public class Event {
             foreignKey = @ForeignKey(name = "fk_event_classe")
     )
     private Classe classroom;
-    
+
     @Column(name = "target_classroom_ids", columnDefinition = "TEXT")
     private String targetClassroomIds;
     private Long createdBy;

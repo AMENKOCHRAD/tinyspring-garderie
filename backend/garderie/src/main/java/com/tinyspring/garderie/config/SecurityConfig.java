@@ -73,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/generate").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/echo").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/generate-test").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/events/ai/recommend").permitAll()
                         .requestMatchers("/api/menus/weekly/**").permitAll()
                         .requestMatchers("/api/menus/daily/**").permitAll()
                         .requestMatchers("/api/menus/dishes/**").permitAll()

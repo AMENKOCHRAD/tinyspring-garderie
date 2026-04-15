@@ -11,14 +11,16 @@ import {
 } from '@angular/forms';
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
+  OnDestroy,
   effect,
   inject,
   input,
-  OnDestroy,
   output
 } from '@angular/core';
 import * as L from 'leaflet';
+import { finalize } from 'rxjs/operators';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { AuthService } from 'src/app/services/auth.service';
@@ -27,6 +29,7 @@ import { EventFormSubmission } from '../../models/event-form-submission.model';
 import { EventRequest } from '../../models/event-request.model';
 import { ClassroomOption } from '../../models/classroom-option.model';
 import { ClassroomService } from '../../services/classroom.service';
+import { EventService } from '../../services/event.service';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
 
 type EventFormStep = 1 | 2 | 3;
@@ -42,6 +45,18 @@ interface EventStatusOption {
   label: string;
 }
 
+interface AiSuggestion {
+  title: string;
+  description: string;
+  suggested_location: string;
+  suggested_price: number;
+  indoor_outdoor?: string;
+  requires_authorization?: boolean;
+  event_type?: string;
+  relevance_score?: number;
+  predicted_label?: string;
+}
+
 @Component({
   selector: 'app-event-form',
   standalone: true,
@@ -54,6 +69,8 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
   private readonly classroomService = inject(ClassroomService);
+  private readonly eventService = inject(EventService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
@@ -65,6 +82,17 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
   readonly initialEvent = input<EventModel | null>(null);
   readonly submitted = output<EventFormSubmission>();
   readonly cancelled = output<void>();
+
+  showAiSuggestions = false;
+  aiSuggestions: AiSuggestion[] = [];
+  aiLoading = false;
+
+  selectedSeason = 'PRINTEMPS';
+  selectedMonth = 'JANUARY';
+  selectedAgeGroup = '2-6 ans';
+  selectedBudgetLevel = 'MEDIUM';
+  selectedOutdoorPreferred = true;
+  selectedCityContext = 'Tunisie';
 
   readonly stepLabels: Array<{ step: EventFormStep; label: string }> = [
     { step: 1, label: 'Informations' },
@@ -160,6 +188,10 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
     return this.eventTypeOptions.find((option) => option.value === this.form.get('type')?.value);
   }
 
+  private get currentUserId(): number | null {
+    return this.authService.getUser()?.id ?? null;
+  }
+
   constructor() {
     this.loadClassrooms();
 
@@ -170,6 +202,9 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
       if (!event) {
         this.currentStep = 1;
         this.locationSearch = '';
+        this.showAiSuggestions = false;
+        this.aiSuggestions = [];
+
         this.form.reset({
           title: '',
           description: '',
@@ -187,6 +222,7 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
           createdBy: this.currentUserId,
           eventPrice: 0
         });
+
         this.form.markAsPristine();
         this.form.markAsUntouched();
         this.validationMessage = null;
@@ -202,6 +238,9 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
 
       this.currentStep = 1;
       this.locationSearch = event.location;
+      this.showAiSuggestions = false;
+      this.aiSuggestions = [];
+
       this.form.reset({
         title: event.title,
         description: event.description,
@@ -219,6 +258,7 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
         createdBy: event.createdBy || this.currentUserId,
         eventPrice: event.eventPrice
       });
+
       this.form.markAsPristine();
       this.form.markAsUntouched();
       this.form.updateValueAndValidity();
@@ -456,8 +496,126 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
     this.searchResults = [];
   }
 
-  private get currentUserId(): number | null {
-    return this.authService.getUser()?.id ?? null;
+  loadAiSuggestions(): void {
+    this.aiLoading = true;
+    this.showAiSuggestions = false;
+    this.aiSuggestions = [];
+
+    const request = {
+      season: this.selectedSeason,
+      month: this.selectedMonth,
+      ageGroup: this.selectedAgeGroup,
+      budgetLevel: this.selectedBudgetLevel,
+      outdoorPreferred: this.selectedOutdoorPreferred,
+      cityContext: this.selectedCityContext
+    };
+
+    this.eventService
+      .getAiRecommendations(request)
+      .pipe(
+        finalize(() => {
+          this.aiLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          const rawList = Array.isArray(res)
+            ? res
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
+
+          this.aiSuggestions = rawList.map((item: any) => ({
+            title: item.title ?? '',
+            description: item.description ?? '',
+            suggested_location: item.suggested_location ?? item.suggestedLocation ?? '',
+            suggested_price: item.suggested_price ?? item.suggestedPrice ?? 0,
+            indoor_outdoor: item.indoor_outdoor ?? item.indoorOutdoor ?? '',
+            requires_authorization:
+              item.requires_authorization ?? item.requiresAuthorization ?? false,
+            event_type: item.event_type ?? item.eventType ?? '',
+            relevance_score: item.relevance_score ?? item.relevanceScore ?? 0,
+            predicted_label: item.predicted_label ?? item.predictedLabel ?? ''
+          }));
+
+          this.showAiSuggestions = true;
+        },
+        error: (err: any) => {
+          console.error('AI error =', err);
+          this.aiSuggestions = [];
+          this.showAiSuggestions = true;
+        }
+      });
+  }
+
+  applyAiSuggestion(suggestion: AiSuggestion): void {
+    this.form.patchValue({
+      title: suggestion.title ?? '',
+      description: suggestion.description ?? '',
+      location: suggestion.suggested_location ?? '',
+      eventPrice: suggestion.suggested_price ?? 0,
+      requiresAuthorization: suggestion.requires_authorization ?? false,
+      type: this.mapSuggestionTypeToEventType(suggestion.event_type),
+      status: 'DRAFT'
+    });
+
+    this.locationSearch = suggestion.suggested_location ?? '';
+
+    this.form.get('title')?.markAsTouched();
+    this.form.get('description')?.markAsTouched();
+    this.form.get('location')?.markAsTouched();
+    this.form.get('eventPrice')?.markAsTouched();
+    this.form.get('requiresAuthorization')?.markAsTouched();
+    this.form.get('type')?.markAsTouched();
+    this.form.get('status')?.markAsTouched();
+
+    this.validationMessage = `Suggestion appliquée : ${suggestion.title}`;
+
+    if (suggestion.suggested_location?.trim()) {
+      this.searching = true;
+
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(
+        suggestion.suggested_location
+      )}&countrycodes=tn&limit=1`;
+
+      this.http
+        .get<Array<{ display_name: string; lat: string; lon: string }>>(url)
+        .subscribe({
+          next: (results) => {
+            const first = results?.[0];
+
+            if (first) {
+              const lat = Number(first.lat);
+              const lng = Number(first.lon);
+
+              if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+                this.setMarker(lat, lng);
+
+                this.form.patchValue({
+                  location: first.display_name,
+                  latitude: lat,
+                  longitude: lng
+                });
+
+                this.locationSearch = first.display_name;
+              }
+            }
+
+            this.searching = false;
+          },
+          error: (err) => {
+            console.error('Erreur géocodage suggestion:', err);
+            this.searching = false;
+          }
+        });
+    }
+
+    setTimeout(() => {
+      const titleInput = document.getElementById('title') as HTMLInputElement | null;
+      titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      titleInput?.focus();
+    }, 100);
   }
 
   private loadClassrooms(): void {
@@ -686,5 +844,24 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
         this.locationSearch = fallback;
       }
     });
+  }
+
+  private mapSuggestionTypeToEventType(type?: string): EventType {
+    const t = (type ?? '').toUpperCase().trim();
+
+    switch (t) {
+      case 'SORTIE':
+        return 'SORTIE';
+      case 'ATELIER':
+        return 'ATELIER';
+      case 'ACTIVITE':
+        return 'ACTIVITE';
+      case 'FETE':
+        return 'FETE';
+      case 'REUNION_PARENTS':
+        return 'REUNION_PARENTS';
+      default:
+        return 'ACTIVITE';
+    }
   }
 }

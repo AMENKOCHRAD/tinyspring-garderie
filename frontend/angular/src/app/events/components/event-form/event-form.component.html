@@ -291,8 +291,154 @@
                 <div id="event-map" class="event-map"></div>
               </div>
             </div>
+            
           </div>
         </section>
+        <section class="form-panel ai-panel">
+    <div class="panel-heading">
+      <h3>Suggestions IA</h3>
+      <p>Recommandez des événements adaptés à la saison, au budget et au contexte tunisien.</p>
+    </div>
+
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label">Saison</label>
+        <select class="form-control" [(ngModel)]="selectedSeason" [ngModelOptions]="{ standalone: true }">
+          <option value="PRINTEMPS">Printemps</option>
+          <option value="ETE">Été</option>
+          <option value="AUTOMNE">Automne</option>
+          <option value="HIVER">Hiver</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Mois</label>
+        <select class="form-control" [(ngModel)]="selectedMonth" [ngModelOptions]="{ standalone: true }">
+          <option value="JANUARY">January</option>
+          <option value="FEBRUARY">February</option>
+          <option value="MARCH">March</option>
+          <option value="APRIL">April</option>
+          <option value="MAY">May</option>
+          <option value="JUNE">June</option>
+          <option value="JULY">July</option>
+          <option value="AUGUST">August</option>
+          <option value="SEPTEMBER">September</option>
+          <option value="OCTOBER">October</option>
+          <option value="NOVEMBER">November</option>
+          <option value="DECEMBER">December</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Âge</label>
+        <select class="form-control" [(ngModel)]="selectedAgeGroup" [ngModelOptions]="{ standalone: true }">
+          <option value="2-3 ans">2-3 ans</option>
+          <option value="4-5 ans">4-5 ans</option>
+          <option value="2-6 ans">2-6 ans</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Budget</label>
+        <select class="form-control" [(ngModel)]="selectedBudgetLevel" [ngModelOptions]="{ standalone: true }">
+          <option value="LOW">Faible</option>
+          <option value="MEDIUM">Moyen</option>
+          <option value="HIGH">Élevé</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Extérieur</label>
+        <select class="form-control" [(ngModel)]="selectedOutdoorPreferred" [ngModelOptions]="{ standalone: true }">
+          <option [ngValue]="true">Oui</option>
+          <option [ngValue]="false">Non</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <button
+          type="button"
+          class="btn btn-outline-success w-100"
+          (click)="loadAiSuggestions()"
+          [disabled]="aiLoading"
+        >
+          <span *ngIf="aiLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ aiLoading ? 'Chargement...' : '🤖 Recommander' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <label class="form-label">Contexte ville</label>
+      <input
+        class="form-control"
+        [(ngModel)]="selectedCityContext"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Ex: Tunisie, Tunis, Sousse"
+      />
+    </div>
+    
+
+  <div *ngIf="showAiSuggestions && aiSuggestions.length > 0" class="ai-suggestions-list">
+  <div *ngFor="let suggestion of aiSuggestions" class="suggestion-card">
+    <div class="suggestion-card__top">
+      <div class="suggestion-card__main">
+        <div class="suggestion-card__badges">
+          <span class="suggestion-badge suggestion-badge--type">
+            {{ suggestion.event_type }}
+          </span>
+
+          <span class="suggestion-badge suggestion-badge--score">
+            Score {{ suggestion.relevance_score }}
+          </span>
+
+          <span class="suggestion-badge suggestion-badge--label">
+            {{ suggestion.predicted_label }}
+          </span>
+        </div>
+
+        <h5 class="suggestion-card__title">{{ suggestion.title }}</h5>
+        <p class="suggestion-card__description">{{ suggestion.description }}</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn suggestion-card__action"
+        (click)="applyAiSuggestion(suggestion)"
+      >
+        Appliquer
+      </button>
+    </div>
+
+    <div class="suggestion-card__details">
+      <div class="suggestion-detail">
+        <span class="suggestion-detail__label">Lieu</span>
+        <span class="suggestion-detail__value">{{ suggestion.suggested_location }}</span>
+      </div>
+
+      <div class="suggestion-detail">
+        <span class="suggestion-detail__label">Cadre</span>
+        <span class="suggestion-detail__value">{{ suggestion.indoor_outdoor }}</span>
+      </div>
+
+      <div class="suggestion-detail">
+        <span class="suggestion-detail__label">Autorisation</span>
+        <span class="suggestion-detail__value">
+          {{ suggestion.requires_authorization ? 'Oui' : 'Non' }}
+        </span>
+      </div>
+
+      <div class="suggestion-detail">
+        <span class="suggestion-detail__label">Prix</span>
+        <span class="suggestion-detail__value suggestion-detail__value--price">
+          {{ suggestion.suggested_price }} DT
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+    
+  </section>
       }
 
       @if (currentStep === 2) {

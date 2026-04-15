@@ -1,11 +1,14 @@
 package com.tinyspring.garderie.controller.Events;
 
+import com.tinyspring.garderie.dto.Events.EventRecommendationContextRequest;
+import com.tinyspring.garderie.dto.Events.EventRecommendationResponse;
 import com.tinyspring.garderie.dto.Events.EventRequest;
 import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.entity.Events.Event;
 import com.tinyspring.garderie.entity.Events.RegistrationStatus;
 import com.tinyspring.garderie.mappeer.EventMapper;
 import com.tinyspring.garderie.repository.Events.EventRegistrationRepository;
+import com.tinyspring.garderie.service.Events.EventRecommendationService;
 import com.tinyspring.garderie.service.Events.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class EventRestController {
     private final EventService eventService;
     private final EventMapper eventMapper;
     private final EventRegistrationRepository eventRegistrationRepository;
+    private final EventRecommendationService eventRecommendationService;
 
     @PostMapping
     public ResponseEntity<EventResponse> create(@Valid @RequestBody EventRequest request) {
@@ -102,5 +106,49 @@ public class EventRestController {
         response.setFull(remainingCapacity != null && remainingCapacity == 0);
         response.setRegistrationOpen(!response.isFull());
         return response;
+    }
+
+    @PostMapping("/ai/recommend")
+
+    public ResponseEntity<?> recommendEvents(@RequestBody EventRecommendationContextRequest request) {
+        try {
+            return ResponseEntity.ok(eventRecommendationService.recommendEvents(request));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    java.util.Map.of(
+                            "message", "Erreur recommandation IA événements",
+                            "errorType", e.getClass().getName(),
+                            "details", e.getMessage()
+                    )
+            );
+        }
+    }
+
+    @GetMapping("/ai/ping")
+    public ResponseEntity<String> aiPing() {
+        return ResponseEntity.ok("EVENT AI OK");
+    }
+
+    @PostMapping("/ai/post-test")
+    public ResponseEntity<String> aiPostTest() {
+        return ResponseEntity.ok("EVENT AI POST OK");
+    }
+    @PostMapping("/ai/recommend-echo")
+    public ResponseEntity<String> recommendEcho(@RequestBody String body) {
+        System.out.println("=== EVENT AI RECOMMEND ECHO ===");
+        System.out.println(body);
+        return ResponseEntity.ok("EVENT AI ECHO OK");
+    }
+    @PostMapping("/ai/recommend-body")
+    public ResponseEntity<?> recommendBody(@RequestBody EventRecommendationContextRequest request) {
+        System.out.println("=== EVENT AI RECOMMEND BODY ===");
+        System.out.println("season = " + request.getSeason());
+        System.out.println("month = " + request.getMonth());
+        System.out.println("ageGroup = " + request.getAgeGroup());
+        System.out.println("budgetLevel = " + request.getBudgetLevel());
+        System.out.println("outdoorPreferred = " + request.getOutdoorPreferred());
+        System.out.println("cityContext = " + request.getCityContext());
+        return ResponseEntity.ok("EVENT AI DTO OK");
     }
 }

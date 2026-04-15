@@ -172,4 +172,7 @@ export class EventService {
       photoEvent: event.photoEvent ?? undefined
     };
   }
+getAiRecommendations(payload: any) {
+  return this.http.post<any[]>(`${this.apiUrl}/events/ai/recommend`, payload);
+}
 }

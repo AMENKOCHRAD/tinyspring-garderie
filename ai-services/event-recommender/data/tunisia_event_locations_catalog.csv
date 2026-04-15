@@ -1,0 +1,73 @@
+city_context,event_type,location,example_title
+Tunis,SORTIE,"Parc du Belvedere, Tunis, Tunisie",Sortie decouverte au Parc du Belvedere
+Tunis,SORTIE,"Cite des Sciences, Tunis, Tunisie",Visite educative a la Cite des Sciences
+Tunis,SORTIE,"Musee Oceanographique de Salammbô, La Goulette, Tunisie",Visite marine au Musee Oceanographique
+Tunis,SORTIE,"Jardin Japonais, Tunis, Tunisie",Balade sensorielle au Jardin Japonais
+Tunis,ATELIER,"Cite des Sciences, Tunis, Tunisie",Atelier sciences ludiques
+Tunis,ATELIER,"Maison de la Culture Ibn Rachiq, Tunis, Tunisie",Atelier creatif en salle
+Tunis,ATELIER,"Bibliotheque pour enfants, Tunis, Tunisie",Atelier lecture et contes
+Tunis,ACTIVITE,"Jardin Japonais, Tunis, Tunisie",Jeux moteurs au Jardin Japonais
+Tunis,ACTIVITE,"Parc du Belvedere, Tunis, Tunisie",Jeux d observation au parc
+Tunis,ACTIVITE,"Maison de la Culture Ibn Rachiq, Tunis, Tunisie",Activite artistique en interieur
+Tunis,FETE,"Parc Ennahli, Ariana, Tunisie",Fete de saison en plein air
+Tunis,FETE,"Maison de la Culture Ibn Rachiq, Tunis, Tunisie",Fete a theme en salle
+Tunis,REUNION_PARENTS,"Maison de la Culture Ibn Rachiq, Tunis, Tunisie",Rencontre parents educateurs
+Tunis,REUNION_PARENTS,"Centre culturel municipal, Tunis, Tunisie",Reunion d information parents
+Ariana,SORTIE,"Parc Ennahli, Ariana, Tunisie",Sortie nature au Parc Ennahli
+Ariana,SORTIE,"Parc Urbain Nahli, Ariana, Tunisie",Balade educative au parc urbain
+Ariana,ATELIER,"Maison de la Culture, Ariana, Tunisie",Atelier peinture et collage
+Ariana,ATELIER,"Cite des Sciences, Tunis, Tunisie",Atelier sciences en petit groupe
+Ariana,ACTIVITE,"Parc Ennahli, Ariana, Tunisie",Parcours moteur au parc
+Ariana,ACTIVITE,"Maison de la Culture, Ariana, Tunisie",Activite manuelle encadree
+Ariana,FETE,"Parc Ennahli, Ariana, Tunisie",Fete des couleurs au parc
+Ariana,FETE,"Maison de la Culture, Ariana, Tunisie",Fete de fin de trimestre
+Ariana,REUNION_PARENTS,"Maison de la Culture, Ariana, Tunisie",Echange avec les familles
+Sousse,SORTIE,"Plage de Boujaafar, Sousse, Tunisie",Sortie decouverte bord de mer
+Sousse,SORTIE,"AquaSplash Thalassa Sousse, Sousse, Tunisie",Sortie jeux d eau surveilles
+Sousse,SORTIE,"Port El Kantaoui, Sousse, Tunisie",Balade educative au port
+Sousse,ATELIER,"Complexe culturel de Sousse, Sousse, Tunisie",Atelier expression artistique
+Sousse,ATELIER,"Maison de la Culture, Sousse, Tunisie",Atelier contes et marionnettes
+Sousse,ACTIVITE,"Parc Hannibal, Sousse, Tunisie",Jeux collectifs au parc
+Sousse,ACTIVITE,"Plage de Boujaafar, Sousse, Tunisie",Activites sable et motricite
+Sousse,FETE,"Parc Hannibal, Sousse, Tunisie",Fete saisonniere au parc
+Sousse,FETE,"Maison de la Culture, Sousse, Tunisie",Fete musicale en interieur
+Sousse,REUNION_PARENTS,"Maison de la Culture, Sousse, Tunisie",Reunion pedagogique parents
+Sfax,SORTIE,"Parc Touta, Sfax, Tunisie",Sortie nature a Parc Touta
+Sfax,SORTIE,"Ain Park, Sfax, Tunisie",Sortie loisirs et observation
+Sfax,SORTIE,"Musee Archeologique de Sfax, Sfax, Tunisie",Visite culturelle encadree
+Sfax,ATELIER,"Centre culturel Mohamed Jamoussi, Sfax, Tunisie",Atelier musique et rythme
+Sfax,ATELIER,"Maison de la Culture, Sfax, Tunisie",Atelier coloriage et decoupage
+Sfax,ACTIVITE,"Parc Touta, Sfax, Tunisie",Jeux de motricite au parc
+Sfax,ACTIVITE,"Ain Park, Sfax, Tunisie",Activite de groupe en exterieur
+Sfax,FETE,"Parc Touta, Sfax, Tunisie",Fete des saisons a l exterieur
+Sfax,FETE,"Maison de la Culture, Sfax, Tunisie",Fete costumee en salle
+Sfax,REUNION_PARENTS,"Maison de la Culture, Sfax, Tunisie",Reunion de suivi avec les familles
+Nabeul,SORTIE,"Medina de Hammamet, Hammamet, Tunisie",Sortie decouverte de la medina
+Nabeul,SORTIE,"Yasmine Hammamet, Hammamet, Tunisie",Balade encadree a Yasmine Hammamet
+Nabeul,SORTIE,"Funny Land, Hammamet, Tunisie",Sortie ludique a Funny Land
+Nabeul,ATELIER,"Centre culturel international de Hammamet, Hammamet, Tunisie",Atelier theatre et expression
+Nabeul,ATELIER,"Maison de la Culture, Nabeul, Tunisie",Atelier poterie et couleurs
+Nabeul,ACTIVITE,"Funny Land, Hammamet, Tunisie",Jeux d adresse et motricite
+Nabeul,ACTIVITE,"Medina de Hammamet, Hammamet, Tunisie",Activite observation et reperage
+Nabeul,FETE,"Yasmine Hammamet, Hammamet, Tunisie",Fete de fin de saison
+Nabeul,FETE,"Maison de la Culture, Nabeul, Tunisie",Fete a theme en interieur
+Nabeul,REUNION_PARENTS,"Maison de la Culture, Nabeul, Tunisie",Reunion de coordination parents
+Monastir,SORTIE,"Ribat de Monastir, Monastir, Tunisie",Visite patrimoniale courte
+Monastir,SORTIE,"Marina de Monastir, Monastir, Tunisie",Balade educative a la marina
+Monastir,SORTIE,"Parc Falaise, Monastir, Tunisie",Sortie nature et jeux libres
+Monastir,ATELIER,"Maison de la Culture, Monastir, Tunisie",Atelier dessin et narration
+Monastir,ATELIER,"Centre culturel de Monastir, Monastir, Tunisie",Atelier d eveil artistique
+Monastir,ACTIVITE,"Parc Falaise, Monastir, Tunisie",Parcours moteur et jeux coopératifs
+Monastir,ACTIVITE,"Marina de Monastir, Monastir, Tunisie",Activite observation en groupe
+Monastir,FETE,"Parc Falaise, Monastir, Tunisie",Fete en plein air
+Monastir,FETE,"Maison de la Culture, Monastir, Tunisie",Fete conviviale en salle
+Monastir,REUNION_PARENTS,"Maison de la Culture, Monastir, Tunisie",Reunion avec les parents
+Bizerte,SORTIE,"Corniche de Bizerte, Bizerte, Tunisie",Balade encadree sur la corniche
+Bizerte,SORTIE,"Vieux Port de Bizerte, Bizerte, Tunisie",Sortie d observation au vieux port
+Bizerte,SORTIE,"Parc Aladin, Bizerte, Tunisie",Sortie ludique au parc
+Bizerte,ATELIER,"Maison de la Culture, Bizerte, Tunisie",Atelier artistique et lecture
+Bizerte,ACTIVITE,"Parc Aladin, Bizerte, Tunisie",Activites motrices en exterieur
+Bizerte,ACTIVITE,"Corniche de Bizerte, Bizerte, Tunisie",Jeux de groupe en exterieur
+Bizerte,FETE,"Parc Aladin, Bizerte, Tunisie",Fete d enfants au parc
+Bizerte,FETE,"Maison de la Culture, Bizerte, Tunisie",Fete a theme en salle
+Bizerte,REUNION_PARENTS,"Maison de la Culture, Bizerte, Tunisie",Reunion information parents
