@@ -321,6 +321,26 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new RuntimeException("Erreur lors de la generation du PDF de l'historique : " + e.getMessage(), e);
         }
     }
+    @Override
+    public String generateSuggestedAdminResponse(Long reclamationId) {
+        User currentUser = getCurrentUser();
+        String roleName = currentUser.getRole().getName().name();
+
+        if (!roleName.equals("ADMIN")) {
+            throw new RuntimeException("Seul un admin peut générer une réponse suggérée");
+        }
+
+        Reclamation reclamation = reclamationRepository.findById(reclamationId)
+                .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
+
+        String greeting = "Bonjour,\n\n";
+        String intro = buildIntroByStatus(reclamation);
+        String categoryPart = buildCategorySpecificMessage(reclamation);
+        String priorityPart = buildPrioritySpecificMessage(reclamation);
+        String closing = "\nNous restons à votre disposition pour toute information complémentaire.\n\nCordialement,\nL'administration.";
+
+        return greeting + intro + categoryPart + priorityPart + closing;
+    }
 
     @Override
     public byte[] exportReclamationsExcel() {
@@ -922,4 +942,48 @@ public class ReclamationServiceImpl implements ReclamationService {
     private String safeExcelText(String value) {
         return (value == null || value.trim().isEmpty()) ? "-" : value;
     }
+    private String buildIntroByStatus(Reclamation reclamation) {
+        if (reclamation.getStatus() == null) {
+            return "Nous avons bien reçu votre réclamation.\n\n";
+        }
+
+        return switch (reclamation.getStatus()) {
+            case OPEN -> "Nous avons bien reçu votre réclamation et elle a été prise en compte.\n\n";
+            case IN_PROGRESS -> "Votre réclamation est actuellement en cours de traitement par le service concerné.\n\n";
+            case RESOLVED -> "Après vérification, le problème signalé a été traité.\n\n";
+            case REJECTED -> "Après analyse de votre demande, nous vous informons qu'elle n'a pas pu être retenue en l'état.\n\n";
+        };
+    }
+
+    private String buildCategorySpecificMessage(Reclamation reclamation) {
+        if (reclamation.getCategory() == null) {
+            return "Une vérification complémentaire est en cours afin de vous apporter une réponse adaptée.\n\n";
+        }
+
+        return switch (reclamation.getCategory()) {
+            case TRANSPORT -> "Une vérification a été engagée auprès du service transport afin de comprendre la situation signalée.\n\n";
+            case REPAS -> "Le service de restauration a été informé afin de vérifier l'incident signalé et prendre les mesures nécessaires.\n\n";
+            case HYGIENE -> "Le signalement a été transmis à l'équipe concernée afin de contrôler les conditions d'hygiène mentionnées.\n\n";
+            case SECURITE -> "La situation signalée fait l'objet d'une attention particulière compte tenu de son impact potentiel sur la sécurité des enfants.\n\n";
+            case FINANCIER -> "Une vérification administrative et financière est en cours concernant les éléments mentionnés dans votre réclamation.\n\n";
+            case ADMINISTRATIF -> "Votre dossier administratif est en cours de vérification afin d'identifier l'origine du problème signalé.\n\n";
+            case PEDAGOGIQUE -> "Le contenu de votre réclamation a été transmis au service pédagogique pour analyse et suivi.\n\n";
+            case PERSONNEL -> "Le signalement a été transmis à la direction afin qu'un suivi approprié soit effectué.\n\n";
+            case COMPORTEMENT -> "Une analyse de la situation a été engagée afin d'évaluer les faits signalés et de prendre les mesures adaptées.\n\n";
+            case AUTRE -> "Votre demande est en cours d'analyse par l'administration afin de vous apporter une réponse adaptée.\n\n";
+        };
+    }
+
+    private String buildPrioritySpecificMessage(Reclamation reclamation) {
+        if (reclamation.getPriority() == null) {
+            return "";
+        }
+
+        return switch (reclamation.getPriority()) {
+            case HIGH -> "Compte tenu du niveau de priorité de cette réclamation, un traitement rapide est en cours.\n\n";
+            case MEDIUM -> "Cette réclamation est en cours de traitement avec le niveau d'attention approprié.\n\n";
+            case LOW -> "Cette demande sera traitée dans les meilleurs délais par le service concerné.\n\n";
+        };
+    }
+
 }

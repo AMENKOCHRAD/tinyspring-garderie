@@ -257,6 +257,13 @@ import {
                 </div>
 
                 <div class="mb-3 mt-3">
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary mb-3"
+                    (click)="generateSuggestedResponse()">
+                    Suggérer une réponse
+                  </button>
+
                   <label class="form-label">Commentaire administratif</label>
                   <textarea
                     class="form-control admin-comment-textarea"
@@ -1296,6 +1303,27 @@ export class ReclamationPageComponent implements OnInit {
     }
 
     return 'file';
+  }
+
+  generateSuggestedResponse(): void {
+    if (this.editingReclamationId === null) {
+      return;
+    }
+
+    this.updateError = '';
+    this.updateSuccess = '';
+
+    this.messagerieService.getSuggestedResponse(this.editingReclamationId)
+      .subscribe({
+        next: (res: any) => {
+          this.editedReclamation.adminComment = res.suggestedResponse || '';
+          this.updateSuccess = 'Réponse suggérée générée automatiquement.';
+        },
+        error: (err: any) => {
+          console.error('Erreur génération réponse = ', err);
+          this.updateError = 'Impossible de générer une réponse suggérée.';
+        }
+      });
   }
 
   getAttachmentIcon(fileName?: string | null, attachmentType?: string | null): string {

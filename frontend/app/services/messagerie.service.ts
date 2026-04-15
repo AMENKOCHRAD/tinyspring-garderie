@@ -287,4 +287,11 @@ export class MessagerieService {
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
+
+getSuggestedResponse(id: number): Observable<any> {
+  return this.http.get<any>(
+    `${this.apiUrl}/reclamations/${id}/suggested-response`,
+    { headers: this.authService.getBasicAuthHeaders() }
+  );
+}
 }

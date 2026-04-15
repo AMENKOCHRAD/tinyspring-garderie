@@ -32,4 +32,6 @@ public interface ReclamationService {
     Reclamation updateStatus(Long reclamationId, UpdateReclamationStatusRequest request);
 
     void deleteReclamation(Long id);
+
+    String generateSuggestedAdminResponse(Long reclamationId);
 }

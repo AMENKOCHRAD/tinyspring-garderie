@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reclamations")
@@ -85,6 +86,12 @@ public class ReclamationController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(excelBytes);
+    }
+
+    @GetMapping("/{id}/suggested-response")
+    public ResponseEntity<Map<String, String>> getSuggestedResponse(@PathVariable Long id) {
+        String suggestion = reclamationService.generateSuggestedAdminResponse(id);
+        return ResponseEntity.ok(Map.of("suggestedResponse", suggestion));
     }
 
     @PutMapping("/{id}")
