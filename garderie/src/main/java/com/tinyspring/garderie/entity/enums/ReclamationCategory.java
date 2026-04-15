@@ -7,5 +7,8 @@ public enum ReclamationCategory {
     HYGIENE,
     SECURITE,
     PERSONNEL,
+    FINANCIER,
+    PEDAGOGIQUE,
+    ADMINISTRATIF,
     AUTRE
 }

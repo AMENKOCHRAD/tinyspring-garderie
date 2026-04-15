@@ -1,10 +1,10 @@
 package com.tinyspring.garderie.entity;
 
 import com.tinyspring.garderie.entity.enums.ReclamationCategory;
-import jakarta.persistence.*;
-import lombok.*;
 import com.tinyspring.garderie.entity.enums.ReclamationPriority;
 import com.tinyspring.garderie.entity.enums.ReclamationStatus;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +35,13 @@ public class Reclamation {
     @Enumerated(EnumType.STRING)
     private ReclamationCategory category;
 
+    @Enumerated(EnumType.STRING)
+    private ReclamationCategory predictedCategory;
+
+    private Double classificationConfidence;
+
+    private Boolean autoClassified;
+
     @Column(columnDefinition = "TEXT")
     private String adminComment;
 
@@ -44,6 +51,13 @@ public class Reclamation {
     private String attachmentName;
     private String attachmentPath;
     private String attachmentType;
+
+    @Column(name = "predicted_priority")
+    @Enumerated(EnumType.STRING)
+    private ReclamationPriority predictedPriority;
+
+    @Column(name = "priority_confidence")
+    private Double priorityConfidence;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -75,6 +89,10 @@ public class Reclamation {
 
         if (this.category == null) {
             this.category = ReclamationCategory.AUTRE;
+        }
+
+        if (this.autoClassified == null) {
+            this.autoClassified = false;
         }
     }
 

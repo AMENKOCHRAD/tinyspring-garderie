@@ -143,23 +143,29 @@ import {
             </div>
 
             <div class="mb-3">
-              <label class="form-label">Catégorie</label>
+              <label class="form-label">Catégorie (optionnelle)</label>
               <select class="form-control" [(ngModel)]="newReclamation.category">
-                <option value="">-- Choisir une catégorie --</option>
+                <option value="">-- Laisser le modèle choisir automatiquement --</option>
                 <option *ngFor="let category of reclamationCategories" [value]="category">
                   {{ getCategoryLabel(category) }}
                 </option>
               </select>
+              <small class="text-muted d-block mt-1">
+                Si vous ne choisissez pas de catégorie, le système la prédira automatiquement.
+              </small>
             </div>
 
             <div class="mb-3">
-              <label class="form-label">Priorité</label>
+              <label class="form-label">Priorité (optionnelle)</label>
               <select class="form-control" [(ngModel)]="newReclamation.priority">
-                <option value="">-- Choisir --</option>
+                <option value="">-- Laisser le modèle prédire automatiquement --</option>
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
                 <option value="HIGH">HIGH</option>
               </select>
+              <small class="text-muted d-block mt-1">
+                Si vous ne choisissez pas de priorité, le système la prédira automatiquement depuis le titre et la description.
+              </small>
             </div>
 
             <div class="mb-3">
@@ -223,7 +229,7 @@ import {
               <div class="mb-3">
                 <label class="form-label">Catégorie</label>
                 <select class="form-control" [(ngModel)]="editedReclamation.category">
-                  <option value="">-- Choisir une catégorie --</option>
+                  <option value="">-- Laisser le modèle recalculer --</option>
                   <option *ngFor="let category of reclamationCategories" [value]="category">
                     {{ getCategoryLabel(category) }}
                   </option>
@@ -233,6 +239,7 @@ import {
               <div class="mb-3">
                 <label class="form-label">Priorité</label>
                 <select class="form-control" [(ngModel)]="editedReclamation.priority">
+                  <option value="">-- Laisser le modèle recalculer --</option>
                   <option value="LOW">LOW</option>
                   <option value="MEDIUM">MEDIUM</option>
                   <option value="HIGH">HIGH</option>
@@ -243,7 +250,7 @@ import {
             <ng-container *ngIf="isAdmin()">
               <div class="admin-response-box mb-3">
                 <div class="admin-response-header">
-                  <h5 class="mb-1">Réponse de l’administration</h5>
+                  <h5 class="mb-1">Réponse de l'administration</h5>
                   <p class="text-muted mb-0">
                     Ajoutez une réponse claire et professionnelle visible par le parent.
                   </p>
@@ -331,6 +338,11 @@ import {
                     <th>Titre</th>
                     <th>Description</th>
                     <th>Catégorie</th>
+                    <th>Prédiction ML</th>
+                    <th>Confiance</th>
+                    <th>Priorité prédite ML</th>
+                    <th>Conf. priorité</th>
+                    <th>Mode</th>
                     <th>Réponse admin</th>
                     <th>Image</th>
                     <th>Pièce jointe</th>
@@ -352,6 +364,54 @@ import {
                     <td>{{ rec.description }}</td>
                     <td>
                       <span class="badge category-badge">{{ getCategoryLabel(rec.category) }}</span>
+                    </td>
+                    <td>
+                      <span *ngIf="rec.predictedCategory; else noPredictedCategory" class="badge predicted-badge">
+                        {{ getCategoryLabel(rec.predictedCategory) }}
+                      </span>
+                      <ng-template #noPredictedCategory>
+                        <span class="text-muted">-</span>
+                      </ng-template>
+                    </td>
+                    <td>
+                      <span
+                        *ngIf="rec.classificationConfidence !== null && rec.classificationConfidence !== undefined; else noConfidence"
+                        class="badge"
+                        [ngClass]="getConfidenceBadgeClass(rec.classificationConfidence)"
+                      >
+                        {{ getConfidencePercent(rec.classificationConfidence) }}
+                      </span>
+                      <ng-template #noConfidence>
+                        <span class="text-muted">-</span>
+                      </ng-template>
+                    </td>
+                    <td>
+                      <span
+                        *ngIf="rec.predictedPriority"
+                        class="badge priority-predicted-badge"
+                        [ngClass]="{
+                          'prio-low':    rec.predictedPriority === 'LOW',
+                          'prio-medium': rec.predictedPriority === 'MEDIUM',
+                          'prio-high':   rec.predictedPriority === 'HIGH'
+                        }">
+                        {{ rec.predictedPriority }}
+                      </span>
+                      <span *ngIf="!rec.predictedPriority" class="text-muted">-</span>
+                    </td>
+                    <td>
+                      <span
+                        *ngIf="rec.priorityConfidence !== null && rec.priorityConfidence !== undefined"
+                        class="badge"
+                        [ngClass]="getConfidenceBadgeClass(rec.priorityConfidence)">
+                        {{ getConfidencePercent(rec.priorityConfidence) }}
+                      </span>
+                      <span
+                        *ngIf="rec.priorityConfidence === null || rec.priorityConfidence === undefined"
+                        class="text-muted">-</span>
+                    </td>
+                    <td>
+                      <span *ngIf="rec.autoClassified === true" class="badge bg-info text-dark">Auto</span>
+                      <span *ngIf="rec.autoClassified !== true" class="badge bg-secondary">Manuel</span>
                     </td>
                     <td style="min-width: 230px;">
                       <div *ngIf="rec.adminComment?.trim(); else noAdminReply" class="admin-comment-preview">
@@ -453,6 +513,41 @@ import {
                   <span class="badge category-badge">{{ getCategoryLabel(rec.category) }}</span>
                 </div>
 
+                <div class="mb-2 d-flex flex-wrap gap-2 align-items-center" *ngIf="rec.predictedCategory || rec.classificationConfidence !== null">
+                  <span *ngIf="rec.predictedCategory" class="badge predicted-badge">
+                    Prédite : {{ getCategoryLabel(rec.predictedCategory) }}
+                  </span>
+
+                  <span
+                    *ngIf="rec.classificationConfidence !== null && rec.classificationConfidence !== undefined"
+                    class="badge"
+                    [ngClass]="getConfidenceBadgeClass(rec.classificationConfidence)"
+                  >
+                    Confiance : {{ getConfidencePercent(rec.classificationConfidence) }}
+                  </span>
+
+                  <span *ngIf="rec.autoClassified === true" class="badge bg-info text-dark">
+                    Auto-classifiée
+                  </span>
+
+                  <span
+                    *ngIf="rec.predictedPriority"
+                    class="badge priority-predicted-badge"
+                    [ngClass]="{
+                      'prio-low':    rec.predictedPriority === 'LOW',
+                      'prio-medium': rec.predictedPriority === 'MEDIUM',
+                      'prio-high':   rec.predictedPriority === 'HIGH'
+                    }">
+                    Priorité ML : {{ rec.predictedPriority }}
+                  </span>
+                  <span
+                    *ngIf="rec.priorityConfidence !== null && rec.priorityConfidence !== undefined"
+                    class="badge"
+                    [ngClass]="getConfidenceBadgeClass(rec.priorityConfidence)">
+                    Conf. : {{ getConfidencePercent(rec.priorityConfidence) }}
+                  </span>
+                </div>
+
                 <p class="mb-2">{{ rec.description }}</p>
 
                 <div *ngIf="rec.imagePath" class="mb-3">
@@ -488,7 +583,7 @@ import {
                 </div>
 
                 <div class="admin-response-display mb-3">
-                  <div class="admin-response-title">Réponse de l’administration</div>
+                  <div class="admin-response-title">Réponse de l'administration</div>
 
                   <div *ngIf="rec.adminComment?.trim(); else noParentAdminComment" class="admin-response-content">
                     {{ rec.adminComment }}
@@ -696,18 +791,6 @@ import {
       background: #f87171;
     }
 
-    .bar-label {
-      margin-top: 10px;
-      font-weight: 700;
-      color: #374151;
-    }
-
-    .bar-value {
-      font-size: 13px;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-
     table th {
       white-space: nowrap;
       font-weight: 700;
@@ -734,6 +817,37 @@ import {
       color: #1d4ed8;
       font-weight: 600;
       border: 1px solid #bfd6ff;
+    }
+
+    .predicted-badge {
+      background: #ede9fe;
+      color: #6d28d9;
+      font-weight: 600;
+      border: 1px solid #d8b4fe;
+    }
+
+    .priority-predicted-badge {
+      font-weight: 600;
+      border: 1px solid;
+      letter-spacing: 0.3px;
+    }
+
+    .prio-low {
+      background: #d1fae5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    .prio-medium {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+
+    .prio-high {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
     }
 
     .admin-comment-preview {
@@ -957,6 +1071,9 @@ export class ReclamationPageComponent implements OnInit {
     'HYGIENE',
     'SECURITE',
     'PERSONNEL',
+    'FINANCIER',
+    'PEDAGOGIQUE',
+    'ADMINISTRATIF',
     'AUTRE'
   ];
 
@@ -1047,7 +1164,7 @@ export class ReclamationPageComponent implements OnInit {
       },
       error: (err: any) => {
         console.log('Erreur export Excel = ', err);
-        this.error = 'Impossible d’exporter le fichier Excel.';
+        this.error = 'Impossible d\'exporter le fichier Excel.';
         this.exportExcelLoading = false;
       }
     });
@@ -1061,9 +1178,35 @@ export class ReclamationPageComponent implements OnInit {
       case 'HYGIENE': return 'Hygiène';
       case 'SECURITE': return 'Sécurité';
       case 'PERSONNEL': return 'Personnel';
+      case 'FINANCIER': return 'Financier';
+      case 'PEDAGOGIQUE': return 'Pédagogique';
+      case 'ADMINISTRATIF': return 'Administratif';
       case 'AUTRE': return 'Autre';
       default: return category || 'Non définie';
     }
+  }
+
+  getConfidencePercent(value?: number | null): string {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+    return (value * 100).toFixed(1) + '%';
+  }
+
+  getConfidenceBadgeClass(confidence?: number | null): string {
+    if (confidence === null || confidence === undefined) {
+      return 'bg-secondary';
+    }
+
+    if (confidence >= 0.75) {
+      return 'bg-success';
+    }
+
+    if (confidence >= 0.5) {
+      return 'bg-warning text-dark';
+    }
+
+    return 'bg-danger';
   }
 
   getAdminCommentPlaceholder(): string {
@@ -1071,13 +1214,13 @@ export class ReclamationPageComponent implements OnInit {
 
     switch (current?.status) {
       case 'OPEN':
-        return 'Ex : Réclamation bien reçue, en attente d’analyse.';
+        return 'Ex : Réclamation bien reçue, en attente d\'analyse.';
       case 'IN_PROGRESS':
-        return 'Ex : Le dossier est en cours de traitement par l’équipe administrative.';
+        return 'Ex : Le dossier est en cours de traitement par l\'équipe administrative.';
       case 'RESOLVED':
         return 'Ex : Le problème a été traité et corrigé.';
       case 'REJECTED':
-        return 'Ex : Après vérification, la demande n’a pas pu être retenue.';
+        return 'Ex : Après vérification, la demande n\'a pas pu être retenue.';
       default:
         return 'Ajoutez une réponse administrative claire et professionnelle.';
     }
@@ -1182,7 +1325,7 @@ export class ReclamationPageComponent implements OnInit {
   filteredReclamations(): Reclamation[] {
     return this.reclamations.filter((rec) => {
       const matchTitle = !this.searchTitle || rec.title.toLowerCase().includes(this.searchTitle.toLowerCase());
-      const matchCategory = !this.filterCategory || rec.category === this.filterCategory;
+      const matchCategory = !this.filterCategory || (rec.category && rec.category === this.filterCategory);
       const matchStatus = !this.filterStatus || rec.status === this.filterStatus;
       const matchPriority = !this.filterPriority || rec.priority === this.filterPriority;
 
@@ -1346,16 +1489,6 @@ export class ReclamationPageComponent implements OnInit {
       return;
     }
 
-    if (!this.newReclamation.category) {
-      this.createError = 'La catégorie est obligatoire.';
-      return;
-    }
-
-    if (!this.newReclamation.priority) {
-      this.createError = 'La priorité est obligatoire.';
-      return;
-    }
-
     const originalTitle = this.newReclamation.title.trim();
     const originalDescription = this.newReclamation.description.trim();
 
@@ -1442,7 +1575,7 @@ export class ReclamationPageComponent implements OnInit {
         },
         error: (err: any) => {
           console.log('Erreur update adminComment = ', err);
-          this.updateError = 'Impossible d’enregistrer la réponse administrative.';
+          this.updateError = 'Impossible d\'enregistrer la réponse administrative.';
         }
       });
       return;
@@ -1455,16 +1588,6 @@ export class ReclamationPageComponent implements OnInit {
 
     if (!this.editedReclamation.description.trim()) {
       this.updateError = 'La description est obligatoire.';
-      return;
-    }
-
-    if (!this.editedReclamation.category) {
-      this.updateError = 'La catégorie est obligatoire.';
-      return;
-    }
-
-    if (!this.editedReclamation.priority) {
-      this.updateError = 'La priorité est obligatoire.';
       return;
     }
 

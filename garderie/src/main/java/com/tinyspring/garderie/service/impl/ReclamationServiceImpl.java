@@ -9,6 +9,7 @@ import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.tinyspring.garderie.dto.MlPredictionResponse;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Conversation;
@@ -26,6 +27,7 @@ import com.tinyspring.garderie.repository.ReclamationHistoryRepository;
 import com.tinyspring.garderie.repository.ReclamationRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.service.BadWordFilterService;
+import com.tinyspring.garderie.service.MlPredictionService;
 import com.tinyspring.garderie.service.ReclamationService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -60,17 +62,20 @@ public class ReclamationServiceImpl implements ReclamationService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final BadWordFilterService badWordFilterService;
+    private final MlPredictionService mlPredictionService;
 
     public ReclamationServiceImpl(ReclamationRepository reclamationRepository,
                                   ReclamationHistoryRepository reclamationHistoryRepository,
                                   ConversationRepository conversationRepository,
                                   UserRepository userRepository,
-                                  BadWordFilterService badWordFilterService) {
+                                  BadWordFilterService badWordFilterService,
+                                  MlPredictionService mlPredictionService) {
         this.reclamationRepository = reclamationRepository;
         this.reclamationHistoryRepository = reclamationHistoryRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
         this.badWordFilterService = badWordFilterService;
+        this.mlPredictionService = mlPredictionService;
     }
 
     @Override
@@ -83,7 +88,6 @@ public class ReclamationServiceImpl implements ReclamationService {
         User currentUser = getCurrentUser();
 
         String roleName = currentUser.getRole().getName().name();
-
         if (!roleName.equals("PARENT")) {
             throw new RuntimeException("Seul un parent peut créer une réclamation");
         }
@@ -94,10 +98,6 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("La description est obligatoire");
-        }
-
-        if (category == null || category.trim().isEmpty()) {
-            throw new RuntimeException("La catégorie est obligatoire");
         }
 
         String cleanTitle = badWordFilterService.censorText(title.trim());
@@ -118,14 +118,7 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setParent(currentUser);
         reclamation.setConversation(savedConversation);
         reclamation.setStatus(ReclamationStatus.OPEN);
-
-        try {
-            reclamation.setCategory(
-                    ReclamationCategory.valueOf(category.trim().toUpperCase())
-            );
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Catégorie invalide. Valeurs autorisées : REPAS, TRANSPORT, COMPORTEMENT, HYGIENE, SECURITE, PERSONNEL, AUTRE");
-        }
+        reclamation.setAutoClassified(false);
 
         if (priority != null && !priority.trim().isEmpty()) {
             try {
@@ -135,80 +128,22 @@ public class ReclamationServiceImpl implements ReclamationService {
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Priorité invalide. Valeurs autorisées : LOW, MEDIUM, HIGH");
             }
-        } else {
-            reclamation.setPriority(ReclamationPriority.MEDIUM);
         }
 
-        boolean hasImage = image != null && !image.isEmpty();
-        if (hasImage) {
+        if (category != null && !category.trim().isEmpty()) {
             try {
-                String originalFilename = image.getOriginalFilename();
-                String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
-                        ? originalFilename.replaceAll("\\s+", "_")
-                        : "image";
-
-                String extension = "";
-                int dotIndex = safeOriginalFilename.lastIndexOf(".");
-                if (dotIndex != -1) {
-                    extension = safeOriginalFilename.substring(dotIndex);
-                }
-
-                String uniqueFileName = UUID.randomUUID() + extension;
-
-                Path uploadPath = Paths.get("uploads", "reclamations").toAbsolutePath().normalize();
-                Files.createDirectories(uploadPath);
-
-                Path targetPath = uploadPath.resolve(uniqueFileName);
-
-                Files.copy(
-                        image.getInputStream(),
-                        targetPath,
-                        StandardCopyOption.REPLACE_EXISTING
+                reclamation.setCategory(
+                        ReclamationCategory.valueOf(category.trim().toUpperCase())
                 );
-
-                reclamation.setImageName(safeOriginalFilename);
-                reclamation.setImagePath("/uploads/reclamations/" + uniqueFileName);
-
-            } catch (IOException e) {
-                throw new RuntimeException("Erreur upload image réclamation : " + e.getMessage(), e);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Catégorie invalide");
             }
         }
 
-        boolean hasAttachment = attachment != null && !attachment.isEmpty();
-        if (hasAttachment) {
-            try {
-                String originalFilename = attachment.getOriginalFilename();
-                String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
-                        ? originalFilename.replaceAll("\\s+", "_")
-                        : "attachment";
+        applyMlPrediction(reclamation, cleanTitle, cleanDescription, priority, category);
 
-                String extension = "";
-                int dotIndex = safeOriginalFilename.lastIndexOf(".");
-                if (dotIndex != -1) {
-                    extension = safeOriginalFilename.substring(dotIndex);
-                }
-
-                String uniqueFileName = UUID.randomUUID() + extension;
-
-                Path uploadPath = Paths.get("uploads", "reclamations", "attachments").toAbsolutePath().normalize();
-                Files.createDirectories(uploadPath);
-
-                Path targetPath = uploadPath.resolve(uniqueFileName);
-
-                Files.copy(
-                        attachment.getInputStream(),
-                        targetPath,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-
-                reclamation.setAttachmentName(safeOriginalFilename);
-                reclamation.setAttachmentPath("/uploads/reclamations/attachments/" + uniqueFileName);
-                reclamation.setAttachmentType(attachment.getContentType());
-
-            } catch (IOException e) {
-                throw new RuntimeException("Erreur upload pièce jointe réclamation : " + e.getMessage(), e);
-            }
-        }
+        handleImageUpload(reclamation, image);
+        handleAttachmentUpload(reclamation, attachment);
 
         Reclamation savedReclamation = reclamationRepository.save(reclamation);
 
@@ -221,13 +156,44 @@ public class ReclamationServiceImpl implements ReclamationService {
                 currentUser
         );
 
+        if (savedReclamation.getPredictedCategory() != null) {
+            addHistory(
+                    savedReclamation,
+                    ReclamationHistoryActionType.CATEGORY_CHANGED,
+                    "Catégorie prédite par ML",
+                    null,
+                    savedReclamation.getPredictedCategory().name()
+                            + " (confiance: "
+                            + (savedReclamation.getClassificationConfidence() != null
+                            ? savedReclamation.getClassificationConfidence()
+                            : 0.0)
+                            + ")",
+                    null
+            );
+        }
+
+        if (savedReclamation.getPredictedPriority() != null) {
+            addHistory(
+                    savedReclamation,
+                    ReclamationHistoryActionType.PRIORITY_CHANGED,
+                    "Priorité prédite par ML",
+                    null,
+                    savedReclamation.getPredictedPriority().name()
+                            + " (confiance: "
+                            + (savedReclamation.getPriorityConfidence() != null
+                            ? savedReclamation.getPriorityConfidence()
+                            : 0.0)
+                            + ")",
+                    null
+            );
+        }
+
         return savedReclamation;
     }
 
     @Override
     public List<Reclamation> getMyReclamations() {
         User currentUser = getCurrentUser();
-
         String roleName = currentUser.getRole().getName().name();
 
         if (roleName.equals("PARENT")) {
@@ -307,7 +273,11 @@ public class ReclamationServiceImpl implements ReclamationService {
 
             addInfoRow(infoTable, "Titre", safeText(reclamation.getTitle()), smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Categorie", safeText(reclamation.getCategory() != null ? reclamation.getCategory().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Categorie predite", safeText(reclamation.getPredictedCategory() != null ? reclamation.getPredictedCategory().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Confiance categorie", reclamation.getClassificationConfidence() != null ? String.valueOf(reclamation.getClassificationConfidence()) : "-", smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Priorite", safeText(reclamation.getPriority() != null ? reclamation.getPriority().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Priorite predite", safeText(reclamation.getPredictedPriority() != null ? reclamation.getPredictedPriority().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Confiance priorite", reclamation.getPriorityConfidence() != null ? String.valueOf(reclamation.getPriorityConfidence()) : "-", smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Statut", safeText(reclamation.getStatus() != null ? reclamation.getStatus().name() : null), smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Parent", reclamation.getParent() != null ? safeText(reclamation.getParent().getEmail()) : "-", smallBoldFont, bodyFont);
 
@@ -386,7 +356,11 @@ public class ReclamationServiceImpl implements ReclamationService {
                     "Titre",
                     "Description",
                     "Categorie",
+                    "Categorie predite",
+                    "Confiance categorie",
                     "Priorite",
+                    "Priorite predite",
+                    "Confiance priorite",
                     "Statut",
                     "Parent",
                     "Admin assigne",
@@ -418,32 +392,44 @@ public class ReclamationServiceImpl implements ReclamationService {
                         reclamation.getCategory() != null ? reclamation.getCategory().name() : "-"
                 );
                 row.createCell(4).setCellValue(
-                        reclamation.getPriority() != null ? reclamation.getPriority().name() : "-"
+                        reclamation.getPredictedCategory() != null ? reclamation.getPredictedCategory().name() : "-"
                 );
                 row.createCell(5).setCellValue(
-                        reclamation.getStatus() != null ? reclamation.getStatus().name() : "-"
+                        reclamation.getClassificationConfidence() != null ? reclamation.getClassificationConfidence() : 0.0
                 );
                 row.createCell(6).setCellValue(
-                        reclamation.getParent() != null ? safeExcelText(reclamation.getParent().getEmail()) : "-"
+                        reclamation.getPriority() != null ? reclamation.getPriority().name() : "-"
                 );
                 row.createCell(7).setCellValue(
+                        reclamation.getPredictedPriority() != null ? reclamation.getPredictedPriority().name() : "-"
+                );
+                row.createCell(8).setCellValue(
+                        reclamation.getPriorityConfidence() != null ? reclamation.getPriorityConfidence() : 0.0
+                );
+                row.createCell(9).setCellValue(
+                        reclamation.getStatus() != null ? reclamation.getStatus().name() : "-"
+                );
+                row.createCell(10).setCellValue(
+                        reclamation.getParent() != null ? safeExcelText(reclamation.getParent().getEmail()) : "-"
+                );
+                row.createCell(11).setCellValue(
                         reclamation.getAssignedAdmin() != null ? safeExcelText(reclamation.getAssignedAdmin().getEmail()) : "-"
                 );
 
-                Cell adminCommentCell = row.createCell(8);
+                Cell adminCommentCell = row.createCell(12);
                 adminCommentCell.setCellValue(safeExcelText(reclamation.getAdminComment()));
                 adminCommentCell.setCellStyle(wrapStyle);
 
-                row.createCell(9).setCellValue(
+                row.createCell(13).setCellValue(
                         reclamation.getImageName() != null ? safeExcelText(reclamation.getImageName()) : "-"
                 );
-                row.createCell(10).setCellValue(
+                row.createCell(14).setCellValue(
                         reclamation.getAttachmentName() != null ? safeExcelText(reclamation.getAttachmentName()) : "-"
                 );
-                row.createCell(11).setCellValue(
+                row.createCell(15).setCellValue(
                         reclamation.getCreatedAt() != null ? reclamation.getCreatedAt().toString() : "-"
                 );
-                row.createCell(12).setCellValue(
+                row.createCell(16).setCellValue(
                         reclamation.getUpdatedAt() != null ? reclamation.getUpdatedAt().toString() : "-"
                 );
             }
@@ -492,10 +478,6 @@ public class ReclamationServiceImpl implements ReclamationService {
                 throw new RuntimeException("La description est obligatoire");
             }
 
-            if (request.getCategory() == null || request.getCategory().trim().isEmpty()) {
-                throw new RuntimeException("La catégorie est obligatoire");
-            }
-
             String cleanTitle = badWordFilterService.censorText(request.getTitle().trim());
             String cleanDescription = badWordFilterService.censorText(request.getDescription().trim());
 
@@ -503,18 +485,26 @@ public class ReclamationServiceImpl implements ReclamationService {
             String oldDescription = reclamation.getDescription();
             String oldCategory = reclamation.getCategory() != null ? reclamation.getCategory().name() : null;
             String oldPriority = reclamation.getPriority() != null ? reclamation.getPriority().name() : null;
+            String oldPredictedCategory = reclamation.getPredictedCategory() != null ? reclamation.getPredictedCategory().name() : null;
+            String oldPredictedPriority = reclamation.getPredictedPriority() != null ? reclamation.getPredictedPriority().name() : null;
+            Double oldConfidence = reclamation.getClassificationConfidence();
+            Double oldPriorityConfidence = reclamation.getPriorityConfidence();
 
             reclamation.setTitle(cleanTitle);
             reclamation.setDescription(cleanDescription);
 
-            try {
-                reclamation.setCategory(
-                        ReclamationCategory.valueOf(request.getCategory().trim().toUpperCase())
-                );
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Catégorie invalide. Valeurs autorisées : REPAS, TRANSPORT, COMPORTEMENT, HYGIENE, SECURITE, PERSONNEL, AUTRE");
+            reclamation.setCategory(null);
+            if (request.getCategory() != null && !request.getCategory().trim().isEmpty()) {
+                try {
+                    reclamation.setCategory(
+                            ReclamationCategory.valueOf(request.getCategory().trim().toUpperCase())
+                    );
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Catégorie invalide");
+                }
             }
 
+            reclamation.setPriority(null);
             if (request.getPriority() != null && !request.getPriority().trim().isEmpty()) {
                 try {
                     reclamation.setPriority(
@@ -525,6 +515,14 @@ public class ReclamationServiceImpl implements ReclamationService {
                 }
             }
 
+            applyMlPrediction(
+                    reclamation,
+                    cleanTitle,
+                    cleanDescription,
+                    request.getPriority(),
+                    request.getCategory()
+            );
+
             if (reclamation.getConversation() != null) {
                 reclamation.getConversation().setSubject("Réclamation : " + cleanTitle);
                 conversationRepository.save(reclamation.getConversation());
@@ -533,48 +531,56 @@ public class ReclamationServiceImpl implements ReclamationService {
             Reclamation saved = reclamationRepository.save(reclamation);
 
             if (!safeEquals(oldTitle, saved.getTitle())) {
-                addHistory(
-                        saved,
-                        ReclamationHistoryActionType.TITLE_CHANGED,
-                        "Titre modifié",
-                        oldTitle,
-                        saved.getTitle(),
-                        currentUser
-                );
+                addHistory(saved, ReclamationHistoryActionType.TITLE_CHANGED, "Titre modifié", oldTitle, saved.getTitle(), currentUser);
             }
 
             if (!safeEquals(oldDescription, saved.getDescription())) {
-                addHistory(
-                        saved,
-                        ReclamationHistoryActionType.DESCRIPTION_UPDATED,
-                        "Description mise à jour",
-                        oldDescription,
-                        saved.getDescription(),
-                        currentUser
-                );
+                addHistory(saved, ReclamationHistoryActionType.DESCRIPTION_UPDATED, "Description mise à jour", oldDescription, saved.getDescription(), currentUser);
             }
 
             String newCategory = saved.getCategory() != null ? saved.getCategory().name() : null;
             if (!safeEquals(oldCategory, newCategory)) {
-                addHistory(
-                        saved,
-                        ReclamationHistoryActionType.CATEGORY_CHANGED,
-                        "Catégorie changée",
-                        oldCategory,
-                        newCategory,
-                        currentUser
-                );
+                addHistory(saved, ReclamationHistoryActionType.CATEGORY_CHANGED, "Catégorie changée", oldCategory, newCategory, currentUser);
             }
 
             String newPriority = saved.getPriority() != null ? saved.getPriority().name() : null;
             if (!safeEquals(oldPriority, newPriority)) {
+                addHistory(saved, ReclamationHistoryActionType.PRIORITY_CHANGED, "Priorité changée", oldPriority, newPriority, currentUser);
+            }
+
+            String newPredictedCategory = saved.getPredictedCategory() != null ? saved.getPredictedCategory().name() : null;
+            boolean confidenceChanged = (oldConfidence == null && saved.getClassificationConfidence() != null)
+                    || (oldConfidence != null && saved.getClassificationConfidence() != null
+                    && Double.compare(oldConfidence, saved.getClassificationConfidence()) != 0);
+
+            if (!safeEquals(oldPredictedCategory, newPredictedCategory) || confidenceChanged) {
+                addHistory(
+                        saved,
+                        ReclamationHistoryActionType.CATEGORY_CHANGED,
+                        "Prédiction catégorie ML mise à jour",
+                        oldPredictedCategory != null ? oldPredictedCategory : "-",
+                        newPredictedCategory != null
+                                ? newPredictedCategory + " (confiance: " + saved.getClassificationConfidence() + ")"
+                                : "-",
+                        null
+                );
+            }
+
+            String newPredictedPriority = saved.getPredictedPriority() != null ? saved.getPredictedPriority().name() : null;
+            boolean priorityConfidenceChanged = (oldPriorityConfidence == null && saved.getPriorityConfidence() != null)
+                    || (oldPriorityConfidence != null && saved.getPriorityConfidence() != null
+                    && Double.compare(oldPriorityConfidence, saved.getPriorityConfidence()) != 0);
+
+            if (!safeEquals(oldPredictedPriority, newPredictedPriority) || priorityConfidenceChanged) {
                 addHistory(
                         saved,
                         ReclamationHistoryActionType.PRIORITY_CHANGED,
-                        "Priorité changée",
-                        oldPriority,
-                        newPriority,
-                        currentUser
+                        "Prédiction priorité ML mise à jour",
+                        oldPredictedPriority != null ? oldPredictedPriority : "-",
+                        newPredictedPriority != null
+                                ? newPredictedPriority + " (confiance: " + saved.getPriorityConfidence() + ")"
+                                : "-",
+                        null
                 );
             }
 
@@ -597,35 +603,14 @@ public class ReclamationServiceImpl implements ReclamationService {
 
             if ((oldAdminComment == null || oldAdminComment.isBlank())
                     && saved.getAdminComment() != null && !saved.getAdminComment().isBlank()) {
-                addHistory(
-                        saved,
-                        ReclamationHistoryActionType.ADMIN_COMMENT_ADDED,
-                        "Réponse administrative ajoutée",
-                        null,
-                        saved.getAdminComment(),
-                        currentUser
-                );
+                addHistory(saved, ReclamationHistoryActionType.ADMIN_COMMENT_ADDED, "Réponse administrative ajoutée", null, saved.getAdminComment(), currentUser);
             } else if (oldAdminComment != null && !oldAdminComment.isBlank()
                     && saved.getAdminComment() != null && !saved.getAdminComment().isBlank()
                     && !safeEquals(oldAdminComment, saved.getAdminComment())) {
-                addHistory(
-                        saved,
-                        ReclamationHistoryActionType.ADMIN_COMMENT_UPDATED,
-                        "Réponse administrative modifiée",
-                        oldAdminComment,
-                        saved.getAdminComment(),
-                        currentUser
-                );
+                addHistory(saved, ReclamationHistoryActionType.ADMIN_COMMENT_UPDATED, "Réponse administrative modifiée", oldAdminComment, saved.getAdminComment(), currentUser);
             } else if (oldAdminComment != null && !oldAdminComment.isBlank()
                     && (saved.getAdminComment() == null || saved.getAdminComment().isBlank())) {
-                addHistory(
-                        saved,
-                        ReclamationHistoryActionType.ADMIN_COMMENT_REMOVED,
-                        "Réponse administrative supprimée",
-                        oldAdminComment,
-                        null,
-                        currentUser
-                );
+                addHistory(saved, ReclamationHistoryActionType.ADMIN_COMMENT_REMOVED, "Réponse administrative supprimée", oldAdminComment, null, currentUser);
             }
 
             return saved;
@@ -639,7 +624,6 @@ public class ReclamationServiceImpl implements ReclamationService {
         User currentUser = getCurrentUser();
 
         String roleName = currentUser.getRole().getName().name();
-
         if (!roleName.equals("ADMIN")) {
             throw new RuntimeException("Seul un admin peut modifier le statut d'une réclamation");
         }
@@ -664,18 +648,10 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setAssignedAdmin(currentUser);
 
         Reclamation saved = reclamationRepository.save(reclamation);
-
         String newStatus = saved.getStatus() != null ? saved.getStatus().name() : null;
 
         if (!safeEquals(oldStatus, newStatus)) {
-            addHistory(
-                    saved,
-                    ReclamationHistoryActionType.STATUS_CHANGED,
-                    "Statut changé",
-                    oldStatus,
-                    newStatus,
-                    currentUser
-            );
+            addHistory(saved, ReclamationHistoryActionType.STATUS_CHANGED, "Statut changé", oldStatus, newStatus, currentUser);
         }
 
         return saved;
@@ -708,6 +684,149 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         if (conversation != null) {
             conversationRepository.delete(conversation);
+        }
+    }
+
+    private void applyMlPrediction(Reclamation reclamation,
+                                   String cleanTitle,
+                                   String cleanDescription,
+                                   String requestedPriority,
+                                   String requestedCategory) {
+        MlPredictionResponse prediction = mlPredictionService.predictCategory(cleanTitle, cleanDescription);
+
+        if (prediction == null) {
+            reclamation.setAutoClassified(false);
+
+            if (reclamation.getCategory() == null) {
+                reclamation.setCategory(ReclamationCategory.AUTRE);
+            }
+
+            if (reclamation.getPriority() == null) {
+                reclamation.setPriority(ReclamationPriority.MEDIUM);
+            }
+            return;
+        }
+
+        boolean categoryAppliedByMl = false;
+
+        if (prediction.getPredictedCategory() != null) {
+            try {
+                ReclamationCategory predictedCat = ReclamationCategory.valueOf(
+                        prediction.getPredictedCategory().trim().toUpperCase()
+                );
+                reclamation.setPredictedCategory(predictedCat);
+                reclamation.setClassificationConfidence(prediction.getConfidence());
+
+                if (requestedCategory == null || requestedCategory.trim().isEmpty()) {
+                    reclamation.setCategory(predictedCat);
+                    categoryAppliedByMl = true;
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        if (prediction.getPredictedPriority() != null) {
+            try {
+                ReclamationPriority predictedPrio = ReclamationPriority.valueOf(
+                        prediction.getPredictedPriority().trim().toUpperCase()
+                );
+                reclamation.setPredictedPriority(predictedPrio);
+                reclamation.setPriorityConfidence(prediction.getPriorityConfidence());
+
+                if (requestedPriority == null || requestedPriority.trim().isEmpty()) {
+                    reclamation.setPriority(predictedPrio);
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        if (reclamation.getCategory() == null) {
+            reclamation.setCategory(ReclamationCategory.AUTRE);
+        }
+
+        if (reclamation.getPriority() == null) {
+            reclamation.setPriority(ReclamationPriority.MEDIUM);
+        }
+
+        reclamation.setAutoClassified(categoryAppliedByMl);
+    }
+
+    private void handleImageUpload(Reclamation reclamation, MultipartFile image) {
+        boolean hasImage = image != null && !image.isEmpty();
+        if (!hasImage) {
+            return;
+        }
+
+        try {
+            String originalFilename = image.getOriginalFilename();
+            String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
+                    ? originalFilename.replaceAll("\\s+", "_")
+                    : "image";
+
+            String extension = "";
+            int dotIndex = safeOriginalFilename.lastIndexOf(".");
+            if (dotIndex != -1) {
+                extension = safeOriginalFilename.substring(dotIndex);
+            }
+
+            String uniqueFileName = UUID.randomUUID() + extension;
+
+            Path uploadPath = Paths.get("uploads", "reclamations").toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
+
+            Path targetPath = uploadPath.resolve(uniqueFileName);
+
+            Files.copy(
+                    image.getInputStream(),
+                    targetPath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            reclamation.setImageName(safeOriginalFilename);
+            reclamation.setImagePath("/uploads/reclamations/" + uniqueFileName);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur upload image réclamation : " + e.getMessage(), e);
+        }
+    }
+
+    private void handleAttachmentUpload(Reclamation reclamation, MultipartFile attachment) {
+        boolean hasAttachment = attachment != null && !attachment.isEmpty();
+        if (!hasAttachment) {
+            return;
+        }
+
+        try {
+            String originalFilename = attachment.getOriginalFilename();
+            String safeOriginalFilename = (originalFilename != null && !originalFilename.isBlank())
+                    ? originalFilename.replaceAll("\\s+", "_")
+                    : "attachment";
+
+            String extension = "";
+            int dotIndex = safeOriginalFilename.lastIndexOf(".");
+            if (dotIndex != -1) {
+                extension = safeOriginalFilename.substring(dotIndex);
+            }
+
+            String uniqueFileName = UUID.randomUUID() + extension;
+
+            Path uploadPath = Paths.get("uploads", "reclamations", "attachments").toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
+
+            Path targetPath = uploadPath.resolve(uniqueFileName);
+
+            Files.copy(
+                    attachment.getInputStream(),
+                    targetPath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            reclamation.setAttachmentName(safeOriginalFilename);
+            reclamation.setAttachmentPath("/uploads/reclamations/attachments/" + uniqueFileName);
+            reclamation.setAttachmentType(attachment.getContentType());
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur upload pièce jointe réclamation : " + e.getMessage(), e);
         }
     }
 

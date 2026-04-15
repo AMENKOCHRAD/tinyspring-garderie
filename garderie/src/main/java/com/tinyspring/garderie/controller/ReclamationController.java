@@ -29,7 +29,7 @@ public class ReclamationController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam(value = "priority", required = false) String priority,
-            @RequestParam("category") String category,
+            @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "attachment", required = false) MultipartFile attachment
     ) {
@@ -67,6 +67,7 @@ public class ReclamationController {
                 .headers(headers)
                 .body(pdfBytes);
     }
+
     @GetMapping("/export-excel")
     public ResponseEntity<byte[]> exportReclamationsExcel() {
         byte[] excelBytes = reclamationService.exportReclamationsExcel();
@@ -102,17 +103,4 @@ public class ReclamationController {
     public void deleteReclamation(@PathVariable Long id) {
         reclamationService.deleteReclamation(id);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

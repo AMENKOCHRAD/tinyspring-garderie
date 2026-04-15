@@ -37,6 +37,14 @@ export interface Reclamation {
   priority: string;
   status: string;
   category: string;
+
+  predictedCategory?: string | null;
+  classificationConfidence?: number | null;
+  autoClassified?: boolean | null;
+
+  predictedPriority?: string | null;
+  priorityConfidence?: number | null;
+
   adminComment?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -210,21 +218,22 @@ export class MessagerieService {
       }
     );
   }
+
   exportReclamationsExcel(): Observable<Blob> {
-  return this.http.get(
-    `${this.apiUrl}/reclamations/export-excel`,
-    {
-      headers: this.authService.getBasicAuthHeaders(),
-      responseType: 'blob'
-    }
-  );
-}
+    return this.http.get(
+      `${this.apiUrl}/reclamations/export-excel`,
+      {
+        headers: this.authService.getBasicAuthHeaders(),
+        responseType: 'blob'
+      }
+    );
+  }
 
   createReclamation(
     title: string,
     description: string,
-    priority: string,
-    category: string,
+    priority?: string,
+    category?: string,
     image?: File | null,
     attachment?: File | null
   ): Observable<Reclamation> {
@@ -278,5 +287,4 @@ export class MessagerieService {
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
-  
 }
