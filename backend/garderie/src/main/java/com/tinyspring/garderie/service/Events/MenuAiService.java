@@ -75,7 +75,7 @@ public class MenuAiService {
 
     private String buildPrompt(LocalDate weekStart) {
         return """
-        Tu es un nutritionniste spécialisé en menus de garderie pour enfants de 2 à 6 ans en Tunisie.
+        Tu es un nutritionniste spécialisé en menus de garderie pour enfants de 2 à 11 ans en Tunisie.
 
         Ta mission est de générer un menu hebdomadaire réaliste, équilibré, simple et adapté à une garderie.
         Le menu doit convenir à de jeunes enfants : plats doux, faciles à manger, non épicés, nutritionnellement adaptés.
@@ -124,8 +124,8 @@ public class MenuAiService {
         }
 
         Contraintes obligatoires :
-        - Générer exactement 5 jours : MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY
-        - Utiliser exactement 4 plats par jour :
+        - Générer  5 jours : MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY
+        - Utiliser  4 plats par jour :
           1 ENTREE
           1 PLAT_PRINCIPAL
           1 DESSERT
@@ -174,8 +174,8 @@ public class MenuAiService {
 
         Vérifie avant de répondre :
         - JSON valide
-        - 5 jours exactement
-        - 4 plats par jour exactement
+        - 5 jours 
+        - 4 plats par jour 
         - dates correctes
         - mealType uniquement parmi ENTREE, PLAT_PRINCIPAL, DESSERT, GOUTER
         - dayOfWeek uniquement parmi MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY
