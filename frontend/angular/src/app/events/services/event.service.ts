@@ -19,7 +19,6 @@ interface EventApiResponse {
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-
   maxCapacity?: number | null;
   requiresAuthorization?: boolean | null;
   classroomId?: number | null;
@@ -44,7 +43,7 @@ export class EventService {
   readonly events$ = this.eventsRefreshSubject.pipe(
     switchMap(() =>
       this.http
-        .get<EventApiResponse[]>(`${this.apiUrl}/events`)
+        .get<EventApiResponse[]>(`${this.apiUrl}/events/get`)
         .pipe(map((events) => events.map((event) => this.mapEventResponse(event))))
     ),
     shareReplay({ bufferSize: 1, refCount: true })
@@ -52,7 +51,7 @@ export class EventService {
 
   getAllEvents(): Observable<Event[]> {
     return this.http
-      .get<EventApiResponse[]>(`${this.apiUrl}/events`)
+      .get<EventApiResponse[]>(`${this.apiUrl}/events/get`)
       .pipe(map((events) => events.map((event) => this.mapEventResponse(event))));
   }
 
@@ -68,7 +67,7 @@ export class EventService {
 
   createEvent(payload: EventRequest): Observable<Event> {
     return this.http
-      .post<EventApiResponse>(`${this.apiUrl}/events`, payload)
+      .post<EventApiResponse>(`${this.apiUrl}/events/create`, payload)
       .pipe(map((event) => this.mapEventResponse(event)))
       .pipe(tap(() => this.refreshEvents()));
   }
@@ -99,7 +98,7 @@ export class EventService {
 
   deleteEvent(id: number): Observable<void> {
     return this.http
-      .delete<void>(`${this.apiUrl}/events/${id}`)
+      .delete<void>(`${this.apiUrl}/events/delete/${id}`)
       .pipe(tap(() => this.refreshEvents()));
   }
 
@@ -147,6 +146,10 @@ export class EventService {
     );
   }
 
+  getAiRecommendations(payload: any): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/events/ai/recommend`, payload);
+  }
+
   private mapEventResponse(event: EventApiResponse): Event {
     return {
       id: event.id,
@@ -172,7 +175,4 @@ export class EventService {
       photoEvent: event.photoEvent ?? undefined
     };
   }
-getAiRecommendations(payload: any) {
-  return this.http.post<any[]>(`${this.apiUrl}/events/ai/recommend`, payload);
-}
 }

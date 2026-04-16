@@ -14,6 +14,8 @@ export interface LoginResponse {
   message: string;
   email: string;
   role: string;
+  accessToken: string;
+  expiresIn?: number;
 }
 
 @Injectable({
@@ -30,11 +32,16 @@ export class AuthService {
 
   saveUser(user: LoginResponse): void {
     localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('accessToken', user.accessToken);
   }
 
   getUser(): LoginResponse | null {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('accessToken');
   }
 
   isAdmin(): boolean {
@@ -43,5 +50,6 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
   }
 }

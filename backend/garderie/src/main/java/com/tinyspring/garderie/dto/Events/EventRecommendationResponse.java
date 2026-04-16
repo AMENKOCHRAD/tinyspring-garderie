@@ -20,18 +20,36 @@ public class EventRecommendationResponse {
     @JsonProperty("suggested_location")
     private String suggestedLocation;
 
+    @JsonProperty("location_name")
+    private String locationName;
+
+    private String city;
+    private String country;
+
+    private Double latitude;
+    private Double longitude;
+
     @JsonProperty("indoor_outdoor")
     private String indoorOutdoor;
 
     @JsonProperty("requires_authorization")
-    private Boolean requiresAuthorization;
+    private boolean requiresAuthorization;
 
     @JsonProperty("suggested_price")
-    private Double suggestedPrice;
+    private double suggestedPrice;
 
     @JsonProperty("predicted_label")
     private String predictedLabel;
 
     @JsonProperty("relevance_score")
-    private Double relevanceScore;
+    private double relevanceScore;
+
+    @JsonProperty("venue_type")
+    private String venueType;
+
+    private String season;
+    private String tags;
+
+    @JsonProperty("match_reason")
+    private String matchReason;
 }

@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -28,5 +26,7 @@ public class EventRecommendationPythonRequest {
     @JsonProperty("city_context")
     private String cityContext;
 
-    private List<EventRecommendationCandidateDto> candidates;
+    @JsonProperty("top_n")
+    private Integer topN;
+
 }

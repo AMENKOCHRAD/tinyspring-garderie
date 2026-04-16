@@ -33,13 +33,15 @@ public class EventRestController {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventRecommendationService eventRecommendationService;
 
-    @PostMapping
+
+    @PostMapping("/create")
     public ResponseEntity<EventResponse> create(@Valid @RequestBody EventRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(eventMapper.toResponse(eventService.create(request)));
     }
 
-    @GetMapping
+
+    @GetMapping("/get")
     public ResponseEntity<List<EventResponse>> getAll() {
         return ResponseEntity.ok(
                 eventService.getAll().stream().map(this::toEventResponse).toList()
@@ -69,7 +71,7 @@ public class EventRestController {
         return ResponseEntity.ok(toEventResponse(eventService.update(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         eventService.delete(id);
         return ResponseEntity.noContent().build();
@@ -109,46 +111,21 @@ public class EventRestController {
     }
 
     @PostMapping("/ai/recommend")
-
     public ResponseEntity<?> recommendEvents(@RequestBody EventRecommendationContextRequest request) {
         try {
             return ResponseEntity.ok(eventRecommendationService.recommendEvents(request));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     java.util.Map.of(
                             "message", "Erreur recommandation IA événements",
-                            "errorType", e.getClass().getName(),
                             "details", e.getMessage()
                     )
             );
         }
     }
 
-    @GetMapping("/ai/ping")
-    public ResponseEntity<String> aiPing() {
-        return ResponseEntity.ok("EVENT AI OK");
-    }
 
-    @PostMapping("/ai/post-test")
-    public ResponseEntity<String> aiPostTest() {
-        return ResponseEntity.ok("EVENT AI POST OK");
-    }
-    @PostMapping("/ai/recommend-echo")
-    public ResponseEntity<String> recommendEcho(@RequestBody String body) {
-        System.out.println("=== EVENT AI RECOMMEND ECHO ===");
-        System.out.println(body);
-        return ResponseEntity.ok("EVENT AI ECHO OK");
-    }
-    @PostMapping("/ai/recommend-body")
-    public ResponseEntity<?> recommendBody(@RequestBody EventRecommendationContextRequest request) {
-        System.out.println("=== EVENT AI RECOMMEND BODY ===");
-        System.out.println("season = " + request.getSeason());
-        System.out.println("month = " + request.getMonth());
-        System.out.println("ageGroup = " + request.getAgeGroup());
-        System.out.println("budgetLevel = " + request.getBudgetLevel());
-        System.out.println("outdoorPreferred = " + request.getOutdoorPreferred());
-        System.out.println("cityContext = " + request.getCityContext());
-        return ResponseEntity.ok("EVENT AI DTO OK");
-    }
+
+
+
 }

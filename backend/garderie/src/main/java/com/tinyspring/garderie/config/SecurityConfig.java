@@ -62,18 +62,28 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/test").permitAll()
                         .requestMatchers("/api/classes/**").permitAll()
-                        .requestMatchers("/api/events/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/api/registrations/**").permitAll()
+                        // public events
+                        .requestMatchers(HttpMethod.GET, "/api/events/public").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/public/*").permitAll()
+
+                        // admin event actions
+                        .requestMatchers(HttpMethod.POST, "/api/events/create").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/events/*/publish").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/events/*/photo").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/events/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/events/delete/*").hasRole("ADMIN")
+
+                        // visible to admin and parent
+                        .requestMatchers(HttpMethod.GET, "/api/events/get").hasAnyRole("ADMIN", "PARENT")
+                        .requestMatchers(HttpMethod.GET, "/api/events/*").hasAnyRole("ADMIN", "PARENT")
+
 
 
 
                         .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/post-test").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menus/weekly/ai/ping").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/generate").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/echo").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/menus/weekly/ai/generate-test").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/events/ai/recommend").permitAll()
                         .requestMatchers("/api/menus/weekly/**").permitAll()
                         .requestMatchers("/api/menus/daily/**").permitAll()
                         .requestMatchers("/api/menus/dishes/**").permitAll()

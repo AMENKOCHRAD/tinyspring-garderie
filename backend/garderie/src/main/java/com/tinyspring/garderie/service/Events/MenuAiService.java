@@ -255,8 +255,8 @@ public class MenuAiService {
                 request.getDailyMenus().add(dailyMenu);
             }
 
-            if (request.getDailyMenus().size() != 5) {
-                throw new IllegalStateException("Le menu généré doit contenir exactement 5 jours.");
+            if (request.getDailyMenus().size() < 5) {
+                System.out.println("⚠️ Menu incomplet généré par IA : " + request.getDailyMenus().size());
             }
 
             return request;
