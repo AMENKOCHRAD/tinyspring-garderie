@@ -87,7 +87,7 @@ public class PredictionService {
     // ── Endpoints appelés par le controller ───────────────────────────────────
 
     public List<Prediction> getAllPredictions() {
-        return predictionRepository.findAllByOrderByAlerteRuptureTotalPrevu4SemainesDesc();
+        return predictionRepository.findAllOrderByAlerteRuptureDescTotalPrevuDesc();
     }
 
     public List<Prediction> getAlertes() {

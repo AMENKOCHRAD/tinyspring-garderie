@@ -37,6 +37,8 @@ public class PredictionController {
     @PostMapping("/recalculer")
     public ResponseEntity<String> recalculer() {
         predictionService.recalculerMaintenant();
-        return ResponseEntity.ok("Recalcul lancé");
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.TEXT_PLAIN)  // ✅ text/plain
+                .body("Recalcul lancé");
     }
 }

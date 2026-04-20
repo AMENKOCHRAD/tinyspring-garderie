@@ -90,6 +90,14 @@ const routes: Routes = [
           import('./admin/boutique/commandes/commandes.component').then(
             (c) => c.AdminCommandesComponent
           )
+      },
+      {
+        path: 'admin/boutique/predictions',
+        canActivate: [adminBoutiqueGuard],
+        loadComponent: () =>
+          import('./admin/boutique/predictions/predictions.component').then(
+            (c) => c.PredictionsComponent
+          )
       }
     ]
   },

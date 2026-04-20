@@ -136,6 +136,13 @@ export const NavigationItems: NavigationItem[] = [
             type: 'item',
             url: '/admin/boutique/commandes',
             icon: 'feather icon-clipboard'
+          },
+          {
+            id: 'boutique-predictions',
+            title: 'Predictions ML',
+            type: 'item',
+            url: '/admin/boutique/predictions',
+            icon: 'feather icon-activity'
           }
         ]
       },

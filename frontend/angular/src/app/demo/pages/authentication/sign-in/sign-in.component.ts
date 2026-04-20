@@ -6,6 +6,7 @@ import { email, Field, form, minLength, required } from '@angular/forms/signals'
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { AuthService } from 'src/app/services/auth.service';
 import { NotificationService } from 'src/app/services/notification.service';
+import { PredictionService } from 'src/app/services/boutique/prediction.service';
 
 @Component({
   selector: 'app-sign-in',
@@ -18,6 +19,7 @@ export class SignInComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private notifService = inject(NotificationService);
+  private predictionService = inject(PredictionService);
 
   submitted = signal(false);
   error = signal('');
@@ -54,6 +56,7 @@ export class SignInComponent {
         const normalizedRole = this.authService.normalizeRole(response.role);
         if (normalizedRole === 'ADMIN') {
           this.notifService.startPolling();
+          this.predictionService.startAlertPolling();
           this.router.navigate(['/admin/boutique/dashboard']);
         } else if (normalizedRole === 'PARENT') {
           this.router.navigate(['/sample-page']);
