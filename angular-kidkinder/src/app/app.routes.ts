@@ -43,9 +43,24 @@ export const routes: Routes = [
       { path: 'messages', component: AnimatorWorkspacePageComponent, data: { page: 'messages' } },
       { path: 'formations', component: AnimatorWorkspacePageComponent, data: { page: 'formations' } },
       { path: 'planning', component: AnimatorWorkspacePageComponent, data: { page: 'planning' } },
-      // ✅ Routes RH ajoutées
+      // ✅ Routes RH absences
       { path: 'rh/mes-absences', component: MesAbsencesComponent },
-      { path: 'rh/nouvelle-demande', component: NouvelleDemande }
+      { path: 'rh/nouvelle-demande', component: NouvelleDemande },
+      // ✅ Nouvelles routes formations
+      {
+        path: 'formations/disponibles',
+        loadComponent: () =>
+          import('./RH/pages/formations-disponibles/formations-disponibles.component').then(
+            c => c.FormationsDisponiblesComponent
+          )
+      },
+      {
+        path: 'formations/mes-formations',
+        loadComponent: () =>
+          import('./RH/pages/mes-formations/mes-formations.component').then(
+            c => c.MesFormationsComponent
+          )
+      }
     ]
   },
   { path: '**', redirectTo: '' }

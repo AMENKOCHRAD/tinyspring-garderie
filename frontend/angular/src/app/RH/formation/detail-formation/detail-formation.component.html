@@ -1,0 +1,222 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="retour()">← Retour</button>
+      <h2 class="page-title" *ngIf="formation">{{ formation.titre }}</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span><span class="sep">/</span>
+        <a routerLink="/rh/formations">Formations</a><span class="sep">/</span>
+        <span class="active">Détail</span>
+      </nav>
+    </div>
+    <div class="header-actions" *ngIf="formation">
+      <button *ngIf="peutDemarrer()" class="btn-start" (click)="demarrer()">
+        ▶ Démarrer la formation
+      </button>
+      <button *ngIf="peutTerminer()" class="btn-finish" (click)="terminer()">
+        ✅ Terminer & Générer certificats
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error" *ngIf="errorMessage && !modalInscrire?.open">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div><p>Chargement...</p>
+  </div>
+
+  <div *ngIf="formation && !isLoading">
+
+    <!-- Info formation -->
+    <div class="formation-info-card">
+      <div class="info-header">
+        <div class="info-badges">
+          <span class="type-badge">{{ getTypeIcon(formation.type) }} {{ formation.type }}</span>
+          <span class="statut-badge"
+                [style.background]="getStatutColor(formation.statut) + '20'"
+                [style.color]="getStatutColor(formation.statut)">
+            {{ formation.statut }}
+          </span>
+          <span class="obligatoire-badge" *ngIf="formation.obligatoire">⚠️ Obligatoire</span>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">👨‍🏫 Formateur</span>
+          <span class="info-value">{{ formation.formateur }}</span>
+        </div>
+        <div class="info-item" *ngIf="formation.lieu">
+          <span class="info-label">📍 Lieu</span>
+          <span class="info-value">{{ formation.lieu }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">📅 Dates</span>
+          <span class="info-value">
+            {{ formatDate(formation.dateFormation) }} — {{ formatHeure(formation.heureDebut) }} → {{ formatHeure(formation.heureFin) }}
+          </span>
+        </div>
+        <div class="info-item" *ngIf="formation.dureeValiditeMois">
+          <span class="info-label">⏱️ Validité</span>
+          <span class="info-value">{{ formation.dureeValiditeMois }} mois</span>
+        </div>
+      </div>
+
+      <p class="info-description" *ngIf="formation.description">
+        {{ formation.description }}
+      </p>
+    </div>
+
+    <!-- Stats inscriptions -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-icon">👥</span>
+        <div><span class="stat-value">{{ getNbInscrits() }}</span>
+        <span class="stat-label">Inscrits</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">⏳</span>
+        <div><span class="stat-value">{{ getNbAttente() }}</span>
+        <span class="stat-label">Liste attente</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🪑</span>
+        <div>
+          <span class="stat-value">
+            {{ formation.placesMax ? (formation.placesMax - getNbInscrits()) : '∞' }}
+          </span>
+          <span class="stat-label">Places dispo</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🎓</span>
+        <div><span class="stat-value">{{ getNbCertificats() }}</span>
+        <span class="stat-label">Certificats</span></div>
+      </div>
+    </div>
+
+    <!-- Barre de remplissage -->
+    <div class="remplissage-card" *ngIf="formation.placesMax">
+      <div class="remplissage-header">
+        <span>Taux de remplissage</span>
+        <span class="remplissage-pct">{{ getRemplissagePct() }}%</span>
+      </div>
+      <div class="remplissage-bar">
+        <div class="remplissage-fill"
+             [style.width]="getRemplissagePct() + '%'"
+             [class.remplissage-fill--plein]="getRemplissagePct() >= 100"
+             [class.remplissage-fill--faible]="getRemplissagePct() < 50">
+        </div>
+      </div>
+      <div class="remplissage-info">
+        <span>{{ getNbInscrits() }}/{{ formation.placesMax }} inscrits</span>
+        <span *ngIf="getNbAttente() > 0" class="attente-info">
+          + {{ getNbAttente() }} en liste d'attente
+        </span>
+      </div>
+    </div>
+
+    <!-- Section inscriptions -->
+    <div class="inscriptions-section">
+      <div class="section-header">
+        <h3 class="section-title">👥 Animatrices Inscrites</h3>
+        <button *ngIf="peutInscrire() && animatricesNonInscrites.length > 0"
+                class="btn-primary" (click)="ouvrirModalInscrire()">
+          + Inscrire une animatrice
+        </button>
+      </div>
+
+      <!-- Empty -->
+      <div class="empty-inscriptions" *ngIf="inscriptions.length === 0">
+        <p>Aucune animatrice inscrite pour le moment</p>
+        <button *ngIf="peutInscrire()" class="btn-primary" (click)="ouvrirModalInscrire()">
+          + Inscrire la première animatrice
+        </button>
+      </div>
+
+      <!-- Liste -->
+      <div class="inscriptions-list" *ngIf="inscriptions.length > 0">
+        <div *ngFor="let i of inscriptions" class="inscription-item"
+             [style.border-left]="'4px solid ' + getStatutColor(i.statut)">
+
+          <div class="inscription-avatar">
+            {{ i.animatrice?.prenom?.charAt(0) }}{{ i.animatrice?.nom?.charAt(0) }}
+          </div>
+
+          <div class="inscription-info">
+            <div class="inscription-nom">
+              {{ i.animatrice?.prenom }} {{ i.animatrice?.nom }}
+            </div>
+            <div class="inscription-meta">
+              <span>📅 Inscrite le {{ formatDate(i.dateInscription) }}</span>
+              <span *ngIf="i.dateCompletion">✅ Complétée le {{ formatDate(i.dateCompletion) }}</span>
+              <span *ngIf="i.dateExpiration">⏰ Expire le {{ formatDate(i.dateExpiration) }}</span>
+            </div>
+          </div>
+
+          <div class="inscription-badges">
+            <span class="badge-statut"
+                  [style.background]="getStatutColor(i.statut) + '20'"
+                  [style.color]="getStatutColor(i.statut)">
+              {{ i.statut?.replace('_', ' ') }}
+            </span>
+            <span class="badge-validite"
+                  *ngIf="i.statutValidite && i.statut === 'TERMINEE'"
+                  [style.background]="getValiditeColor(i.statutValidite) + '20'"
+                  [style.color]="getValiditeColor(i.statutValidite)">
+              {{ i.statutValidite?.replace('_', ' ') }}
+            </span>
+            <span class="badge-certificat" *ngIf="i.certificationGeneree">
+              🎓 Certifiée
+            </span>
+          </div>
+
+          <button *ngIf="i.statut === 'INSCRITE' && peutInscrire()"
+                  class="btn-desinscrire"
+                  (click)="desinscrire(i.animatrice?.id, i.animatrice?.prenom + ' ' + i.animatrice?.nom)">
+            Désinscrire
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ===== MODAL INSCRIPTION ===== -->
+<dialog #modalInscrire class="native-modal">
+  <div class="modal-header">
+    <h3>➕ Inscrire une animatrice</h3>
+    <button class="modal-close" (click)="modalInscrire.close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="info-places" *ngIf="formation?.complet">
+      ⚠️ La formation est complète. L'animatrice sera ajoutée en liste d'attente.
+    </div>
+
+    <div class="form-group">
+      <label>Sélectionner une animatrice</label>
+      <select [(ngModel)]="animatriceSelectionnee" class="form-input">
+        <option [value]="null">Choisir...</option>
+        <option *ngFor="let a of animatricesNonInscrites" [value]="a.id">
+          {{ a.prenom }} {{ a.nom }} — {{ a.specialite || 'Animatrice' }}
+        </option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" (click)="modalInscrire.close()">Annuler</button>
+    <button class="btn-primary" (click)="confirmerInscription()">Inscrire</button>
+  </div>
+</dialog>

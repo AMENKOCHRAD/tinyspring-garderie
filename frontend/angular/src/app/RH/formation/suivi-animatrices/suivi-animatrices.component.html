@@ -1,0 +1,243 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" *ngIf="vue === 'profil'" (click)="retourListe()">← Retour</button>
+      <h2 class="page-title">
+        {{ vue === 'liste' ? '👥 Suivi Formations Animatrices' : '👤 Profil Formations — ' + animatriceSelectionnee?.prenom + ' ' + animatriceSelectionnee?.nom }}
+      </h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span><span class="sep">/</span>
+        <span>Formations</span><span class="sep">/</span>
+        <span class="active">{{ vue === 'liste' ? 'Suivi Animatrices' : 'Profil' }}</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ===== VUE LISTE ===== -->
+  <div *ngIf="vue === 'liste'">
+
+    <!-- Alertes globales -->
+    <div class="alertes-section" *ngIf="alertesGlobales && alertesGlobales.totalAlertes > 0">
+      <h3 class="alertes-title">🚨 Alertes formations</h3>
+      <div class="alertes-grid">
+        <div class="alerte-card alerte-card--red" *ngIf="alertesGlobales.expirees?.length > 0">
+          <span class="alerte-icon">🔴</span>
+          <div>
+            <span class="alerte-count">{{ alertesGlobales.expirees.length }}</span>
+            <span class="alerte-label">Formation(s) expirée(s)</span>
+          </div>
+        </div>
+        <div class="alerte-card alerte-card--orange" *ngIf="alertesGlobales.bientotExpirees?.length > 0">
+          <span class="alerte-icon">🟡</span>
+          <div>
+            <span class="alerte-count">{{ alertesGlobales.bientotExpirees.length }}</span>
+            <span class="alerte-label">Expirent bientôt</span>
+          </div>
+        </div>
+        <div class="alerte-card alerte-card--blue" *ngIf="alertesGlobales.sousInscrites?.length > 0">
+          <span class="alerte-icon">⚠️</span>
+          <div>
+            <span class="alerte-count">{{ alertesGlobales.sousInscrites.length }}</span>
+            <span class="alerte-label">Formation(s) sous-inscrite(s)</span>
+          </div>
+        </div>
+        <div class="alerte-card alerte-card--grey" *ngIf="alertesGlobales.sanFormationRecente?.length > 0">
+          <span class="alerte-icon">💡</span>
+          <div>
+            <span class="alerte-count">{{ alertesGlobales.sanFormationRecente.length }}</span>
+            <span class="alerte-label">Sans formation récente</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div><p>Chargement...</p>
+    </div>
+
+    <!-- Liste animatrices -->
+    <div class="animatrices-grid" *ngIf="!isLoading">
+      <div *ngFor="let a of animatrices" class="animatrice-card"
+           [class.animatrice-card--alerte]="aDesAlertes(a.id)"
+           (click)="voirProfil(a)">
+
+        <div class="animatrice-card__header">
+          <div class="avatar">
+            {{ a.prenom?.charAt(0) }}{{ a.nom?.charAt(0) }}
+          </div>
+          <div class="animatrice-info">
+            <span class="animatrice-nom">{{ a.prenom }} {{ a.nom }}</span>
+            <span class="animatrice-specialite">{{ a.specialite || 'Animatrice' }}</span>
+          </div>
+          <div class="alertes-badges">
+            <span *ngIf="aDesAlertes(a.id)" class="badge-alerte">⚠️ Alerte</span>
+            <span *ngIf="estSansFormationRecente(a.id)" class="badge-inactif">💡 Sans formation</span>
+          </div>
+        </div>
+
+        <div class="animatrice-card__footer">
+          <span class="voir-profil">Voir le profil formations →</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== VUE PROFIL ===== -->
+  <div *ngIf="vue === 'profil'">
+
+    <!-- Loading profil -->
+    <div class="loading-state" *ngIf="isLoadingProfil">
+      <div class="spinner"></div><p>Chargement du profil...</p>
+    </div>
+
+    <div *ngIf="profil && !isLoadingProfil">
+
+      <!-- Card animatrice -->
+      <div class="profil-hero">
+        <div class="profil-avatar">
+          {{ animatriceSelectionnee?.prenom?.charAt(0) }}{{ animatriceSelectionnee?.nom?.charAt(0) }}
+        </div>
+        <div class="profil-info">
+          <h3>{{ animatriceSelectionnee?.prenom }} {{ animatriceSelectionnee?.nom }}</h3>
+          <span>{{ animatriceSelectionnee?.specialite || 'Animatrice' }}</span>
+        </div>
+        <div class="profil-score">
+          <div class="score-circle">
+            <svg viewBox="0 0 36 36">
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke="#e2e8f0" stroke-width="3"/>
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke="#4f46e5" stroke-width="3"
+                [attr.stroke-dasharray]="getTauxCompletion() + ', 100'"/>
+            </svg>
+            <span class="score-text">{{ getTauxCompletion() }}%</span>
+          </div>
+          <span class="score-label">Taux de complétion</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card stat-card--blue">
+          <span class="stat-icon">📚</span>
+          <span class="stat-value">{{ profil.stats.total }}</span>
+          <span class="stat-label">Total formations</span>
+        </div>
+        <div class="stat-card stat-card--green">
+          <span class="stat-icon">✅</span>
+          <span class="stat-value">{{ profil.stats.terminees }}</span>
+          <span class="stat-label">Terminées</span>
+        </div>
+        <div class="stat-card stat-card--indigo">
+          <span class="stat-icon">⏳</span>
+          <span class="stat-value">{{ profil.stats.inscrites }}</span>
+          <span class="stat-label">En cours</span>
+        </div>
+        <div class="stat-card stat-card--orange">
+          <span class="stat-icon">⚠️</span>
+          <span class="stat-value">{{ profil.stats.bientotExpirees + profil.stats.expirees }}</span>
+          <span class="stat-label">Alertes validité</span>
+        </div>
+      </div>
+
+      <!-- Alertes animatrice -->
+      <div class="alertes-animatrice" *ngIf="profil.alertes?.totalAlertes > 0">
+        <h4 class="alertes-animatrice__title">🚨 Alertes personnalisées</h4>
+        <div class="alerte-ligne" *ngIf="profil.alertes.expirees?.length > 0">
+          🔴 {{ profil.alertes.expirees.length }} formation(s) expirée(s) — renouvellement urgent
+        </div>
+        <div class="alerte-ligne" *ngIf="profil.alertes.bientotExpirees?.length > 0">
+          🟡 {{ profil.alertes.bientotExpirees.length }} formation(s) expirent dans moins de 3 mois
+        </div>
+        <div class="alerte-ligne" *ngIf="profil.alertes.obligatoiresNonSuivies?.length > 0">
+          ⚠️ {{ profil.alertes.obligatoiresNonSuivies.length }} formation(s) obligatoire(s) non suivie(s)
+        </div>
+      </div>
+
+      <div class="content-grid">
+
+        <!-- Historique formations -->
+        <div class="section-card">
+          <h3 class="section-title">📋 Historique Formations</h3>
+
+          <div class="empty-section" *ngIf="profil.formations.length === 0">
+            <p>Aucune formation suivie pour le moment</p>
+          </div>
+
+          <div class="formations-list">
+            <div *ngFor="let af of profil.formations" class="formation-item"
+                 [style.border-left]="'4px solid ' + getStatutColor(af.statut)">
+
+              <div class="formation-item__header">
+                <div class="formation-item__title">
+                  <span class="type-icon">{{ getTypeIcon(af.formation?.type) }}</span>
+                  <span class="formation-nom">{{ af.formation?.titre }}</span>
+                </div>
+                <div class="formation-item__badges">
+                  <span class="badge-statut"
+                        [style.background]="getStatutColor(af.statut) + '20'"
+                        [style.color]="getStatutColor(af.statut)">
+                    {{ af.statut?.replace('_', ' ') }}
+                  </span>
+                  <span *ngIf="af.statutValidite && af.statut === 'TERMINEE'"
+                        class="badge-validite"
+                        [style.background]="getValiditeColor(af.statutValidite) + '20'"
+                        [style.color]="getValiditeColor(af.statutValidite)">
+                    {{ af.statutValidite?.replace('_', ' ') }}
+                  </span>
+                  <span *ngIf="af.certificationGeneree" class="badge-certificat">🎓</span>
+                </div>
+              </div>
+
+              <div class="formation-item__dates">
+                <span>📅 Inscrite : {{ formatDate(af.dateInscription) }}</span>
+                <span *ngIf="af.dateCompletion">✅ Complétée : {{ formatDate(af.dateCompletion) }}</span>
+                <span *ngIf="af.dateExpiration"
+                      [style.color]="getValiditeColor(af.statutValidite)">
+                  ⏰ Expire : {{ formatDate(af.dateExpiration) }}
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="section-card">
+          <h3 class="section-title">💡 Formations Recommandées</h3>
+
+          <div class="empty-section" *ngIf="profil.suggestions.length === 0">
+            <p>✅ Toutes les formations sont à jour !</p>
+          </div>
+
+          <div class="suggestions-list">
+            <div *ngFor="let s of profil.suggestions" class="suggestion-item"
+                 [style.border-left]="'4px solid ' + getPrioriteColor(s.priorite)">
+              <div class="suggestion-header">
+                <span class="suggestion-titre">{{ s.formation.titre }}</span>
+                <span class="priorite-badge"
+                      [style.background]="getPrioriteColor(s.priorite) + '20'"
+                      [style.color]="getPrioriteColor(s.priorite)">
+                  {{ s.priorite }}
+                </span>
+              </div>
+              <p class="suggestion-raison">{{ s.raison }}</p>
+              <div class="suggestion-meta">
+                <span *ngIf="s.formation.dateDebut">📅 {{ formatDate(s.formation.dateDebut) }}</span>
+                <span>🪑 {{ s.formation.placesDisponibles }} place(s)</span>
+                <span *ngIf="s.formation.obligatoire" class="obligatoire-tag">⚠️ Obligatoire</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

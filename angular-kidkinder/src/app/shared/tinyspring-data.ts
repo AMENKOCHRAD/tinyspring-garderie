@@ -127,17 +127,19 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
     { key: 'sante', label: 'Sante & alertes', route: '/animateur/sante' },
     { key: 'activites', label: 'Activites', route: '/animateur/activites' },
     { key: 'messages', label: 'Messages', route: '/animateur/messages' },
-   {
-  key: 'rh',
-  label: 'RH',
-  route: '/animateur/formations',
-  children: [
-    { label: 'Formations', route: '/animateur/formations' },
-    { label: 'Planning', route: '/animateur/planning' },
-    // ✅ Ajout des pages RH
-    { label: 'Mes absences', route: '/animateur/rh/mes-absences' },
-    { label: 'Nouvelle demande', route: '/animateur/rh/nouvelle-demande' }
-  ]
-}
+    {
+      key: 'rh',
+      label: 'RH',
+      route: '/animateur/formations',
+      children: [
+        { label: 'Formations', route: '/animateur/formations' },
+        { label: 'Planning', route: '/animateur/planning' },
+        { label: 'Mes absences', route: '/animateur/rh/mes-absences' },
+        { label: 'Nouvelle demande', route: '/animateur/rh/nouvelle-demande' },
+        // ✅ NOUVEAU — Formations enrichies
+        { label: '📚 Formations disponibles', route: '/animateur/formations/disponibles' },
+        { label: '🎓 Mes formations', route: '/animateur/formations/mes-formations' }
+      ]
+    }
   ]
 };

@@ -1,0 +1,163 @@
+.page-wrapper { padding: 24px; max-width: 1000px; margin: 0 auto; }
+
+.page-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 20px;
+}
+.page-title { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0; }
+.btn-link {
+  padding: 10px 18px; background: #4f46e5; color: white;
+  border-radius: 10px; text-decoration: none;
+  font-size: 13px; font-weight: 600;
+  &:hover { background: #4338ca; }
+}
+.btn-link-sm {
+  color: #4f46e5; text-decoration: none; font-size: 13px;
+  font-weight: 600; &:hover { text-decoration: underline; }
+}
+
+/* Hero */
+.hero-card {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-radius: 16px; padding: 22px;
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 20px; color: white;
+}
+.hero-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  font-size: 20px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.hero-info { flex: 1; }
+.hero-info h3 { font-size: 18px; font-weight: 700; margin: 0 0 3px; }
+.hero-info span { font-size: 12px; opacity: 0.8; }
+.hero-stats { display: flex; gap: 20px; }
+.hero-stat { text-align: center; }
+.hero-stat__value { display: block; font-size: 22px; font-weight: 700; }
+.hero-stat__label { display: block; font-size: 10px; opacity: 0.8; }
+
+/* Alerte card */
+.alerte-card {
+  background: #fef3c7; border: 1px solid #fcd34d;
+  border-radius: 12px; padding: 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-bottom: 20px;
+}
+.alerte-icon { font-size: 22px; }
+.alerte-content { flex: 1; }
+.alerte-content h4 { font-size: 14px; font-weight: 700; color: #92400e; margin: 0 0 4px; }
+.alerte-content p { font-size: 12px; color: #92400e; margin: 2px 0; }
+.alerte-btn {
+  color: #4f46e5; text-decoration: none; font-size: 13px;
+  font-weight: 600; white-space: nowrap;
+  &:hover { text-decoration: underline; }
+}
+
+/* Onglets */
+.onglets {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  background: #f1f5f9; border-radius: 12px; padding: 4px;
+}
+.onglet {
+  flex: 1; padding: 10px; border: none; border-radius: 8px;
+  background: transparent; font-size: 13px; font-weight: 600;
+  color: #64748b; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  &:hover { background: white; }
+  &--active { background: white; color: #1e293b; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+}
+.onglet-count {
+  background: #e2e8f0; color: #374151;
+  padding: 1px 6px; border-radius: 10px; font-size: 11px;
+  &--red { background: #fee2e2; color: #991b1b; }
+}
+
+/* Section */
+.section { margin-bottom: 20px; }
+.section-title {
+  font-size: 15px; font-weight: 700; color: #1e293b;
+  margin: 0 0 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+/* Formations list */
+.formations-list { display: flex; flex-direction: column; gap: 8px; }
+.formation-item {
+  background: white; border-radius: 10px; padding: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: flex; justify-content: space-between; align-items: center;
+  border-left: 4px solid #e2e8f0;
+  &--blue { border-left-color: #3b82f6; }
+  &--orange { border-left-color: #f59e0b; }
+}
+.fi-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+.fi-icon { font-size: 22px; flex-shrink: 0; }
+.fi-info { display: flex; flex-direction: column; gap: 2px; }
+.fi-titre { font-size: 14px; font-weight: 700; color: #1e293b; }
+.fi-meta { font-size: 11px; color: #64748b; }
+.fi-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.fi-badge {
+  padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
+}
+.fi-certificat {
+  background: #f0fdf4; color: #16a34a;
+  padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
+}
+
+/* Suggestions */
+.suggestions-list { display: flex; flex-direction: column; gap: 12px; }
+.suggestion-item {
+  background: white; border-radius: 12px; padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid;
+}
+.suggestion-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 10px;
+}
+.suggestion-left { display: flex; gap: 10px; align-items: flex-start; }
+.suggestion-icon { font-size: 22px; flex-shrink: 0; }
+.suggestion-titre { font-size: 14px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 3px; }
+.suggestion-raison { font-size: 12px; color: #64748b; margin: 0; }
+.priorite-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.suggestion-footer { display: flex; justify-content: space-between; align-items: center; }
+.suggestion-meta { display: flex; gap: 12px; font-size: 11px; color: #94a3b8; }
+.obligatoire-tag {
+  background: #fef3c7; color: #92400e;
+  padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;
+}
+
+/* Alertes */
+.alertes-group { margin-bottom: 20px; }
+.alertes-group__title {
+  font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 10px;
+}
+.alerte-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
+  font-size: 13px; font-weight: 600;
+  &--red { background: #fee2e2; color: #991b1b; }
+  &--orange { background: #fef3c7; color: #92400e; }
+  &--yellow { background: #fefce8; color: #854d0e; }
+}
+.alerte-date { font-size: 11px; opacity: 0.8; }
+.alerte-btn-sm {
+  color: #4f46e5; text-decoration: none; font-size: 12px;
+  font-weight: 600; &:hover { text-decoration: underline; }
+}
+
+/* States */
+.empty-section {
+  text-align: center; padding: 30px;
+  color: #64748b; font-size: 13px;
+  background: #f8fafc; border-radius: 12px;
+  p { margin: 0 0 12px; }
+}
+.loading-state { text-align: center; padding: 50px 20px; color: #64748b; }
+.spinner {
+  width: 40px; height: 40px; border: 3px solid #f1f5f9;
+  border-top: 3px solid #4f46e5; border-radius: 50%;
+  animation: spin 1s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -2,9 +2,7 @@ package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.dto.RH.CalendrierEventDTO;
 import com.tinyspring.garderie.entity.RH.AbsenceConge;
-import com.tinyspring.garderie.entity.RH.Formation;
 import com.tinyspring.garderie.repository.RH.AbsenceCongeRepository;
-import com.tinyspring.garderie.repository.RH.FormationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +16,13 @@ import java.util.List;
 public class CalendrierController {
 
     private final AbsenceCongeRepository absenceCongeRepository;
-    private final FormationRepository formationRepository;
+    // ✅ FormationRepository supprimé — sera rajouté avec la nouvelle logique
 
     @GetMapping("/events")
     public ResponseEntity<List<CalendrierEventDTO>> getEvents() {
         List<CalendrierEventDTO> events = new ArrayList<>();
 
+        // Absences & Congés
         for (AbsenceConge ac : absenceCongeRepository.findAll()) {
             String color = switch (ac.getStatut()) {
                 case APPROUVE -> "#10b981";
@@ -45,20 +44,7 @@ public class CalendrierController {
                     .build());
         }
 
-        for (Formation f : formationRepository.findAll()) {
-            if (f.getDateDebut() != null) {
-                events.add(CalendrierEventDTO.builder()
-                        .id("form-" + f.getId())
-                        .title("📚 " + f.getTitre())
-                        .start(f.getDateDebut().toString())
-                        .end(f.getDateFin() != null
-                                ? f.getDateFin().plusDays(1).toString()
-                                : f.getDateDebut().plusDays(1).toString())
-                        .color("#6366f1")
-                        .type("FORMATION")
-                        .build());
-            }
-        }
+        // ✅ Formations supprimées temporairement — seront rajoutées avec la nouvelle logique
 
         return ResponseEntity.ok(events);
     }

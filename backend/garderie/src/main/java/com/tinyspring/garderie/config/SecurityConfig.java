@@ -59,14 +59,25 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // ✅ Auth publique
                         .requestMatchers("/api/auth/**").permitAll()
+
                         // ✅ Photos accessibles sans token
                         .requestMatchers("/uploads/**").permitAll()
+
+                        // ✅ Endpoints admin accessibles aussi par l'animatrice (lecture seule)
+                        .requestMatchers(HttpMethod.GET, "/api/admin/formations").hasAnyRole("ADMIN", "ANIMATRICE")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/formations/**").hasAnyRole("ADMIN", "ANIMATRICE")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/animatrices/**").hasAnyRole("ADMIN", "ANIMATRICE")
+
                         // ✅ Routes protégées par rôle
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
-                        .requestMatchers("/api/animatrice/**").permitAll()
+
+                        // ✅ Routes animatrice — ANIMATRICE authentifiée requise
+                        .requestMatchers("/api/animatrice/**").hasAnyRole("ADMIN", "ANIMATRICE")
+
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
                         .anyRequest().authenticated()
                 )
@@ -84,7 +95,6 @@ public class SecurityConfig {
                 "http://localhost:4202"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // ✅ Headers explicites — fix bug CORS avec credentials
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",

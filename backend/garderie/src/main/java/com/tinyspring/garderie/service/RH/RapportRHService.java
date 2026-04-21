@@ -7,7 +7,6 @@ import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
 import com.tinyspring.garderie.entity.RH.enums.TypeAbsenceConge;
 import com.tinyspring.garderie.repository.RH.AbsenceCongeRepository;
 import com.tinyspring.garderie.repository.RH.AnimatriceRepository;
-import com.tinyspring.garderie.repository.RH.FormationRepository;
 import com.tinyspring.garderie.repository.RH.RapportRHRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,27 +20,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RapportRHService {
 
-    private final OllamaService ollamaService; // ✅ Ollama local
+    private final OllamaService ollamaService;
     private final RapportRHRepository rapportRHRepository;
     private final AbsenceCongeRepository absenceCongeRepository;
     private final AnimatriceRepository animatriceRepository;
-    private final FormationRepository formationRepository;
+    // ✅ FormationRepository supprimé
 
-    /**
-     * Génère un rapport RH à partir d'une question en langage naturel
-     */
     public RapportRHDTO genererRapport(String question) {
-
-        // 1. Collecter toutes les données temps réel
         String donneesContexte = collecterDonnees();
-
-        // 2. Construire le prompt format Alpaca
         String prompt = construirePrompt(question, donneesContexte);
-
-        // 3. Appeler Ollama local
         String contenuRapport = ollamaService.generer(prompt);
 
-        // 4. Sauvegarder le rapport
         RapportRH rapport = RapportRH.builder()
                 .question(question)
                 .typeRapport(detecterTypeRapport(question))
@@ -54,9 +43,6 @@ public class RapportRHService {
         return toDTO(saved);
     }
 
-    /**
-     * Collecte toutes les données RH temps réel
-     */
     private String collecterDonnees() {
         StringBuilder sb = new StringBuilder();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -111,7 +97,6 @@ public class RapportRHService {
                     .append(" demandes, ").append(totalJours).append(" jours\n");
         }
 
-        // Demandes en attente
         sb.append("\nDEMANDES EN ATTENTE\n");
         absences.stream()
                 .filter(a -> StatutAbsenceConge.EN_ATTENTE.equals(a.getStatut()))
@@ -122,23 +107,15 @@ public class RapportRHService {
                         .append(" | ").append(a.getType().name())
                         .append(" | ").append(a.getNbJours()).append(" jours\n"));
 
-        // Formations
-        long totalFormations = formationRepository.count();
-        sb.append("\nFORMATIONS\n");
-        sb.append("Total : ").append(totalFormations).append("\n");
+        // ✅ Formations supprimées temporairement
 
         return sb.toString();
     }
 
-    /**
-     * Construit le prompt au format Alpaca (même format que le fine-tuning)
-     */
     private String construirePrompt(String question, String donnees) {
         return "Tu es TinySpring-RH, un assistant expert en gestion RH pour TinySpring Garderie.\n\n" +
-                "### Instruction:\n" +
-                question + "\n\n" +
-                "### Input:\n" +
-                donnees + "\n\n" +
+                "### Instruction:\n" + question + "\n\n" +
+                "### Input:\n" + donnees + "\n\n" +
                 "### Response:\n";
     }
 

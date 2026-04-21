@@ -42,13 +42,14 @@ public class Animatrice {
     @Column(name = "photo_url")
     private String photoUrl;
 
+    // Mot de passe temporaire pour premier login
+    @Column(name = "mot_de_passe_temporaire")
+    private String motDePasseTemporaire;
+
     // ✅ JsonIgnore pour éviter la boucle infinie JSON
     @JsonIgnore
     @OneToMany(mappedBy = "animatrice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AbsenceConge> absenceConges;
 
-    // ✅ JsonIgnore pour éviter la boucle infinie JSON
-    @JsonIgnore
-    @ManyToMany(mappedBy = "animatrices", fetch = FetchType.LAZY)
-    private List<Formation> formations;
+    // ✅ formations supprimé — sera recréé avec la nouvelle logique
 }

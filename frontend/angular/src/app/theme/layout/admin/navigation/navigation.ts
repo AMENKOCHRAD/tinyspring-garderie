@@ -11,10 +11,7 @@ export interface NavigationItem {
   external?: boolean;
   target?: boolean;
   breadcrumbs?: boolean;
-  badge?: {
-    title?: string;
-    type?: string;
-  };
+  badge?: { title?: string; type?: string; };
   children?: NavigationItem[];
 }
 
@@ -125,14 +122,7 @@ export const NavigationItems: NavigationItem[] = [
             classes: 'nav-item',
             icon: 'feather icon-calendar'
           },
-          {
-            id: 'rh-formations',
-            title: 'Formations',
-            type: 'item',
-            url: '/rh/formations',
-            classes: 'nav-item',
-            icon: 'feather icon-award'
-          },
+          // ✅ Formations sera rajouté ici avec la nouvelle logique enrichie
           {
             id: 'rh-calendrier',
             title: 'Calendrier',
@@ -141,7 +131,6 @@ export const NavigationItems: NavigationItem[] = [
             classes: 'nav-item',
             icon: 'feather icon-calendar'
           },
-          // ✅ NOUVEAU — Moteur de règles
           {
             id: 'rh-quotas',
             title: '⚙️ Moteur de règles',
@@ -151,12 +140,28 @@ export const NavigationItems: NavigationItem[] = [
             icon: 'feather icon-settings'
           },
           {
-  id: 'rh-rapports',
-  title: '🤖 Rapports IA',
+            id: 'rh-rapports',
+            title: '🤖 Rapports IA',
+            type: 'item',
+            url: '/rh/rapports',
+            classes: 'nav-item',
+            icon: 'feather icon-file-text'
+          },
+          {
+  id: 'rh-formations',
+  title: '📚 Formations',
   type: 'item',
-  url: '/rh/rapports',
+  url: '/rh/formations',
   classes: 'nav-item',
-  icon: 'feather icon-file-text'
+  icon: 'feather icon-award'
+},
+{
+  id: 'rh-suivi-animatrices',
+  title: '👥 Suivi Animatrices',
+  type: 'item',
+  url: '/rh/formations/suivi',
+  classes: 'nav-item',
+  icon: 'feather icon-users'
 }
         ]
       },

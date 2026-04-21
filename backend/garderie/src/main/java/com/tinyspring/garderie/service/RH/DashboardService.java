@@ -45,11 +45,11 @@ public class DashboardService {
         long congesMaladie = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_MALADIE).size();
         long congesMaternite = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_MATERNITE).size();
 
-        // ===== Formations =====
+        // ===== Formations ✅ maintenant avec le nouveau repository =====
         long totalFormations = formationRepository.count();
-        long formationsInscrites = formationRepository.findByStatutInscription(StatutFormation.INSCRITE).size();
-        long formationsEnCours = formationRepository.findByStatutInscription(StatutFormation.EN_COURS).size();
-        long formationsTerminees = formationRepository.findByStatutInscription(StatutFormation.TERMINEE).size();
+        long formationsInscrites = formationRepository.countByStatut(StatutFormation.OUVERTE);
+        long formationsEnCours = formationRepository.countByStatut(StatutFormation.EN_COURS);
+        long formationsTerminees = formationRepository.countByStatut(StatutFormation.TERMINEE);
 
         // ===== Dernières demandes en attente =====
         List<AbsenceCongeDTO> dernieresDemandesEnAttente = absenceCongeRepository
@@ -89,7 +89,6 @@ public class DashboardService {
                 .build();
     }
 
-    // Méthode publique pour toDTO absence
     public AbsenceCongeDTO toDTO(com.tinyspring.garderie.entity.RH.AbsenceConge absenceConge) {
         return absenceCongeService.toDTO(absenceConge);
     }
