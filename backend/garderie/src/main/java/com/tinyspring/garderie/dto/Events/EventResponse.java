@@ -41,4 +41,9 @@ public class EventResponse {
     private Integer remainingCapacity;
     private boolean full;
     private boolean registrationOpen;
+    private boolean rateable;
+    private Long rateableChildId;
+    private Integer myRating;
+    private Double averageRating;
+    private Long ratingCount;
 }

@@ -40,6 +40,11 @@ export interface ParentEvent {
   remainingCapacity: number | null;
   full: boolean;
   registrationOpen: boolean;
+    rateable?: boolean;
+  rateableChildId?: number | null;
+  myRating?: number | null;
+  averageRating?: number | null;
+  ratingCount?: number | null;
 }
 
 export interface ParentParticipation {
@@ -68,6 +73,8 @@ export interface DecoratedParentEvent extends ParentEvent {
   cardState: ActivityCardState;
   canParticipate: boolean;
   hasStarted: boolean;
+    canRate: boolean;
+  ratingChildId: number | null;
 }
 
 export interface ParentActivitiesData {

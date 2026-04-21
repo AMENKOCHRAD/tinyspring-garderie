@@ -24,4 +24,9 @@ export interface Event {
   updatedAt?: string;
   eventPrice: number;
   photoEvent?: string;
+  ratingCount?: number | null;
+averageRating?: number | null;
+myRating?: number | null;
+rateable?: boolean;
+rateableChildId?: number | null;
 }

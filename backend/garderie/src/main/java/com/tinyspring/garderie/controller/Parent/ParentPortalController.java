@@ -1,20 +1,17 @@
 package com.tinyspring.garderie.controller.Parent;
 
+import com.tinyspring.garderie.dto.Events.EventRatingRequest;
+import com.tinyspring.garderie.dto.Events.EventRatingResponse;
 import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
 import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.dto.Parent.ParentChildResponse;
 import com.tinyspring.garderie.service.Parent.ParentPortalService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -60,5 +57,14 @@ public class ParentPortalController {
             @RequestParam Long parentId
     ) {
         return ResponseEntity.ok(parentPortalService.cancelParticipation(parentId, registrationId));
+    }
+
+    @PostMapping("/events/{eventId}/rating")
+    public ResponseEntity<EventRatingResponse> rateEvent(
+            @PathVariable Long eventId,
+            @RequestParam Long parentId,
+            @Valid @RequestBody EventRatingRequest request
+    ) {
+        return ResponseEntity.ok(parentPortalService.rateEvent(parentId, eventId, request));
     }
 }

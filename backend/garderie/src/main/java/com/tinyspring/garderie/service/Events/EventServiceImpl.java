@@ -1,12 +1,15 @@
 package com.tinyspring.garderie.service.Events;
 
 import com.tinyspring.garderie.dto.Events.EventRequest;
+import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.entity.Events.Event;
+import com.tinyspring.garderie.entity.Events.EventRating;
 import com.tinyspring.garderie.entity.Events.EventStatus;
 import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
 import com.tinyspring.garderie.mappeer.EventMapper;
 import com.tinyspring.garderie.repository.Classes.ClasseRepository;
+import com.tinyspring.garderie.repository.Events.EventRatingRepository;
 import com.tinyspring.garderie.repository.Events.EventRegistrationRepository;
 import com.tinyspring.garderie.repository.Events.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventMapper eventMapper;
+    private final EventRatingRepository eventRatingRepository;
 
     @Override
     public Event create(EventRequest request) {
@@ -50,10 +54,78 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<EventResponse> getAllWithRatings() {
+        List<Event> events = eventRepository.findAll();
+        events.forEach(this::syncCompletedStatusIfNeeded);
+
+        return events.stream()
+                .sorted((e1, e2) -> {
+                    int statusCompare = Integer.compare(
+                            getStatusPriority(e1.getStatus()),
+                            getStatusPriority(e2.getStatus())
+                    );
+
+                    if (statusCompare != 0) {
+                        return statusCompare;
+                    }
+
+                    if (e1.getStartDatetime() == null && e2.getStartDatetime() == null) return 0;
+                    if (e1.getStartDatetime() == null) return 1;
+                    if (e2.getStartDatetime() == null) return -1;
+
+                    return e1.getStartDatetime().compareTo(e2.getStartDatetime());
+                })
+                .map(event -> {
+
+                    EventResponse response = eventMapper.toResponse(event);
+
+                    // 🔥 ICI ON AJOUTE LE RATING
+                    List<EventRating> ratings =
+                            eventRatingRepository.findByEventId(event.getId());
+
+                    response.setRatingCount((long) ratings.size());
+
+                    double avg = ratings.stream()
+                            .mapToInt(EventRating::getStars)
+                            .average()
+                            .orElse(0.0);
+
+                    response.setAverageRating(avg);
+
+                    return response;
+                })
+                .toList();
+    }
+
+    @Override
     public List<Event> getAll() {
         List<Event> events = eventRepository.findAll();
         events.forEach(this::syncCompletedStatusIfNeeded);
-        return events;
+
+        return events.stream()
+                .sorted((e1, e2) -> {
+                    int statusCompare = Integer.compare(
+                            getStatusPriority(e1.getStatus()),
+                            getStatusPriority(e2.getStatus())
+                    );
+
+                    if (statusCompare != 0) {
+                        return statusCompare;
+                    }
+
+                    if (e1.getStartDatetime() == null && e2.getStartDatetime() == null) {
+                        return 0;
+                    }
+                    if (e1.getStartDatetime() == null) {
+                        return 1;
+                    }
+                    if (e2.getStartDatetime() == null) {
+                        return -1;
+                    }
+
+                    return e1.getStartDatetime().compareTo(e2.getStartDatetime());
+                })
+                .toList();
     }
 
     @Override
@@ -103,11 +175,12 @@ public class EventServiceImpl implements EventService {
         validateDates(existing);
         validateLocation(existing);
 
-        if (request.getStatus() != null) {
-            existing.setStatus(request.getStatus());
-        } else if (previousStatus == EventStatus.COMPLETED && isRepublishableAfterEdit(existing)) {
+        if (previousStatus == EventStatus.COMPLETED && isRepublishableAfterEdit(existing)) {
             existing.setStatus(EventStatus.DRAFT);
+        } else if (request.getStatus() != null) {
+            existing.setStatus(request.getStatus());
         }
+
 
         return eventRepository.save(existing);
     }
@@ -263,4 +336,17 @@ public class EventServiceImpl implements EventService {
             throw new InvalidStatusTransitionException(errorMessage);
         }
     }
+
+
+    public int getStatusPriority(EventStatus status) {
+        return switch (status) {
+            case PUBLISHED -> 1;
+            case CANCELLED -> 2;
+            case COMPLETED -> 3;
+            case DRAFT -> 4;
+            default -> 99;
+        };
+    }
+
+
 }

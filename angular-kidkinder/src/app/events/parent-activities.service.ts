@@ -76,6 +76,19 @@ export class ParentActivitiesService {
       }))
     );
   }
+rateEvent(eventId: number, childId: number, stars: number, comment?: string) {
+  const parentId = this.getParentId();
+
+  return this.http.post(
+    `${this.apiUrl}/events/${eventId}/rating?parentId=${parentId}`,
+    {
+      childId,
+      stars,
+      comment
+    }
+  );
+}
+
 
   private decorateEvent(
     event: ParentEvent,
@@ -87,6 +100,7 @@ export class ParentActivitiesService {
     if (typeof event.classroomId === 'number') {
       classroomScope.add(event.classroomId);
     }
+    
 
     for (const classroomId of event.targetClassroomIds ?? []) {
       classroomScope.add(classroomId);
@@ -119,22 +133,33 @@ export class ParentActivitiesService {
     } else if (isClosed) {
       cardState = 'full';
     }
+const attendedParticipations = activeParticipations.filter(
+  (participation) => participation.status === 'ATTENDED'
+);
+
+const ratingChildId = attendedParticipations.length > 0
+  ? attendedParticipations[0].childId
+  : null;
 
     return {
-      ...event,
-      eligibleChildren,
-      activeParticipations,
-      availableChildren,
-      hasStarted,
-      canParticipate:
-        !hasStarted &&
-        event.status !== 'CANCELLED' &&
-        event.status !== 'COMPLETED' &&
-        event.registrationOpen &&
-        !event.full &&
-        (event.remainingCapacity === null || event.remainingCapacity > 0) &&
-        availableChildren.length > 0,
-      cardState
+ ...event,
+  eligibleChildren,
+  activeParticipations,
+  availableChildren,
+  hasStarted,
+  canParticipate:
+    !hasStarted &&
+    event.status !== 'CANCELLED' &&
+    event.status !== 'COMPLETED' &&
+    event.registrationOpen &&
+    !event.full &&
+    (event.remainingCapacity === null || event.remainingCapacity > 0) &&
+    availableChildren.length > 0,
+
+  canRate: event.status === 'COMPLETED' && ratingChildId !== null,
+  ratingChildId,
+
+  cardState
     };
   }
 

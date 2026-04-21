@@ -5,6 +5,7 @@ import com.tinyspring.garderie.dto.Events.EventRecommendationResponse;
 import com.tinyspring.garderie.dto.Events.EventRequest;
 import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.entity.Events.Event;
+import com.tinyspring.garderie.entity.Events.EventRating;
 import com.tinyspring.garderie.entity.Events.RegistrationStatus;
 import com.tinyspring.garderie.mappeer.EventMapper;
 import com.tinyspring.garderie.repository.Events.EventRegistrationRepository;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
+import com.tinyspring.garderie.repository.Events.EventRatingRepository;
 import java.util.List;
 import java.util.EnumSet;
 import java.util.Set;
@@ -32,6 +34,7 @@ public class EventRestController {
     private final EventMapper eventMapper;
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventRecommendationService eventRecommendationService;
+    private final EventRatingRepository eventRatingRepository;
 
 
     @PostMapping("/create")
@@ -90,6 +93,8 @@ public class EventRestController {
 
     private EventResponse toEventResponse(Event event) {
         EventResponse response = eventMapper.toResponse(event);
+
+        // 🔹 CAPACITÉ (déjà existant)
         long confirmedRegistrations = eventRegistrationRepository.countByEventIdAndStatusIn(
                 event.getId(),
                 CAPACITY_CONSUMING_STATUSES
@@ -98,6 +103,7 @@ public class EventRestController {
                 event.getId(),
                 RegistrationStatus.WAITLISTED
         );
+
         Integer remainingCapacity = event.getMaxCapacity() == null
                 ? null
                 : Math.max(event.getMaxCapacity() - Math.toIntExact(confirmedRegistrations), 0);
@@ -107,6 +113,19 @@ public class EventRestController {
         response.setRemainingCapacity(remainingCapacity);
         response.setFull(remainingCapacity != null && remainingCapacity == 0);
         response.setRegistrationOpen(!response.isFull());
+
+        // 🔥 AJOUT ICI : RATING
+        List<EventRating> ratings = eventRatingRepository.findByEventId(event.getId());
+
+        response.setRatingCount((long) ratings.size());
+
+        double avg = ratings.stream()
+                .mapToInt(EventRating::getStars)
+                .average()
+                .orElse(0.0);
+
+        response.setAverageRating(avg);
+
         return response;
     }
 

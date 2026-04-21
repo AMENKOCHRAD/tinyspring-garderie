@@ -27,7 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.tinyspring.garderie.dto.Events.EventRatingRequest;
+import com.tinyspring.garderie.dto.Events.EventRatingResponse;
+import com.tinyspring.garderie.entity.Events.EventRating;
+import com.tinyspring.garderie.repository.Events.EventRatingRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +46,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.tinyspring.garderie.entity.Events.EventStatus;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +57,7 @@ public class ParentPortalServiceImpl implements ParentPortalService {
 
     private static final Set<RegistrationStatus> CAPACITY_CONSUMING_STATUSES =
             EnumSet.of(RegistrationStatus.CONFIRMED, RegistrationStatus.ATTENDED);
+    private final EventRatingRepository eventRatingRepository;
 
     private final UserRepository userRepository;
     private final ChildRepository childRepository;
@@ -85,10 +91,36 @@ public class ParentPortalServiceImpl implements ParentPortalService {
                 .map(child -> child.getClassroom().getId())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        return eventService.getPublished().stream()
-                .map(this::toParentEventResponse)
-                .filter(event -> isVisibleForChildren(event, classroomIds))
+        Set<Long> childIds = children.stream()
+                .map(Child::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> attendedCompletedEventIds = eventRegistrationRepository
+                .findByChildIdInAndStatus(childIds, RegistrationStatus.ATTENDED).stream()
+                .map(EventRegistration::getEventId)
+                .collect(Collectors.toSet());
+
+        return eventRepository.findAll().stream()
+                .map(event -> eventService.getById(event.getId()))
+                .filter(event -> isEventVisibleForParent(event, classroomIds, attendedCompletedEventIds, childIds))
+                .map(event -> toParentEventResponse(event, childIds))
                 .toList();
+    }
+
+    private boolean isEventVisibleForParent(Event event,
+                                            Set<Long> classroomIds,
+                                            Set<Long> attendedCompletedEventIds,
+                                            Set<Long> childIds) {
+        if (event.getStatus() == EventStatus.PUBLISHED) {
+            EventResponse response = toParentEventResponse(event, childIds);
+            return isVisibleForChildren(response, classroomIds);
+        }
+
+        if (event.getStatus() == EventStatus.COMPLETED) {
+            return attendedCompletedEventIds.contains(event.getId());
+        }
+
+        return false;
     }
 
     @Override
@@ -202,7 +234,7 @@ public class ParentPortalServiceImpl implements ParentPortalService {
                 .build();
     }
 
-    private EventResponse toParentEventResponse(Event event) {
+    private EventResponse toParentEventResponse(Event event, Set<Long> childIds) {
         EventResponse response = eventMapper.toResponse(event);
 
         long confirmedRegistrations = eventRegistrationRepository.countByEventIdAndStatusIn(
@@ -213,6 +245,7 @@ public class ParentPortalServiceImpl implements ParentPortalService {
                 event.getId(),
                 RegistrationStatus.WAITLISTED
         );
+
         Integer remainingCapacity = event.getMaxCapacity() == null
                 ? null
                 : Math.max(event.getMaxCapacity() - Math.toIntExact(confirmedRegistrations), 0);
@@ -230,6 +263,51 @@ public class ParentPortalServiceImpl implements ParentPortalService {
         }
 
         response.setTargetedClassroomNames(resolveClassroomNames(response.getTargetClassroomIds()));
+
+        // =========================
+        //  PARTIE RATING
+        // =========================
+
+        List<EventRating> ratings = eventRatingRepository.findByEventId(event.getId());
+
+        response.setRatingCount((long) ratings.size());
+
+        double average = ratings.stream()
+                .mapToInt(EventRating::getStars)
+                .average()
+                .orElse(0.0);
+
+        response.setAverageRating(average);
+
+        List<Long> attendedChildIds = eventRegistrationRepository
+                .findByChildIdInAndStatus(childIds, RegistrationStatus.ATTENDED)
+                .stream()
+                .filter(reg -> reg.getEventId().equals(event.getId()))
+                .map(EventRegistration::getChildId)
+                .distinct()
+                .toList();
+
+        Long rateableChildId = null;
+        Integer myRating = null;
+
+        if (!attendedChildIds.isEmpty()) {
+            List<EventRating> childRatings = eventRatingRepository.findByEventIdAndChildIdIn(event.getId(), attendedChildIds);
+
+            if (!childRatings.isEmpty()) {
+                EventRating existingRating = childRatings.get(0);
+                rateableChildId = existingRating.getChildId();
+                myRating = existingRating.getStars();
+            } else {
+                rateableChildId = attendedChildIds.get(0);
+            }
+        }
+
+        boolean canRate = event.getStatus() == EventStatus.COMPLETED && rateableChildId != null;
+
+        response.setRateable(canRate);
+        response.setRateableChildId(rateableChildId);
+        response.setMyRating(myRating);
+
         return response;
     }
 
@@ -363,5 +441,64 @@ public class ParentPortalServiceImpl implements ParentPortalService {
         return childRepository.findById(registration.getChildId())
                 .map(child -> (child.getFirstName() + " " + child.getLastName()).trim())
                 .orElse("Enfant");
+    }
+
+    @Override
+    @Transactional
+    public EventRatingResponse rateEvent(Long parentId, Long eventId, EventRatingRequest request) {
+        User parent = getValidatedParent(parentId);
+
+        Child child = childRepository.findById(request.getChildId())
+                .orElseThrow(() -> new ResourceNotFoundException("Enfant introuvable avec l'id : " + request.getChildId()));
+
+        if (!child.getParent().getId().equals(parent.getId())) {
+            throw new InvalidStatusTransitionException("Cet enfant n'est pas rattache au parent connecte");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + eventId));
+
+        if (event.getStatus() != EventStatus.COMPLETED) {
+            throw new InvalidStatusTransitionException("Seuls les evenements termines peuvent etre notes");
+        }
+
+        boolean attended = eventRegistrationRepository.findByChildIdInAndStatus(
+                        Set.of(child.getId()),
+                        RegistrationStatus.ATTENDED
+                ).stream()
+                .anyMatch(registration -> registration.getEventId().equals(eventId));
+
+        if (!attended) {
+            throw new InvalidStatusTransitionException(
+                    "Le parent ne peut noter qu'un evenement auquel son enfant a effectivement participe"
+            );
+        }
+
+        EventRating rating = eventRatingRepository.findByEventIdAndChildId(eventId, child.getId())
+                .orElse(
+                        EventRating.builder()
+                                .eventId(eventId)
+                                .childId(child.getId())
+                                .parentId(parentId)
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                );
+
+        rating.setStars(request.getStars());
+        rating.setComment(request.getComment() != null ? request.getComment().trim() : null);
+        rating.setUpdatedAt(LocalDateTime.now());
+
+        EventRating saved = eventRatingRepository.save(rating);
+
+        return EventRatingResponse.builder()
+                .id(saved.getId())
+                .eventId(saved.getEventId())
+                .childId(saved.getChildId())
+                .parentId(saved.getParentId())
+                .stars(saved.getStars())
+                .comment(saved.getComment())
+                .createdAt(saved.getCreatedAt())
+                .updatedAt(saved.getUpdatedAt())
+                .build();
     }
 }

@@ -23,6 +23,9 @@ export class ParentActivitiesComponent {
   private readonly activitiesService = inject(ParentActivitiesService);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected hoveredStars: Record<number, number> = {};
+  protected ratingLoadingEventId: number | null = null;
+
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
@@ -62,6 +65,7 @@ export class ParentActivitiesComponent {
   });
 
   protected readonly classSummary = computed(() => this.buildClassSummary(this.activitiesData()?.children ?? []));
+
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', {
     weekday: 'long',
     day: 'numeric',
@@ -217,8 +221,57 @@ export class ParentActivitiesComponent {
       });
   }
 
+  protected submitRating(event: DecoratedParentEvent, stars: number): void {
+    if (!event.canRate || !event.ratingChildId) {
+      return;
+    }
+
+    this.ratingLoadingEventId = event.id;
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.activitiesService
+      .rateEvent(event.id, event.ratingChildId, stars)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+       next: () => {
+  //  mettre à jour la note locale
+  event.myRating = stars;
+
+  // mise à jour moyenne + compteur (UX instantanée)
+  if (!event.ratingCount || event.ratingCount === 0) {
+    event.ratingCount = 1;
+    event.averageRating = stars;
+  } else {
+    event.averageRating = stars; // simple refresh visuel
+  }
+
+  this.ratingLoadingEventId = null;
+  this.successMessage.set('Votre note a ete enregistree.');
+},
+        error: (error: HttpErrorResponse | Error) => {
+          this.ratingLoadingEventId = null;
+          this.errorMessage.set(this.getErrorMessage(error, "La note n'a pas pu etre enregistree."));
+        }
+      });
+  }
+
   protected isCancelling(participationId: number): boolean {
     return this.cancellingParticipationId() === participationId;
+  }
+
+  protected isStarFilled(event: DecoratedParentEvent, star: number): boolean {
+    const hovered = this.hoveredStars[event.id];
+    const current = hovered ?? event.myRating ?? 0;
+    return star <= current;
+  }
+
+  protected setHoveredStars(eventId: number, stars: number): void {
+    this.hoveredStars[eventId] = stars;
+  }
+
+  protected clearHoveredStars(eventId: number): void {
+    delete this.hoveredStars[eventId];
   }
 
   protected openDirections(event: DecoratedParentEvent): void {
@@ -404,6 +457,22 @@ export class ParentActivitiesComponent {
     }
 
     return "L'inscription n'est pas disponible pour cet evenement.";
+  }
+
+  protected isCompletedEvent(event: DecoratedParentEvent): boolean {
+    return event.status === 'COMPLETED';
+  }
+
+  protected hasAttendedParticipation(event: DecoratedParentEvent): boolean {
+    return event.activeParticipations.some((participation) => participation.status === 'ATTENDED');
+  }
+
+  protected shouldShowCompletedBadge(event: DecoratedParentEvent): boolean {
+    return this.isCompletedEvent(event);
+  }
+
+  protected shouldShowAttendedBadge(event: DecoratedParentEvent): boolean {
+    return this.isCompletedEvent(event) && this.hasAttendedParticipation(event);
   }
 
   private matchesFilter(event: DecoratedParentEvent, filter: ActivityFilter): boolean {

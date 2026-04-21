@@ -17,4 +17,4 @@ public interface EventRegistrationService {
     EventRegistration markAttended(Long registrationId);
 
     EventRegistration markAbsent(Long registrationId);
-}
+   }

@@ -1,5 +1,7 @@
 package com.tinyspring.garderie.service.Parent;
 
+import com.tinyspring.garderie.dto.Events.EventRatingRequest;
+import com.tinyspring.garderie.dto.Events.EventRatingResponse;
 import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
 import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.dto.Parent.ParentChildResponse;
@@ -21,4 +23,5 @@ public interface ParentPortalService {
                                           MultipartFile authorizationFile);
 
     EventRegistrationResponse cancelParticipation(Long parentId, Long registrationId);
+    EventRatingResponse rateEvent(Long parentId, Long eventId, EventRatingRequest request);
 }

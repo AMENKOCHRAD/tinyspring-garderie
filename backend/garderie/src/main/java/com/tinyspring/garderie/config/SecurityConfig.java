@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/test").permitAll()
                         .requestMatchers("/api/classes/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/parent/events/{eventId}/rating").hasRole("PARENT")
                         // public events
                         .requestMatchers(HttpMethod.GET, "/api/events/public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/events/public/*").permitAll()

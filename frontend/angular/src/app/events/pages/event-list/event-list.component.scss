@@ -278,6 +278,30 @@
   --fc-button-active-border-color: #17b6d2;
   --fc-today-bg-color: rgba(23, 182, 210, 0.08);
 }
+.event-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.stars {
+  display: flex;
+}
+
+.star {
+  color: #dcdcdc;
+  font-size: 16px;
+}
+
+.star.filled {
+  color: #f4b400;
+}
+
+.rating-text {
+  font-size: 13px;
+  color: #6b7280;
+}
 
 :host ::ng-deep .fc .fc-toolbar-title {
   font-size: 1.25rem;

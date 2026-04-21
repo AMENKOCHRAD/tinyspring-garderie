@@ -1,7 +1,9 @@
 package com.tinyspring.garderie.service.Events;
 
 import com.tinyspring.garderie.dto.Events.EventRequest;
+import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.entity.Events.Event;
+import com.tinyspring.garderie.entity.Events.EventStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -25,4 +27,7 @@ public interface EventService {
 
     Event uploadPhoto(Long id, MultipartFile file);
      void validateLocation(Event event);
+     int getStatusPriority(EventStatus status);
+    List<EventResponse> getAllWithRatings();
+
 }

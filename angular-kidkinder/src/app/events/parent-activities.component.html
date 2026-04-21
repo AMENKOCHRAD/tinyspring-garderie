@@ -1,231 +1,375 @@
-<section class="activities-shell">
-  <ng-container *ngIf="!selectedEvent(); else detailView">
-    <article class="activities-hero">
-      <div>
-        <span class="hero-chip">Activites</span>
-        <h2>Calendrier et evenements</h2>
-        <p>Consultez les activites a venir, les sorties et les autorisations de vos enfants.</p>
-      </div>
-      <div class="hero-date">{{ todayLabel }}</div>
-    </article>
+<section class="activities-shell" [class.activities-shell--blurred]="selectedEvent()">
+  <article class="activities-hero">
+    <div class="activities-hero__content">
+      <div class="activities-hero__eyebrow">Activites</div>
+      <h2>Calendrier des <span>activités</span></h2>
+      <p>Semaine du 21 au 27 avril 2026</p>
+    </div>
 
-    <article class="calendar-strip-card">
+    <div class="filter-pills filter-pills--hero">
+      <button
+        *ngFor="let filter of filters"
+        type="button"
+        class="filter-pill"
+        [class.filter-pill--active]="selectedFilter() === filter.key"
+        (click)="selectFilter(filter.key)">
+        {{ filter.label }}
+      </button>
+    </div>
+  </article>
+
+  <article class="calendar-strip-card">
+    <div class="calendar-strip-card__header">
       <h3>Calendrier des activites</h3>
-      <div class="calendar-strip">
-        <button
-          *ngFor="let day of nextSevenDays()"
-          type="button"
-          class="calendar-day"
-          [class.calendar-day--selected]="day.selected"
-          [class.calendar-day--has-event]="day.hasEvent">
-          <span>{{ day.weekday }}</span>
-          <strong>{{ day.label }}</strong>
-        </button>
-      </div>
-    </article>
+    </div>
 
-    <article class="events-board">
-      <header class="events-board__header">
-        <div>
-          <h3>Evenements</h3>
-          <p>{{ classSummary() }}</p>
+    <div class="calendar-strip calendar-strip--framed">
+      <button type="button" class="calendar-nav-button" aria-label="Semaine precedente">
+        &#8249;
+      </button>
+
+      <button
+        *ngFor="let day of nextSevenDays()"
+        type="button"
+        class="calendar-day"
+        [class.calendar-day--selected]="day.selected"
+        [class.calendar-day--has-event]="day.hasEvent">
+        <span>{{ day.weekday }}</span>
+        <strong>{{ day.label }}</strong>
+      </button>
+
+      <button type="button" class="calendar-nav-button" aria-label="Semaine suivante">
+        &#8250;
+      </button>
+    </div>
+  </article>
+
+  <article class="children-board">
+    <div class="children-board__label">Enfants</div>
+    <div class="children-board__list">
+      <div class="child-chip" *ngFor="let child of activitiesData()?.children ?? []">
+        <span class="child-chip__avatar">{{ child.firstName.charAt(0) }}</span>
+        <div class="child-chip__content">
+          <strong>{{ child.firstName }}</strong>
+          <small>{{ child.classroomName }}</small>
         </div>
-        <span class="events-avatar">{{ getHeroInitials() }}</span>
-      </header>
-
-      <div class="filter-pills">
-        <button
-          *ngFor="let filter of filters"
-          type="button"
-          class="filter-pill"
-          [class.filter-pill--active]="selectedFilter() === filter.key"
-          (click)="selectFilter(filter.key)">
-          {{ filter.label }}
-        </button>
       </div>
+    </div>
+  </article>
 
-      <div *ngIf="successMessage()" class="feedback feedback--success">{{ successMessage() }}</div>
-      <div *ngIf="errorMessage()" class="feedback feedback--error">{{ errorMessage() }}</div>
-
-      <div *ngIf="loading()" class="empty-state">
-        <strong>Chargement des evenements...</strong>
-        <span>Nous recuperons les activites liees aux classes de vos enfants.</span>
+  <article class="events-board">
+    <header class="events-board__header">
+      <div>
+        <h3>Événements</h3>
+        <p>{{ classSummary() }}</p>
       </div>
-
-      <div *ngIf="!loading() && !filteredEvents().length" class="empty-state">
-        <strong>Aucun evenement pour le moment.</strong>
-        <span>Seuls les evenements publies des classes de vos enfants apparaissent ici.</span>
+      <div class="events-board__count">
+        {{ filteredEvents().length }} activité<span *ngIf="filteredEvents().length > 1">s</span> trouvée<span *ngIf="filteredEvents().length > 1">s</span>
       </div>
+    </header>
 
-      <section *ngIf="!loading() && filteredEvents().length" class="cards-grid">
-        <article *ngFor="let event of filteredEvents()" class="event-card">
-          <div class="event-card__media" [class]="getCardStateClass(event)">
-            <img *ngIf="getPhotoUrl(event.photoEvent) as photoUrl" [src]="photoUrl" alt="Photo evenement" />
-            <div *ngIf="!getPhotoUrl(event.photoEvent)" class="event-card__placeholder">
-              <span>{{ getTypeLabel(event.type) }}</span>
-            </div>
+    <div *ngIf="successMessage()" class="feedback feedback--success">{{ successMessage() }}</div>
+    <div *ngIf="errorMessage()" class="feedback feedback--error">{{ errorMessage() }}</div>
 
-            <div class="event-card__badges">
-              <span class="badge badge--type">{{ getTypeLabel(event.type) }}</span>
-              <span class="badge badge--state" [class]="getCardStateClass(event)">{{ getCardStateBadge(event) }}</span>
-            </div>
-          </div>
+    <div *ngIf="loading()" class="empty-state">
+      <strong>Chargement des evenements...</strong>
+      <span>Nous recuperons les activites liees aux classes de vos enfants.</span>
+    </div>
 
-          <div class="event-card__body">
-            <h4>{{ event.title }}</h4>
-            <p class="event-card__description">{{ getDescriptionPreview(event.description) }}</p>
+    <div *ngIf="!loading() && !filteredEvents().length" class="empty-state">
+      <strong>Aucun evenement pour le moment.</strong>
+      <span>Les evenements publies et les evenements termines visibles pour votre famille apparaissent ici.</span>
+    </div>
 
-            <div class="event-card__meta">
-              <span>{{ formatDateRange(event) }}</span>
-              <span>{{ event.location || 'Lieu a confirmer' }}</span>
-            </div>
-
-            <div class="event-card__footer">
-              <div class="event-card__chips">
-                <span *ngIf="event.cardState === 'registered'" class="chip">Deja inscrit</span>
-                <span *ngIf="event.cardState !== 'registered' && event.requiresAuthorization" class="chip chip--warning">
-                  Autorisation requise
-                </span>
-                <span class="chip chip--neutral">{{ (event.eventPrice ?? 0) > 0 ? (event.eventPrice + ' DT') : 'Gratuit' }}</span>
-              </div>
-
-              <div class="event-card__actions">
-                <button type="button" class="icon-button icon-button--ghost" (click)="showDetails(event)" aria-label="Voir le detail">
-                  &#128065;
-                </button>
-                <button
-                  type="button"
-                  class="icon-button"
-                  [class.icon-button--primary]="event.cardState === 'available'"
-                  [class.icon-button--success]="event.cardState === 'registered'"
-                  [class.icon-button--muted]="event.cardState === 'full'"
-                  [disabled]="event.cardState === 'full'"
-                  (click)="triggerPrimaryAction(event)"
-                  aria-label="Participer a l'evenement">
-                  {{ getPrimaryActionIcon(event) }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </article>
-      </section>
-    </article>
-  </ng-container>
-
-  <ng-template #detailView>
-    <section *ngIf="selectedEvent() as event" class="event-detail-page">
-      <article class="event-detail">
-        <header class="event-detail__topbar">
-          <button type="button" class="detail-back" (click)="resetSelection()">
-            &#8249; Retour
-          </button>
-          <span class="events-avatar">{{ getHeroInitials() }}</span>
-        </header>
-
-        <div class="detail-hero" [class]="getCardStateClass(event)">
+    <section *ngIf="!loading() && filteredEvents().length" class="cards-grid cards-grid--premium">
+      <article *ngFor="let event of filteredEvents()" class="event-card">
+        <div class="event-card__media" [class]="getCardStateClass(event)">
           <img *ngIf="getPhotoUrl(event.photoEvent) as photoUrl" [src]="photoUrl" alt="Photo evenement" />
-          <div *ngIf="!getPhotoUrl(event.photoEvent)" class="detail-hero__placeholder">{{ getTypeLabel(event.type) }}</div>
-        </div>
-
-        <h3>{{ event.title }}</h3>
-
-        <div class="detail-badges">
-          <span class="badge badge--soft">{{ getTypeLabel(event.type) }}</span>
-          <span class="badge badge--state" [class]="getCardStateClass(event)">
-            {{ event.cardState === 'available' && event.remainingCapacity !== null ? (event.remainingCapacity + ' places restantes') : getCardStateBadge(event) }}
-          </span>
-          <span *ngIf="event.requiresAuthorization" class="badge badge--warning">Autorisation requise</span>
-          <span class="badge badge--soft">{{ (event.eventPrice ?? 0) > 0 ? (event.eventPrice + ' DT') : 'Gratuit' }}</span>
-        </div>
-
-        <div *ngIf="hasSelectedParticipations()" class="detail-success">
-          {{ getRegisteredChildrenMessage() }}
-        </div>
-
-        <article class="detail-card">
-          <h4>Informations</h4>
-          <div class="detail-row detail-row--with-icon">
-            <span class="detail-icon">&#128197;</span>
-            <div>
-              <strong>{{ formatLongDate(event.startDatetime) }}</strong>
-              <p>{{ formatTimeRange(event) }}</p>
-            </div>
+          <div *ngIf="!getPhotoUrl(event.photoEvent)" class="event-card__placeholder">
+            <span>{{ getTypeLabel(event.type) }}</span>
           </div>
-          <div *ngIf="event.classroomName" class="detail-row detail-row--with-icon">
-            <span class="detail-icon">&#9788;</span>
-            <div>
-              <strong>{{ event.classroomName }}</strong>
-            </div>
+
+          <div class="event-card__badges event-card__badges--top">
+            <span class="badge badge--dark">{{ getTypeLabel(event.type) }}</span>
+            <span *ngIf="event.cardState === 'registered'" class="badge badge--muted">Déjà inscrit</span>
+            <span *ngIf="shouldShowAttendedBadge(event)" class="badge badge--blue">Présent</span>
+            <span *ngIf="shouldShowCompletedBadge(event) && !shouldShowAttendedBadge(event)" class="badge badge--coral">
+              Clôture
+            </span>
           </div>
-          <button type="button" class="location-button" (click)="openDirections(event)">
+        </div>
+
+        <div class="event-card__body">
+          <div class="event-card__meta-line">
+            <span>{{ formatDateRange(event) }}</span>
+            <span *ngIf="event.classroomName">{{ event.classroomName }}</span>
+          </div>
+
+          <h4>{{ event.title }}</h4>
+          <p class="event-card__description">{{ getDescriptionPreview(event.description) }}</p>
+
+          <div class="event-card__location">
+            <span class="event-card__location-icon">&#9673;</span>
             <span>{{ event.location || 'Lieu a confirmer' }}</span>
-            <span>&#8594;</span>
-          </button>
-        </article>
-
-        <article class="detail-card">
-          <h4>Capacite</h4>
-          <div class="capacity-line">
-            <span>Places disponibles</span>
-            <strong>
-              {{ event.remainingCapacity ?? 'Illimite' }}
-              <ng-container *ngIf="event.maxCapacity">/ {{ event.maxCapacity }}</ng-container>
-            </strong>
           </div>
-          <div class="capacity-bar">
-            <span [style.width.%]="event.maxCapacity ? ((event.confirmedRegistrations / event.maxCapacity) * 100) : 35"></span>
+
+          <div class="capacity-block" *ngIf="event.maxCapacity">
+            <div class="capacity-block__header">
+              <span>Capacité</span>
+              <strong>{{ event.remainingCapacity ?? 0 }} / {{ event.maxCapacity }} places</strong>
+            </div>
+            <div class="capacity-bar capacity-bar--soft">
+              <span [style.width.%]="event.maxCapacity ? ((event.confirmedRegistrations / event.maxCapacity) * 100) : 35"></span>
+            </div>
           </div>
-          <small>
-            {{ event.confirmedRegistrations }} inscrit(s)
-            <ng-container *ngIf="event.remainingCapacity !== null"> - {{ event.remainingCapacity }} places restantes</ng-container>
-          </small>
-        </article>
 
-        <article class="detail-card">
-          <h4>Description</h4>
-          <p>{{ getDescriptionPreview(event.description) }}</p>
-        </article>
+          <div class="event-card__bottom-row">
+            <div class="event-card__price">
+              <strong>{{ (event.eventPrice ?? 0) > 0 ? (event.eventPrice + ' DT') : 'Gratuit' }}</strong>
+              <small *ngIf="(event.eventPrice ?? 0) > 0">/ enfant</small>
+            </div>
 
-        <article *ngIf="event.requiresAuthorization && event.canParticipate && hasAvailableChildrenToRegister()" class="detail-alert">
-          Autorisation parentale obligatoire. Votre signature numerique sera demandee lors de l'inscription.
-        </article>
-
-        <article *ngIf="event.canParticipate && hasAvailableChildrenToRegister()" class="detail-card">
-          <h4>{{ hasSelectedParticipations() ? 'Inscrire un autre enfant' : 'Participer' }}</h4>
-
-          <label class="detail-label">Enfant concerne</label>
-          <select class="detail-input" [ngModel]="selectedChildId()" (ngModelChange)="onChildSelectionChange($event)">
-            <option *ngFor="let child of getSelectedChildOptions()" [ngValue]="child.id">
-              {{ child.firstName }} {{ child.lastName }}
-            </option>
-          </select>
-
-          <ng-container *ngIf="event.requiresAuthorization">
-            <label class="detail-label">Autorisation PDF</label>
-            <input class="detail-input detail-input--file" type="file" accept="application/pdf" (change)="onAuthorizationFileChange($event)" />
-            <small *ngIf="getSelectedFileName()">{{ getSelectedFileName() }}</small>
-          </ng-container>
-
-          <label class="detail-label">Commentaire parent</label>
-          <textarea
-            class="detail-input detail-input--textarea"
-            rows="3"
-            [ngModel]="parentNotes()"
-            (ngModelChange)="onNotesChange($event)"
-            placeholder="Informations utiles pour l'equipe."></textarea>
-
-          <button type="button" class="cta-button" [disabled]="isSubmitting()" (click)="participate(event)">
-            {{ isSubmitting() ? 'Enregistrement...' : "Inscrire l'enfant" }}
-          </button>
-        </article>
-
-        <section *ngIf="hasSelectedParticipations()" class="detail-participations">
-          <article *ngFor="let participation of getSelectedParticipations()" class="detail-card participation-card">
-            <div class="participation-card__header">
-              <div>
-                <h4>{{ participation.childFullName }}</h4>
-                <p>Statut : {{ participation.status }}</p>
+            <div class="event-card__rating" *ngIf="event.status === 'COMPLETED'">
+              <div class="stars-row">
+                <button
+                  *ngFor="let star of [1, 2, 3, 4, 5]"
+                  type="button"
+                  class="star-button"
+                  [class.star-button--filled]="isStarFilled(event, star)"
+                  [class.star-button--disabled]="!event.canRate"
+                  [disabled]="!event.canRate || ratingLoadingEventId === event.id"
+                  (mouseenter)="event.canRate && setHoveredStars(event.id, star)"
+                  (mouseleave)="event.canRate && clearHoveredStars(event.id)"
+                  (click)="event.canRate && submitRating(event, star)"
+                  [attr.aria-label]="'Noter ' + star + ' etoile(s)'">
+                  ★
+                </button>
               </div>
+
+              <div class="rating-summary">
+                <span class="rating-summary__value" *ngIf="(event.ratingCount ?? 0) > 0">
+                  {{ event.averageRating ?? 0 | number:'1.1-1' }}/5
+                </span>
+                <span class="rating-summary__count" *ngIf="(event.ratingCount ?? 0) > 0">
+                  ({{ event.ratingCount }} avis)
+                </span>
+              </div>
+            </div>
+
+            <div class="event-card__actions">
+              <button type="button" class="icon-button icon-button--ghost" (click)="showDetails(event)" aria-label="Voir le detail">
+                &#128065;
+              </button>
+              <button
+                type="button"
+                class="icon-button"
+                [class.icon-button--primary]="event.cardState === 'available'"
+                [class.icon-button--success]="event.cardState === 'registered'"
+                [class.icon-button--muted]="event.cardState === 'full'"
+                [disabled]="event.cardState === 'full'"
+                (click)="triggerPrimaryAction(event)"
+                aria-label="Participer a l'evenement">
+                {{ getPrimaryActionIcon(event) }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </article>
+</section>
+
+<div class="event-detail-page" *ngIf="selectedEvent() as event">
+  <div class="event-detail__overlay" (click)="resetSelection()"></div>
+
+  <aside class="event-detail__panel">
+    <header class="event-detail__hero" [class]="getCardStateClass(event)">
+      <button type="button" class="detail-back detail-back--floating" (click)="resetSelection()">
+        &#8592;
+      </button>
+
+      <img *ngIf="getPhotoUrl(event.photoEvent) as photoUrl" [src]="photoUrl" alt="Photo evenement" />
+      <div *ngIf="!getPhotoUrl(event.photoEvent)" class="detail-hero__placeholder">
+        {{ getTypeLabel(event.type) }}
+      </div>
+
+      <div class="event-card__badges event-card__badges--top">
+        <span class="badge badge--dark">{{ getTypeLabel(event.type) }}</span>
+        <span *ngIf="event.cardState === 'registered'" class="badge badge--muted">Déjà inscrit</span>
+        <span *ngIf="shouldShowAttendedBadge(event)" class="badge badge--blue">Présent</span>
+        <span *ngIf="shouldShowCompletedBadge(event) && !shouldShowAttendedBadge(event)" class="badge badge--coral">
+          Clôture
+        </span>
+      </div>
+    </header>
+
+    <div class="event-detail__content">
+      <h3>{{ event.title }}</h3>
+
+      <div *ngIf="hasSelectedParticipations()" class="detail-success">
+        {{ getRegisteredChildrenMessage() }}
+      </div>
+
+      <article class="detail-card detail-card--soft">
+        <h4>Informations</h4>
+
+        <div class="detail-row detail-row--with-icon">
+  <span class="detail-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+  </span>
+  <div>
+    <strong>{{ formatLongDate(event.startDatetime) }}</strong>
+    <p>{{ formatTimeRange(event) }}</p>
+  </div>
+</div>
+
+<div *ngIf="event.classroomName" class="detail-row detail-row--with-icon">
+  <span class="detail-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+  </span>
+  <div>
+    <strong>{{ event.classroomName }}</strong>
+  </div>
+</div>
+<button
+  type="button"
+  class="detail-location-button"
+  (click)="openDirections(event)"
+  [disabled]="!event.location && (event.latitude == null || event.longitude == null)">
+  <span class="detail-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+  </span>
+
+  <div class="detail-location-button__content">
+    <span class="detail-location-button__label">Lieu</span>
+    <strong>{{ event.location || 'Lieu a confirmer' }}</strong>
+    <small>Ouvrir l’itinéraire dans Google Maps</small>
+  </div>
+
+  <span class="detail-location-button__arrow" aria-hidden="true">↗</span>
+</button>
+      </article>
+
+      <article class="detail-card detail-card--soft">
+        <h4>Capacité</h4>
+        <div class="capacity-line">
+          <span>Places disponibles</span>
+          <strong>
+            {{ event.remainingCapacity ?? 'Illimite' }}
+            <ng-container *ngIf="event.maxCapacity">/ {{ event.maxCapacity }}</ng-container>
+          </strong>
+        </div>
+        <div class="capacity-bar capacity-bar--soft">
+          <span [style.width.%]="event.maxCapacity ? ((event.confirmedRegistrations / event.maxCapacity) * 100) : 35"></span>
+        </div>
+        <small>
+          {{ event.confirmedRegistrations }} inscrit(s)
+          <ng-container *ngIf="event.remainingCapacity !== null"> — {{ event.remainingCapacity }} places restantes</ng-container>
+        </small>
+      </article>
+
+      <article class="detail-card">
+        <h4>Description</h4>
+        <p>{{ getDescriptionPreview(event.description) }}</p>
+      </article>
+
+      <article class="detail-card" *ngIf="event.status === 'COMPLETED'">
+        <h4>Votre avis</h4>
+
+        <div class="detail-rating">
+          <button
+            *ngFor="let star of [1, 2, 3, 4, 5]"
+            type="button"
+            class="star-button star-button--large"
+            [class.star-button--filled]="isStarFilled(event, star)"
+            [class.star-button--disabled]="!event.canRate"
+            [disabled]="!event.canRate || ratingLoadingEventId === event.id"
+            (mouseenter)="event.canRate && setHoveredStars(event.id, star)"
+            (mouseleave)="event.canRate && clearHoveredStars(event.id)"
+            (click)="event.canRate && submitRating(event, star)"
+            [attr.aria-label]="'Noter ' + star + ' etoile(s)'">
+            ★
+          </button>
+        </div>
+
+        <div class="rating-summary">
+          <span class="rating-summary__value" *ngIf="(event.ratingCount ?? 0) > 0">
+            {{ event.averageRating ?? 0 | number:'1.1-1' }}/5
+          </span>
+          <span class="rating-summary__count" *ngIf="(event.ratingCount ?? 0) > 0">
+            ({{ event.ratingCount }} avis)
+          </span>
+          <span class="rating-summary__hint" *ngIf="event.canRate">
+            Touchez une etoile pour noter cet evenement
+          </span>
+          <span class="rating-summary__hint" *ngIf="!event.canRate">
+            La note est reservee aux parents dont l'enfant a ete marque present
+          </span>
+        </div>
+      </article>
+
+      <article *ngIf="event.requiresAuthorization && event.canParticipate && hasAvailableChildrenToRegister()" class="detail-alert">
+        Autorisation parentale obligatoire. Votre signature numerique sera demandee lors de l'inscription.
+      </article>
+
+      <article *ngIf="event.canParticipate && hasAvailableChildrenToRegister()" class="detail-card">
+        <h4>{{ hasSelectedParticipations() ? 'Inscrire un autre enfant' : 'Participer' }}</h4>
+
+        <label class="detail-label">Enfant concerne</label>
+        <select class="detail-input" [ngModel]="selectedChildId()" (ngModelChange)="onChildSelectionChange($event)">
+          <option *ngFor="let child of getSelectedChildOptions()" [ngValue]="child.id">
+            {{ child.firstName }} {{ child.lastName }}
+          </option>
+        </select>
+
+        <ng-container *ngIf="event.requiresAuthorization">
+          <label class="detail-label">Autorisation PDF</label>
+          <input class="detail-input detail-input--file" type="file" accept="application/pdf" (change)="onAuthorizationFileChange($event)" />
+          <small *ngIf="getSelectedFileName()">{{ getSelectedFileName() }}</small>
+        </ng-container>
+
+        <label class="detail-label">Commentaire parent</label>
+        <textarea
+          class="detail-input detail-input--textarea"
+          rows="3"
+          [ngModel]="parentNotes()"
+          (ngModelChange)="onNotesChange($event)"
+          placeholder="Informations utiles pour l'equipe."></textarea>
+
+        <button type="button" class="cta-button" [disabled]="isSubmitting()" (click)="participate(event)">
+          {{ isSubmitting() ? 'Enregistrement...' : "Inscrire l'enfant" }}
+        </button>
+      </article>
+
+      <section *ngIf="hasSelectedParticipations()" class="detail-participations">
+        <article *ngFor="let participation of getSelectedParticipations()" class="detail-card participation-card">
+          <h4>Participant</h4>
+          <div class="participation-card__header">
+            <div class="participant-pill">
+              <span class="participant-pill__avatar">
+                {{ participation.childFullName.charAt(0) }}{{ participation.childFullName.split(' ').length > 1 ? participation.childFullName.split(' ')[1].charAt(0) : '' }}
+              </span>
+              <div>
+                <strong>{{ participation.childFullName }}</strong>
+                <p>{{ event.classroomName || 'Classe' }}</p>
+              </div>
+            </div>
+
+            <div class="participation-card__actions">
+              <span class="badge badge--blue" *ngIf="participation.status === 'ATTENDED'">PRÉSENT</span>
               <button
                 type="button"
                 class="danger-button"
@@ -234,17 +378,17 @@
                 {{ isCancelling(participation.id) ? 'Annulation...' : 'Annuler' }}
               </button>
             </div>
-          </article>
-        </section>
+          </div>
+        </article>
+      </section>
 
-        <div *ngIf="hasSelectedParticipations() && areAllParticipationsLocked()" class="detail-disabled">
-          L'annulation est possible seulement jusqu'a 24h avant le debut de l'evenement.
-        </div>
+      <div *ngIf="hasSelectedParticipations() && areAllParticipationsLocked()" class="detail-disabled">
+        L'annulation est possible seulement jusqu'a 24h avant le debut de l'evenement.
+      </div>
 
-        <div *ngIf="!hasSelectedParticipations() && !event.canParticipate" class="detail-disabled">
-          {{ getUnavailableMessage(event) }}
-        </div>
-      </article>
-    </section>
-  </ng-template>
-</section>
+      <div *ngIf="!hasSelectedParticipations() && !event.canParticipate" class="detail-disabled">
+        {{ getUnavailableMessage(event) }}
+      </div>
+    </div>
+  </aside>
+</div>
