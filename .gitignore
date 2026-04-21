@@ -24,3 +24,6 @@ hs_err_pid*
 replay_pid*
 **/*.gguf
 backend/dataset/*.json
+**/.angular/cache
+backend/dataset/*.gguf
+backend/dataset/*.json
