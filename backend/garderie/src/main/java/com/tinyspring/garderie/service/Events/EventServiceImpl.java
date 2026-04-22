@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.service.Events;
 
+import com.tinyspring.garderie.dto.Events.EventRatingAdminResponse;
 import com.tinyspring.garderie.dto.Events.EventRequest;
 import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.entity.Events.Event;
@@ -8,6 +9,7 @@ import com.tinyspring.garderie.entity.Events.EventStatus;
 import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
 import com.tinyspring.garderie.mappeer.EventMapper;
+import com.tinyspring.garderie.repository.Children.ChildRepository;
 import com.tinyspring.garderie.repository.Classes.ClasseRepository;
 import com.tinyspring.garderie.repository.Events.EventRatingRepository;
 import com.tinyspring.garderie.repository.Events.EventRegistrationRepository;
@@ -38,6 +40,7 @@ public class EventServiceImpl implements EventService {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventMapper eventMapper;
     private final EventRatingRepository eventRatingRepository;
+    private final ChildRepository childRepository;
 
     @Override
     public Event create(EventRequest request) {
@@ -51,6 +54,32 @@ public class EventServiceImpl implements EventService {
         validateDates(event);
         validateLocation(event);
         return eventRepository.save(event);
+    }
+    @Override
+    public List<EventRatingAdminResponse> getRatingsForAdmin(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evenement introuvable avec l'id : " + eventId));
+
+        List<EventRating> ratings = eventRatingRepository.findByEventId(event.getId());
+
+        return ratings.stream()
+                .map(rating -> {
+                    String childFullName = childRepository.findById(rating.getChildId())
+                            .map(child -> child.getFirstName() + " " + child.getLastName())
+                            .orElse("Enfant inconnu");
+
+                    return EventRatingAdminResponse.builder()
+                            .id(rating.getId())
+                            .eventId(rating.getEventId())
+                            .childId(rating.getChildId())
+                            .childFullName(childFullName)
+                            .stars(rating.getStars())
+                            .comment(rating.getComment())
+                            .createdAt(rating.getCreatedAt())
+                            .updatedAt(rating.getUpdatedAt())
+                            .build();
+                })
+                .toList();
     }
 
     @Override

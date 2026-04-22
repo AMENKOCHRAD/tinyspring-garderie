@@ -86,6 +86,18 @@ export class EventRegistrationsComponent {
     this.router.navigate(['/events']);
   }
 
+  getFullDocUrl(docUrl: string | null | undefined): string | null {
+  if (!docUrl) {
+    return null;
+  }
+
+  if (docUrl.startsWith('http')) {
+    return docUrl;
+  }
+
+  return `http://localhost:8081${docUrl}`;
+}
+
   markAttended(registration: EventRegistrationRow): void {
     this.actionRegistrationId = registration.id;
 

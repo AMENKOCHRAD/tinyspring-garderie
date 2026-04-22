@@ -13,6 +13,7 @@ import { EventRequest } from '../../models/event-request.model';
 import { EventNotificationService, EventToastMessage } from '../../services/event-notification.service';
 import { EventService } from '../../services/event.service';
 import { getSafeEventPhotoUrl } from '../../utils/photo-url.util';
+import { EventRatingAdmin } from '../../models/event-rating-admin.model';
 
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
@@ -48,7 +49,7 @@ export class EventListComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(EventNotificationService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
-
+   
   private readonly loadingSubject = new BehaviorSubject<boolean>(true);
   private readonly errorSubject = new BehaviorSubject<string>('');
   private readonly searchSubject = new BehaviorSubject<string>('');
@@ -60,6 +61,12 @@ export class EventListComponent implements OnInit, OnDestroy {
   readonly toast$ = this.notificationService.message$;
   readonly loading$ = this.loadingSubject.asObservable();
   readonly errorMessage$ = this.errorSubject.asObservable();
+Math = Math;
+  ratingsModalOpen = false;
+  ratingsLoading = false;
+  selectedRatingsEventTitle = '';
+  selectedRatings: EventRatingAdmin[] = [];
+   ratingsErrorMessage: string = '';
 
   readonly statusOptions: FilterOption<EventStatus | 'ALL'>[] = [
     { value: 'ALL', label: 'Tous' },
@@ -201,8 +208,7 @@ export class EventListComponent implements OnInit, OnDestroy {
         this.updateCalendarEvents(vm.filteredEvents);
       });
   }
-
-  ngOnDestroy(): void {
+ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -431,6 +437,7 @@ export class EventListComponent implements OnInit, OnDestroy {
       createdBy: event.createdBy,
       eventPrice: event.eventPrice,
       photoEvent: event.photoEvent
+      
     };
 
     this.eventService

@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.service.Events;
 
+import com.tinyspring.garderie.dto.Events.EventRatingAdminResponse;
 import com.tinyspring.garderie.dto.Events.EventRequest;
 import com.tinyspring.garderie.dto.Events.EventResponse;
 import com.tinyspring.garderie.entity.Events.Event;
@@ -29,5 +30,7 @@ public interface EventService {
      void validateLocation(Event event);
      int getStatusPriority(EventStatus status);
     List<EventResponse> getAllWithRatings();
+    List<EventRatingAdminResponse> getRatingsForAdmin(Long eventId);
+
 
 }

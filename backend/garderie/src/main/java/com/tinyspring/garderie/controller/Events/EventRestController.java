@@ -1,9 +1,6 @@
 package com.tinyspring.garderie.controller.Events;
 
-import com.tinyspring.garderie.dto.Events.EventRecommendationContextRequest;
-import com.tinyspring.garderie.dto.Events.EventRecommendationResponse;
-import com.tinyspring.garderie.dto.Events.EventRequest;
-import com.tinyspring.garderie.dto.Events.EventResponse;
+import com.tinyspring.garderie.dto.Events.*;
 import com.tinyspring.garderie.entity.Events.Event;
 import com.tinyspring.garderie.entity.Events.EventRating;
 import com.tinyspring.garderie.entity.Events.RegistrationStatus;
@@ -40,15 +37,17 @@ public class EventRestController {
     @PostMapping("/create")
     public ResponseEntity<EventResponse> create(@Valid @RequestBody EventRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(eventMapper.toResponse(eventService.create(request)));
+                .body(toEventResponse(eventService.create(request)));
+    }
+    @GetMapping("/{id}/ratings")
+    public ResponseEntity<List<EventRatingAdminResponse>> getRatingsForAdmin(@PathVariable Long id) {
+        return ResponseEntity.ok(eventService.getRatingsForAdmin(id));
     }
 
 
     @GetMapping("/get")
     public ResponseEntity<List<EventResponse>> getAll() {
-        return ResponseEntity.ok(
-                eventService.getAll().stream().map(this::toEventResponse).toList()
-        );
+        return ResponseEntity.ok(eventService.getAllWithRatings());
     }
 
     @GetMapping("/public")
@@ -62,7 +61,6 @@ public class EventRestController {
     public ResponseEntity<EventResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(toEventResponse(eventService.getById(id)));
     }
-
     @GetMapping("/public/{id}")
     public ResponseEntity<EventResponse> getPublishedById(@PathVariable Long id) {
         return ResponseEntity.ok(toEventResponse(eventService.getPublishedById(id)));

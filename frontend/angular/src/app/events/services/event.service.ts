@@ -7,6 +7,7 @@ import { environment } from 'src/environments/environment';
 import { Event } from '../models/event.model';
 import { EventRegistration } from '../models/event-registration.model';
 import { EventRequest } from '../models/event-request.model';
+import { EventRatingAdmin } from '../models/event-rating-admin.model';
 
 interface EventApiResponse {
   id: number;
@@ -30,6 +31,13 @@ interface EventApiResponse {
   updatedAt?: string | null;
   eventPrice?: number | null;
   photoEvent?: string | null;
+
+  // rating
+  ratingCount?: number | null;
+  averageRating?: number | null;
+  myRating?: number | null;
+  rateable?: boolean | null;
+  rateableChildId?: number | null;
 }
 
 @Injectable({
@@ -48,6 +56,9 @@ export class EventService {
     ),
     shareReplay({ bufferSize: 1, refCount: true })
   );
+  getRatingsForAdmin(eventId: number) {
+  return this.http.get<EventRatingAdmin[]>(`${this.apiUrl}/events/${eventId}/ratings`);
+}
 
   getAllEvents(): Observable<Event[]> {
     return this.http
@@ -172,7 +183,14 @@ export class EventService {
       createdAt: event.createdAt ?? undefined,
       updatedAt: event.updatedAt ?? undefined,
       eventPrice: event.eventPrice ?? 0,
-      photoEvent: event.photoEvent ?? undefined
+      photoEvent: event.photoEvent ?? undefined,
+
+      // rating
+      ratingCount: event.ratingCount ?? 0,
+      averageRating: event.averageRating ?? 0,
+      myRating: event.myRating ?? null,
+      rateable: Boolean(event.rateable),
+      rateableChildId: event.rateableChildId ?? null
     };
   }
 }

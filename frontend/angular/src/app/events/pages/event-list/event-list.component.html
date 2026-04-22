@@ -200,12 +200,12 @@
                     <span class="event-card-id">#{{ event.id }}</span>
                     <span class="event-capacity">Capacité : {{ event.maxCapacity }}</span>
                   </div>
-<div class="event-rating">
+<div class="event-rating"  tabindex="0">
   <div class="stars">
     <ng-container *ngFor="let star of [1,2,3,4,5]">
       <span
         class="star"
-        [class.filled]="star <= (event.averageRating ?? 0)">
+        [class.filled]="star <= Math.round(event.averageRating ?? 0)">
         ★
       </span>
     </ng-container>
@@ -360,3 +360,4 @@
     </div>
   </section>
 }
+

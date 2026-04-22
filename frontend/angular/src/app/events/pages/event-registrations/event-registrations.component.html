@@ -109,11 +109,14 @@
                   </td>
                   <td>{{ registration.authorizationSigned ? 'Oui' : 'Non' }}</td>
                   <td>
-                    @if (registration.authorizationDocUrl) {
-                      <a [href]="registration.authorizationDocUrl" target="_blank" rel="noreferrer">
-                        Ouvrir
-                      </a>
-                    } @else {
+                   @if (registration.authorizationDocUrl) {
+    <a
+      [href]="getFullDocUrl(registration.authorizationDocUrl)"
+      target="_blank"
+      rel="noopener noreferrer">
+      Ouvrir
+    </a>
+  } @else {
                       -
                     }
                   </td>
