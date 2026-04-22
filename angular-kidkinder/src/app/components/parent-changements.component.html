@@ -1,0 +1,81 @@
+<section class="table-card">
+  <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+    <div>
+      <h2>Changements declares par l'equipe</h2>
+      <p class="muted">Retrouvez toutes les observations (sante, comportement, sommeil...).</p>
+    </div>
+    <button type="button" class="ts-button" (click)="chargerChangements()" [disabled]="isLoadingChangements">
+      {{ isLoadingChangements ? 'Chargement...' : 'Rafraichir' }}
+    </button>
+  </div>
+
+  <div class="form-grid form-grid--two" style="margin-top:12px;">
+    <div>
+      <label>Enfant</label>
+      <select [(ngModel)]="changementsEnfantId" name="chgChild">
+        <option [ngValue]="0">Tous</option>
+        <option *ngFor="let e of enfants" [ngValue]="e.id">{{ e.prenom }} {{ e.nom }}</option>
+      </select>
+    </div>
+    <div>
+      <label>Type</label>
+      <select [(ngModel)]="changementsType" name="chgType">
+        <option value="">Tous</option>
+        <option value="SANTE">Sante</option>
+        <option value="COMPORTEMENT">Comportement</option>
+        <option value="SOMMEIL">Sommeil</option>
+        <option value="ALIMENTATION">Alimentation</option>
+        <option value="INCIDENT">Incident</option>
+        <option value="HUMEUR">Humeur</option>
+        <option value="HYGIENE">Hygiene</option>
+        <option value="AUTRE">Autre</option>
+      </select>
+    </div>
+    <div style="grid-column: 1 / -1;">
+      <label>Recherche</label>
+      <input [(ngModel)]="changementsSearch" name="chgSearch" placeholder="Titre, description, lieu..." />
+    </div>
+    <div>
+      <label style="display:flex; gap:10px; align-items:center;">
+        <input type="checkbox" [(ngModel)]="changementsOnlyUnread" name="chgUnread" (change)="chargerChangements()" />
+        <span>Seulement non lus</span>
+      </label>
+    </div>
+  </div>
+</section>
+
+<section class="stack-list" *ngIf="!isLoadingChangements">
+  <article
+    class="soft-panel"
+    *ngFor="let obs of filteredChangements"
+    [ngClass]="obs.luParent ? 'soft-panel--mint' : 'soft-panel--blush'"
+    (click)="marquerChangementLu(obs)"
+    style="cursor:pointer;"
+  >
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+      <div>
+        <strong>{{ obs.enfantPrenom }} {{ obs.enfantNom }}</strong>
+        <p class="muted">
+          {{ obs.type }} &bull; {{ obs.titre }}
+          <span *ngIf="obs.urgence"> &bull; urgence: {{ obs.urgence }}</span>
+          <span *ngIf="obs.temperature != null"> &bull; {{ obs.temperature }} Â°C</span>
+          <span *ngIf="obs.lieu"> &bull; {{ obs.lieu }}</span>
+        </p>
+        <p class="muted">{{ obs.description }}</p>
+        <p class="muted">
+          {{ obs.observeLe ? obs.observeLe.replace('T', ' ') : (obs.creeLe ? obs.creeLe.replace('T', ' ') : '') }}
+          <span *ngIf="obs.creeParNom"> Ã¢â‚¬Â¢ {{ obs.creeParNom }}</span>
+          <span *ngIf="obs.luParent"> Ã¢â‚¬Â¢ lu</span>
+        </p>
+      </div>
+      <span class="tag" [ngClass]="obs.luParent ? 'tag--mint' : 'tag--blush'">
+        {{ obs.luParent ? 'Lu' : 'Nouveau' }}
+      </span>
+    </div>
+  </article>
+
+  <section class="table-card" *ngIf="filteredChangements.length === 0">
+    <p class="muted">Aucun changement a afficher.</p>
+  </section>
+</section>
+

@@ -1,0 +1,207 @@
+:host {
+  display: block;
+}
+
+.health-conditions-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.health-condition-card {
+  border: 1px solid #e7e7ee;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fbfbfd;
+}
+
+.health-condition-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.health-condition-card h4 {
+  margin: 0;
+}
+
+.health-traitements {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e1e1ea;
+}
+
+.health-traitements h5 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.health-traitements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.traitement-mini-card {
+  border: 1px solid #e7e7ee;
+  border-radius: 12px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.traitement-mini-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.animator-search {
+  margin-bottom: 12px;
+}
+
+.planning-table {
+  margin-top: 12px;
+  border: 1px solid #e7e7ee;
+  border-radius: 12px;
+  overflow: auto;
+  background: #fff;
+}
+
+.planning-table__head,
+.planning-table__row {
+  display: grid;
+  grid-template-columns: 260px repeat(auto-fit, minmax(120px, 1fr));
+  min-width: 860px;
+}
+
+.planning-table__head {
+  position: sticky;
+  top: 0;
+  background: #f7fbfc;
+  border-bottom: 1px solid #e7e7ee;
+  z-index: 2;
+}
+
+.planning-table__cell {
+  padding: 10px;
+  border-right: 1px solid #f0f0f6;
+  border-bottom: 1px solid #f0f0f6;
+  font-size: 13px;
+}
+
+.planning-table__cell--sticky {
+  position: sticky;
+  left: 0;
+  background: #ffffff;
+  z-index: 3;
+  border-right: 1px solid #e7e7ee;
+}
+
+.planning-table__head .planning-table__cell--sticky {
+  background: #f7fbfc;
+}
+
+.dose-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dose-chip {
+  border: 1px solid #cfe8ee;
+  background: #eef9fb;
+  color: #00394f;
+  padding: 6px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dose-chip:hover:not(:disabled) {
+  background: #e0f6fa;
+}
+
+.dose-chip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dose-chip--done {
+  border-color: #b7f3c1;
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.dose-chip--future {
+  border-color: #e7e7ee;
+  background: #f7f7fb;
+  color: #6b7280;
+}
+
+.planning-calendar {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.planning-day {
+  border: 1px solid #e7e7ee;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.planning-day__header {
+  padding: 10px 12px;
+  background: #f7fbfc;
+  border-bottom: 1px solid #e7e7ee;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planning-day__body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.planning-event {
+  border: 1px solid #e7e7ee;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fbfbfd;
+}
+
+.planning-event--done {
+  border-color: #b7f3c1;
+  background: #ecfdf3;
+}
+
+.planning-event__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 1100px) {
+  .planning-calendar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .planning-calendar {
+    grid-template-columns: 1fr;
+  }
+}

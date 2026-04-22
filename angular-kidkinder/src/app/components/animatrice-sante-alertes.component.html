@@ -1,0 +1,38 @@
+<section id="alertes" class="stack-list">
+  <article
+    class="soft-panel soft-panel--blush"
+    *ngFor="let alerte of filteredAlertes"
+    [ngStyle]="isDoseDueNow(alerte) ? { border: '2px solid #84cc16' } : null"
+  >
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+      <div>
+        <strong>{{ alerte.enfant.prenom }} {{ alerte.enfant.nom }}</strong>
+        <p class="muted">
+          {{ alerte.traitement.nomTraitement }} ({{ alerte.traitement.heuresPrises?.length || 0 }} fois/jour) &bull;
+          {{ alerte.heure }} &bull;
+          {{ alerte.dejaDonne ? 'Deja donne' : 'A donner' }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="ts-button ts-button--primary"
+        (click)="mark.emit(alerte)"
+        [disabled]="alerte.dejaDonne || isSavingPrise"
+      >
+        {{ alerte.dejaDonne ? 'OK' : isSavingPrise ? 'Enregistrement...' : 'Marquer donne' }}
+      </button>
+    </div>
+  </article>
+
+  <article class="soft-panel soft-panel--mint" *ngIf="filteredAlertes.length === 0 && !searchTerm.trim()">
+    <strong>Aucune alerte aujourd'hui</strong>
+    <p class="muted">Les traitements avec heures de prise apparaitront ici.</p>
+  </article>
+
+  <article class="soft-panel" *ngIf="filteredAlertes.length === 0 && searchTerm.trim()">
+    <strong>Aucun resultat</strong>
+    <p class="muted">Aucune alerte ne correspond a votre recherche.</p>
+  </article>
+</section>
+

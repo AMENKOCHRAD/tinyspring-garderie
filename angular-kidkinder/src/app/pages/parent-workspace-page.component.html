@@ -1,0 +1,1186 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">{{ pageMeta().chip }}</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p class="muted">{{ pageMeta().description }}</p>
+    </div>
+    <div class="page-header-meta">{{ todayLabel }}</div>
+  </section>
+
+  <ng-container [ngSwitch]="page()">
+    <section *ngSwitchCase="'tableau-de-bord'" class="workspace-page">
+      <div class="stats-grid">
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">E</span>
+            <span class="stat-card__value">2</span>
+          </div>
+          <span class="stat-card__label">Mes enfants</span>
+        </article>
+
+        <article class="stat-card tone-blush">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-blush">A</span>
+            <span class="stat-card__value">4</span>
+          </div>
+          <span class="stat-card__label">Activites a venir</span>
+        </article>
+
+        <article class="stat-card tone-lime">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-lime">M</span>
+            <span class="stat-card__value">3</span>
+          </div>
+          <span class="stat-card__label">Messages non lus</span>
+        </article>
+
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">S</span>
+            <span class="stat-card__value">2</span>
+          </div>
+          <span class="stat-card__label">Suivis sante</span>
+        </article>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'enfants'" class="workspace-page">
+      <section id="profils" class="profile-cards">
+        <article class="profile-card" *ngFor="let enfant of enfants">
+          <div class="inline-meta">
+            <img
+              *ngIf="enfant.photo && enfant.photo.trim()"
+              class="profile-avatar-image"
+              [src]="enfant.photo"
+              alt="Photo enfant"
+            />
+            <span *ngIf="!enfant.photo || !enfant.photo.trim()" class="profile-avatar">
+              {{ getInitial(enfant.prenom, enfant.nom) }}
+            </span>
+            <div>
+              <h3>{{ enfant.nom }} {{ enfant.prenom }}</h3>
+              <p class="muted">{{ getAge(enfant.dateNaissance) }} ans</p>
+            </div>
+          </div>
+
+          <div class="badge-row">
+            <span class="tag tag--blush" *ngIf="enfant.allergies && enfant.allergies.trim()">
+              {{ enfant.allergies }}
+            </span>
+            <span class="tag tag--lime" *ngIf="!enfant.allergies || !enfant.allergies.trim()">
+              Aucune
+            </span>
+          </div>
+
+          <div class="mt-2">
+            <button
+              type="button"
+              class="ts-button ts-button--primary"
+              (click)="voirProfil(enfant)"
+            >
+              Profil complet
+            </button>
+          </div>
+        </article>
+
+        <article class="profile-card" *ngIf="enfants.length === 0">
+          <div>
+            <h3>Aucun enfant</h3>
+            <p class="muted">Aucun profil enfant n'est encore ajoute.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="table-card" *ngIf="selectedEnfant && !isEditingEnfant">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+          <h3>Profil complet</h3>
+          <button type="button" class="ts-button" (click)="fermerProfil()">Fermer</button>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <img
+            *ngIf="selectedEnfant.photo && selectedEnfant.photo.trim()"
+            class="profile-avatar-image profile-avatar-image--large"
+            [src]="selectedEnfant.photo"
+            alt="Photo enfant"
+          />
+          <span *ngIf="!selectedEnfant.photo || !selectedEnfant.photo.trim()" class="profile-avatar profile-avatar--large">
+            {{ getInitial(selectedEnfant.prenom, selectedEnfant.nom) }}
+          </span>
+          <div>
+            <strong>{{ selectedEnfant.nom }} {{ selectedEnfant.prenom }}</strong>
+            <p class="muted" style="margin:4px 0 0;">{{ getAge(selectedEnfant.dateNaissance) }} ans</p>
+          </div>
+        </div>
+
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Nom</strong>
+            <p class="muted">{{ selectedEnfant.nom }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Prenom</strong>
+            <p class="muted">{{ selectedEnfant.prenom }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Date de naissance</strong>
+            <p class="muted">{{ selectedEnfant.dateNaissance }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Age</strong>
+            <p class="muted">{{ getAge(selectedEnfant.dateNaissance) }} ans</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Contact d urgence</strong>
+            <p class="muted">{{ selectedEnfant.contactUrgence || 'Non renseigne' }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Allergies</strong>
+            <p class="muted">{{ selectedEnfant.allergies || 'Aucune' }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Groupe sanguin</strong>
+            <p class="muted">{{ selectedEnfant.groupeSanguin || 'Non renseigne' }}</p>
+          </article>
+
+          <article class="stack-item" *ngIf="selectedEnfant.parent">
+            <strong>Parent</strong>
+            <p class="muted">{{ selectedEnfant.parent.nom }} - {{ selectedEnfant.parent.email }}</p>
+          </article>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button
+            type="button"
+            class="ts-button ts-button--primary"
+            (click)="activerModification()"
+          >
+            Modifier
+          </button>
+        </div>
+      </section>
+
+      <section class="table-card" *ngIf="selectedEnfant && isEditingEnfant">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+          <h3>Modifier les informations</h3>
+          <button type="button" class="ts-button" (click)="annulerModification()">Annuler</button>
+        </div>
+
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+          {{ successMessage }}
+        </div>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Prenom</label>
+            <input [(ngModel)]="editEnfantForm.prenom" name="editPrenom" />
+          </div>
+
+          <div>
+            <label>Nom</label>
+            <input [(ngModel)]="editEnfantForm.nom" name="editNom" />
+          </div>
+
+          <div>
+            <label>Date de naissance</label>
+            <input [(ngModel)]="editEnfantForm.dateNaissance" name="editDateNaissance" type="date" />
+          </div>
+
+          <div>
+            <label>Contact d urgence</label>
+            <input [(ngModel)]="editEnfantForm.contactUrgence" name="editContactUrgence" maxlength="8" />
+          </div>
+
+          <div>
+            <label>Allergies</label>
+            <input [(ngModel)]="editEnfantForm.allergies" name="editAllergies" />
+          </div>
+
+          <div>
+            <label>Groupe sanguin</label>
+            <select [(ngModel)]="editEnfantForm.groupeSanguin" name="editGroupeSanguin">
+              <option value="">Selectionner</option>
+              <option *ngFor="let groupe of groupesSanguins" [value]="groupe">
+                {{ groupe }}
+              </option>
+            </select>
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <label>Photo (optionnel)</label>
+            <input
+              #editPhotoInput
+              type="file"
+              accept="image/*"
+              (change)="onEditEnfantPhotoSelected($event)"
+            />
+            <div
+              *ngIf="editEnfantForm.photo && editEnfantForm.photo.trim()"
+              style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;"
+            >
+              <img
+                [src]="editEnfantForm.photo"
+                alt="Photo enfant"
+                style="width:96px; height:96px; object-fit:cover; border-radius:18px; border:1px solid rgba(15, 23, 42, 0.12);"
+              />
+              <button type="button" class="ts-button" (click)="clearEditEnfantPhoto(editPhotoInput)">Retirer la photo</button>
+            </div>
+            <p class="muted" style="margin-top:6px;">Formats images (PNG/JPG). Taille max 2 Mo.</p>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button
+            type="button"
+            class="ts-button ts-button--primary"
+            (click)="enregistrerModificationEnfant()"
+            [disabled]="isUpdating"
+          >
+            {{ isUpdating ? 'Modification...' : 'Enregistrer les modifications' }}
+          </button>
+        </div>
+      </section>
+
+      <section id="documents" class="table-card">
+        <h3>Documents</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Carnet de vaccination</strong>
+            <p class="muted">Mis a jour le 02 avril 2026</p>
+          </article>
+          <article class="stack-item">
+            <strong>Autorisation de sortie</strong>
+            <p class="muted">Valide pour le trimestre en cours</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="ajouter-enfant" class="table-card">
+        <h3>Ajouter un enfant</h3>
+
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+          {{ successMessage }}
+        </div>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Prenom</label>
+            <input [(ngModel)]="nouvelEnfant.prenom" name="prenom" placeholder="Prenom de l enfant" />
+          </div>
+
+          <div>
+            <label>Nom</label>
+            <input [(ngModel)]="nouvelEnfant.nom" name="nom" placeholder="Nom de l enfant" />
+          </div>
+
+          <div>
+            <label>Date de naissance</label>
+            <input [(ngModel)]="nouvelEnfant.dateNaissance" name="dateNaissance" type="date" />
+          </div>
+
+          <div>
+            <label>Contact d urgence</label>
+            <input
+              [(ngModel)]="nouvelEnfant.contactUrgence"
+              name="contactUrgence"
+              placeholder="12345678"
+              maxlength="8"
+            />
+          </div>
+
+          <div>
+            <label>Allergies</label>
+            <input
+              [(ngModel)]="nouvelEnfant.allergies"
+              name="allergies"
+              placeholder="Ex: arachides"
+            />
+          </div>
+
+          <div>
+            <label>Groupe sanguin</label>
+            <select [(ngModel)]="nouvelEnfant.groupeSanguin" name="groupeSanguin">
+              <option value="">Selectionner</option>
+              <option *ngFor="let groupe of groupesSanguins" [value]="groupe">
+                {{ groupe }}
+              </option>
+            </select>
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <label>Photo (optionnel)</label>
+            <input
+              #photoInput
+              type="file"
+              accept="image/*"
+              (change)="onNouvelEnfantPhotoSelected($event)"
+            />
+            <div *ngIf="nouvelEnfant.photoDataUrl" style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <img
+                [src]="nouvelEnfant.photoDataUrl"
+                alt="Photo enfant"
+                style="width:96px; height:96px; object-fit:cover; border-radius:18px; border:1px solid rgba(15, 23, 42, 0.12);"
+              />
+              <button type="button" class="ts-button" (click)="clearNouvelEnfantPhoto(photoInput)">Retirer la photo</button>
+            </div>
+            <p class="muted" style="margin-top:6px;">Formats images (PNG/JPG). Taille max 2 Mo.</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="ts-button ts-button--primary"
+          (click)="ajouterEnfant()"
+          [disabled]="isSaving"
+        >
+          {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'sante'" class="workspace-page">
+      <section class="stats-grid">
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">C</span>
+            <span class="stat-card__value">{{ totalConditions() }}</span>
+          </div>
+          <span class="stat-card__label">Conditions</span>
+        </article>
+
+        <article class="stat-card tone-blush">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-blush">T</span>
+            <span class="stat-card__value">{{ totalTraitements() }}</span>
+          </div>
+          <span class="stat-card__label">Traitements</span>
+        </article>
+
+        <article class="stat-card tone-lime">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-lime">V</span>
+            <span class="stat-card__value">{{ totalTraitementsValides() }}</span>
+          </div>
+          <span class="stat-card__label">Traitements valides</span>
+        </article>
+      </section>
+
+      <section class="table-card">
+        <h3>Ajouter une condition sanitaire</h3>
+
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+          {{ successMessage }}
+        </div>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Enfant</label>
+            <select [(ngModel)]="nouvelleCondition.enfantId" name="conditionEnfantId">
+              <option [ngValue]="null">Selectionner</option>
+              <option *ngFor="let enfant of enfants" [ngValue]="enfant.id">
+                {{ enfant.prenom }} {{ enfant.nom }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label>Type de condition</label>
+            <select [(ngModel)]="nouvelleCondition.type" name="conditionType">
+              <option value="">Selectionner</option>
+              <option value="MALADIE_CHRONIQUE">Maladie chronique</option>
+              <option value="MALADIE_TEMPORAIRE">Maladie temporaire</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Nom de la condition</label>
+            <input
+              [(ngModel)]="nouvelleCondition.nomCondition"
+              name="nomCondition"
+              placeholder="Ex: Asthme"
+            />
+          </div>
+
+          <div>
+            <label>Date debut</label>
+            <input
+              [(ngModel)]="nouvelleCondition.dateDebut"
+              name="conditionDateDebut"
+              type="date"
+            />
+          </div>
+
+          <div>
+            <label>Date fin</label>
+            <input
+              [(ngModel)]="nouvelleCondition.dateFin"
+              name="conditionDateFin"
+              type="date"
+            />
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <label>Description</label>
+            <textarea
+              [(ngModel)]="nouvelleCondition.description"
+              name="conditionDescription"
+              placeholder="Description de la condition sanitaire"
+            ></textarea>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="ts-button ts-button--primary"
+          (click)="ajouterConditionSanitaire()"
+          [disabled]="isSavingCondition"
+        >
+          {{ isSavingCondition ? 'Enregistrement...' : 'Ajouter la condition' }}
+        </button>
+      </section>
+
+      <section class="health-children-grid" *ngIf="enfantsAvecSante.length > 0; else noHealthData">
+        <article class="health-child-card" *ngFor="let item of enfantsAvecSante">
+          <div class="health-child-card__header">
+            <div class="inline-meta">
+              <span class="profile-avatar">{{ getInitial(item.enfant.prenom, item.enfant.nom) }}</span>
+              <div>
+                <h3>{{ item.enfant.prenom }} {{ item.enfant.nom }}</h3>
+                <p class="muted">
+                  {{ getAge(item.enfant.dateNaissance) }} ans •
+                  {{ item.conditions.length }} condition(s)
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="ts-button ts-button--primary"
+              (click)="prefillConditionForChild(item.enfant.id)"
+            >
+              Ajouter une condition
+            </button>
+          </div>
+
+          <div class="health-conditions-grid" *ngIf="item.conditions.length > 0; else noChildConditionsTpl">
+            <article class="health-condition-card" *ngFor="let condition of item.conditions">
+              <div class="health-condition-card__top">
+                <div>
+                  <h4>{{ condition.nomCondition }}</h4>
+                  <p class="muted">
+                    {{ condition.type === 'MALADIE_CHRONIQUE' ? 'Maladie chronique' : 'Maladie temporaire' }}
+                  </p>
+                </div>
+
+                <span class="tag" [ngClass]="condition.type === 'MALADIE_CHRONIQUE' ? 'tag--mint' : 'tag--blush'">
+                  {{ condition.type === 'MALADIE_CHRONIQUE' ? 'Chronique' : 'Temporaire' }}
+                </span>
+              </div>
+
+              <p class="muted">
+                Debut : {{ condition.dateDebut || 'Non renseignee' }} •
+                Fin : {{ condition.dateFin || 'Non renseignee' }}
+              </p>
+
+              <p class="muted">{{ condition.description || 'Sans description' }}</p>
+
+              <div class="health-actions">
+                <button type="button" class="ts-button ts-button--primary" (click)="voirDetailsCondition(condition)">
+                  Voir details
+                </button>
+
+                <button type="button" class="ts-button" (click)="preparerTraitement(condition)">
+                  Ajouter traitement
+                </button>
+              </div>
+
+              <div class="health-traitements" *ngIf="condition.traitements && condition.traitements.length > 0">
+                <h5>Traitements</h5>
+                <div class="health-traitements-grid">
+
+                <article class="traitement-mini-card" *ngFor="let traitement of condition.traitements">
+                  <div class="traitement-mini-card__top">
+                    <strong>{{ traitement.nomTraitement }}</strong>
+                    <span
+                      class="tag"
+                      [ngClass]="{
+                        'tag--blush': traitement.statut === 'REFUSE' || traitement.statut === 'ANNULE',
+                        'tag--lime': traitement.statut === 'VALIDE' || traitement.statut === 'ACTIF',
+                        'tag--mint': traitement.statut === 'EN_ATTENTE_VALIDATION'
+                      }"
+                    >
+                      {{
+                        traitement.statut === 'EN_ATTENTE_VALIDATION'
+                          ? 'En attente'
+                          : traitement.statut === 'VALIDE'
+                          ? 'Valide'
+                          : traitement.statut === 'ACTIF'
+                          ? 'Actif'
+                          : traitement.statut === 'ANNULE'
+                          ? 'Annule'
+                          : 'Refuse'
+                      }}
+                    </span>
+                  </div>
+
+                  <p class="muted">
+                    {{ traitement.dateDebut }} • {{ traitement.dateFin || 'Sans date fin' }}
+                  </p>
+
+                  <p class="muted">
+                    Heures :
+                    {{ traitement.heuresPrises.length ? traitement.heuresPrises.join(', ') : 'Non renseignees' }}
+                  </p>
+
+                  <button
+                    type="button"
+                    class="ts-button"
+                    (click)="telechargerOrdonnance(traitement)"
+                    *ngIf="traitement.ordonnance"
+                  >
+                    Ordonnance (PDF)
+                  </button>
+
+                  <div class="traitement-mini-card__actions">
+                    <button
+                      type="button"
+                      class="ts-button"
+                      (click)="activerModificationTraitement(condition.id, traitement)"
+                      [disabled]="traitement.statut === 'ANNULE'"
+                    >
+                      Modifier
+                    </button>
+
+                    <button
+                      type="button"
+                      class="ts-button"
+                      (click)="supprimerTraitement(condition.id, traitement)"
+                      [disabled]="isDeletingTraitement"
+                    >
+                      {{ isDeletingTraitement ? 'Suppression...' : 'Supprimer' }}
+                    </button>
+                  </div>
+                </article>
+                </div>
+              </div>
+
+              <p class="muted" *ngIf="!condition.traitements || condition.traitements.length === 0">
+                Aucun traitement pour cette condition.
+              </p>
+            </article>
+          </div>
+
+          <ng-template #noChildConditionsTpl>
+            <p class="muted">Aucune condition sanitaire pour cet enfant.</p>
+          </ng-template>
+
+          <div class="health-observations" *ngIf="observationsParEnfant[item.enfant.id] && observationsParEnfant[item.enfant.id].length">
+            <h5>Changements declares par l'equipe</h5>
+            <div class="health-observations-grid">
+              <article class="observation-mini-card" *ngFor="let obs of observationsParEnfant[item.enfant.id] | slice:0:4">
+                <div class="observation-mini-card__top">
+                  <strong>{{ obs.titre }}</strong>
+                  <span class="tag" [ngClass]="obs.type === 'SANTE' ? 'tag--mint' : 'tag--blush'">
+                    {{ obs.type }}
+                  </span>
+                </div>
+                <p class="muted">{{ obs.description }}</p>
+                <p class="muted">
+                  {{ obs.creeLe ? obs.creeLe.replace('T', ' ') : '' }}
+                  <span *ngIf="obs.creeParNom"> â€¢ {{ obs.creeParNom }}</span>
+                </p>
+              </article>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <ng-template #noHealthData>
+        <section class="table-card">
+          <p class="muted">Aucune condition sanitaire ajoutee pour le moment.</p>
+        </section>
+      </ng-template>
+
+      <section class="table-card" *ngIf="conditionDetail && !isEditingCondition">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+          <h3>Details de la condition</h3>
+          <button type="button" class="ts-button" (click)="fermerDetailsCondition()">Fermer</button>
+        </div>
+
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Enfant</strong>
+            <p class="muted">{{ conditionDetail.enfant?.prenom }} {{ conditionDetail.enfant?.nom }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Condition</strong>
+            <p class="muted">{{ conditionDetail.nomCondition }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Type</strong>
+            <p class="muted">
+              {{ conditionDetail.type === 'MALADIE_CHRONIQUE' ? 'Maladie chronique' : 'Maladie temporaire' }}
+            </p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Description</strong>
+            <p class="muted">{{ conditionDetail.description || 'Sans description' }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Date debut</strong>
+            <p class="muted">{{ conditionDetail.dateDebut || 'Non renseignee' }}</p>
+          </article>
+
+          <article class="stack-item">
+            <strong>Date fin</strong>
+            <p class="muted">{{ conditionDetail.dateFin || 'Non renseignee' }}</p>
+          </article>
+        </div>
+
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button
+            type="button"
+            class="ts-button ts-button--primary"
+            (click)="activerModificationCondition()"
+          >
+            Modifier
+          </button>
+
+          <button
+            type="button"
+            class="ts-button"
+            (click)="supprimerCondition()"
+            [disabled]="isDeletingCondition"
+          >
+            {{ isDeletingCondition ? 'Suppression...' : 'Supprimer' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="table-card" *ngIf="conditionDetail && isEditingCondition">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+          <h3>Modifier la condition</h3>
+          <button type="button" class="ts-button" (click)="annulerModificationCondition()">Annuler</button>
+        </div>
+
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+          {{ successMessage }}
+        </div>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Nom de la condition</label>
+            <input [(ngModel)]="editConditionForm.nomCondition" name="editNomCondition" />
+          </div>
+
+          <div>
+            <label>Type</label>
+            <select [(ngModel)]="editConditionForm.type" name="editTypeCondition">
+              <option value="">Selectionner</option>
+              <option value="MALADIE_CHRONIQUE">Maladie chronique</option>
+              <option value="MALADIE_TEMPORAIRE">Maladie temporaire</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Date debut</label>
+            <input [(ngModel)]="editConditionForm.dateDebut" name="editConditionDateDebut" type="date" />
+          </div>
+
+          <div>
+            <label>Date fin</label>
+            <input [(ngModel)]="editConditionForm.dateFin" name="editConditionDateFin" type="date" />
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <label>Description</label>
+            <textarea [(ngModel)]="editConditionForm.description" name="editConditionDescription"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button
+            type="button"
+            class="ts-button ts-button--primary"
+            (click)="enregistrerModificationCondition()"
+            [disabled]="isUpdatingCondition"
+          >
+            {{ isUpdatingCondition ? 'Modification...' : 'Enregistrer les modifications' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="table-card" *ngIf="showTraitementForm && conditionSelectionnee">
+        <h3>Ajouter un traitement pour : {{ conditionSelectionnee.nomCondition }}</h3>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Nom du traitement</label>
+            <input
+              [(ngModel)]="nouveauTraitement.nomTraitement"
+              name="nomTraitement"
+              placeholder="Ex: Sirop"
+            />
+          </div>
+
+          <div>
+            <label>Description</label>
+            <input
+              [(ngModel)]="nouveauTraitement.description"
+              name="traitementDescription"
+              placeholder="Ex: 5 ml apres repas"
+            />
+          </div>
+
+          <div>
+            <label>Date debut</label>
+            <input
+              [(ngModel)]="nouveauTraitement.dateDebut"
+              name="traitementDateDebut"
+              type="date"
+            />
+          </div>
+
+          <div>
+            <label>Date fin</label>
+            <input
+              [(ngModel)]="nouveauTraitement.dateFin"
+              name="traitementDateFin"
+              type="date"
+            />
+          </div>
+
+          <div>
+            <label>Heure 1</label>
+            <input [(ngModel)]="nouveauTraitement.heure1" name="heure1" type="time" />
+          </div>
+
+          <div>
+            <label>Heure 2</label>
+            <input [(ngModel)]="nouveauTraitement.heure2" name="heure2" type="time" />
+          </div>
+
+          <div>
+            <label>Heure 3</label>
+            <input [(ngModel)]="nouveauTraitement.heure3" name="heure3" type="time" />
+          </div>
+
+          <div>
+            <label>Ordonnance</label>
+            <input
+              type="file"
+              accept="application/pdf"
+              (change)="onOrdonnanceSelected($event)"
+              name="ordonnancePdf"
+            />
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 10px;">
+          <button
+            type="button"
+            class="ts-button ts-button--primary"
+            (click)="ajouterTraitement()"
+            [disabled]="isSavingTraitement"
+          >
+            {{ isSavingTraitement ? 'Enregistrement...' : 'Ajouter le traitement' }}
+          </button>
+
+          <button
+            type="button"
+            class="ts-button"
+            (click)="annulerAjoutTraitement()"
+          >
+            Annuler
+          </button>
+        </div>
+      </section>
+
+      <section class="table-card" *ngIf="isEditingTraitement">
+        <h3>Modifier le traitement</h3>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Nom du traitement</label>
+            <input [(ngModel)]="editTraitementForm.nomTraitement" name="editNomTraitement" />
+          </div>
+
+          <div>
+            <label>Description</label>
+            <input [(ngModel)]="editTraitementForm.description" name="editTraitementDescription" />
+          </div>
+
+          <div>
+            <label>Date debut</label>
+            <input [(ngModel)]="editTraitementForm.dateDebut" name="editTraitementDateDebut" type="date" />
+          </div>
+
+          <div>
+            <label>Date fin</label>
+            <input [(ngModel)]="editTraitementForm.dateFin" name="editTraitementDateFin" type="date" />
+          </div>
+
+          <div>
+            <label>Heure 1</label>
+            <input [(ngModel)]="editTraitementForm.heure1" name="editHeure1" type="time" />
+          </div>
+
+          <div>
+            <label>Heure 2</label>
+            <input [(ngModel)]="editTraitementForm.heure2" name="editHeure2" type="time" />
+          </div>
+
+          <div>
+            <label>Heure 3</label>
+            <input [(ngModel)]="editTraitementForm.heure3" name="editHeure3" type="time" />
+          </div>
+
+          <div>
+            <label>Ordonnance (non modifiable ici)</label>
+            <input [(ngModel)]="editTraitementForm.ordonnance" name="editOrdonnance" disabled />
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 10px;">
+          <button
+            type="button"
+            class="ts-button ts-button--primary"
+            (click)="enregistrerModificationTraitement()"
+            [disabled]="isUpdatingTraitement"
+          >
+            {{ isUpdatingTraitement ? 'Modification...' : 'Enregistrer' }}
+          </button>
+
+          <button type="button" class="ts-button" (click)="annulerModificationTraitement()">Annuler</button>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'changements'" class="workspace-page">
+      <app-parent-changements [enfants]="enfants"></app-parent-changements>
+      <!--
+      <section class="table-card">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+          <div>
+            <h2>Changements declares par l'equipe</h2>
+            <p class="muted">Retrouvez toutes les observations (sante, comportement, sommeil...).</p>
+          </div>
+          <button type="button" class="ts-button" (click)="chargerChangements()" [disabled]="isLoadingChangements">
+            {{ isLoadingChangements ? 'Chargement...' : 'Rafraichir' }}
+          </button>
+        </div>
+
+        <div class="form-grid form-grid--two" style="margin-top:12px;">
+          <div>
+            <label>Enfant</label>
+            <select [(ngModel)]="changementsEnfantId" name="chgChild">
+              <option [ngValue]="0">Tous</option>
+              <option *ngFor="let e of enfants" [ngValue]="e.id">{{ e.prenom }} {{ e.nom }}</option>
+            </select>
+          </div>
+          <div>
+            <label>Type</label>
+            <select [(ngModel)]="changementsType" name="chgType">
+              <option value="">Tous</option>
+              <option value="SANTE">Sante</option>
+              <option value="COMPORTEMENT">Comportement</option>
+              <option value="SOMMEIL">Sommeil</option>
+              <option value="ALIMENTATION">Alimentation</option>
+              <option value="INCIDENT">Incident</option>
+              <option value="HUMEUR">Humeur</option>
+              <option value="HYGIENE">Hygiene</option>
+              <option value="AUTRE">Autre</option>
+            </select>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Recherche</label>
+            <input [(ngModel)]="changementsSearch" name="chgSearch" placeholder="Titre, description, lieu..." />
+          </div>
+          <div>
+            <label style="display:flex; gap:10px; align-items:center;">
+              <input type="checkbox" [(ngModel)]="changementsOnlyUnread" name="chgUnread" (change)="chargerChangements()" />
+              <span>Seulement non lus</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="stack-list" *ngIf="!isLoadingChangements">
+        <article
+          class="soft-panel"
+          *ngFor="let obs of filteredChangements"
+          [ngClass]="obs.luParent ? 'soft-panel--mint' : 'soft-panel--blush'"
+          (click)="marquerChangementLu(obs)"
+          style="cursor:pointer;"
+        >
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+            <div>
+              <strong>{{ obs.enfantPrenom }} {{ obs.enfantNom }}</strong>
+              <p class="muted">
+                {{ obs.type }} &bull; {{ obs.titre }}
+                <span *ngIf="obs.urgence"> &bull; urgence: {{ obs.urgence }}</span>
+                <span *ngIf="obs.temperature != null"> &bull; {{ obs.temperature }} °C</span>
+                <span *ngIf="obs.lieu"> &bull; {{ obs.lieu }}</span>
+              </p>
+              <p class="muted">{{ obs.description }}</p>
+              <p class="muted">
+                {{ obs.observeLe ? obs.observeLe.replace('T', ' ') : (obs.creeLe ? obs.creeLe.replace('T', ' ') : '') }}
+                <span *ngIf="obs.creeParNom"> â€¢ {{ obs.creeParNom }}</span>
+                <span *ngIf="obs.luParent"> â€¢ lu</span>
+              </p>
+            </div>
+            <span class="tag" [ngClass]="obs.luParent ? 'tag--mint' : 'tag--blush'">
+              {{ obs.luParent ? 'Lu' : 'Nouveau' }}
+            </span>
+          </div>
+        </article>
+
+        <section class="table-card" *ngIf="filteredChangements.length === 0">
+          <p class="muted">Aucun changement a afficher.</p>
+        </section>
+      </section>
+      -->
+    </section>
+
+    <section *ngSwitchCase="'activites'" class="workspace-page">
+      <section id="calendrier" class="calendar-card">
+        <h3>Calendrier des activites</h3>
+        <div class="calendar-grid">
+          <div class="calendar-day">1</div>
+          <div class="calendar-day">2</div>
+          <div class="calendar-day calendar-day--selected">3</div>
+          <div class="calendar-day">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day">6</div>
+          <div class="calendar-day">7</div>
+        </div>
+      </section>
+
+      <div class="two-column-grid">
+        <section id="evenements" class="table-card">
+          <h3>Evenements</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <span class="tag tag--mint">Sortie</span>
+              <strong>Visite du jardin botanique</strong>
+              <p class="muted">Mardi a 10h00 avec autorisation parentale.</p>
+            </article>
+            <article class="stack-item">
+              <span class="tag tag--blush">Fete</span>
+              <strong>Gouter du printemps</strong>
+              <p class="muted">Jeudi a 15h30 pour tous les groupes.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="autorisations" class="table-card">
+          <h3>Autorisations</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Jardin botanique</strong>
+              <p class="muted">Lina • En attente de validation</p>
+            </article>
+            <article class="stack-item">
+              <strong>Gouter du printemps</strong>
+              <p class="muted">Adam • Validation deja envoyee</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'menus'" class="workspace-page">
+      <section id="menus" class="table-card">
+        <h3>Menus de la semaine</h3>
+        <div class="menu-grid">
+          <div></div>
+          <div class="menu-grid__header">Lun</div>
+          <div class="menu-grid__header">Mar</div>
+          <div class="menu-grid__header">Mer</div>
+          <div class="menu-grid__header">Jeu</div>
+          <div class="menu-grid__header">Ven</div>
+
+          <div class="menu-grid__row-label">Dejeuner</div>
+          <div class="menu-cell">Poulet et carottes</div>
+          <div class="menu-cell">Pates et legumes</div>
+          <div class="menu-cell">Riz et lentilles</div>
+          <div class="menu-cell">Semoule et dinde</div>
+          <div class="menu-cell">Gratin doux</div>
+
+          <div class="menu-grid__row-label">Gouter</div>
+          <div class="menu-cell">Pomme</div>
+          <div class="menu-cell">Yaourt</div>
+          <div class="menu-cell">Gateau maison</div>
+          <div class="menu-cell">Compote</div>
+          <div class="menu-cell">Fruit de saison</div>
+        </div>
+      </section>
+
+      <section id="mensuel" class="calendar-card">
+        <h3>Calendrier mensuel</h3>
+        <div class="calendar-grid">
+          <div class="calendar-day">1</div>
+          <div class="calendar-day">2</div>
+          <div class="calendar-day calendar-day--selected">3</div>
+          <div class="calendar-day">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day">6</div>
+          <div class="calendar-day">7</div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'messages'" class="workspace-page">
+      <section id="conversations" class="conversation-layout">
+        <aside class="chat-sidebar">
+          <article class="message-preview message-preview--active">
+            <strong>Equipe Papillons</strong>
+            <p class="muted">Retour sur la journee</p>
+          </article>
+          <article class="message-preview">
+            <strong>Direction</strong>
+            <p class="muted">Information generale</p>
+          </article>
+        </aside>
+
+        <section class="chat-panel">
+          <h3>Conversation active</h3>
+          <div class="chat-thread">
+            <article class="bubble bubble--other">
+              Bonjour, Lina a bien participe a l atelier nature ce matin.
+            </article>
+            <article class="bubble bubble--self">
+              Merci beaucoup pour le retour.
+            </article>
+          </div>
+          <div class="chat-composer">
+            <input placeholder="Ecrire un message..." />
+            <button type="button" class="ts-button ts-button--primary">Envoyer</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="nouveau-message" class="table-card">
+        <h3>Nouveau message</h3>
+        <div class="form-grid">
+          <div>
+            <label>Message</label>
+            <textarea placeholder="Decrivez votre demande."></textarea>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'trajets'" class="workspace-page">
+      <section id="mes-trajets" class="stack-list">
+        <article class="trip-card">
+          <strong>Lina Ben Salah</strong>
+          <p class="muted">Lac 1 vers TinySpring • 07h30 • En attente</p>
+        </article>
+        <article class="trip-card">
+          <strong>Adam Ben Salah</strong>
+          <p class="muted">Ennasr vers TinySpring • 08h00 • Confirme</p>
+        </article>
+      </section>
+
+      <section id="ajouter-trajet" class="table-card">
+        <h3>Ajouter un trajet</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Enfant</label>
+            <select>
+              <option>Lina Ben Salah</option>
+              <option>Adam Ben Salah</option>
+            </select>
+          </div>
+          <div>
+            <label>Heure</label>
+            <input type="time" />
+          </div>
+          <div>
+            <label>Adresse depart</label>
+            <input placeholder="Adresse de depart" />
+          </div>
+          <div>
+            <label>Adresse arrivee</label>
+            <input placeholder="Adresse d arrivee" />
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'boutique'" class="workspace-page">
+      <section id="catalogue" class="product-grid">
+        <article class="product-card">
+          <div class="product-card__image">Sac</div>
+          <h3>Sac TinySpring</h3>
+          <p class="muted">49 TND</p>
+        </article>
+        <article class="product-card">
+          <div class="product-card__image">Kit</div>
+          <h3>Kit creatif</h3>
+          <p class="muted">28 TND</p>
+        </article>
+        <article class="product-card">
+          <div class="product-card__image">Tablier</div>
+          <h3>Tablier activite</h3>
+          <p class="muted">32 TND</p>
+        </article>
+      </section>
+
+      <section id="panier" class="two-column-grid">
+        <article class="ts-card">
+          <h3>Panier</h3>
+          <div class="stack-list">
+            <article class="cart-item">
+              <strong>Sac TinySpring</strong>
+              <p class="muted">49 TND</p>
+            </article>
+          </div>
+        </article>
+
+        <article class="summary-card">
+          <h3>Total</h3>
+          <p class="stat-card__value">49 TND</p>
+        </article>
+      </section>
+
+      <section id="commandes" class="table-card">
+        <h3>Commandes</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>#TS-1203</strong>
+            <p class="muted">Livree le 04 avril 2026</p>
+          </article>
+        </div>
+      </section>
+    </section>
+  </ng-container>
+</div>
