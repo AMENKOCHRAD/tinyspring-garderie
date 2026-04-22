@@ -45,6 +45,9 @@ export interface Reclamation {
   predictedPriority?: string | null;
   priorityConfidence?: number | null;
 
+  decisionRecommendation?: string | null;
+  decisionConfidence?: number | null;
+
   adminComment?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -65,6 +68,12 @@ export interface ReclamationHistory {
   actorName: string;
   actorRole: string;
   createdAt: string;
+}
+export interface RecommendedAdminActionResponse {
+  recommendedService: string;
+  recommendedUrgency: string;
+  recommendedAction: string;
+  recommendedDelay: string;
 }
 
 @Injectable({
@@ -122,6 +131,12 @@ export class MessagerieService {
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
+  getRecommendedAdminAction(id: number): Observable<RecommendedAdminActionResponse> {
+  return this.http.get<RecommendedAdminActionResponse>(
+    `${this.apiUrl}/reclamations/${id}/recommended-admin-action`,
+    { headers: this.authService.getBasicAuthHeaders() }
+  );
+}
 
   sendMessage(conversationId: number, content: string, image?: File | null): Observable<Message> {
     const formData = new FormData();
@@ -288,10 +303,10 @@ export class MessagerieService {
     );
   }
 
-getSuggestedResponse(id: number): Observable<any> {
-  return this.http.get<any>(
-    `${this.apiUrl}/reclamations/${id}/suggested-response`,
-    { headers: this.authService.getBasicAuthHeaders() }
-  );
-}
+  getSuggestedResponse(id: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/reclamations/${id}/suggested-response`,
+      { headers: this.authService.getBasicAuthHeaders() }
+    );
+  }
 }

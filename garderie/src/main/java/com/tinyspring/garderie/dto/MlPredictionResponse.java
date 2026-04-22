@@ -3,10 +3,13 @@ package com.tinyspring.garderie.dto;
 public class MlPredictionResponse {
 
     private String predictedCategory;
-    private Double confidence;
+    private Double classificationConfidence;
 
     private String predictedPriority;
     private Double priorityConfidence;
+
+    private String decisionRecommendation;
+    private Double decisionConfidence;
 
     public MlPredictionResponse() {
     }
@@ -19,12 +22,12 @@ public class MlPredictionResponse {
         this.predictedCategory = predictedCategory;
     }
 
-    public Double getConfidence() {
-        return confidence;
+    public Double getClassificationConfidence() {
+        return classificationConfidence;
     }
 
-    public void setConfidence(Double confidence) {
-        this.confidence = confidence;
+    public void setClassificationConfidence(Double classificationConfidence) {
+        this.classificationConfidence = classificationConfidence;
     }
 
     public String getPredictedPriority() {
@@ -41,5 +44,21 @@ public class MlPredictionResponse {
 
     public void setPriorityConfidence(Double priorityConfidence) {
         this.priorityConfidence = priorityConfidence;
+    }
+
+    public String getDecisionRecommendation() {
+        return decisionRecommendation;
+    }
+
+    public void setDecisionRecommendation(String decisionRecommendation) {
+        this.decisionRecommendation = decisionRecommendation;
+    }
+
+    public Double getDecisionConfidence() {
+        return decisionConfidence;
+    }
+
+    public void setDecisionConfidence(Double decisionConfidence) {
+        this.decisionConfidence = decisionConfidence;
     }
 }

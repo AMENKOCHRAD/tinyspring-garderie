@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.entity;
 
+import com.tinyspring.garderie.entity.enums.DecisionRecommendation;
 import com.tinyspring.garderie.entity.enums.ReclamationCategory;
 import com.tinyspring.garderie.entity.enums.ReclamationPriority;
 import com.tinyspring.garderie.entity.enums.ReclamationStatus;
@@ -58,6 +59,13 @@ public class Reclamation {
 
     @Column(name = "priority_confidence")
     private Double priorityConfidence;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decision_recommendation")
+    private DecisionRecommendation decisionRecommendation;
+
+    @Column(name = "decision_confidence")
+    private Double decisionConfidence;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

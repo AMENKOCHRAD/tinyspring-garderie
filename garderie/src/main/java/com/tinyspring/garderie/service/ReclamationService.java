@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.service;
 
+import com.tinyspring.garderie.dto.RecommendedAdminActionResponse;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Reclamation;
@@ -34,4 +35,6 @@ public interface ReclamationService {
     void deleteReclamation(Long id);
 
     String generateSuggestedAdminResponse(Long reclamationId);
+
+    RecommendedAdminActionResponse getRecommendedAdminAction(Long reclamationId);
 }

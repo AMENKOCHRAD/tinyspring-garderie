@@ -1,5 +1,6 @@
 package com.tinyspring.garderie.controller;
 
+import com.tinyspring.garderie.dto.RecommendedAdminActionResponse;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
 import com.tinyspring.garderie.entity.Reclamation;
@@ -92,6 +93,12 @@ public class ReclamationController {
     public ResponseEntity<Map<String, String>> getSuggestedResponse(@PathVariable Long id) {
         String suggestion = reclamationService.generateSuggestedAdminResponse(id);
         return ResponseEntity.ok(Map.of("suggestedResponse", suggestion));
+    }
+
+    @GetMapping("/{id}/recommended-admin-action")
+    public ResponseEntity<RecommendedAdminActionResponse> getRecommendedAdminAction(@PathVariable Long id) {
+        RecommendedAdminActionResponse response = reclamationService.getRecommendedAdminAction(id);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")

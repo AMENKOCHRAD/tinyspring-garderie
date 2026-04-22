@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from 'src/app/services/auth.service';
 import {
   MessagerieService,
-  Reclamation
+  Reclamation,
+  RecommendedAdminActionResponse
 } from 'src/app/services/messagerie.service';
 
 @Component({
@@ -116,6 +117,23 @@ import {
                       <span>HIGH</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stats-card mt-4">
+              <h5 class="chart-title">Répartition des décisions recommandées</h5>
+
+              <div *ngIf="getDecisionStats().length === 0" class="text-muted">
+                Aucune décision recommandée disponible.
+              </div>
+
+              <div *ngIf="getDecisionStats().length > 0" class="chart-legend">
+                <div class="legend-item" *ngFor="let item of getDecisionStats()">
+                  <span class="badge recommendation-badge" [ngClass]="getDecisionBadgeClass(item.label)">
+                    {{ getDecisionLabel(item.label) }}
+                  </span>
+                  <span>{{ item.count }}</span>
                 </div>
               </div>
             </div>
@@ -256,6 +274,59 @@ import {
                   </p>
                 </div>
 
+                <div class="mt-3" *ngIf="getCurrentEditingReclamation()?.decisionRecommendation">
+                  <div class="mb-2">
+                    <strong>Décision recommandée :</strong>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge recommendation-badge"
+                          [ngClass]="getDecisionBadgeClass(getCurrentEditingReclamation()?.decisionRecommendation)">
+                      {{ getDecisionLabel(getCurrentEditingReclamation()?.decisionRecommendation) }}
+                    </span>
+
+                    <span
+                      *ngIf="getCurrentEditingReclamation()?.decisionConfidence !== null && getCurrentEditingReclamation()?.decisionConfidence !== undefined"
+                      class="badge"
+                      [ngClass]="getConfidenceBadgeClass(getCurrentEditingReclamation()?.decisionConfidence)">
+                      {{ getConfidencePercent(getCurrentEditingReclamation()?.decisionConfidence) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="recommended-action-box mt-3" *ngIf="recommendedAction">
+                  <div class="recommended-action-title">
+                    Action admin recommandée
+                  </div>
+
+                  <div class="recommended-action-grid">
+                    <div class="recommended-action-item">
+                      <span class="recommended-action-label">Service</span>
+                      <span class="badge bg-primary">
+                        {{ getRecommendedServiceLabel(recommendedAction.recommendedService) }}
+                      </span>
+                    </div>
+
+                    <div class="recommended-action-item">
+                      <span class="recommended-action-label">Urgence</span>
+                      <span class="badge" [ngClass]="getUrgencyBadgeClass(recommendedAction.recommendedUrgency)">
+                        {{ recommendedAction.recommendedUrgency }}
+                      </span>
+                    </div>
+
+                    <div class="recommended-action-item">
+                      <span class="recommended-action-label">Délai</span>
+                      <span class="badge bg-secondary">
+                        {{ getRecommendedDelayLabel(recommendedAction.recommendedDelay) }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="recommended-action-text mt-3">
+                    {{ recommendedAction.recommendedAction }}
+                  </div>
+                </div>
+
                 <div class="mb-3 mt-3">
                   <button
                     type="button"
@@ -349,6 +420,8 @@ import {
                     <th>Confiance</th>
                     <th>Priorité prédite ML</th>
                     <th>Conf. priorité</th>
+                    <th>Décision ML</th>
+                    <th>Conf. décision</th>
                     <th>Mode</th>
                     <th>Réponse admin</th>
                     <th>Image</th>
@@ -414,6 +487,25 @@ import {
                       </span>
                       <span
                         *ngIf="rec.priorityConfidence === null || rec.priorityConfidence === undefined"
+                        class="text-muted">-</span>
+                    </td>
+                    <td>
+                      <span *ngIf="rec.decisionRecommendation"
+                            class="badge recommendation-badge"
+                            [ngClass]="getDecisionBadgeClass(rec.decisionRecommendation)">
+                        {{ getDecisionLabel(rec.decisionRecommendation) }}
+                      </span>
+                      <span *ngIf="!rec.decisionRecommendation" class="text-muted">-</span>
+                    </td>
+                    <td>
+                      <span
+                        *ngIf="rec.decisionConfidence !== null && rec.decisionConfidence !== undefined"
+                        class="badge"
+                        [ngClass]="getConfidenceBadgeClass(rec.decisionConfidence)">
+                        {{ getConfidencePercent(rec.decisionConfidence) }}
+                      </span>
+                      <span
+                        *ngIf="rec.decisionConfidence === null || rec.decisionConfidence === undefined"
                         class="text-muted">-</span>
                     </td>
                     <td>
@@ -552,6 +644,19 @@ import {
                     class="badge"
                     [ngClass]="getConfidenceBadgeClass(rec.priorityConfidence)">
                     Conf. : {{ getConfidencePercent(rec.priorityConfidence) }}
+                  </span>
+                </div>
+
+                <div class="mb-2 d-flex flex-wrap gap-2 align-items-center" *ngIf="rec.decisionRecommendation">
+                  <span class="badge recommendation-badge"
+                        [ngClass]="getDecisionBadgeClass(rec.decisionRecommendation)">
+                    {{ getDecisionLabel(rec.decisionRecommendation) }}
+                  </span>
+                  <span
+                    *ngIf="rec.decisionConfidence !== null && rec.decisionConfidence !== undefined"
+                    class="badge"
+                    [ngClass]="getConfidenceBadgeClass(rec.decisionConfidence)">
+                    {{ getConfidencePercent(rec.decisionConfidence) }}
                   </span>
                 </div>
 
@@ -857,6 +962,99 @@ import {
       border-color: #fca5a5;
     }
 
+    .recommendation-badge {
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .decision-repair {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-color: #93c5fd;
+    }
+
+    .decision-supervision {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+
+    .decision-training {
+      background: #ede9fe;
+      color: #6d28d9;
+      border-color: #c4b5fd;
+    }
+
+    .decision-process {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+
+    .decision-admin {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-color: #7dd3fc;
+    }
+
+    .decision-medical {
+      background: #ffe4e6;
+      color: #be123c;
+      border-color: #fda4af;
+    }
+
+    .decision-transport {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    .decision-followup {
+      background: #f3f4f6;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+
+    .recommended-action-box {
+      background: #ffffff;
+      border: 1px solid #dbe7f5;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .recommended-action-title {
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 10px;
+    }
+
+    .recommended-action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .recommended-action-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .recommended-action-label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .recommended-action-text {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      color: #334155;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
     .admin-comment-preview {
       max-height: 90px;
       overflow: auto;
@@ -1110,6 +1308,7 @@ export class ReclamationPageComponent implements OnInit {
   exportExcelLoading = false;
 
   selectedReclamationImage: File | null = null;
+  recommendedAction: RecommendedAdminActionResponse | null = null;
   selectedReclamationImageName = '';
 
   selectedAttachment: File | null = null;
@@ -1193,6 +1392,50 @@ export class ReclamationPageComponent implements OnInit {
     }
   }
 
+  getDecisionLabel(decision?: string | null): string {
+    switch (decision) {
+      case 'REPAIR_NEEDED': return 'Réparation nécessaire';
+      case 'INCREASE_SUPERVISION': return 'Surveillance renforcée';
+      case 'STAFF_TRAINING': return 'Formation du personnel';
+      case 'PROCESS_IMPROVEMENT': return 'Amélioration du processus';
+      case 'ADMINISTRATIVE_CORRECTION': return 'Correction administrative';
+      case 'MEDICAL_ATTENTION': return 'Attention médicale';
+      case 'TRANSPORT_ESCALATION': return 'Escalade transport';
+      case 'PARENT_FOLLOWUP': return 'Suivi parent';
+      default: return decision || 'Non définie';
+    }
+  }
+
+  getDecisionBadgeClass(decision?: string | null): string {
+    switch (decision) {
+      case 'REPAIR_NEEDED': return 'decision-repair';
+      case 'INCREASE_SUPERVISION': return 'decision-supervision';
+      case 'STAFF_TRAINING': return 'decision-training';
+      case 'PROCESS_IMPROVEMENT': return 'decision-process';
+      case 'ADMINISTRATIVE_CORRECTION': return 'decision-admin';
+      case 'MEDICAL_ATTENTION': return 'decision-medical';
+      case 'TRANSPORT_ESCALATION': return 'decision-transport';
+      case 'PARENT_FOLLOWUP': return 'decision-followup';
+      default: return 'bg-secondary';
+    }
+  }
+
+  getDecisionStats(): { label: string; count: number }[] {
+    const map = new Map<string, number>();
+
+    this.reclamations.forEach(rec => {
+      if (rec.decisionRecommendation) {
+        map.set(rec.decisionRecommendation, (map.get(rec.decisionRecommendation) || 0) + 1);
+      }
+    });
+
+    return Array.from(map.entries()).map(([label, count]) => ({ label, count }));
+  }
+
+  getCurrentEditingReclamation(): Reclamation | undefined {
+    return this.reclamations.find(r => r.id === this.editingReclamationId);
+  }
+
   getConfidencePercent(value?: number | null): string {
     if (value === null || value === undefined) {
       return '-';
@@ -1214,6 +1457,59 @@ export class ReclamationPageComponent implements OnInit {
     }
 
     return 'bg-danger';
+  }
+
+  getUrgencyBadgeClass(urgency?: string | null): string {
+    switch (urgency) {
+      case 'HIGH':
+        return 'bg-danger';
+      case 'MEDIUM':
+        return 'bg-warning text-dark';
+      case 'LOW':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  }
+
+  getRecommendedServiceLabel(service?: string | null): string {
+    switch (service) {
+      case 'SERVICE_MEDICAL':
+        return 'Service médical';
+      case 'MAINTENANCE':
+        return 'Maintenance';
+      case 'SERVICE_PEDAGOGIQUE':
+        return 'Service pédagogique';
+      case 'RESSOURCES_HUMAINES':
+        return 'Ressources humaines';
+      case 'ADMINISTRATION':
+        return 'Administration';
+      case 'SERVICE_ADMINISTRATIF':
+        return 'Service administratif';
+      case 'SERVICE_TRANSPORT':
+        return 'Service transport';
+      case 'RELATION_PARENT':
+        return 'Relation parent';
+      case 'ANALYSE_ADMINISTRATIVE':
+        return 'Analyse administrative';
+      default:
+        return service || '-';
+    }
+  }
+
+  getRecommendedDelayLabel(delay?: string | null): string {
+    switch (delay) {
+      case 'IMMEDIATE':
+        return 'Immédiat';
+      case '24H':
+        return 'Sous 24h';
+      case '48H':
+        return 'Sous 48h';
+      case '72H':
+        return 'Sous 72h';
+      default:
+        return delay || '-';
+    }
   }
 
   getAdminCommentPlaceholder(): string {
@@ -1312,6 +1608,7 @@ export class ReclamationPageComponent implements OnInit {
 
     this.updateError = '';
     this.updateSuccess = '';
+    this.recommendedAction = null;
 
     this.messagerieService.getSuggestedResponse(this.editingReclamationId)
       .subscribe({
@@ -1322,6 +1619,17 @@ export class ReclamationPageComponent implements OnInit {
         error: (err: any) => {
           console.error('Erreur génération réponse = ', err);
           this.updateError = 'Impossible de générer une réponse suggérée.';
+        }
+      });
+
+    this.messagerieService.getRecommendedAdminAction(this.editingReclamationId)
+      .subscribe({
+        next: (res: RecommendedAdminActionResponse) => {
+          console.log('Recommandation ML = ', res);
+          this.recommendedAction = res;
+        },
+        error: (err: any) => {
+          console.error('Erreur recommandation ML = ', err);
         }
       });
   }
@@ -1556,6 +1864,7 @@ export class ReclamationPageComponent implements OnInit {
 
   editReclamation(rec: Reclamation): void {
     this.editingReclamationId = rec.id;
+    this.recommendedAction = null;
     this.editedReclamation = {
       title: rec.title,
       description: rec.description,
@@ -1570,6 +1879,7 @@ export class ReclamationPageComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingReclamationId = null;
+    this.recommendedAction = null;
     this.editedReclamation = {
       title: '',
       description: '',

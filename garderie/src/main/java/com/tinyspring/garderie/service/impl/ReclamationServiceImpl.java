@@ -18,6 +18,7 @@ import com.tinyspring.garderie.entity.ReclamationHistory;
 import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.entity.enums.ConversationStatus;
 import com.tinyspring.garderie.entity.enums.ConversationType;
+import com.tinyspring.garderie.entity.enums.DecisionRecommendation;
 import com.tinyspring.garderie.entity.enums.ReclamationCategory;
 import com.tinyspring.garderie.entity.enums.ReclamationHistoryActionType;
 import com.tinyspring.garderie.entity.enums.ReclamationPriority;
@@ -30,6 +31,7 @@ import com.tinyspring.garderie.service.BadWordFilterService;
 import com.tinyspring.garderie.service.MlPredictionService;
 import com.tinyspring.garderie.service.ReclamationService;
 import org.apache.poi.ss.usermodel.Cell;
+import com.tinyspring.garderie.dto.RecommendedAdminActionResponse;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -188,6 +190,22 @@ public class ReclamationServiceImpl implements ReclamationService {
             );
         }
 
+        if (savedReclamation.getDecisionRecommendation() != null) {
+            addHistory(
+                    savedReclamation,
+                    ReclamationHistoryActionType.DECISION_RECOMMENDED,
+                    "Décision recommandée par ML",
+                    null,
+                    savedReclamation.getDecisionRecommendation().name()
+                            + " (confiance: "
+                            + (savedReclamation.getDecisionConfidence() != null
+                            ? savedReclamation.getDecisionConfidence()
+                            : 0.0)
+                            + ")",
+                    null
+            );
+        }
+
         return savedReclamation;
     }
 
@@ -278,6 +296,8 @@ public class ReclamationServiceImpl implements ReclamationService {
             addInfoRow(infoTable, "Priorite", safeText(reclamation.getPriority() != null ? reclamation.getPriority().name() : null), smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Priorite predite", safeText(reclamation.getPredictedPriority() != null ? reclamation.getPredictedPriority().name() : null), smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Confiance priorite", reclamation.getPriorityConfidence() != null ? String.valueOf(reclamation.getPriorityConfidence()) : "-", smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Decision recommandee", safeText(reclamation.getDecisionRecommendation() != null ? reclamation.getDecisionRecommendation().name() : null), smallBoldFont, bodyFont);
+            addInfoRow(infoTable, "Confiance decision", reclamation.getDecisionConfidence() != null ? String.valueOf(reclamation.getDecisionConfidence()) : "-", smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Statut", safeText(reclamation.getStatus() != null ? reclamation.getStatus().name() : null), smallBoldFont, bodyFont);
             addInfoRow(infoTable, "Parent", reclamation.getParent() != null ? safeText(reclamation.getParent().getEmail()) : "-", smallBoldFont, bodyFont);
 
@@ -321,6 +341,7 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new RuntimeException("Erreur lors de la generation du PDF de l'historique : " + e.getMessage(), e);
         }
     }
+
     @Override
     public String generateSuggestedAdminResponse(Long reclamationId) {
         User currentUser = getCurrentUser();
@@ -337,9 +358,90 @@ public class ReclamationServiceImpl implements ReclamationService {
         String intro = buildIntroByStatus(reclamation);
         String categoryPart = buildCategorySpecificMessage(reclamation);
         String priorityPart = buildPrioritySpecificMessage(reclamation);
+        String decisionPart = buildDecisionSpecificMessage(reclamation);
+        String sensitiveKeywordsPart = buildSensitiveKeywordsMessage(reclamation);
         String closing = "\nNous restons à votre disposition pour toute information complémentaire.\n\nCordialement,\nL'administration.";
 
-        return greeting + intro + categoryPart + priorityPart + closing;
+        return greeting + intro + categoryPart + priorityPart + decisionPart + sensitiveKeywordsPart + closing;
+    }
+    @Override
+    public RecommendedAdminActionResponse getRecommendedAdminAction(Long reclamationId) {
+        User currentUser = getCurrentUser();
+        String roleName = currentUser.getRole().getName().name();
+
+        if (!roleName.equals("ADMIN")) {
+            throw new RuntimeException("Seul un admin peut consulter l'action recommandée");
+        }
+
+        Reclamation reclamation = reclamationRepository.findById(reclamationId)
+                .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
+
+        if (reclamation.getDecisionRecommendation() == null) {
+            return new RecommendedAdminActionResponse(
+                    "ANALYSE_ADMINISTRATIVE",
+                    "MEDIUM",
+                    "Analyser manuellement la réclamation et déterminer le service concerné.",
+                    "24H"
+            );
+        }
+
+        return switch (reclamation.getDecisionRecommendation()) {
+            case MEDICAL_ATTENTION -> new RecommendedAdminActionResponse(
+                    "SERVICE_MEDICAL",
+                    "HIGH",
+                    "Vérifier immédiatement l'état de l'enfant et informer les responsables concernés.",
+                    "IMMEDIATE"
+            );
+
+            case REPAIR_NEEDED -> new RecommendedAdminActionResponse(
+                    "MAINTENANCE",
+                    "HIGH",
+                    "Sécuriser la zone ou l'équipement concerné et planifier une réparation rapide.",
+                    "24H"
+            );
+
+            case INCREASE_SUPERVISION -> new RecommendedAdminActionResponse(
+                    "SERVICE_PEDAGOGIQUE",
+                    "HIGH",
+                    "Renforcer immédiatement la surveillance dans la zone ou le contexte signalé.",
+                    "IMMEDIATE"
+            );
+
+            case STAFF_TRAINING -> new RecommendedAdminActionResponse(
+                    "RESSOURCES_HUMAINES",
+                    "MEDIUM",
+                    "Identifier le personnel concerné et prévoir une action de sensibilisation ou de formation.",
+                    "72H"
+            );
+
+            case PROCESS_IMPROVEMENT -> new RecommendedAdminActionResponse(
+                    "ADMINISTRATION",
+                    "MEDIUM",
+                    "Analyser le processus interne concerné et proposer une amélioration organisationnelle.",
+                    "72H"
+            );
+
+            case ADMINISTRATIVE_CORRECTION -> new RecommendedAdminActionResponse(
+                    "SERVICE_ADMINISTRATIF",
+                    "MEDIUM",
+                    "Vérifier le dossier et corriger les informations ou traitements administratifs concernés.",
+                    "24H"
+            );
+
+            case TRANSPORT_ESCALATION -> new RecommendedAdminActionResponse(
+                    "SERVICE_TRANSPORT",
+                    "HIGH",
+                    "Contacter le responsable transport et vérifier l'incident signalé en priorité.",
+                    "IMMEDIATE"
+            );
+
+            case PARENT_FOLLOWUP -> new RecommendedAdminActionResponse(
+                    "RELATION_PARENT",
+                    "LOW",
+                    "Contacter le parent pour obtenir des précisions complémentaires avant décision finale.",
+                    "48H"
+            );
+        };
     }
 
     @Override
@@ -381,6 +483,8 @@ public class ReclamationServiceImpl implements ReclamationService {
                     "Priorite",
                     "Priorite predite",
                     "Confiance priorite",
+                    "Decision recommandee",
+                    "Confiance decision",
                     "Statut",
                     "Parent",
                     "Admin assigne",
@@ -427,29 +531,35 @@ public class ReclamationServiceImpl implements ReclamationService {
                         reclamation.getPriorityConfidence() != null ? reclamation.getPriorityConfidence() : 0.0
                 );
                 row.createCell(9).setCellValue(
-                        reclamation.getStatus() != null ? reclamation.getStatus().name() : "-"
+                        reclamation.getDecisionRecommendation() != null ? reclamation.getDecisionRecommendation().name() : "-"
                 );
                 row.createCell(10).setCellValue(
-                        reclamation.getParent() != null ? safeExcelText(reclamation.getParent().getEmail()) : "-"
+                        reclamation.getDecisionConfidence() != null ? reclamation.getDecisionConfidence() : 0.0
                 );
                 row.createCell(11).setCellValue(
+                        reclamation.getStatus() != null ? reclamation.getStatus().name() : "-"
+                );
+                row.createCell(12).setCellValue(
+                        reclamation.getParent() != null ? safeExcelText(reclamation.getParent().getEmail()) : "-"
+                );
+                row.createCell(13).setCellValue(
                         reclamation.getAssignedAdmin() != null ? safeExcelText(reclamation.getAssignedAdmin().getEmail()) : "-"
                 );
 
-                Cell adminCommentCell = row.createCell(12);
+                Cell adminCommentCell = row.createCell(14);
                 adminCommentCell.setCellValue(safeExcelText(reclamation.getAdminComment()));
                 adminCommentCell.setCellStyle(wrapStyle);
 
-                row.createCell(13).setCellValue(
+                row.createCell(15).setCellValue(
                         reclamation.getImageName() != null ? safeExcelText(reclamation.getImageName()) : "-"
                 );
-                row.createCell(14).setCellValue(
+                row.createCell(16).setCellValue(
                         reclamation.getAttachmentName() != null ? safeExcelText(reclamation.getAttachmentName()) : "-"
                 );
-                row.createCell(15).setCellValue(
+                row.createCell(17).setCellValue(
                         reclamation.getCreatedAt() != null ? reclamation.getCreatedAt().toString() : "-"
                 );
-                row.createCell(16).setCellValue(
+                row.createCell(18).setCellValue(
                         reclamation.getUpdatedAt() != null ? reclamation.getUpdatedAt().toString() : "-"
                 );
             }
@@ -509,6 +619,10 @@ public class ReclamationServiceImpl implements ReclamationService {
             String oldPredictedPriority = reclamation.getPredictedPriority() != null ? reclamation.getPredictedPriority().name() : null;
             Double oldConfidence = reclamation.getClassificationConfidence();
             Double oldPriorityConfidence = reclamation.getPriorityConfidence();
+            String oldDecisionRecommendation = reclamation.getDecisionRecommendation() != null
+                    ? reclamation.getDecisionRecommendation().name()
+                    : null;
+            Double oldDecisionConfidence = reclamation.getDecisionConfidence();
 
             reclamation.setTitle(cleanTitle);
             reclamation.setDescription(cleanDescription);
@@ -599,6 +713,27 @@ public class ReclamationServiceImpl implements ReclamationService {
                         oldPredictedPriority != null ? oldPredictedPriority : "-",
                         newPredictedPriority != null
                                 ? newPredictedPriority + " (confiance: " + saved.getPriorityConfidence() + ")"
+                                : "-",
+                        null
+                );
+            }
+
+            String newDecisionRecommendation = saved.getDecisionRecommendation() != null
+                    ? saved.getDecisionRecommendation().name()
+                    : null;
+
+            boolean decisionConfidenceChanged = (oldDecisionConfidence == null && saved.getDecisionConfidence() != null)
+                    || (oldDecisionConfidence != null && saved.getDecisionConfidence() != null
+                    && Double.compare(oldDecisionConfidence, saved.getDecisionConfidence()) != 0);
+
+            if (!safeEquals(oldDecisionRecommendation, newDecisionRecommendation) || decisionConfidenceChanged) {
+                addHistory(
+                        saved,
+                        ReclamationHistoryActionType.DECISION_RECOMMENDED,
+                        "Décision recommandée ML mise à jour",
+                        oldDecisionRecommendation != null ? oldDecisionRecommendation : "-",
+                        newDecisionRecommendation != null
+                                ? newDecisionRecommendation + " (confiance: " + saved.getDecisionConfidence() + ")"
                                 : "-",
                         null
                 );
@@ -712,9 +847,11 @@ public class ReclamationServiceImpl implements ReclamationService {
                                    String cleanDescription,
                                    String requestedPriority,
                                    String requestedCategory) {
-        MlPredictionResponse prediction = mlPredictionService.predictCategory(cleanTitle, cleanDescription);
 
-        if (prediction == null) {
+        MlPredictionResponse categoryResponse = mlPredictionService.predictCategory(cleanTitle, cleanDescription);
+        MlPredictionResponse priorityResponse = mlPredictionService.predictPriority(cleanTitle, cleanDescription);
+
+        if (categoryResponse == null && priorityResponse == null) {
             reclamation.setAutoClassified(false);
 
             if (reclamation.getCategory() == null) {
@@ -724,18 +861,22 @@ public class ReclamationServiceImpl implements ReclamationService {
             if (reclamation.getPriority() == null) {
                 reclamation.setPriority(ReclamationPriority.MEDIUM);
             }
+
+            reclamation.setDecisionRecommendation(null);
+            reclamation.setDecisionConfidence(null);
             return;
         }
 
         boolean categoryAppliedByMl = false;
 
-        if (prediction.getPredictedCategory() != null) {
+        if (categoryResponse != null && categoryResponse.getPredictedCategory() != null) {
             try {
                 ReclamationCategory predictedCat = ReclamationCategory.valueOf(
-                        prediction.getPredictedCategory().trim().toUpperCase()
+                        categoryResponse.getPredictedCategory().trim().toUpperCase()
                 );
+
                 reclamation.setPredictedCategory(predictedCat);
-                reclamation.setClassificationConfidence(prediction.getConfidence());
+                reclamation.setClassificationConfidence(categoryResponse.getClassificationConfidence());
 
                 if (requestedCategory == null || requestedCategory.trim().isEmpty()) {
                     reclamation.setCategory(predictedCat);
@@ -745,13 +886,14 @@ public class ReclamationServiceImpl implements ReclamationService {
             }
         }
 
-        if (prediction.getPredictedPriority() != null) {
+        if (priorityResponse != null && priorityResponse.getPredictedPriority() != null) {
             try {
                 ReclamationPriority predictedPrio = ReclamationPriority.valueOf(
-                        prediction.getPredictedPriority().trim().toUpperCase()
+                        priorityResponse.getPredictedPriority().trim().toUpperCase()
                 );
+
                 reclamation.setPredictedPriority(predictedPrio);
-                reclamation.setPriorityConfidence(prediction.getPriorityConfidence());
+                reclamation.setPriorityConfidence(priorityResponse.getPriorityConfidence());
 
                 if (requestedPriority == null || requestedPriority.trim().isEmpty()) {
                     reclamation.setPriority(predictedPrio);
@@ -769,6 +911,36 @@ public class ReclamationServiceImpl implements ReclamationService {
         }
 
         reclamation.setAutoClassified(categoryAppliedByMl);
+
+        try {
+            MlPredictionResponse decisionResponse = mlPredictionService.predictDecision(
+                    cleanTitle,
+                    cleanDescription,
+                    reclamation.getCategory().name(),
+                    reclamation.getPriority().name()
+            );
+
+            if (decisionResponse != null && decisionResponse.getDecisionRecommendation() != null) {
+                try {
+                    DecisionRecommendation decisionRecommendation = DecisionRecommendation.valueOf(
+                            decisionResponse.getDecisionRecommendation().trim().toUpperCase()
+                    );
+
+                    reclamation.setDecisionRecommendation(decisionRecommendation);
+                    reclamation.setDecisionConfidence(decisionResponse.getDecisionConfidence());
+                } catch (IllegalArgumentException ignored) {
+                    reclamation.setDecisionRecommendation(null);
+                    reclamation.setDecisionConfidence(null);
+                }
+            } else {
+                reclamation.setDecisionRecommendation(null);
+                reclamation.setDecisionConfidence(null);
+            }
+
+        } catch (Exception e) {
+            reclamation.setDecisionRecommendation(null);
+            reclamation.setDecisionConfidence(null);
+        }
     }
 
     private void handleImageUpload(Reclamation reclamation, MultipartFile image) {
@@ -942,6 +1114,7 @@ public class ReclamationServiceImpl implements ReclamationService {
     private String safeExcelText(String value) {
         return (value == null || value.trim().isEmpty()) ? "-" : value;
     }
+
     private String buildIntroByStatus(Reclamation reclamation) {
         if (reclamation.getStatus() == null) {
             return "Nous avons bien reçu votre réclamation.\n\n";
@@ -986,4 +1159,54 @@ public class ReclamationServiceImpl implements ReclamationService {
         };
     }
 
+    private String buildDecisionSpecificMessage(Reclamation reclamation) {
+        if (reclamation.getDecisionRecommendation() == null) {
+            return "";
+        }
+
+        return switch (reclamation.getDecisionRecommendation()) {
+            case REPAIR_NEEDED ->
+                    "Une intervention technique ou matérielle a été identifiée comme nécessaire afin de corriger durablement le problème signalé.\n\n";
+            case INCREASE_SUPERVISION ->
+                    "Un renforcement temporaire ou ciblé de la surveillance sera mis en place afin de sécuriser davantage les enfants dans la situation signalée.\n\n";
+            case STAFF_TRAINING ->
+                    "Une action de sensibilisation ou de renforcement des compétences du personnel concerné sera envisagée afin d'améliorer la qualité de prise en charge.\n\n";
+            case PROCESS_IMPROVEMENT ->
+                    "Une amélioration du processus interne a été identifiée afin d'éviter que ce type de situation ne se reproduise.\n\n";
+            case ADMINISTRATIVE_CORRECTION ->
+                    "Une correction administrative sera effectuée sur les éléments du dossier ou du traitement concernés.\n\n";
+            case MEDICAL_ATTENTION ->
+                    "Une attention particulière sera portée à l'aspect médical ou sanitaire de la situation afin de garantir la sécurité et le bien-être de l'enfant.\n\n";
+            case TRANSPORT_ESCALATION ->
+                    "Le signalement sera transmis au service transport pour traitement prioritaire et vérification approfondie.\n\n";
+            case PARENT_FOLLOWUP ->
+                    "Un complément d'information pourra être demandé afin de mieux qualifier la situation et assurer un suivi adapté.\n\n";
+        };
+    }
+
+    private String buildSensitiveKeywordsMessage(Reclamation reclamation) {
+        if (reclamation.getDescription() == null || reclamation.getDescription().isBlank()) {
+            return "";
+        }
+
+        String text = reclamation.getDescription().toLowerCase();
+
+        if (text.contains("allerg")) {
+            return "Compte tenu des éléments liés à une possible allergie, une vérification renforcée sera effectuée avec la plus grande vigilance.\n\n";
+        }
+
+        if (text.contains("danger") || text.contains("dangereux")) {
+            return "Les éléments signalant un danger potentiel feront l'objet d'une vérification prioritaire afin de prévenir tout risque.\n\n";
+        }
+
+        if (text.contains("retard")) {
+            return "Les retards mentionnés seront vérifiés avec le service concerné afin d'améliorer la régularité et l'organisation.\n\n";
+        }
+
+        if (text.contains("bless") || text.contains("malade") || text.contains("malaise")) {
+            return "Les éléments relatifs à la santé ou à un incident physique seront examinés avec une attention immédiate.\n\n";
+        }
+
+        return "";
+    }
 }
