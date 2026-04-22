@@ -11,5 +11,11 @@ public interface PriseTraitementRepository extends JpaRepository<PriseTraitement
     Optional<PriseTraitement> findByTraitementIdAndDatePriseAndHeurePrevue(Long traitementId, LocalDate datePrise, String heurePrevue);
 
     List<PriseTraitement> findByTraitementConditionSanitaireEnfantIdAndDatePrise(Long enfantId, LocalDate datePrise);
-}
 
+    List<PriseTraitement> findByTraitementConditionSanitaireEnfantIdAndDatePriseBetween(Long enfantId, LocalDate dateFrom, LocalDate dateTo);
+
+    List<PriseTraitement> findByDatePriseOrderByHeurePrevueAscDonneLeAsc(LocalDate datePrise);
+
+    List<PriseTraitement> findByDonneParEmailIgnoreCaseAndDatePriseBetweenOrderByDatePriseDescHeurePrevueAscDonneLeDesc(
+            String email, LocalDate dateFrom, LocalDate dateTo);
+}

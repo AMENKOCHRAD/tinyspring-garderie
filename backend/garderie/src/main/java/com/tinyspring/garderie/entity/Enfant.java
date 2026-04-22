@@ -26,6 +26,8 @@ public class Enfant {
 
     private String contactUrgence;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String photo;
 
     @Column(nullable = false)

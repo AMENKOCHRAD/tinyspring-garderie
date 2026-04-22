@@ -1,18 +1,26 @@
 package com.tinyspring.garderie.dto;
 
-import com.tinyspring.garderie.entity.ObservationType;
 import com.tinyspring.garderie.entity.NiveauUrgence;
+import com.tinyspring.garderie.entity.ObservationType;
 
-public class ObservationCreateDto {
+public class ObservationAiRequestDto {
+    private Long enfantId;
     private ObservationType type;
     private String titre;
-    private String description;
-    private String observeLe;
     private NiveauUrgence urgence;
     private Double temperature;
     private String lieu;
     private String symptomes;
     private String actionsEffectuees;
+    private String contexte;
+
+    public Long getEnfantId() {
+        return enfantId;
+    }
+
+    public void setEnfantId(Long enfantId) {
+        this.enfantId = enfantId;
+    }
 
     public ObservationType getType() {
         return type;
@@ -28,22 +36,6 @@ public class ObservationCreateDto {
 
     public void setTitre(String titre) {
         this.titre = titre;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getObserveLe() {
-        return observeLe;
-    }
-
-    public void setObserveLe(String observeLe) {
-        this.observeLe = observeLe;
     }
 
     public NiveauUrgence getUrgence() {
@@ -85,4 +77,13 @@ public class ObservationCreateDto {
     public void setActionsEffectuees(String actionsEffectuees) {
         this.actionsEffectuees = actionsEffectuees;
     }
+
+    public String getContexte() {
+        return contexte;
+    }
+
+    public void setContexte(String contexte) {
+        this.contexte = contexte;
+    }
 }
+

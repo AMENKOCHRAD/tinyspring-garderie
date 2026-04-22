@@ -17,7 +17,7 @@ public class ObservationEnfant {
     private Enfant enfant;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 32)
     private ObservationType type;
 
     @Column(nullable = false, length = 120)
@@ -32,6 +32,27 @@ public class ObservationEnfant {
 
     @Column(nullable = false)
     private LocalDateTime creeLe = LocalDateTime.now();
+
+    @Column(nullable = false)
+    private boolean luParent = false;
+
+    private LocalDateTime luLe;
+
+    private LocalDateTime observeLe;
+
+    @Enumerated(EnumType.STRING)
+    private NiveauUrgence urgence;
+
+    private Double temperature;
+
+    @Column(length = 120)
+    private String lieu;
+
+    @Column(length = 500)
+    private String symptomes;
+
+    @Column(length = 500)
+    private String actionsEffectuees;
 
     public Long getId() {
         return id;
@@ -84,5 +105,68 @@ public class ObservationEnfant {
     public void setCreeLe(LocalDateTime creeLe) {
         this.creeLe = creeLe;
     }
-}
 
+    public boolean isLuParent() {
+        return luParent;
+    }
+
+    public void setLuParent(boolean luParent) {
+        this.luParent = luParent;
+    }
+
+    public LocalDateTime getLuLe() {
+        return luLe;
+    }
+
+    public void setLuLe(LocalDateTime luLe) {
+        this.luLe = luLe;
+    }
+
+    public LocalDateTime getObserveLe() {
+        return observeLe;
+    }
+
+    public void setObserveLe(LocalDateTime observeLe) {
+        this.observeLe = observeLe;
+    }
+
+    public NiveauUrgence getUrgence() {
+        return urgence;
+    }
+
+    public void setUrgence(NiveauUrgence urgence) {
+        this.urgence = urgence;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getLieu() {
+        return lieu;
+    }
+
+    public void setLieu(String lieu) {
+        this.lieu = lieu;
+    }
+
+    public String getSymptomes() {
+        return symptomes;
+    }
+
+    public void setSymptomes(String symptomes) {
+        this.symptomes = symptomes;
+    }
+
+    public String getActionsEffectuees() {
+        return actionsEffectuees;
+    }
+
+    public void setActionsEffectuees(String actionsEffectuees) {
+        this.actionsEffectuees = actionsEffectuees;
+    }
+}

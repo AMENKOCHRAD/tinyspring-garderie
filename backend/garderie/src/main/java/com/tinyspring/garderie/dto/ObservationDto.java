@@ -10,6 +10,14 @@ public class ObservationDto {
     private String description;
     private String creeLe;
     private String creeParNom;
+    private boolean luParent;
+    private String luLe;
+    private String observeLe;
+    private String urgence;
+    private Double temperature;
+    private String lieu;
+    private String symptomes;
+    private String actionsEffectuees;
 
     public Long getId() {
         return id;
@@ -82,5 +90,68 @@ public class ObservationDto {
     public void setCreeParNom(String creeParNom) {
         this.creeParNom = creeParNom;
     }
-}
 
+    public boolean isLuParent() {
+        return luParent;
+    }
+
+    public void setLuParent(boolean luParent) {
+        this.luParent = luParent;
+    }
+
+    public String getLuLe() {
+        return luLe;
+    }
+
+    public void setLuLe(String luLe) {
+        this.luLe = luLe;
+    }
+
+    public String getObserveLe() {
+        return observeLe;
+    }
+
+    public void setObserveLe(String observeLe) {
+        this.observeLe = observeLe;
+    }
+
+    public String getUrgence() {
+        return urgence;
+    }
+
+    public void setUrgence(String urgence) {
+        this.urgence = urgence;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getLieu() {
+        return lieu;
+    }
+
+    public void setLieu(String lieu) {
+        this.lieu = lieu;
+    }
+
+    public String getSymptomes() {
+        return symptomes;
+    }
+
+    public void setSymptomes(String symptomes) {
+        this.symptomes = symptomes;
+    }
+
+    public String getActionsEffectuees() {
+        return actionsEffectuees;
+    }
+
+    public void setActionsEffectuees(String actionsEffectuees) {
+        this.actionsEffectuees = actionsEffectuees;
+    }
+}

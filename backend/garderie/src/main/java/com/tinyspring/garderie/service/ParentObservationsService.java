@@ -7,6 +7,7 @@ import com.tinyspring.garderie.repository.ObservationEnfantRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -42,5 +43,54 @@ public class ParentObservationsService {
 
         return observationEnfantRepository.findTop50ByEnfantIdOrderByCreeLeDesc(enfantId);
     }
-}
 
+    public List<ObservationEnfant> listerObservationsParent(String emailParent, boolean unreadOnly) {
+        if (emailParent == null || emailParent.isBlank()) {
+            throw new RuntimeException("Utilisateur non connecte.");
+        }
+
+        userRepository.findByEmailIgnoreCase(emailParent.trim())
+                .orElseThrow(() -> new RuntimeException("Parent introuvable."));
+
+        if (unreadOnly) {
+            return observationEnfantRepository.findTop200ByEnfantParentEmailIgnoreCaseAndLuParentFalseOrderByCreeLeDesc(emailParent.trim());
+        }
+
+        return observationEnfantRepository.findTop200ByEnfantParentEmailIgnoreCaseOrderByCreeLeDesc(emailParent.trim());
+    }
+
+    public long compterNonLues(String emailParent) {
+        if (emailParent == null || emailParent.isBlank()) {
+            throw new RuntimeException("Utilisateur non connecte.");
+        }
+        userRepository.findByEmailIgnoreCase(emailParent.trim())
+                .orElseThrow(() -> new RuntimeException("Parent introuvable."));
+        return observationEnfantRepository.countByEnfantParentEmailIgnoreCaseAndLuParentFalse(emailParent.trim());
+    }
+
+    public ObservationEnfant marquerLue(String emailParent, Long observationId) {
+        if (emailParent == null || emailParent.isBlank()) {
+            throw new RuntimeException("Utilisateur non connecte.");
+        }
+
+        userRepository.findByEmailIgnoreCase(emailParent.trim())
+                .orElseThrow(() -> new RuntimeException("Parent introuvable."));
+
+        ObservationEnfant observation = observationEnfantRepository.findById(observationId)
+                .orElseThrow(() -> new RuntimeException("Observation introuvable."));
+
+        Enfant enfant = observation.getEnfant();
+        if (enfant == null || enfant.getParent() == null || enfant.getParent().getEmail() == null
+                || !enfant.getParent().getEmail().equalsIgnoreCase(emailParent.trim())) {
+            throw new RuntimeException("Acces interdit.");
+        }
+
+        if (!observation.isLuParent()) {
+            observation.setLuParent(true);
+            observation.setLuLe(LocalDateTime.now());
+            observation = observationEnfantRepository.save(observation);
+        }
+
+        return observation;
+    }
+}
