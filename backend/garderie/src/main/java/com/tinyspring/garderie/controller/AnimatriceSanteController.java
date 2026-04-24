@@ -10,6 +10,8 @@ import com.tinyspring.garderie.entity.ObservationEnfant;
 import com.tinyspring.garderie.entity.PriseTraitement;
 import com.tinyspring.garderie.service.AnimatriceSanteService;
 import com.tinyspring.garderie.service.ObservationAiService;
+import com.tinyspring.garderie.service.RiskPredictionService;
+import com.tinyspring.garderie.dto.RiskPredictionDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
@@ -28,11 +30,14 @@ public class AnimatriceSanteController {
 
     private final AnimatriceSanteService service;
     private final ObservationAiService observationAiService;
+    private final RiskPredictionService riskPredictionService;
 
     public AnimatriceSanteController(AnimatriceSanteService service,
-                                    ObservationAiService observationAiService) {
+                                    ObservationAiService observationAiService,
+                                    RiskPredictionService riskPredictionService) {
         this.service = service;
         this.observationAiService = observationAiService;
+        this.riskPredictionService = riskPredictionService;
     }
 
     @PostMapping("/traitements/{traitementId}/prises")
@@ -142,6 +147,11 @@ public class AnimatriceSanteController {
         return ResponseEntity.ok(service.listerDernieresObservations().stream()
                 .map(this::mapObservation)
                 .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/enfant/{enfantId}/risque")
+    public ResponseEntity<RiskPredictionDto> predireRisque(@PathVariable Long enfantId) {
+        return ResponseEntity.ok(riskPredictionService.predirePourEnfant(enfantId));
     }
 
     private PriseTraitementDto mapPrise(PriseTraitement prise) {

@@ -41,8 +41,18 @@
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Photo</label>
-      <input class="form-control" [(ngModel)]="formData.photo" name="photo" />
+      <label class="form-label">Photo (optionnel)</label>
+      <input #photoInput type="file" class="form-control" accept="image/*" (change)="onPhotoSelected($event)" />
+
+      <div class="mt-2 d-flex gap-3 align-items-center flex-wrap" *ngIf="formData.photo && formData.photo.trim()">
+        <img
+          [src]="formData.photo"
+          alt="Photo enfant"
+          style="width:96px; height:96px; object-fit:cover; border-radius:18px; border:1px solid rgba(0,0,0,0.12);"
+        />
+        <button type="button" class="btn btn-outline-secondary" (click)="clearPhoto(photoInput)">Retirer la photo</button>
+      </div>
+      <small class="text-muted d-block mt-1">Formats images (PNG/JPG). Taille max 2 Mo.</small>
     </div>
 
     <button type="submit" class="btn btn-primary">

@@ -7,13 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-/**
- * Fixes legacy MySQL schemas where Enum columns were created with a limited set of values
- * (or with a too-small VARCHAR) and Hibernate "update" can't safely widen/extend them.
- *
- * This app stores enums as strings (EnumType.STRING). We keep DB column as VARCHAR to avoid
- * truncation when new enum values are added (ex: JOUET, ACTIVITE).
- */
+
 @Component
 public class DatabaseSchemaFixer implements ApplicationRunner {
 
@@ -58,13 +52,7 @@ public class DatabaseSchemaFixer implements ApplicationRunner {
         }
     }
 
-    /**
-     * When we briefly introduced ML indicators on ObservationEnfant, Hibernate created
-     * NOT NULL columns without default. If we later remove those fields from the entity,
-     * inserts won't provide values and MySQL fails with "doesn't have a default value".
-     *
-     * We keep those legacy columns (no drop) but enforce a default 0 so inserts succeed.
-     */
+
     private void fixLegacyIndicColumnsDefaults() {
         String[] cols = new String[]{
                 "indic_fievre",

@@ -12,6 +12,7 @@ import { EtatSanitaireComponent } from './enfant/etat-sanitaire/etat-sanitaire';
 import { ValidationTraitementsComponent } from './enfant/validation-traitements/validation-traitements';
 import { DetailEnfantComponent } from './enfant/detail-enfant/detail-enfant';
 import { ModifierEnfantComponent } from './enfant/modifier-enfant/modifier-enfant';
+import { StatistiquesEnfantsComponent } from './enfant/statistiques-enfants/statistiques-enfants';
 
 const routes: Routes = [
   {
@@ -58,6 +59,10 @@ const routes: Routes = [
           {
             path: 'etat-sanitaire',
             component: EtatSanitaireComponent
+          },
+          {
+            path: 'statistiques',
+            component: StatistiquesEnfantsComponent
           }
         ]
       },

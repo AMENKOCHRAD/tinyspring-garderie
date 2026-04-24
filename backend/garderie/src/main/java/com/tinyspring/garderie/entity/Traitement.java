@@ -20,7 +20,7 @@ public class Traitement {
     private String description;
 
     @Column(nullable = false)
-    private String ordonnance; // on stocke le nom/fichier dans DB
+    private String ordonnance;
 
     @Column(nullable = false)
     private LocalDate dateDebut;

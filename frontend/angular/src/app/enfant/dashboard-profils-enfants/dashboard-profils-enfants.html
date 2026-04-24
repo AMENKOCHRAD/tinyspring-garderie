@@ -7,6 +7,7 @@
   <table class="table table-bordered table-striped" *ngIf="!isLoading && !error">
     <thead>
       <tr>
+        <th>Photo</th>
         <th>Nom</th>
         <th>Prénom</th>
         <th>Date naissance</th>
@@ -19,6 +20,17 @@
     </thead>
     <tbody>
       <tr *ngFor="let enfant of enfants">
+        <td>
+          <img
+            *ngIf="enfant.photo && enfant.photo.trim()"
+            class="child-avatar"
+            [src]="enfant.photo"
+            alt="Photo enfant"
+          />
+          <span *ngIf="!enfant.photo || !enfant.photo.trim()" class="child-avatar child-avatar--placeholder">
+            {{ enfant.prenom?.[0] }}{{ enfant.nom?.[0] }}
+          </span>
+        </td>
         <td>{{ enfant.nom }}</td>
         <td>{{ enfant.prenom }}</td>
         <td>{{ enfant.dateNaissance }}</td>

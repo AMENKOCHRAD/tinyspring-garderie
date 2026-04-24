@@ -1,0 +1,92 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
+    <div>
+      <h2 class="mb-1">Statistiques enfants</h2>
+      <p class="text-muted mb-0">AperÃ§u des allergies, conditions sanitaires et statuts des traitements.</p>
+    </div>
+    <button class="btn btn-outline-primary" type="button" (click)="chargerStats()" [disabled]="isLoading">
+      {{ isLoading ? 'Chargement...' : 'RafraÃ®chir' }}
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="isLoading">Chargement...</div>
+
+  <div class="row g-3" *ngIf="!isLoading && !error">
+    <div class="col-12 col-md-4">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="stat-value">{{ totalEnfants }}</div>
+          <div class="stat-label">Enfants</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="stat-value">{{ totalConditions }}</div>
+          <div class="stat-label">Conditions sanitaires</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="stat-value">{{ totalTraitements }}</div>
+          <div class="stat-label">Traitements (tous statuts)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1" *ngIf="!isLoading && !error">
+    <div class="col-12 col-lg-6">
+      <div class="card">
+        <div class="card-header fw-semibold">Allergies frÃ©quentes</div>
+        <div class="card-body">
+          <div *ngIf="allergiesTop.length === 0" class="text-muted">Aucune allergie renseignÃ©e.</div>
+          <div class="d-flex flex-wrap gap-2" *ngIf="allergiesTop.length > 0">
+            <span class="badge text-bg-secondary" *ngFor="let a of allergiesTop">
+              {{ a.allergie }} <span class="opacity-75">({{ a.count }})</span>
+            </span>
+          </div>
+          <small class="text-muted d-block mt-2">Comptage basÃ© sur le champ allergies des profils enfant.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card">
+        <div class="card-header fw-semibold">Conditions sanitaires (types)</div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge text-bg-danger">Chroniques: {{ conditionsChroniques }}</span>
+            <span class="badge text-bg-warning text-dark">Temporaires: {{ conditionsTemporaires }}</span>
+            <span class="badge text-bg-secondary">Autres: {{ conditionsAutres }}</span>
+          </div>
+          <small class="text-muted d-block mt-2">BasÃ© sur le champ type des conditions.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header fw-semibold">Traitements (statuts)</div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge text-bg-primary">En attente: {{ traitementsEnAttente }}</span>
+            <span class="badge text-bg-success">ValidÃ©s: {{ traitementsValides }}</span>
+            <span class="badge text-bg-info text-dark">Actifs: {{ traitementsActifs }}</span>
+            <span class="badge text-bg-danger">RefusÃ©s: {{ traitementsRefuses }}</span>
+            <span class="badge text-bg-secondary">AnnulÃ©s: {{ traitementsAnnules }}</span>
+            <span class="badge text-bg-dark">Autres: {{ traitementsAutres }}</span>
+          </div>
+          <small class="text-muted d-block mt-2">
+            "En attente" provient aussi de l'endpoint de validation; les autres compteurs proviennent des traitements par enfant.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -28,6 +28,48 @@ export class ModifierEnfantComponent implements OnInit {
     parentId: 0
   };
 
+  onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files.length ? input.files[0] : null;
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type?.startsWith('image/')) {
+      this.error = 'Veuillez choisir une image (PNG, JPG...).';
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxBytes) {
+      this.error = 'Image trop grande. Maximum 2 Mo.';
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.formData.photo = (reader.result as string) || '';
+      if (this.formData.photo) {
+        this.error = '';
+      }
+    };
+    reader.onerror = () => {
+      this.error = "Impossible de lire l'image selectionnee.";
+      input.value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearPhoto(photoInput?: HTMLInputElement | null): void {
+    this.formData.photo = '';
+    if (photoInput) {
+      photoInput.value = '';
+    }
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,

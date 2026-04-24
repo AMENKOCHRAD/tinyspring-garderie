@@ -10,6 +10,8 @@ public interface ObservationEnfantRepository extends JpaRepository<ObservationEn
 
     List<ObservationEnfant> findTop50ByOrderByCreeLeDesc();
 
+    List<ObservationEnfant> findTop5000ByOrderByCreeLeDesc();
+
     List<ObservationEnfant> findTop200ByEnfantParentEmailIgnoreCaseOrderByCreeLeDesc(String parentEmail);
 
     List<ObservationEnfant> findTop200ByEnfantParentEmailIgnoreCaseAndLuParentFalseOrderByCreeLeDesc(String parentEmail);
