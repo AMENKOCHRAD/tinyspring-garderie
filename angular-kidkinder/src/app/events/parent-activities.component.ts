@@ -238,7 +238,7 @@ export class ParentActivitiesComponent {
   //  mettre à jour la note locale
   event.myRating = stars;
 
-  // mise à jour moyenne + compteur (UX instantanée)
+  // mise à jour moyenne  et compteur 
   if (!event.ratingCount || event.ratingCount === 0) {
     event.ratingCount = 1;
     event.averageRating = stars;

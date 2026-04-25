@@ -88,29 +88,11 @@ public class EventServiceImpl implements EventService {
         events.forEach(this::syncCompletedStatusIfNeeded);
 
         return events.stream()
-                .sorted((e1, e2) -> {
-                    int statusCompare = Integer.compare(
-                            getStatusPriority(e1.getStatus()),
-                            getStatusPriority(e2.getStatus())
-                    );
-
-                    if (statusCompare != 0) {
-                        return statusCompare;
-                    }
-
-                    if (e1.getStartDatetime() == null && e2.getStartDatetime() == null) return 0;
-                    if (e1.getStartDatetime() == null) return 1;
-                    if (e2.getStartDatetime() == null) return -1;
-
-                    return e1.getStartDatetime().compareTo(e2.getStartDatetime());
-                })
+                .sorted(this::compareEventsByPriority)
                 .map(event -> {
-
                     EventResponse response = eventMapper.toResponse(event);
 
-                    // 🔥 ICI ON AJOUTE LE RATING
-                    List<EventRating> ratings =
-                            eventRatingRepository.findByEventId(event.getId());
+                    List<EventRating> ratings = eventRatingRepository.findByEventId(event.getId());
 
                     response.setRatingCount((long) ratings.size());
 
@@ -126,34 +108,15 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
+
+
     @Override
     public List<Event> getAll() {
         List<Event> events = eventRepository.findAll();
         events.forEach(this::syncCompletedStatusIfNeeded);
 
         return events.stream()
-                .sorted((e1, e2) -> {
-                    int statusCompare = Integer.compare(
-                            getStatusPriority(e1.getStatus()),
-                            getStatusPriority(e2.getStatus())
-                    );
-
-                    if (statusCompare != 0) {
-                        return statusCompare;
-                    }
-
-                    if (e1.getStartDatetime() == null && e2.getStartDatetime() == null) {
-                        return 0;
-                    }
-                    if (e1.getStartDatetime() == null) {
-                        return 1;
-                    }
-                    if (e2.getStartDatetime() == null) {
-                        return -1;
-                    }
-
-                    return e1.getStartDatetime().compareTo(e2.getStartDatetime());
-                })
+                .sorted(this::compareEventsByPriority)
                 .toList();
     }
 
@@ -268,7 +231,7 @@ public class EventServiceImpl implements EventService {
 
         if (event.getStatus() == EventStatus.CANCELLED) {
             throw new InvalidStatusTransitionException(
-                    "Un evenement annule ne peut plus etre modifie"
+                    "Un évenement annule ne peut plus etre modifie"
             );
         }
 
@@ -365,15 +328,42 @@ public class EventServiceImpl implements EventService {
             throw new InvalidStatusTransitionException(errorMessage);
         }
     }
+    private int compareEventsByPriority(Event e1, Event e2) {
+        int statusCompare = Integer.compare(
+                getStatusPriority(e1.getStatus()),
+                getStatusPriority(e2.getStatus())
+        );
+
+        if (statusCompare != 0) {
+            return statusCompare;
+        }
+
+        if (e1.getStartDatetime() == null && e2.getStartDatetime() == null) {
+            return 0;
+        }
+
+        if (e1.getStartDatetime() == null) {
+            return 1;
+        }
+
+        if (e2.getStartDatetime() == null) {
+            return -1;
+        }
+
+        return e1.getStartDatetime().compareTo(e2.getStartDatetime());
+    }
 
 
     public int getStatusPriority(EventStatus status) {
+        if (status == null) {
+            return 99;
+        }
+
         return switch (status) {
             case PUBLISHED -> 1;
-            case CANCELLED -> 2;
+            case DRAFT -> 2;
             case COMPLETED -> 3;
-            case DRAFT -> 4;
-            default -> 99;
+            case CANCELLED -> 4;
         };
     }
 

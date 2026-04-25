@@ -767,6 +767,15 @@ export class EventFormComponent implements AfterViewInit, OnDestroy {
       this.syncMapMarkerWithForm();
     }, 0);
   }
+  aiPopupOpen = false;
+
+openAiPopup(): void {
+  this.aiPopupOpen = true;
+}
+
+closeAiPopup(): void {
+  this.aiPopupOpen = false;
+}
 
   private initMap(): void {
     if (this.map) {

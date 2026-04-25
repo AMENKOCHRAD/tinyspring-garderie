@@ -112,7 +112,7 @@ public class EventRestController {
         response.setFull(remainingCapacity != null && remainingCapacity == 0);
         response.setRegistrationOpen(!response.isFull());
 
-        // 🔥 AJOUT ICI : RATING
+        //
         List<EventRating> ratings = eventRatingRepository.findByEventId(event.getId());
 
         response.setRatingCount((long) ratings.size());

@@ -75,117 +75,100 @@ public class MenuAiService {
 
     private String buildPrompt(LocalDate weekStart) {
         return """
-        Tu es un nutritionniste spécialisé en menus de garderie pour enfants de 2 à 11 ans en Tunisie.
+        Tu génères uniquement du JSON valide.
 
-        Ta mission est de générer un menu hebdomadaire réaliste, équilibré, simple et adapté à une garderie.
-        Le menu doit convenir à de jeunes enfants : plats doux, faciles à manger, non épicés, nutritionnellement adaptés.
+    Contexte :
+    Tu es un nutritionniste spécialisé en menus de garderie en Tunisie pour enfants de 2 à 6 ans.
 
-        Semaine de début : %s
+    Objectif :
+    Générer un menu hebdomadaire simple, réaliste, doux, équilibré, non épicé.
 
-        Réponds uniquement avec un JSON valide.
-        Ne mets aucun texte avant ou après le JSON.
+    Semaine :
+    - MONDAY = %s
+    - TUESDAY = %s
+    - WEDNESDAY = %s
+    - THURSDAY = %s
+    - FRIDAY = %s
 
-        Format exact attendu :
+    Règles obligatoires :
+    - Répondre avec UN SEUL objet JSON
+    - Aucun texte avant ou après
+    - JSON strictement valide
+    - 5 éléments dans dailyMenus
+    - 1 jour par élément
+    - 4 plats par jour exactement
+    - mealType autorisé uniquement :
+      ENTREE, PLAT_PRINCIPAL, DESSERT, GOUTER
+    - dayOfWeek autorisé uniquement :
+      MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY
+    - allergens autorisés uniquement :
+      gluten, lait, oeufs, poisson, arachides, soja, noix, céleri, moutarde, sésame, sulfites
+    - Si aucun allergène : ""
+
+    Interdictions :
+    - pas de harissa
+    - pas de merguez
+    - pas de plats épicés
+    - pas de fritures lourdes
+    - pas de plats sophistiqués
+    - pas d’allergènes inventés
+    - pas d’ingrédients ordinaires dans allergens
+
+    Structure JSON attendue :
+    {
+      "title": "Menu semaine du %s",
+      "dailyMenus": [
         {
-          "title": "Menu semaine du 2026-04-27",
-          "dailyMenus": [
+          "menuDate": "%s",
+          "dayOfWeek": "MONDAY",
+          "isVisibleToParents": true,
+          "dishes": [
             {
-              "menuDate": "2026-04-27",
-              "dayOfWeek": "MONDAY",
-              "isVisibleToParents": true,
-              "dishes": [
-                {
-                  "mealType": "ENTREE",
-                  "name": "Soupe de légumes",
-                  "description": "Soupe légère de légumes mixés adaptée aux enfants",
-                  "allergens": "céleri"
-                },
-                {
-                  "mealType": "PLAT_PRINCIPAL",
-                  "name": "Escalope de poulet avec riz",
-                  "description": "Poulet tendre accompagné de riz cuit simplement",
-                  "allergens": ""
-                },
-                {
-                  "mealType": "DESSERT",
-                  "name": "Compote de pomme",
-                  "description": "Compote douce sans morceaux",
-                  "allergens": ""
-                },
-                {
-                  "mealType": "GOUTER",
-                  "name": "Pain au lait",
-                  "description": "Petit pain moelleux adapté au goûter",
-                  "allergens": "gluten, lait"
-                }
-              ]
+              "mealType": "ENTREE",
+              "name": "string",
+              "description": "string",
+              "allergens": ""
+            },
+            {
+              "mealType": "PLAT_PRINCIPAL",
+              "name": "string",
+              "description": "string",
+              "allergens": ""
+            },
+            {
+              "mealType": "DESSERT",
+              "name": "string",
+              "description": "string",
+              "allergens": ""
+            },
+            {
+              "mealType": "GOUTER",
+              "name": "string",
+              "description": "string",
+              "allergens": ""
             }
           ]
         }
+      ]
+    }
 
-        Contraintes obligatoires :
-        - Générer  5 jours : MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY
-        - Utiliser  4 plats par jour :
-          1 ENTREE
-          1 PLAT_PRINCIPAL
-          1 DESSERT
-          1 GOUTER
-        - Les dates doivent correspondre exactement à la semaine demandée :
-          jour 1 = %s
-          jour 2 = %s
-          jour 3 = %s
-          jour 4 = %s
-          jour 5 = %s
-        - Les plats doivent être réalistes pour une garderie tunisienne
-        - Les plats doivent être doux, simples, équilibrés, digestes, adaptés à des enfants de 2 à 6 ans
-        - Utiliser des ingrédients courants et des préparations simples
-        - Éviter les plats trop gras, trop épicés, trop salés ou difficiles à mâcher
-        - Éviter les plats répétitifs sur la semaine
+    Vérification interne avant réponse :
+    - le JSON est valide
+    - tous les crochets et accolades sont fermés
+    - dailyMenus contient exactement 5 objets
+    - chaque objet contient exactement 4 dishes
+    - aucune valeur hors liste autorisée
+    - si le JSON n’est pas valide, corrige-le avant d’envoyer
 
-        Interdictions strictes :
-        - Pas de harissa
-        - Pas de merguez
-        - Pas de plats très épicés
-        - Pas de fritures lourdes
-        - Pas de fruits secs entiers ou aliments dangereux pour de jeunes enfants
-        - Pas de plats sophistiqués ou gastronomiques
-        - Pas d'ingrédients incohérents comme allergènes
-
-        Règles sur les allergènes :
-        - Le champ "allergens" doit contenir uniquement une liste parmi :
-          gluten, lait, oeufs, poisson, arachides, soja, noix, céleri, moutarde, sésame, sulfites
-        - Si aucun allergène majeur n'est probable, mettre une chaîne vide ""
-        - Ne jamais mettre dans "allergens" des ingrédients ordinaires comme :
-          sucre, poivre, raisins, carottes, pommes de terre, oignons, semoule, fruits secs, farine
-        - "allergens" doit être une chaîne de caractères séparée par des virgules
-
-        Exemples de plats acceptables :
-        - soupe de légumes
-        - purée de pommes de terre
-        - riz au poulet
-        - pâtes sauce tomate douce
-        - poisson au four
-        - tajine doux aux légumes
-        - compote
-        - yaourt
-        - fruit coupé
-        - cake maison simple
-        - tartine au fromage
-
-        Vérifie avant de répondre :
-        - JSON valide
-        - 5 jours 
-        - 4 plats par jour 
-        - dates correctes
-        - mealType uniquement parmi ENTREE, PLAT_PRINCIPAL, DESSERT, GOUTER
-        - dayOfWeek uniquement parmi MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY
-        """.formatted(
-                weekStart,
+    Réponds maintenant avec le JSON uniquement.
+    """.formatted(
                 weekStart,
                 weekStart.plusDays(1),
                 weekStart.plusDays(2),
                 weekStart.plusDays(3),
-                weekStart.plusDays(4)
+                weekStart.plusDays(4),
+                weekStart,
+                weekStart
         );
     }
 
