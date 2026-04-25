@@ -25,6 +25,6 @@ public interface EventRegistrationRepository  extends JpaRepository<EventRegistr
 
     boolean existsByEventIdAndChildIdAndStatusIn(Long eventId, Long childId, Collection<RegistrationStatus> statuses);
 
-    boolean existsByEventIdAndChildId(Long eventId, Long childId);
+    Optional<EventRegistration> findByEventIdAndChildId(Long eventId, Long childId);
     List<EventRegistration> findByChildIdInAndStatus(Set<Long> childIds, RegistrationStatus status);
 }

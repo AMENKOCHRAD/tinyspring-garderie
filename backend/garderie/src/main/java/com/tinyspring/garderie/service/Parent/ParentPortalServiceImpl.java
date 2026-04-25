@@ -100,9 +100,31 @@ public class ParentPortalServiceImpl implements ParentPortalService {
                 .map(EventRegistration::getEventId)
                 .collect(Collectors.toSet());
 
-        return eventRepository.findAll().stream()
+        List<Event> publishedEvents = eventRepository.findPublishedCandidatesForParent(
+                        classroomIds,
+                        EventStatus.PUBLISHED
+                ).stream()
                 .map(event -> eventService.getById(event.getId()))
-                .filter(event -> isEventVisibleForParent(event, classroomIds, attendedCompletedEventIds, childIds))
+                .filter(event -> {
+                    EventResponse response = toParentEventResponse(event, childIds);
+                    return isVisibleForChildren(response, classroomIds);
+                })
+                .toList();
+
+        List<Event> completedEvents = attendedCompletedEventIds.isEmpty()
+                ? List.of()
+                : eventRepository.findCompletedAttendedEventsForParent(
+                        attendedCompletedEventIds,
+                        EventStatus.COMPLETED
+                ).stream()
+                .map(event -> eventService.getById(event.getId()))
+                .toList();
+
+        return java.util.stream.Stream.concat(
+                        publishedEvents.stream(),
+                        completedEvents.stream()
+                )
+                .distinct()
                 .map(event -> toParentEventResponse(event, childIds))
                 .toList();
     }
@@ -159,9 +181,35 @@ public class ParentPortalServiceImpl implements ParentPortalService {
             );
         }
 
-        if (eventRegistrationRepository.existsByEventIdAndChildId(eventId, childId)) {
+        EventRegistration existingRegistration = eventRegistrationRepository
+                .findByEventIdAndChildId(eventId, childId)
+                .orElse(null);
+
+        if (existingRegistration != null) {
+
+            if (existingRegistration.getStatus() == RegistrationStatus.CANCELLED) {
+
+                EventResponse eventResponse = toParentEventResponse(event, Set.of(childId));
+
+                if (eventResponse.isFull()) {
+                    existingRegistration.setStatus(RegistrationStatus.WAITLISTED);
+                } else {
+                    existingRegistration.setStatus(RegistrationStatus.CONFIRMED);
+                }
+
+                existingRegistration.setRegisteredAt(LocalDateTime.now());
+                existingRegistration.setNotes(StringUtils.hasText(notes) ? notes.trim() : null);
+
+                String authorizationDocUrl = storeAuthorizationPdf(authorizationFile);
+                existingRegistration.setAuthorizationSigned(authorizationDocUrl != null);
+                existingRegistration.setAuthorizationDocUrl(authorizationDocUrl);
+
+                EventRegistration saved = eventRegistrationRepository.save(existingRegistration);
+                return toParentParticipationResponse(saved);
+            }
+
             throw new InvalidStatusTransitionException(
-                    "Cet enfant possede deja une participation pour cet evenement"
+                    "Cet enfant possede deja une participation active pour cet evenement"
             );
         }
 

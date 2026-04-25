@@ -4,6 +4,7 @@ import com.tinyspring.garderie.dto.Events.EventRegistrationRequest;
 import com.tinyspring.garderie.entity.Events.EventRegistration;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EventRegistrationService {
     EventRegistration register(Long eventId, EventRegistrationRequest request);
@@ -17,4 +18,6 @@ public interface EventRegistrationService {
     EventRegistration markAttended(Long registrationId);
 
     EventRegistration markAbsent(Long registrationId);
+
+
    }
