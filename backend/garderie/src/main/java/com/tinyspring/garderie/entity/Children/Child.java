@@ -39,6 +39,8 @@ public class Child {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    private String allergies;
+
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 

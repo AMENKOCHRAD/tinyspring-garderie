@@ -1,24 +1,22 @@
 package com.tinyspring.garderie.service.Parent;
 
-import com.tinyspring.garderie.dto.Events.EventRegistrationRequest;
-import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
-import com.tinyspring.garderie.dto.Events.EventResponse;
+import com.tinyspring.garderie.dto.Events.*;
 import com.tinyspring.garderie.dto.Parent.ParentChildResponse;
 import com.tinyspring.garderie.entity.Children.Child;
 import com.tinyspring.garderie.entity.Classes.Classe;
-import com.tinyspring.garderie.entity.Events.Event;
-import com.tinyspring.garderie.entity.Events.EventRegistration;
-import com.tinyspring.garderie.entity.Events.RegistrationStatus;
+import com.tinyspring.garderie.entity.Events.*;
 import com.tinyspring.garderie.entity.RoleName;
 import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
 import com.tinyspring.garderie.mappeer.EventMapper;
 import com.tinyspring.garderie.mappeer.EventRegistrationMapper;
+import com.tinyspring.garderie.mappeer.WeeklyMenuMapper;
 import com.tinyspring.garderie.repository.Children.ChildRepository;
 import com.tinyspring.garderie.repository.Classes.ClasseRepository;
 import com.tinyspring.garderie.repository.Events.EventRegistrationRepository;
 import com.tinyspring.garderie.repository.Events.EventRepository;
+import com.tinyspring.garderie.repository.Events.WeeklyMenuRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.service.Events.EventRegistrationService;
 import com.tinyspring.garderie.service.Events.EventService;
@@ -27,27 +25,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import com.tinyspring.garderie.dto.Events.EventRatingRequest;
-import com.tinyspring.garderie.dto.Events.EventRatingResponse;
-import com.tinyspring.garderie.entity.Events.EventRating;
 import com.tinyspring.garderie.repository.Events.EventRatingRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.tinyspring.garderie.entity.Events.EventStatus;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +56,8 @@ public class ParentPortalServiceImpl implements ParentPortalService {
     private final EventRegistrationService eventRegistrationService;
     private final EventMapper eventMapper;
     private final EventRegistrationMapper eventRegistrationMapper;
+    private final WeeklyMenuRepository weeklyMenuRepository;
+    private final WeeklyMenuMapper weeklyMenuMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -548,5 +538,113 @@ public class ParentPortalServiceImpl implements ParentPortalService {
                 .createdAt(saved.getCreatedAt())
                 .updatedAt(saved.getUpdatedAt())
                 .build();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WeeklyMenuResponse> getMenus(Long parentId) {
+        User parent = getValidatedParent(parentId);
+
+        List<Child> children = childRepository.findByParentIdOrderByFirstNameAscLastNameAsc(parent.getId());
+
+        List<WeeklyMenu> menus = weeklyMenuRepository
+                .findByStatusOrderByWeekStartDateDesc(MenuStatus.PUBLISHED);
+
+        return menus.stream()
+                .map(menu -> {
+                    WeeklyMenuResponse response = weeklyMenuMapper.toResponse(menu);
+                    enrichWithAllergenConflicts(response, menu, children);
+                    return response;
+                })
+                .toList();
+    }
+
+    private void enrichWithAllergenConflicts(
+            WeeklyMenuResponse response,
+            WeeklyMenu menu,
+            List<Child> children
+    ) {
+        if (response.getDailyMenus() == null || menu.getDailyMenus() == null) {
+            return;
+        }
+
+        for (DailyMenuResponse dailyResponse : response.getDailyMenus()) {
+            DailyMenu dailyEntity = menu.getDailyMenus()
+                    .stream()
+                    .filter(day -> day.getId() != null && day.getId().equals(dailyResponse.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (dailyEntity == null) {
+                dailyResponse.setAllergenConflictFlags(List.of());
+                dailyResponse.setAllergenConflictMessages(List.of());
+                continue;
+            }
+
+            List<String> flags = new ArrayList<>();
+            List<String> messages = new ArrayList<>();
+
+            for (Dish dish : dailyEntity.getDishes()) {
+                Set<String> dishAllergens = normalizeToSet(dish.getAllergens());
+
+                if (dishAllergens.isEmpty()) {
+                    continue;
+                }
+
+                for (Child child : children) {
+                    Set<String> childAllergies = normalizeToSet(child.getAllergies());
+
+                    for (String dishAllergen : dishAllergens) {
+                        if (childAllergies.contains(dishAllergen)) {
+                            String childFullName = child.getFirstName() + " " + child.getLastName();
+                            String allergenLabel = capitalize(dishAllergen);
+
+                            flags.add(allergenLabel + " — " + child.getFirstName());
+
+                            messages.add(
+                                    dish.getName()
+                                            + " contient du "
+                                            + dishAllergen
+                                            + " — "
+                                            + childFullName
+                                            + " est allergique."
+                            );
+                        }
+                    }
+                }
+            }
+
+            dailyResponse.setAllergenConflictFlags(flags.stream().distinct().toList());
+            dailyResponse.setAllergenConflictMessages(messages.stream().distinct().toList());
+        }
+    }
+
+    private Set<String> normalizeToSet(String value) {
+        if (!StringUtils.hasText(value)) {
+            return Set.of();
+        }
+
+        return Arrays.stream(value.split("[,;\\n]"))
+                .map(this::normalizeText)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+    }
+
+    private String capitalize(String value) {
+        if (!StringUtils.hasText(value)) {
+            return value;
+        }
+
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
     }
 }

@@ -25,4 +25,10 @@ public class DailyMenuResponse {
 
     @Builder.Default
     private List<DishResponse> dishes = new ArrayList<>();
+
+    @Builder.Default
+    private List<String> allergenConflictFlags = new ArrayList<>();
+
+    @Builder.Default
+    private List<String> allergenConflictMessages = new ArrayList<>();
 }

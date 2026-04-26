@@ -1,184 +1,234 @@
 <section class="menus-shell">
-  <div *ngIf="errorMessage()" class="feedback feedback--error">{{ errorMessage() }}</div>
+  <div *ngIf="errorMessage()" class="feedback feedback--error">
+    {{ errorMessage() }}
+  </div>
 
   <div *ngIf="loading()" class="empty-state">
     <strong>Chargement des menus...</strong>
-    <span>Nous recuperons les menus publies visibles pour les parents.</span>
+    <span>Nous récupérons les menus publiés visibles pour les parents.</span>
   </div>
 
   <div *ngIf="!loading() && !(menusData()?.weeklyMenus?.length)" class="empty-state">
-    <strong>Aucun menu publie pour le moment.</strong>
-    <span>Les repas visibles pour les parents apparaitront ici des qu'ils seront publies.</span>
+    <strong>Aucun menu publié pour le moment.</strong>
+    <span>Les repas visibles pour les parents apparaîtront ici dès qu'ils seront publiés.</span>
   </div>
 
   <ng-container *ngIf="!loading() && currentWeek() as week">
-    <ng-container *ngIf="!detailOpen(); else detailView">
-      <article class="menus-hero">
+    <article class="parent-menu-card">
+      <button *ngIf="archiveMode()" type="button" class="back-button" (click)="backToCurrentWeek()">
+        ‹ Retour
+      </button>
+
+      <header class="parent-menu-header">
         <div>
-          <span class="hero-chip">Menus</span>
-          <h2>Menus hebdomadaires</h2>
-          <p>Suivez les repas et les reperes mensuels dans un espace dedie.</p>
+          <h2>{{ archiveMode() ? (week.title || week.weekLabel) : 'Menus de la semaine' }}</h2>
+          <p>TinySpring · {{ getChildrenSummary() }}</p>
         </div>
-        <div class="hero-date">{{ todayLabel }}</div>
-      </article>
 
-      <article class="week-overview-card">
-        <header class="week-navigation">
-          <button type="button" class="nav-arrow" [disabled]="selectedWeekIndex() >= (menusData()?.weeklyMenus?.length ?? 0) - 1" (click)="goToPreviousWeek()">
-            &#8249;
+        <div class="week-navigation compact" *ngIf="!archiveMode()">
+          <button
+            type="button"
+            class="nav-arrow"
+            [disabled]="selectedWeekIndex() >= (menusData()?.weeklyMenus?.length ?? 0) - 1"
+            (click)="goToPreviousWeek()">
+            ‹
           </button>
-          <div class="week-navigation__title">
-            <span class="week-state-chip">{{ week.isCurrentWeek ? 'Semaine en cours' : 'Semaine publiee' }}</span>
-            <h3>{{ week.weekLabel }}</h3>
-            <span>{{ week.weekRangeLabel }}</span>
-          </div>
-          <button type="button" class="nav-arrow" [disabled]="selectedWeekIndex() === 0" (click)="goToNextWeek()">
-            &#8250;
-          </button>
-        </header>
 
-        <article *ngIf="week.todayMenu as todayMenu" class="today-summary-card">
-          <span class="today-summary-card__dot" [style.background]="todayMenu.dayColor"></span>
-          <div class="today-summary-card__content">
-            <strong>Aujourd'hui: {{ todayMenu.displayDayLong }} {{ todayMenu.displayDateLong }}</strong>
-            <p>Plat du jour : {{ todayMenu.summaryDish }}</p>
-            <div class="today-summary-card__meta">
-              <span class="soft-pill" *ngIf="getAllergenCount(todayMenu)">{{ getAllergenCount(todayMenu) }} allergene(s)</span>
-              <span class="soft-pill soft-pill--alert" *ngIf="hasConflict(todayMenu)">Attention allergenes</span>
-            </div>
-          </div>
+          <strong>{{ week.weekRangeLabel }}</strong>
+
+          <button
+            type="button"
+            class="nav-arrow"
+            [disabled]="selectedWeekIndex() === 0"
+            (click)="goToNextWeek()">
+            ›
+          </button>
+        </div>
+
+        <div class="archive-header-meta" *ngIf="archiveMode()">
+          <strong>{{ week.weekRangeLabel }}</strong>
+          <span class="archive-status">Publié</span>
+        </div>
+      </header>
+
+      <section *ngIf="archiveMode()" class="stats-row">
+        <article class="stat-card">
+          <span>Jours publiés</span>
+          <strong>{{ week.visibleDailyMenus.length }}</strong>
+          <small>Lundi → Vendredi</small>
         </article>
 
-        <section class="day-cards">
-          <article
-            *ngFor="let dayMenu of week.visibleDailyMenus"
-            class="day-card"
-            [class.day-card--today]="dayMenu.isToday"
-            (click)="openDayDetails(dayMenu)">
-            <header class="day-card__header">
-              <div class="day-card__title">
-                <span class="day-card__dot" [style.background]="getDayBulletStyle(dayMenu)"></span>
-                <div>
-                  <h4>{{ dayMenu.displayDayLong }}</h4>
-                  <small>{{ dayMenu.displayDateLong }}</small>
-                </div>
-              </div>
-              <span *ngIf="dayMenu.isToday" class="today-badge">Aujourd'hui</span>
-              <span *ngIf="!dayMenu.isToday" class="day-card__chevron">&#8250;</span>
-            </header>
+        <article class="stat-card">
+          <span>Total plats</span>
+          <strong>{{ getTotalDishes(week) }}</strong>
+          <small>{{ getTotalDishes(week) / (week.visibleDailyMenus.length || 1) | number:'1.0-0' }} par jour</small>
+        </article>
 
-            <div class="day-card__rows">
-              <div class="meal-row" *ngFor="let mealType of mealOrder">
-                <span>{{ getMealTitle(mealType) }}</span>
-                <strong>{{ getMealValue(dayMenu, mealType) }}</strong>
+        <article class="stat-card">
+          <span>Alertes allergènes</span>
+          <strong class="danger-text">{{ getAllergenAlertCount(week) }}</strong>
+          <small>{{ getWeekConflictSummary(week) || 'Aucune alerte' }}</small>
+        </article>
+
+        <article class="stat-card">
+          <span>Score équilibré</span>
+          <strong [class]="getBalanceClass(getBalanceScore(week))">{{ getBalanceScore(week) }}</strong>
+          <small>/100 — Excellent</small>
+        </article>
+      </section>
+
+      <article class="today-pill">
+        <span class="blue-dot"></span>
+        <div>
+          <strong>Aujourd’hui : {{ getTodayRealLabel() }}</strong>
+
+          <p *ngIf="week.todayMenu as todayMenu">
+            Plat du jour — {{ todayMenu.summaryDish }}
+          </p>
+
+          <p *ngIf="!week.todayMenu">
+            Aucun plat publié pour aujourd’hui.
+          </p>
+        </div>
+      </article>
+
+      <article *ngIf="hasWeekConflict(week)" class="allergy-alert">
+        <strong>⚠ Alerte allergène</strong>
+        <p>{{ getWeekConflictSummary(week) }}</p>
+      </article>
+
+      <div *ngIf="archiveMode()" class="section-divider">
+        <span>Jours de la semaine</span>
+      </div>
+
+      <section class="week-grid">
+        <article
+          *ngFor="let dayMenu of week.visibleDailyMenus"
+          class="mini-day-card"
+          [class.mini-day-card--today]="dayMenu.isToday"
+          [class.mini-day-card--alert]="hasConflict(dayMenu)"
+          (click)="openDayDetails(dayMenu)">
+
+          <header>
+            <div class="day-title">
+              <span class="day-dot" [style.background]="getDayBulletStyle(dayMenu)"></span>
+              <div>
+                <strong>{{ dayMenu.displayDayLong }}</strong>
+                <small>{{ dayMenu.displayDateLong }}</small>
               </div>
             </div>
 
-            <div class="day-card__footer">
-              <div class="allergen-row" *ngIf="dayMenu.allergens.length">
-                <span class="allergen-chip" *ngFor="let allergen of dayMenu.allergens">
-                  {{ allergen }}
-                </span>
+            <span *ngIf="dayMenu.isToday" class="mini-badge blue">Auj.</span>
+            <span *ngIf="hasConflict(dayMenu)" class="mini-badge red">⚠ Allergène</span>
+          </header>
+
+          <div class="mini-meals">
+            <div *ngFor="let mealType of mealOrder">
+              <span>{{ getMealTitle(mealType) }}</span>
+              <strong>{{ getMealValue(dayMenu, mealType) }}</strong>
+            </div>
+          </div>
+
+          <footer *ngIf="dayMenu.allergens.length || hasConflict(dayMenu)">
+            <span
+              class="allergen-chip"
+              *ngFor="let allergen of dayMenu.allergens"
+              [class.allergen-chip--conflict]="hasDishConflict(dayMenu, allergen)">
+              {{ allergen }}
+            </span>
+
+            <span
+              class="allergen-chip allergen-chip--conflict"
+              *ngFor="let conflict of getConflictFlags(dayMenu)">
+              {{ conflict }}
+            </span>
+          </footer>
+        </article>
+      </section>
+
+      <section *ngIf="selectedDailyMenu() as selectedMenu" id="day-detail-panel" class="inline-detail-card">
+        <div class="menu-tabs compact-tabs">
+          <button
+            *ngFor="let dayMenu of week.visibleDailyMenus"
+            type="button"
+            class="menu-tab"
+            [class.menu-tab--active]="selectedMenu.id === dayMenu.id"
+            [class.menu-tab--alert]="hasConflict(dayMenu)"
+            (click)="selectDetailTab(dayMenu)">
+            {{ dayMenu.displayDayShort }}
+            <span *ngIf="hasConflict(dayMenu)">⚠</span>
+          </button>
+        </div>
+
+        <article *ngIf="hasConflict(selectedMenu)" class="allergy-alert detail-alert">
+          <strong>⚠ Attention allergènes</strong>
+          <p>{{ getConflictSummary(selectedMenu) }}</p>
+        </article>
+
+        <header class="detail-day-header">
+          <div class="detail-day-title">
+            <span class="day-dot" [style.background]="selectedMenu.dayColor"></span>
+            <div>
+              <h3>{{ selectedMenu.displayDayLong }} · {{ selectedMenu.displayDateLong }}</h3>
+            </div>
+          </div>
+
+          <span class="visibility-badge" [class.visibility-badge--hidden]="!selectedMenu.isVisibleToParents">
+            {{ selectedMenu.isVisibleToParents ? 'Visible' : 'Masqué' }}
+          </span>
+        </header>
+
+        <section class="detail-menu-list">
+          <article class="detail-meal-row" *ngFor="let mealType of mealOrder">
+            <span class="detail-meal-row__label">{{ getMealDetailTitle(mealType) }}</span>
+
+            <div class="dish-stack">
+              <div
+                class="dish-line"
+                *ngFor="let dish of getDishesForType(selectedMenu, mealType); let i = index"
+                [class.dish-line--adapted]="i > 0">
+
+                <strong>{{ dish.name }}</strong>
+                <p *ngIf="dish.description">{{ dish.description }}</p>
+
+                <div class="allergen-row" *ngIf="getAllergens([dish]).length">
+                  <span
+                    class="allergen-chip"
+                    *ngFor="let allergen of getAllergens([dish])"
+                    [class.allergen-chip--conflict]="hasDishConflict(selectedMenu, allergen)">
+                    ⚠ {{ allergen }}
+                  </span>
+                </div>
+
+                <span *ngIf="i > 0" class="adapted-badge">Plat adapté</span>
               </div>
-              <span class="day-card__hint">Voir le detail</span>
             </div>
           </article>
         </section>
-      </article>
-
-      <article *ngIf="archivedWeeks().length" class="archives-card">
-        <header class="archives-card__header">
-          <div>
-            <h3>Menus precedents</h3>
-            <p>Archives des semaines passees</p>
-          </div>
-        </header>
-
-        <div class="archives-list">
-          <article *ngFor="let archivedWeek of archivedWeeks(); let archiveIndex = index" class="archive-item" (click)="openArchivedWeek(archiveIndex)">
-            <div class="archive-item__top">
-              <div>
-                <strong>{{ archivedWeek.title || archivedWeek.weekLabel }}</strong>
-                <p>{{ archivedWeek.weekRangeLabel }}</p>
-              </div>
-              <span class="archive-status">Publie</span>
-            </div>
-
-            <div class="archive-days">
-              <span class="archive-day-pill" *ngFor="let dayMenu of archivedWeek.visibleDailyMenus">
-                {{ dayMenu.displayDayShort }}
-              </span>
-            </div>
-          </article>
-        </div>
-      </article>
-    </ng-container>
-
-    <ng-template #detailView>
-      <section *ngIf="selectedDailyMenu() as selectedMenu" class="menu-detail-page">
-        <article class="menu-detail-card">
-          <header class="menu-detail-card__topbar">
-            <button type="button" class="detail-back" (click)="closeDetails()">
-              &#8249; Retour
-            </button>
-            <span class="menu-avatar">SM</span>
-          </header>
-
-          <div class="menu-detail-card__head">
-            <span class="week-state-chip">{{ week.isCurrentWeek ? 'Semaine en cours' : 'Archive publiee' }}</span>
-            <h3>{{ week.weekLabel }}</h3>
-            <p>{{ week.title || 'Menu hebdomadaire - TinySpring' }}</p>
-          </div>
-
-          <div class="menu-tabs">
-            <button
-              *ngFor="let dayMenu of week.visibleDailyMenus"
-              type="button"
-              class="menu-tab"
-              [class.menu-tab--active]="selectedMenu.id === dayMenu.id"
-              (click)="selectDetailTab(dayMenu)">
-              {{ dayMenu.displayDayShort }}
-            </button>
-          </div>
-
-          <article *ngIf="hasConflict(selectedMenu)" class="conflict-alert">
-            <strong>Attention allergenes</strong>
-            <p>Conflit detecte pour : {{ getConflictSummary(selectedMenu) }}</p>
-          </article>
-
-          <header class="detail-day-header">
-            <div class="detail-day-header__title">
-              <span class="day-card__dot" [style.background]="selectedMenu.dayColor"></span>
-              <div>
-                <h4>{{ selectedMenu.displayDayLong }}</h4>
-                <small>{{ selectedMenu.displayDateLong }}</small>
-              </div>
-            </div>
-            <div class="detail-day-header__meta">
-              <span class="soft-pill" *ngIf="getAllergenCount(selectedMenu)">{{ getAllergenCount(selectedMenu) }} allergene(s)</span>
-              <span class="soft-pill" *ngIf="selectedMenu.isToday">Aujourd'hui</span>
-            </div>
-          </header>
-
-          <section class="detail-menu-list">
-            <article class="detail-meal-row" *ngFor="let mealType of mealOrder">
-              <div class="detail-meal-row__top">
-                <div>
-                  <span class="detail-meal-row__label">{{ getMealTitle(mealType) }}</span>
-                  <strong>{{ getMealValue(selectedMenu, mealType) }}</strong>
-                </div>
-                <span class="detail-meal-row__dot" [style.background]="selectedMenu.dayColor"></span>
-              </div>
-
-              <div class="allergen-row" *ngIf="getAllergens(selectedMenu.sections[mealType]).length">
-                <span class="allergen-chip" *ngFor="let allergen of getAllergens(selectedMenu.sections[mealType])">
-                  {{ allergen }}
-                </span>
-              </div>
-            </article>
-          </section>
-        </article>
       </section>
-    </ng-template>
+    </article>
+
+    <article *ngIf="!archiveMode() && archivedWeeks().length" class="archives-card">
+      <header class="archives-card__header">
+        <h3>Semaines précédentes</h3>
+      </header>
+
+      <div class="archives-list">
+        <article
+          *ngFor="let archivedWeek of archivedWeeks(); let archiveIndex = index"
+          class="archive-item">
+
+          <div>
+            <strong>{{ archivedWeek.title || archivedWeek.weekLabel }}</strong>
+            <p>{{ archivedWeek.weekRangeLabel }}</p>
+          </div>
+
+          <div class="archive-actions">
+            <span class="archive-status">Publié</span>
+            <button type="button" (click)="openArchivedWeek(archiveIndex)">Voir</button>
+          </div>
+        </article>
+      </div>
+    </article>
   </ng-container>
 </section>

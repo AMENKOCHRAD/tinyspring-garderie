@@ -1,9 +1,6 @@
 package com.tinyspring.garderie.controller.Parent;
 
-import com.tinyspring.garderie.dto.Events.EventRatingRequest;
-import com.tinyspring.garderie.dto.Events.EventRatingResponse;
-import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
-import com.tinyspring.garderie.dto.Events.EventResponse;
+import com.tinyspring.garderie.dto.Events.*;
 import com.tinyspring.garderie.dto.Parent.ParentChildResponse;
 import com.tinyspring.garderie.service.Parent.ParentPortalService;
 import jakarta.validation.Valid;
@@ -66,5 +63,9 @@ public class ParentPortalController {
             @Valid @RequestBody EventRatingRequest request
     ) {
         return ResponseEntity.ok(parentPortalService.rateEvent(parentId, eventId, request));
+    }
+    @GetMapping("/menus")
+    public ResponseEntity<List<WeeklyMenuResponse>> getMenus(@RequestParam Long parentId) {
+        return ResponseEntity.ok(parentPortalService.getMenus(parentId));
     }
 }

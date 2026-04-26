@@ -1,15 +1,27 @@
 export type MenuStatus = 'DRAFT' | 'PUBLISHED' | 'TEMPLATE' | string;
-export type MealType = 'ENTREE' | 'PLAT_PRINCIPAL' | 'DESSERT' | 'GOUTER' | string;
-export type MenuSectionKey = 'ENTREE' | 'PLAT_PRINCIPAL' | 'ACCOMPAGNEMENT' | 'DESSERT' | 'GOUTER';
+
+export type MealType =
+  | 'ENTREE'
+  | 'PLAT_PRINCIPAL'
+  | 'DESSERT'
+  | 'GOUTER'
+  | string;
+
+export type MenuSectionKey =
+  | 'ENTREE'
+  | 'PLAT_PRINCIPAL'
+  | 'ACCOMPAGNEMENT'
+  | 'DESSERT'
+  | 'GOUTER';
 
 export interface MenuDish {
   id: number;
   dailyMenuId: number | null;
   mealType: MealType;
   name: string;
-  description: string;
-  allergens: string;
-  allergenConflictFlags: string;
+  description: string | null;
+  allergens: string | null;
+  allergenConflictFlags?: string | null;
 }
 
 export interface DailyMenu {
@@ -20,6 +32,9 @@ export interface DailyMenu {
   isVisibleToParents: boolean;
   publishedAt: string | null;
   dishes: MenuDish[];
+
+  allergenConflictFlags?: string[];
+  allergenConflictMessages?: string[];
 }
 
 export interface WeeklyMenu {
@@ -45,6 +60,8 @@ export interface DecoratedDailyMenu extends DailyMenu {
   summaryDish: string;
   allergens: string[];
   conflictFlags: string[];
+  allergenConflictFlags: string[];
+  allergenConflictMessages: string[];
 }
 
 export interface DecoratedWeeklyMenu extends WeeklyMenu {
