@@ -25,6 +25,8 @@ public class MenuAllergenScheduler {
     }
     @Scheduled(cron = "0 */1 * * * *")
     public void testEveryMinute() {
+        System.out.println("=== TEST SCHEDULER ALLERGENES ===");
+        service.sendWeeklyAllergenSummary();
         service.sendTomorrowAllergenAlerts();
     }
 }

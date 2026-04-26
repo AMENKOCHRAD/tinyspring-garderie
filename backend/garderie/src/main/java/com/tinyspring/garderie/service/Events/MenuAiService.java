@@ -211,12 +211,19 @@ public class MenuAiService {
 
                 if (dishesNode.isArray()) {
                     for (JsonNode dishNode : dishesNode) {
-                        String allergens = normalizeAllergens(dishNode.path("allergens").asText(""));
+                        String dishName = dishNode.path("name").asText("");
+                        String description = dishNode.path("description").asText("");
+
+                        String allergens = normalizeAllergens(
+                                dishNode.path("allergens").asText(""),
+                                dishName,
+                                description
+                        );
 
                         DishRequest dish = DishRequest.builder()
                                 .mealType(safeMealType(dishNode.path("mealType").asText()))
-                                .name(dishNode.path("name").asText(""))
-                                .description(dishNode.path("description").asText(""))
+                                .name(dishName)
+                                .description(description)
                                 .allergens(allergens)
                                 .allergenConflictFlags("")
                                 .build();
@@ -345,16 +352,56 @@ public class MenuAiService {
             "soja", "noix", "céleri", "moutarde", "sésame", "sulfites"
     );
 
-    private String normalizeAllergens(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return "";
+    private String normalizeAllergens(String raw, String dishName, String description) {
+        java.util.Set<String> allergens = new java.util.LinkedHashSet<>();
+
+        if (raw != null && !raw.isBlank()) {
+            java.util.Arrays.stream(raw.split("[,;]"))
+                    .map(String::trim)
+                    .map(String::toLowerCase)
+                    .filter(ALLOWED_ALLERGENS::contains)
+                    .forEach(allergens::add);
         }
 
-        return java.util.Arrays.stream(raw.split(","))
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .filter(ALLOWED_ALLERGENS::contains)
-                .distinct()
-                .collect(java.util.stream.Collectors.joining(", "));
+        String text = ((dishName == null ? "" : dishName) + " " + (description == null ? "" : description))
+                .toLowerCase();
+
+        if (containsAny(text, "pain", "couscous", "pâtes", "pates", "semoule", "biscuit", "biscuits", "cake", "gâteau", "gateau", "tarte")) {
+            allergens.add("gluten");
+        }
+
+        if (containsAny(text, "lait", "yaourt", "fromage", "beurre", "crème", "creme")) {
+            allergens.add("lait");
+        }
+
+        if (containsAny(text, "oeuf", "œuf", "oeufs", "œufs", "omelette", "cake", "gâteau", "gateau")) {
+            allergens.add("oeufs");
+        }
+
+        if (containsAny(text, "poisson", "thon", "sardine", "saumon")) {
+            allergens.add("poisson");
+        }
+
+        if (containsAny(text, "cacahuète", "cacahuete", "arachide", "arachides")) {
+            allergens.add("arachides");
+        }
+
+        if (containsAny(text, "noix", "amande", "amandes", "noisette", "noisettes")) {
+            allergens.add("noix");
+        }
+
+        if (containsAny(text, "céleri", "celeri")) {
+            allergens.add("céleri");
+        }
+
+        return String.join(", ", allergens);
+    }
+    private boolean containsAny(String text, String... keywords) {
+        for (String keyword : keywords) {
+            if (text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
