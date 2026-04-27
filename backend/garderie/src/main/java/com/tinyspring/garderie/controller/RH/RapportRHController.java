@@ -2,7 +2,7 @@ package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.dto.RH.RapportRHDTO;
 import com.tinyspring.garderie.dto.RH.RapportRequestDTO;
-import com.tinyspring.garderie.service.RH.RapportRHService;
+import com.tinyspring.garderie.service.RH.IRapportRHService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RapportRHController {
 
-    private final RapportRHService rapportRHService;
+    private final IRapportRHService rapportRHService;
 
     // ✅ Générer un nouveau rapport via langage naturel
     @PostMapping("/generer")

@@ -171,8 +171,7 @@
                   *ngIf="i.statutValidite && i.statut === 'TERMINEE'"
                   [style.background]="getValiditeColor(i.statutValidite) + '20'"
                   [style.color]="getValiditeColor(i.statutValidite)">
-              {{ i.statutValidite?.replace('_', ' ') }}
-            </span>
+{{ (i.statutValidite || '')?.replace('_', ' ') }}            </span>
             <span class="badge-certificat" *ngIf="i.certificationGeneree">
               🎓 Certifiée
             </span>

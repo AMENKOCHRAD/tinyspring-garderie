@@ -2,7 +2,7 @@ package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.dto.RH.AbsenceCongeDTO;
 import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
-import com.tinyspring.garderie.service.RH.AbsenceCongeService;
+import com.tinyspring.garderie.service.RH.IAbsenceCongeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminAbsenceCongeController {
 
-    private final AbsenceCongeService absenceCongeService;
+    private final IAbsenceCongeService absenceCongeService;
 
     @GetMapping
     public ResponseEntity<List<AbsenceCongeDTO>> getAllAbsenceConges() {

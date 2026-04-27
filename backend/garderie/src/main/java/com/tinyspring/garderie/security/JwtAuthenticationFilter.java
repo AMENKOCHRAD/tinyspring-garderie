@@ -29,20 +29,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        // ✅ 1. Lire le token depuis le header Authorization (requêtes HTTP normales)
+        String jwt = null;
         String authHeader = request.getHeader("Authorization");
 
-        // ✅ LOGS DEBUG
-        System.out.println("🔍 URL: " + request.getRequestURI());
-        System.out.println("🔍 Auth header: " + authHeader);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+            System.out.println("🔍 Token lu depuis le header Authorization");
+        }
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // ✅ 2. Fallback : lire depuis le query param ?token= (SSE EventSource)
+        //    EventSource ne supporte pas les headers custom,
+        //    donc le frontend passe le token en query param pour le stream SSE
+        if (jwt == null) {
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null && !tokenParam.isBlank()) {
+                jwt = tokenParam;
+                System.out.println("🔍 Token lu depuis le query param ?token= (SSE)");
+            }
+        }
+
+        System.out.println("🔍 URL: " + request.getRequestURI());
+
+        // Pas de token du tout → on passe au filtre suivant (Spring Security gérera l'accès)
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String jwt = authHeader.substring(7);
+        // ✅ 3. Extraire l'email depuis le token
         String userEmail;
-
         try {
             userEmail = jwtService.extractUsername(jwt);
             System.out.println("✅ Email extrait: " + userEmail);
@@ -52,6 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // ✅ 4. Authentifier si pas encore authentifié
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
             System.out.println("✅ Authorities: " + userDetails.getAuthorities());

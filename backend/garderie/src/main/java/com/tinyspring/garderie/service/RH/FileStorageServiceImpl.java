@@ -12,11 +12,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
-public class FileStorageService {
+public class FileStorageServiceImpl implements IFileStorageService {
 
     @Value("${app.upload.dir}")
     private String uploadDir;
 
+    @Override
     public String saveFile(MultipartFile file) throws IOException {
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) {
@@ -31,6 +32,7 @@ public class FileStorageService {
         return fileName;
     }
 
+    @Override
     public void deleteFile(String fileName) throws IOException {
         if (fileName != null && !fileName.isEmpty()) {
             Path filePath = Paths.get(uploadDir).resolve(fileName);

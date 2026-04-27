@@ -18,14 +18,15 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RapportRHService {
+public class RapportRHServiceImpl implements IRapportRHService {
 
-    private final OllamaService ollamaService;
+    // ✅ Injection par interface
+    private final IOllamaService ollamaService;
     private final RapportRHRepository rapportRHRepository;
     private final AbsenceCongeRepository absenceCongeRepository;
     private final AnimatriceRepository animatriceRepository;
-    // ✅ FormationRepository supprimé
 
+    @Override
     public RapportRHDTO genererRapport(String question) {
         String donneesContexte = collecterDonnees();
         String prompt = construirePrompt(question, donneesContexte);
@@ -43,6 +44,19 @@ public class RapportRHService {
         return toDTO(saved);
     }
 
+    @Override
+    public List<RapportRHDTO> getTousLesRapports() {
+        return rapportRHRepository.findAllByOrderByDateGenerationDesc()
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public RapportRHDTO getRapportById(Long id) {
+        return rapportRHRepository.findById(id)
+                .map(this::toDTO)
+                .orElseThrow(() -> new RuntimeException("Rapport non trouvé : " + id));
+    }
+
     private String collecterDonnees() {
         StringBuilder sb = new StringBuilder();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -55,7 +69,6 @@ public class RapportRHService {
 
         sb.append("=== DONNÉES RH TINYSPRING GARDERIE ===\n");
         sb.append("Date : ").append(maintenant.format(fmt)).append("\n\n");
-
         sb.append("ANIMATRICES\n");
         sb.append("Total : ").append(totalAnimatrices).append("\n");
         sb.append("Actives : ").append(actives).append("\n");
@@ -63,31 +76,19 @@ public class RapportRHService {
 
         List<AbsenceConge> absences = absenceCongeRepository.findAll();
 
-        long enAttente = absences.stream()
-                .filter(a -> StatutAbsenceConge.EN_ATTENTE.equals(a.getStatut())).count();
-        long approuvees = absences.stream()
-                .filter(a -> StatutAbsenceConge.APPROUVE.equals(a.getStatut())).count();
-        long refusees = absences.stream()
-                .filter(a -> StatutAbsenceConge.REFUSE.equals(a.getStatut())).count();
-        long autoApprouvees = absences.stream()
-                .filter(a -> StatutAbsenceConge.APPROUVE.equals(a.getStatut()))
-                .filter(a -> Boolean.TRUE.equals(a.getDecisionAutomatique())).count();
-        long autoRefusees = absences.stream()
-                .filter(a -> StatutAbsenceConge.REFUSE.equals(a.getStatut()))
-                .filter(a -> Boolean.TRUE.equals(a.getDecisionAutomatique())).count();
+        long enAttente  = absences.stream().filter(a -> StatutAbsenceConge.EN_ATTENTE.equals(a.getStatut())).count();
+        long approuvees = absences.stream().filter(a -> StatutAbsenceConge.APPROUVE.equals(a.getStatut())).count();
+        long refusees   = absences.stream().filter(a -> StatutAbsenceConge.REFUSE.equals(a.getStatut())).count();
 
         sb.append("ABSENCES\n");
         sb.append("Total : ").append(absences.size()).append("\n");
-        sb.append("Approuvées : ").append(approuvees)
-                .append(" (dont ").append(autoApprouvees).append(" automatiques)\n");
-        sb.append("Refusées : ").append(refusees)
-                .append(" (dont ").append(autoRefusees).append(" automatiques)\n");
+        sb.append("Approuvées : ").append(approuvees).append("\n");
+        sb.append("Refusées : ").append(refusees).append("\n");
         sb.append("En attente : ").append(enAttente).append("\n\n");
 
         sb.append("PAR TYPE\n");
         for (TypeAbsenceConge type : TypeAbsenceConge.values()) {
-            long count = absences.stream()
-                    .filter(a -> type.equals(a.getType())).count();
+            long count = absences.stream().filter(a -> type.equals(a.getType())).count();
             int totalJours = absences.stream()
                     .filter(a -> type.equals(a.getType()))
                     .filter(a -> !StatutAbsenceConge.REFUSE.equals(a.getStatut()))
@@ -96,18 +97,6 @@ public class RapportRHService {
             sb.append(type.name()).append(" : ").append(count)
                     .append(" demandes, ").append(totalJours).append(" jours\n");
         }
-
-        sb.append("\nDEMANDES EN ATTENTE\n");
-        absences.stream()
-                .filter(a -> StatutAbsenceConge.EN_ATTENTE.equals(a.getStatut()))
-                .limit(5)
-                .forEach(a -> sb.append("• ")
-                        .append(a.getAnimatrice().getPrenom()).append(" ")
-                        .append(a.getAnimatrice().getNom())
-                        .append(" | ").append(a.getType().name())
-                        .append(" | ").append(a.getNbJours()).append(" jours\n"));
-
-        // ✅ Formations supprimées temporairement
 
         return sb.toString();
     }
@@ -142,17 +131,6 @@ public class RapportRHService {
         if (q.contains("semaine")) return "Semaine en cours";
         if (q.contains("mois")) return "Mois en cours";
         return "Période générale";
-    }
-
-    public List<RapportRHDTO> getTousLesRapports() {
-        return rapportRHRepository.findAllByOrderByDateGenerationDesc()
-                .stream().map(this::toDTO).collect(Collectors.toList());
-    }
-
-    public RapportRHDTO getRapportById(Long id) {
-        return rapportRHRepository.findById(id)
-                .map(this::toDTO)
-                .orElseThrow(() -> new RuntimeException("Rapport non trouvé : " + id));
     }
 
     private RapportRHDTO toDTO(RapportRH rapport) {

@@ -59,7 +59,10 @@ export class FormAnimatriceComponent implements OnInit {
         }
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Erreur chargement', err)
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Impossible de charger les données de l\'animatrice.';
+        console.error('Erreur chargement', err);
+      }
     });
   }
 
@@ -76,14 +79,40 @@ export class FormAnimatriceComponent implements OnInit {
     }
   }
 
+  private buildPayload(): Animatrice {
+    return {
+      ...this.animatrice,
+      telephone:    this.animatrice.telephone?.trim()    || undefined,
+      dateEmbauche: this.animatrice.dateEmbauche?.trim() || undefined,
+      specialite:   this.animatrice.specialite?.trim()   || undefined,
+      photoUrl:     this.animatrice.photoUrl?.trim()     || undefined,
+    };
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    if (err?.error?.message) return err.error.message;
+    if (err?.error?.errors) {
+      // Erreurs de validation @Valid Spring → liste de messages
+      return Object.values(err.error.errors).join(', ');
+    }
+    if (err?.status === 0) return 'Serveur inaccessible. Vérifiez que le backend est démarré.';
+    if (err?.status === 401) return 'Session expirée. Veuillez vous reconnecter.';
+    if (err?.status === 403) return 'Accès refusé.';
+    if (err?.status === 404) return 'Ressource introuvable.';
+    if (err?.status === 500) return 'Erreur interne du serveur.';
+    return fallback;
+  }
+
   onSubmit(): void {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
     this.motDePasseTemporaire = '';
 
+    const payload = this.buildPayload();
+
     if (this.isEditMode && this.animatriceId) {
-      this.animatriceService.updateAnimatrice(this.animatriceId, this.animatrice).subscribe({
+      this.animatriceService.updateAnimatrice(this.animatriceId, payload).subscribe({
         next: (updated) => {
           if (this.selectedFile) {
             this.uploadPhoto(updated.id!);
@@ -93,13 +122,13 @@ export class FormAnimatriceComponent implements OnInit {
             setTimeout(() => this.router.navigate(['/rh/animatrices']), 1500);
           }
         },
-        error: () => {
-          this.errorMessage = 'Erreur lors de la modification.';
+        error: (err) => {
+          this.errorMessage = this.extractErrorMessage(err, 'Erreur lors de la modification.');
           this.isLoading = false;
         }
       });
     } else {
-      this.animatriceService.createAnimatrice(this.animatrice).subscribe({
+      this.animatriceService.createAnimatrice(payload).subscribe({
         next: (created) => {
           if (created.motDePasseTemporaire) {
             this.motDePasseTemporaire = created.motDePasseTemporaire;
@@ -112,8 +141,8 @@ export class FormAnimatriceComponent implements OnInit {
             setTimeout(() => this.router.navigate(['/rh/animatrices']), 3000);
           }
         },
-        error: () => {
-          this.errorMessage = 'Erreur lors de la création.';
+        error: (err) => {
+          this.errorMessage = this.extractErrorMessage(err, 'Erreur lors de la création.');
           this.isLoading = false;
         }
       });
@@ -129,10 +158,8 @@ export class FormAnimatriceComponent implements OnInit {
         this.isLoading = false;
         setTimeout(() => this.router.navigate(['/rh/animatrices']), 3000);
       },
-      error: () => {
-        this.successMessage = this.isEditMode
-          ? 'Animatrice modifiée mais erreur upload photo.'
-          : 'Animatrice créée mais erreur upload photo.';
+      error: (err) => {
+        this.errorMessage = this.extractErrorMessage(err, 'Animatrice sauvegardée mais erreur lors de l\'upload photo.');
         this.isLoading = false;
         setTimeout(() => this.router.navigate(['/rh/animatrices']), 3000);
       }

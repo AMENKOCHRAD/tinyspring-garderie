@@ -2,7 +2,7 @@ package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.dto.RH.AnimatriceDTO;
 import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
-import com.tinyspring.garderie.service.RH.AnimatriceService;
+import com.tinyspring.garderie.service.RH.IAnimatriceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminAnimatriceController {
 
-    private final AnimatriceService animatriceService;
+    private final IAnimatriceService animatriceService;
 
     @GetMapping
     public ResponseEntity<List<AnimatriceDTO>> getAllAnimatrices() {

@@ -1,6 +1,6 @@
 package com.tinyspring.garderie.controller.RH;
 
-import com.tinyspring.garderie.service.RH.DatasetGeneratorService;
+import com.tinyspring.garderie.service.RH.IDatasetGeneratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +12,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DatasetController {
 
-    private final DatasetGeneratorService datasetGeneratorService;
+    private final IDatasetGeneratorService datasetGeneratorService;
 
     @PostMapping("/generer")
     public ResponseEntity<Map<String, String>> genererDataset() {

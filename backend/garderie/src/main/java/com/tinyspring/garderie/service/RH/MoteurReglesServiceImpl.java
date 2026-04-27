@@ -20,30 +20,27 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MoteurReglesService {
+public class MoteurReglesServiceImpl implements IMoteurReglesService {
 
     private final QuotaCongeRepository quotaCongeRepository;
     private final AbsenceCongeRepository absenceCongeRepository;
     private final HistoriqueDecisionRepository historiqueDecisionRepository;
-    private final AnimatriceRepository animatriceRepository; // ✅ CORRIGÉ
+    private final AnimatriceRepository animatriceRepository;
 
-    /**
-     * Point d'entrée principal — évalue toutes les règles pour une demande
-     */
+    @Override
     public ResultatEvaluationDTO evaluer(AbsenceConge demande) {
 
-        // Charger le quota pour ce type de congé
         QuotaConge quota = quotaCongeRepository.findByType(demande.getType())
                 .orElse(getQuotaParDefaut(demande.getType()));
 
-        // ===== RÈGLE 1 : Délai de prévenance =====
+        // RÈGLE 1 : Délai de prévenance
         ResultatEvaluationDTO regle1 = verifierDelaiPrevenance(demande, quota);
         if ("AUTO_REFUSE".equals(regle1.getDecision())) {
             sauvegarderHistorique(demande, regle1);
             return regle1;
         }
 
-        // ===== RÈGLE 2 : Quota annuel =====
+        // RÈGLE 2 : Quota annuel
         int joursDejaUtilises = calculerJoursUtilises(demande);
         int joursRestants = quota.getNbJoursMax() - joursDejaUtilises;
         ResultatEvaluationDTO regle2 = verifierQuota(demande, quota, joursDejaUtilises, joursRestants);
@@ -52,21 +49,21 @@ public class MoteurReglesService {
             return regle2;
         }
 
-        // ===== RÈGLE 3 : Chevauchement avec autres absences =====
+        // RÈGLE 3 : Chevauchement
         ResultatEvaluationDTO regle3 = verifierChevauchement(demande);
         if ("AUTO_REFUSE".equals(regle3.getDecision())) {
             sauvegarderHistorique(demande, regle3);
             return regle3;
         }
 
-        // ===== RÈGLE 4 : Effectif minimum =====
+        // RÈGLE 4 : Effectif minimum
         ResultatEvaluationDTO regle4 = verifierEffectifMinimum(demande, quota);
         if ("AUTO_REFUSE".equals(regle4.getDecision())) {
             sauvegarderHistorique(demande, regle4);
             return regle4;
         }
 
-        // ===== TOUTES LES RÈGLES PASSENT =====
+        // TOUTES LES RÈGLES PASSENT
         if (quota.isAutoApprobation()) {
             ResultatEvaluationDTO approuve = ResultatEvaluationDTO.builder()
                     .decision("AUTO_APPROUVE")
@@ -82,7 +79,6 @@ public class MoteurReglesService {
             return approuve;
         }
 
-        // Auto-approbation désactivée → transmettre à l'admin
         ResultatEvaluationDTO transmis = ResultatEvaluationDTO.builder()
                 .decision("TRANSMIS_ADMIN")
                 .regleDeclenchee("TOUTES_REGLES_OK")
@@ -96,10 +92,8 @@ public class MoteurReglesService {
         return transmis;
     }
 
-    // ===== RÈGLE 1 : Délai de prévenance =====
     private ResultatEvaluationDTO verifierDelaiPrevenance(AbsenceConge demande, QuotaConge quota) {
         long joursAvant = ChronoUnit.DAYS.between(LocalDate.now(), demande.getDateDebut());
-
         if (joursAvant < quota.getDelaiPrevenanceJours()) {
             return ResultatEvaluationDTO.builder()
                     .decision("AUTO_REFUSE")
@@ -111,11 +105,9 @@ public class MoteurReglesService {
                             "Vous avez soumis " + joursAvant + " jour(s) avant le début.")
                     .build();
         }
-
         return ResultatEvaluationDTO.builder().decision("OK").build();
     }
 
-    // ===== RÈGLE 2 : Quota annuel =====
     private ResultatEvaluationDTO verifierQuota(AbsenceConge demande, QuotaConge quota,
                                                 int joursDejaUtilises, int joursRestants) {
         if (demande.getNbJours() > joursRestants) {
@@ -133,11 +125,9 @@ public class MoteurReglesService {
                     .quotaMax(quota.getNbJoursMax())
                     .build();
         }
-
         return ResultatEvaluationDTO.builder().decision("OK").build();
     }
 
-    // ===== RÈGLE 3 : Chevauchement =====
     private ResultatEvaluationDTO verifierChevauchement(AbsenceConge demande) {
         List<AbsenceConge> existantes = absenceCongeRepository.findByAnimatriceId(
                 demande.getAnimatrice().getId());
@@ -161,18 +151,12 @@ public class MoteurReglesService {
                         .build();
             }
         }
-
         return ResultatEvaluationDTO.builder().decision("OK").build();
     }
 
-    // ===== RÈGLE 4 : Effectif minimum — CORRIGÉE =====
     private ResultatEvaluationDTO verifierEffectifMinimum(AbsenceConge demande, QuotaConge quota) {
+        long totalAnimatrices = animatriceRepository.findByStatut(StatutAnimatrice.ACTIVE).size();
 
-        // ✅ Compter TOUTES les animatrices actives (pas seulement celles avec absences)
-        long totalAnimatrices = animatriceRepository
-                .findByStatut(StatutAnimatrice.ACTIVE).size();
-
-        // Animatrices déjà absentes sur la même période
         long absencesEnParallele = absenceCongeRepository.findAll().stream()
                 .filter(a -> !StatutAbsenceConge.REFUSE.equals(a.getStatut()))
                 .filter(a -> !a.getAnimatrice().getId().equals(demande.getAnimatrice().getId()))
@@ -180,7 +164,6 @@ public class MoteurReglesService {
                         !a.getDateFin().isBefore(demande.getDateDebut()))
                 .count();
 
-        // Animatrices présentes si cette demande est approuvée
         long animatricesPresentes = totalAnimatrices - absencesEnParallele - 1;
 
         if (animatricesPresentes < quota.getEffectifMinimum()) {
@@ -194,62 +177,45 @@ public class MoteurReglesService {
                             absencesEnParallele + " sont déjà absente(s) à ces dates.")
                     .build();
         }
-
         return ResultatEvaluationDTO.builder().decision("OK").build();
     }
 
-    // ===== Calcul jours utilisés cette année =====
     private int calculerJoursUtilises(AbsenceConge demande) {
         int anneeEnCours = LocalDate.now().getYear();
-
         return absenceCongeRepository.findByAnimatriceId(demande.getAnimatrice().getId())
                 .stream()
                 .filter(a -> demande.getType().equals(a.getType()))
                 .filter(a -> !StatutAbsenceConge.REFUSE.equals(a.getStatut()))
                 .filter(a -> a.getDateDebut().getYear() == anneeEnCours)
-                // ✅ Exclure la demande en cours elle-même
                 .filter(a -> !a.getId().equals(demande.getId()))
                 .mapToInt(a -> a.getNbJours() != null ? a.getNbJours() : 0)
                 .sum();
     }
 
-    // ===== Quota par défaut si non configuré =====
     private QuotaConge getQuotaParDefaut(TypeAbsenceConge type) {
         return switch (type) {
-            case CONGE_ANNUEL    -> QuotaConge.builder()
-                    .type(type).nbJoursMax(30)
-                    .delaiPrevenanceJours(7).effectifMinimum(2)
-                    .autoApprobation(true).build();
-            case CONGE_MALADIE   -> QuotaConge.builder()
-                    .type(type).nbJoursMax(15)
-                    .delaiPrevenanceJours(0).effectifMinimum(1)
-                    .autoApprobation(true).build();
-            case CONGE_MATERNITE -> QuotaConge.builder()
-                    .type(type).nbJoursMax(90)
-                    .delaiPrevenanceJours(30).effectifMinimum(1)
-                    .autoApprobation(true).build();
-            case ABSENCE         -> QuotaConge.builder()
-                    .type(type).nbJoursMax(10)
-                    .delaiPrevenanceJours(1).effectifMinimum(2)
-                    .autoApprobation(false).build();
+            case CONGE_ANNUEL    -> QuotaConge.builder().type(type).nbJoursMax(30)
+                    .delaiPrevenanceJours(7).effectifMinimum(2).autoApprobation(true).build();
+            case CONGE_MALADIE   -> QuotaConge.builder().type(type).nbJoursMax(15)
+                    .delaiPrevenanceJours(0).effectifMinimum(1).autoApprobation(true).build();
+            case CONGE_MATERNITE -> QuotaConge.builder().type(type).nbJoursMax(90)
+                    .delaiPrevenanceJours(30).effectifMinimum(1).autoApprobation(true).build();
+            case ABSENCE         -> QuotaConge.builder().type(type).nbJoursMax(10)
+                    .delaiPrevenanceJours(1).effectifMinimum(2).autoApprobation(false).build();
         };
     }
 
-    // ===== Sauvegarder l'historique =====
     private void sauvegarderHistorique(AbsenceConge demande, ResultatEvaluationDTO resultat) {
         if (demande.getId() == null) return;
-
         HistoriqueDecision historique = HistoriqueDecision.builder()
                 .absenceConge(demande)
                 .regleDeclenchee(resultat.getRegleDeclenchee())
                 .decision(resultat.getDecision())
                 .explication(resultat.getExplication())
                 .build();
-
         historiqueDecisionRepository.save(historique);
     }
 
-    // ===== Format lisible du type =====
     private String formatType(TypeAbsenceConge type) {
         return switch (type) {
             case CONGE_ANNUEL    -> "Congé Annuel";

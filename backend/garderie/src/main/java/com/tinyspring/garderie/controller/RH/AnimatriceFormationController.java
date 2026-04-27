@@ -2,7 +2,7 @@ package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.entity.RH.AnimatriceFormation;
 import com.tinyspring.garderie.entity.RH.Formation;
-import com.tinyspring.garderie.service.RH.FormationService;
+import com.tinyspring.garderie.service.RH.IFormationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AnimatriceFormationController {
 
-    private final FormationService formationService;
+    private final IFormationService formationService;
 
     // GET /api/animatrice/formations
     @GetMapping

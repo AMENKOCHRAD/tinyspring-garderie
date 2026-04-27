@@ -76,11 +76,7 @@ const routes: Routes = [
         loadComponent: () =>
           import('./RH/absence-conge/detail-absence-conge/detail-absence-conge.component').then(c => c.DetailAbsenceCongeComponent)
       },
-      {
-        path: 'rh/quotas',
-        loadComponent: () =>
-          import('./RH/quota/list-quota/list-quota.component').then(c => c.ListQuotaComponent)
-      },
+
       {
         path: 'rh/rapports',
         loadComponent: () =>

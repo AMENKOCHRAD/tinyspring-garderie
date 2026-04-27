@@ -16,7 +16,9 @@ import java.util.List;
 public class FormationScheduler {
 
     private final FormationRepository formationRepository;
-    private final FormationService formationService;
+
+    // ✅ Injection par interface
+    private final IFormationService formationService;
 
     @Scheduled(fixedRate = 60000)
     public void gererCycleVieAutomatique() {
@@ -26,7 +28,7 @@ public class FormationScheduler {
         System.out.println("🕐 [Scheduler] Vérification à " + maintenant.toString().substring(0, 5)
                 + " — date : " + aujourd_hui);
 
-        // ===== AUTO-DÉMARRAGE =====
+        // AUTO-DÉMARRAGE
         List<Formation> aDemar = formationRepository
                 .findByStatut(StatutFormation.OUVERTE).stream()
                 .filter(f ->
@@ -39,7 +41,6 @@ public class FormationScheduler {
 
         for (Formation f : aDemar) {
             try {
-                // ✅ Utilise demarrerAutomatique — sans vérification d'inscrits
                 formationService.demarrerAutomatique(f.getId());
                 System.out.println("🚀 [AUTO] Formation démarrée : " + f.getTitre()
                         + " (prévu à " + f.getHeureDebut() + ")");
@@ -48,7 +49,7 @@ public class FormationScheduler {
             }
         }
 
-        // ===== AUTO-TERMINAISON =====
+        // AUTO-TERMINAISON
         List<Formation> aTerminer = formationRepository
                 .findByStatut(StatutFormation.EN_COURS).stream()
                 .filter(f ->
@@ -69,7 +70,7 @@ public class FormationScheduler {
             }
         }
 
-        // ===== FORMATIONS PASSÉES NON TERMINÉES =====
+        // FORMATIONS PASSÉES NON TERMINÉES
         List<Formation> passees = formationRepository
                 .findByStatut(StatutFormation.EN_COURS).stream()
                 .filter(f ->

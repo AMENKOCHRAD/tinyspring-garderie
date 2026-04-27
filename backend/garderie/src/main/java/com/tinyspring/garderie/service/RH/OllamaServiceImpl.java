@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 @Service
-public class OllamaService {
+public class OllamaServiceImpl implements IOllamaService {
 
     @Value("${ollama.api.url:http://localhost:11434/api/generate}")
     private String apiUrl;
@@ -18,9 +18,7 @@ public class OllamaService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * Envoie un prompt à Ollama et retourne la réponse complète
-     */
+    @Override
     public String generer(String prompt) {
         try {
             Map<String, Object> body = new HashMap<>();
@@ -38,15 +36,12 @@ public class OllamaService {
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                    apiUrl, request, Map.class);
+            ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, request, Map.class);
 
             if (response.getBody() != null) {
                 String reponse = (String) response.getBody().get("response");
                 if (reponse != null) {
-                    // Nettoyer le tag ### Response: si présent
-                    reponse = reponse.replace("### Response:", "").trim();
-                    return reponse;
+                    return reponse.replace("### Response:", "").trim();
                 }
             }
 

@@ -132,14 +132,13 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
       label: 'RH',
       route: '/animateur/formations',
       children: [
-        { label: 'Formations', route: '/animateur/formations' },
-        { label: 'Planning', route: '/animateur/planning' },
         { label: 'Mes absences', route: '/animateur/rh/mes-absences' },
         { label: 'Nouvelle demande', route: '/animateur/rh/nouvelle-demande' },
-        // ✅ NOUVEAU — Formations enrichies
         { label: '📚 Formations disponibles', route: '/animateur/formations/disponibles' },
         { label: '🎓 Mes formations', route: '/animateur/formations/mes-formations' }
       ]
-    }
+    },
+    // ✅ NOUVEAU — Mon profil
+    { key: 'mon-profil', label: '👤 Mon profil', route: '/animateur/mon-profil' }
   ]
 };

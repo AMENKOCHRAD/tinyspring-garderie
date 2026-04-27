@@ -23,7 +23,8 @@ public class AnimatriceDTO {
     @Email(message = "Email invalide")
     private String email;
 
-    @Pattern(regexp = "^[0-9]{8}$", message = "Téléphone invalide")
+    // ✅ CORRIGÉ : ^$ autorise chaîne vide (champ optionnel)
+    @Pattern(regexp = "^$|^[0-9]{8}$", message = "Téléphone invalide (8 chiffres requis)")
     private String telephone;
 
     private LocalDate dateEmbauche;

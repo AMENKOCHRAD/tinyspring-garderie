@@ -17,41 +17,38 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class FormationService {
+public class FormationServiceImpl implements IFormationService {
 
     private final FormationRepository formationRepository;
     private final AnimatriceFormationRepository animatriceFormationRepository;
     private final AnimatriceRepository animatriceRepository;
-    private final NotificationService notificationService;
+    private final INotificationService notificationService;
 
-    // =============================================
-    // CRUD FORMATIONS
-    // =============================================
+    // ===== CRUD =====
 
+    @Override
     public Formation creerFormation(Formation formation) {
         formation.setStatut(StatutFormation.OUVERTE);
         Formation saved = formationRepository.save(formation);
-
-        // Notifier toutes les animatrices actives
         notifierNouvelleFormation(saved);
-
-        // Si obligatoire → inscrire automatiquement toutes les animatrices
         if (Boolean.TRUE.equals(formation.getObligatoire())) {
             inscrireToutes(saved);
         }
-
         return saved;
     }
 
+    @Override
     public List<Formation> getToutesFormations() {
         return formationRepository.findAll();
     }
 
+    @Override
     public Formation getFormationById(Long id) {
         return formationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Formation non trouvée : " + id));
     }
 
+    @Override
     public Formation modifierFormation(Long id, Formation formation) {
         Formation existing = getFormationById(id);
         existing.setTitre(formation.getTitre());
@@ -68,47 +65,37 @@ public class FormationService {
         return formationRepository.save(existing);
     }
 
+    @Override
     @Transactional
     public void supprimerFormation(Long id) {
-        // ✅ Supprimer d'abord toutes les inscriptions liées
         animatriceFormationRepository.deleteByFormationId(id);
-        // Puis supprimer la formation
         formationRepository.deleteById(id);
     }
 
-    // =============================================
-    // CYCLE DE VIE — TRANSITIONS DE STATUT
-    // =============================================
+    // ===== CYCLE DE VIE =====
 
+    @Override
     @Transactional
     public Formation demarrerFormation(Long id) {
         Formation formation = getFormationById(id);
-
-        if (formation.getStatut() != StatutFormation.OUVERTE) {
+        if (formation.getStatut() != StatutFormation.OUVERTE)
             throw new RuntimeException("La formation doit être OUVERTE pour être démarrée");
-        }
-        if (formation.getNbInscrits() == 0) {
+        if (formation.getNbInscrits() == 0)
             throw new RuntimeException("Impossible de démarrer : aucune animatrice inscrite");
-        }
 
         formation.setStatut(StatutFormation.EN_COURS);
         Formation saved = formationRepository.save(formation);
 
-        // Notifier les inscrits
         animatriceFormationRepository.findByFormationId(id).stream()
                 .filter(i -> StatutInscription.INSCRITE.equals(i.getStatut()))
                 .forEach(i -> notificationService.creerNotification(
                         "🚀 La formation '" + formation.getTitre() + "' vient de commencer !",
                         "FORMATION_DEMARREE"
                 ));
-
         return saved;
     }
 
-
-    /**
-     * Démarrage automatique par le scheduler — sans vérification d'inscrits
-     */
+    @Override
     @Transactional
     public Formation demarrerAutomatique(Long id) {
         Formation formation = getFormationById(id);
@@ -123,24 +110,20 @@ public class FormationService {
                         "🚀 La formation '" + formation.getTitre() + "' vient de commencer !",
                         "FORMATION_DEMARREE"
                 ));
-
         return saved;
     }
 
+    @Override
     @Transactional
     public Formation terminerFormation(Long id) {
         Formation formation = getFormationById(id);
-
-        if (formation.getStatut() != StatutFormation.EN_COURS) {
+        if (formation.getStatut() != StatutFormation.EN_COURS)
             throw new RuntimeException("La formation doit être EN_COURS pour être terminée");
-        }
 
         formation.setStatut(StatutFormation.TERMINEE);
         formationRepository.save(formation);
 
-        List<AnimatriceFormation> inscriptions =
-                animatriceFormationRepository.findByFormationId(id);
-
+        List<AnimatriceFormation> inscriptions = animatriceFormationRepository.findByFormationId(id);
         LocalDate dateCompletion = LocalDate.now();
         int nbCertificats = 0;
 
@@ -148,18 +131,12 @@ public class FormationService {
             if (StatutInscription.INSCRITE.equals(inscription.getStatut())) {
                 inscription.setStatut(StatutInscription.TERMINEE);
                 inscription.setDateCompletion(dateCompletion);
-
-                // Calculer date expiration si durée validité définie
                 if (formation.getDureeValiditeMois() != null) {
-                    inscription.setDateExpiration(
-                            dateCompletion.plusMonths(formation.getDureeValiditeMois()));
+                    inscription.setDateExpiration(dateCompletion.plusMonths(formation.getDureeValiditeMois()));
                 }
-
                 inscription.setCertificationGeneree(true);
                 animatriceFormationRepository.save(inscription);
                 nbCertificats++;
-
-                // Notifier l'animatrice
                 notificationService.creerNotification(
                         "🎓 Félicitations ! Vous avez complété '" + formation.getTitre() +
                                 "'. Votre certificat est disponible.",
@@ -168,30 +145,24 @@ public class FormationService {
             }
         }
 
-        System.out.println("✅ Formation terminée — " + nbCertificats + " certificats générés");
-
-        // Notifier admin
         notificationService.creerNotification(
                 "✅ Formation '" + formation.getTitre() + "' terminée — " +
-                        nbCertificats + " certificat(s) généré(s)",
+                        nbCertificats + " certificat(s) générés",
                 "FORMATION_TERMINEE_ADMIN"
         );
-
         return formation;
     }
 
+    @Override
     @Transactional
     public Formation annulerFormation(Long id, String motif) {
         Formation formation = getFormationById(id);
-
-        if (formation.getStatut() == StatutFormation.TERMINEE) {
+        if (formation.getStatut() == StatutFormation.TERMINEE)
             throw new RuntimeException("Impossible d'annuler une formation terminée");
-        }
 
         formation.setStatut(StatutFormation.ANNULEE);
         formationRepository.save(formation);
 
-        // Notifier et désinscrire
         animatriceFormationRepository.findByFormationId(id).stream()
                 .filter(i -> StatutInscription.INSCRITE.equals(i.getStatut()))
                 .forEach(i -> {
@@ -203,36 +174,30 @@ public class FormationService {
                             "FORMATION_ANNULEE"
                     );
                 });
-
         return formation;
     }
 
-    // =============================================
-    // INSCRIPTION INTELLIGENTE
-    // =============================================
+    // ===== INSCRIPTIONS =====
 
+    @Override
     @Transactional
     public AnimatriceFormation inscrireAnimatrice(Long formationId, Long animatriceId) {
         Formation formation = getFormationById(formationId);
         animatriceRepository.findById(animatriceId)
                 .orElseThrow(() -> new RuntimeException("Animatrice non trouvée"));
 
-        if (formation.getStatut() != StatutFormation.OUVERTE) {
-            throw new RuntimeException("❌ La formation n'est plus ouverte aux inscriptions");
-        }
+        if (formation.getStatut() != StatutFormation.OUVERTE)
+            throw new RuntimeException("🚫 La formation n'est plus ouverte aux inscriptions");
 
-        if (animatriceFormationRepository.existsByAnimatriceIdAndFormationId(
-                animatriceId, formationId)) {
-            throw new RuntimeException("❌ Vous êtes déjà inscrite à cette formation");
-        }
+        if (animatriceFormationRepository.existsByAnimatriceIdAndFormationId(animatriceId, formationId))
+            throw new RuntimeException("🚫 Vous êtes déjà inscrite à cette formation");
 
         StatutInscription statut;
         String messageNotif;
 
         if (formation.isComplet()) {
             statut = StatutInscription.LISTE_ATTENTE;
-            messageNotif = "⏳ Vous êtes en liste d'attente pour '" + formation.getTitre() +
-                    "'. Vous serez notifiée si une place se libère.";
+            messageNotif = "⏳ Vous êtes en liste d'attente pour '" + formation.getTitre() + "'.";
         } else {
             statut = StatutInscription.INSCRITE;
             messageNotif = "✅ Votre inscription à '" + formation.getTitre() +
@@ -240,7 +205,6 @@ public class FormationService {
         }
 
         Animatrice animatrice = animatriceRepository.findById(animatriceId).get();
-
         AnimatriceFormation inscription = AnimatriceFormation.builder()
                 .animatrice(animatrice)
                 .formation(formation)
@@ -250,12 +214,11 @@ public class FormationService {
                 .build();
 
         AnimatriceFormation saved = animatriceFormationRepository.save(inscription);
-
         notificationService.creerNotification(messageNotif, "INSCRIPTION_FORMATION");
-
         return saved;
     }
 
+    @Override
     @Transactional
     public void desinscrireAnimatrice(Long formationId, Long animatriceId) {
         AnimatriceFormation inscription = animatriceFormationRepository
@@ -264,79 +227,27 @@ public class FormationService {
 
         inscription.setStatut(StatutInscription.ABANDONNEE);
         animatriceFormationRepository.save(inscription);
-
         promouvoirListeAttente(formationId);
     }
 
-    private void promouvoirListeAttente(Long formationId) {
-        Formation formation = getFormationById(formationId);
-        if (formation.isComplet()) return;
+    // ===== PROFIL & STATS =====
 
-        List<AnimatriceFormation> listeAttente =
-                animatriceFormationRepository
-                        .findByFormationIdAndStatutOrderByDateInscriptionAsc(
-                                formationId, StatutInscription.LISTE_ATTENTE);
-
-        if (!listeAttente.isEmpty()) {
-            AnimatriceFormation premier = listeAttente.get(0);
-            premier.setStatut(StatutInscription.INSCRITE);
-            animatriceFormationRepository.save(premier);
-
-            notificationService.creerNotification(
-                    "🎉 Une place s'est libérée ! Votre inscription à '" +
-                            formation.getTitre() + "' est maintenant confirmée.",
-                    "PLACE_LIBEREE"
-            );
-        }
-    }
-
-    private void inscrireToutes(Formation formation) {
-        animatriceRepository.findByStatut(StatutAnimatrice.ACTIVE).forEach(animatrice -> {
-            if (!animatriceFormationRepository.existsByAnimatriceIdAndFormationId(
-                    animatrice.getId(), formation.getId())) {
-                AnimatriceFormation inscription = AnimatriceFormation.builder()
-                        .animatrice(animatrice)
-                        .formation(formation)
-                        .dateInscription(LocalDate.now())
-                        .statut(StatutInscription.INSCRITE)
-                        .certificationGeneree(false)
-                        .build();
-                animatriceFormationRepository.save(inscription);
-            }
-        });
-        notificationService.creerNotification(
-                "📋 Inscription automatique à la formation obligatoire : " + formation.getTitre(),
-                "FORMATION_OBLIGATOIRE"
-        );
-    }
-
-    // =============================================
-    // PROFIL FORMATIONS PAR ANIMATRICE
-    // =============================================
-
+    @Override
     public Map<String, Object> getProfilFormations(Long animatriceId) {
         Animatrice animatrice = animatriceRepository.findById(animatriceId)
                 .orElseThrow(() -> new RuntimeException("Animatrice non trouvée"));
 
-        List<AnimatriceFormation> toutes =
-                animatriceFormationRepository.findByAnimatriceId(animatriceId);
-
-        // Mettre à jour les statuts de validité
+        List<AnimatriceFormation> toutes = animatriceFormationRepository.findByAnimatriceId(animatriceId);
         toutes.forEach(af -> {
             af.calculerStatutValidite();
             animatriceFormationRepository.save(af);
         });
 
-        long terminees = toutes.stream()
-                .filter(af -> StatutInscription.TERMINEE.equals(af.getStatut())).count();
-        long inscrites = toutes.stream()
-                .filter(af -> StatutInscription.INSCRITE.equals(af.getStatut())).count();
-        long enAttente = toutes.stream()
-                .filter(af -> StatutInscription.LISTE_ATTENTE.equals(af.getStatut())).count();
-        long bientotExpirees = toutes.stream()
-                .filter(af -> StatutValidite.BIENTOT_EXPIREE.equals(af.getStatutValidite())).count();
-        long expirees = toutes.stream()
-                .filter(af -> StatutValidite.EXPIREE.equals(af.getStatutValidite())).count();
+        long terminees  = toutes.stream().filter(af -> StatutInscription.TERMINEE.equals(af.getStatut())).count();
+        long inscrites  = toutes.stream().filter(af -> StatutInscription.INSCRITE.equals(af.getStatut())).count();
+        long enAttente  = toutes.stream().filter(af -> StatutInscription.LISTE_ATTENTE.equals(af.getStatut())).count();
+        long bientotExp = toutes.stream().filter(af -> StatutValidite.BIENTOT_EXPIREE.equals(af.getStatutValidite())).count();
+        long expirees   = toutes.stream().filter(af -> StatutValidite.EXPIREE.equals(af.getStatutValidite())).count();
 
         Map<String, Object> profil = new HashMap<>();
         profil.put("animatrice", Map.of(
@@ -351,21 +262,17 @@ public class FormationService {
                 "terminees", terminees,
                 "inscrites", inscrites,
                 "enAttente", enAttente,
-                "bientotExpirees", bientotExpirees,
+                "bientotExpirees", bientotExp,
                 "expirees", expirees,
                 "tauxParticipation", toutes.size() > 0 ?
                         Math.round((double) terminees / toutes.size() * 100) : 0
         ));
         profil.put("suggestions", getSuggestions(animatriceId));
         profil.put("alertes", getAlertesAnimatrice(animatriceId));
-
         return profil;
     }
 
-    // =============================================
-    // MOTEUR DE SUGGESTIONS
-    // =============================================
-
+    @Override
     public List<Map<String, Object>> getSuggestions(Long animatriceId) {
         Animatrice animatrice = animatriceRepository.findById(animatriceId)
                 .orElseThrow(() -> new RuntimeException("Animatrice non trouvée"));
@@ -374,8 +281,7 @@ public class FormationService {
                 animatriceFormationRepository.findFormationIdsSuiviesByAnimatriceId(animatriceId);
         List<AnimatriceFormation> formationsExpirees =
                 animatriceFormationRepository.findFormationsExpireesByAnimatrice(animatriceId);
-        List<Formation> toutesFormations =
-                formationRepository.findByStatut(StatutFormation.OUVERTE);
+        List<Formation> toutesFormations = formationRepository.findByStatut(StatutFormation.OUVERTE);
 
         List<Map<String, Object>> suggestions = new ArrayList<>();
 
@@ -386,22 +292,19 @@ public class FormationService {
             String priorite = null;
             String raison = null;
 
-            // URGENT — Recyclage
             boolean estRecyclage = formationsExpirees.stream()
                     .anyMatch(af -> af.getFormation().getType().equals(formation.getType()));
             if (estRecyclage) {
                 priorite = "URGENT";
-                raison = "🔴 Recyclage requis — formation expirée du même type";
+                raison = "🔁 Recyclage requis — formation expirée du même type";
             }
 
-            // IMPORTANT — Obligatoire non suivie
             if (priorite == null && Boolean.TRUE.equals(formation.getObligatoire())
                     && !formationsSuivies.contains(formation.getId())) {
                 priorite = "IMPORTANT";
-                raison = "🟠 Formation obligatoire non encore suivie";
+                raison = "⚠️ Formation obligatoire non encore suivie";
             }
 
-            // RECOMMANDÉ — Selon spécialité
             if (priorite == null) {
                 String specialite = animatrice.getSpecialite() != null ?
                         animatrice.getSpecialite().toLowerCase() : "";
@@ -412,17 +315,15 @@ public class FormationService {
                                 typeFormation.contains("secourisme") ||
                                 typeFormation.contains("sante") ||
                                 typeFormation.contains("securite");
-
                 if (lieASpecialite && !formationsSuivies.contains(formation.getId())) {
-                    priorite = "RECOMMANDÉ";
-                    raison = "🟡 Recommandée selon votre spécialité";
+                    priorite = "RECOMMANDÉE";
+                    raison = "⭐ Recommandée selon votre spécialité";
                 }
             }
 
-            // SUGGÉRÉ
             if (priorite == null && !formationsSuivies.contains(formation.getId())) {
-                priorite = "SUGGÉRÉ";
-                raison = "💡 Formation disponible non encore suivie";
+                priorite = "SUGGÉRÉE";
+                raison = "📚 Formation disponible non encore suivie";
             }
 
             if (priorite != null) {
@@ -444,18 +345,14 @@ public class FormationService {
         }
 
         Map<String, Integer> ordre = Map.of(
-                "URGENT", 0, "IMPORTANT", 1, "RECOMMANDÉ", 2, "SUGGÉRÉ", 3);
+                "URGENT", 0, "IMPORTANT", 1, "RECOMMANDÉE", 2, "SUGGÉRÉE", 3);
         suggestions.sort((a, b) ->
                 ordre.getOrDefault(a.get("priorite").toString(), 4)
                         .compareTo(ordre.getOrDefault(b.get("priorite").toString(), 4)));
-
         return suggestions;
     }
 
-    // =============================================
-    // ALERTES & DASHBOARD
-    // =============================================
-
+    @Override
     public Map<String, Object> getAlertesGlobales() {
         animatriceFormationRepository.findAll().forEach(af -> {
             af.calculerStatutValidite();
@@ -473,7 +370,7 @@ public class FormationService {
         List<Long> animatricesAvecFormationRecente =
                 animatriceFormationRepository.findAnimatriceIdsAvecFormationRecente(
                         LocalDate.now().minusMonths(6));
-        List<Animatrice> sanFormationRecente = animatriceRepository
+        List<Animatrice> sansFormationRecente = animatriceRepository
                 .findByStatut(StatutAnimatrice.ACTIVE).stream()
                 .filter(a -> !animatricesAvecFormationRecente.contains(a.getId()))
                 .collect(Collectors.toList());
@@ -483,33 +380,29 @@ public class FormationService {
         alertes.put("expirees", expirees);
         alertes.put("sousInscrites", sousInscrites);
         alertes.put("bientotDebutees", bientotDebutees);
-        alertes.put("sanFormationRecente", sanFormationRecente);
+        alertes.put("sansFormationRecente", sansFormationRecente);
         alertes.put("totalAlertes", bientotExpirees.size() + expirees.size() +
-                sousInscrites.size() + sanFormationRecente.size());
-
+                sousInscrites.size() + sansFormationRecente.size());
         return alertes;
     }
 
+    @Override
     public Map<String, Object> getAlertesAnimatrice(Long animatriceId) {
         List<AnimatriceFormation> bientotExpirees =
                 animatriceFormationRepository.findByAnimatriceIdAndStatutValidite(
                         animatriceId, StatutValidite.BIENTOT_EXPIREE);
         List<AnimatriceFormation> expirees =
                 animatriceFormationRepository.findFormationsExpireesByAnimatrice(animatriceId);
+
         List<Long> suivies = animatriceFormationRepository
                 .findFormationIdsSuiviesByAnimatriceId(animatriceId);
-
-        // IDs des formations où l'animatrice est inscrite ou en attente
-        List<Long> inscrites = animatriceFormationRepository
-                .findByAnimatriceId(animatriceId).stream()
+        List<Long> inscrites = animatriceFormationRepository.findByAnimatriceId(animatriceId).stream()
                 .filter(af -> StatutInscription.INSCRITE.equals(af.getStatut())
                         || StatutInscription.LISTE_ATTENTE.equals(af.getStatut()))
                 .map(af -> af.getFormation().getId())
                 .collect(Collectors.toList());
 
-        // Obligatoires non suivies ET pas encore inscrite
-        List<Formation> obligatoiresNonSuivies = formationRepository
-                .findByObligatoire(true).stream()
+        List<Formation> obligatoiresNonSuivies = formationRepository.findByObligatoire(true).stream()
                 .filter(f -> !suivies.contains(f.getId()) && !inscrites.contains(f.getId()))
                 .collect(Collectors.toList());
 
@@ -519,10 +412,10 @@ public class FormationService {
         alertes.put("obligatoiresNonSuivies", obligatoiresNonSuivies);
         alertes.put("totalAlertes", bientotExpirees.size() + expirees.size() +
                 obligatoiresNonSuivies.size());
-
         return alertes;
     }
 
+    @Override
     public Map<String, Object> getStatsFormations() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("total", formationRepository.count());
@@ -535,13 +428,10 @@ public class FormationService {
                 .filter(af -> Boolean.TRUE.equals(af.getCertificationGeneree())).count();
         stats.put("totalInscriptions", animatriceFormationRepository.count());
         stats.put("certificatsGeneres", certificats);
-
         return stats;
     }
 
-    // =============================================
-    // HELPERS PRIVÉS
-    // =============================================
+    // ===== HELPERS PRIVÉS =====
 
     private void notifierNouvelleFormation(Formation formation) {
         animatriceRepository.findByStatut(StatutAnimatrice.ACTIVE).forEach(animatrice ->
@@ -552,5 +442,45 @@ public class FormationService {
                         "NOUVELLE_FORMATION"
                 )
         );
+    }
+
+    private void inscrireToutes(Formation formation) {
+        animatriceRepository.findByStatut(StatutAnimatrice.ACTIVE).forEach(animatrice -> {
+            if (!animatriceFormationRepository.existsByAnimatriceIdAndFormationId(
+                    animatrice.getId(), formation.getId())) {
+                AnimatriceFormation inscription = AnimatriceFormation.builder()
+                        .animatrice(animatrice)
+                        .formation(formation)
+                        .dateInscription(LocalDate.now())
+                        .statut(StatutInscription.INSCRITE)
+                        .certificationGeneree(false)
+                        .build();
+                animatriceFormationRepository.save(inscription);
+            }
+        });
+        notificationService.creerNotification(
+                "📌 Inscription automatique à la formation obligatoire : " + formation.getTitre(),
+                "FORMATION_OBLIGATOIRE"
+        );
+    }
+
+    private void promouvoirListeAttente(Long formationId) {
+        Formation formation = getFormationById(formationId);
+        if (formation.isComplet()) return;
+
+        List<AnimatriceFormation> listeAttente =
+                animatriceFormationRepository.findByFormationIdAndStatutOrderByDateInscriptionAsc(
+                        formationId, StatutInscription.LISTE_ATTENTE);
+
+        if (!listeAttente.isEmpty()) {
+            AnimatriceFormation premier = listeAttente.get(0);
+            premier.setStatut(StatutInscription.INSCRITE);
+            animatriceFormationRepository.save(premier);
+            notificationService.creerNotification(
+                    "🎉 Une place s'est libérée ! Votre inscription à '" +
+                            formation.getTitre() + "' est maintenant confirmée.",
+                    "PLACE_LIBEREE"
+            );
+        }
     }
 }

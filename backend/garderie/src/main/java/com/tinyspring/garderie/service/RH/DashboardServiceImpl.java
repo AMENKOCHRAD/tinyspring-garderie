@@ -3,6 +3,7 @@ package com.tinyspring.garderie.service.RH;
 import com.tinyspring.garderie.dto.RH.AbsenceCongeDTO;
 import com.tinyspring.garderie.dto.RH.AnimatriceDTO;
 import com.tinyspring.garderie.dto.RH.DashboardStatsDTO;
+import com.tinyspring.garderie.entity.RH.AbsenceConge;
 import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
 import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
 import com.tinyspring.garderie.entity.RH.enums.StatutFormation;
@@ -18,37 +19,40 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class DashboardService {
+public class DashboardServiceImpl implements IDashboardService {
 
     private final AnimatriceRepository animatriceRepository;
     private final AbsenceCongeRepository absenceCongeRepository;
     private final FormationRepository formationRepository;
-    private final AnimatriceService animatriceService;
-    private final AbsenceCongeService absenceCongeService;
 
+    // ✅ Injection par interfaces
+    private final IAnimatriceService animatriceService;
+    private final IAbsenceCongeService absenceCongeService;
+
+    @Override
     public DashboardStatsDTO getStats() {
 
         // ===== Animatrices =====
-        long totalAnimatrices = animatriceRepository.count();
-        long animatricesActives = animatriceRepository.findByStatut(StatutAnimatrice.ACTIVE).size();
+        long totalAnimatrices     = animatriceRepository.count();
+        long animatricesActives   = animatriceRepository.findByStatut(StatutAnimatrice.ACTIVE).size();
         long animatricesInactives = animatriceRepository.findByStatut(StatutAnimatrice.INACTIVE).size();
 
         // ===== Absences =====
-        long totalAbsences = absenceCongeRepository.count();
-        long absencesEnAttente = absenceCongeRepository.findByStatut(StatutAbsenceConge.EN_ATTENTE).size();
+        long totalAbsences      = absenceCongeRepository.count();
+        long absencesEnAttente  = absenceCongeRepository.findByStatut(StatutAbsenceConge.EN_ATTENTE).size();
         long absencesApprouvees = absenceCongeRepository.findByStatut(StatutAbsenceConge.APPROUVE).size();
-        long absencesRefusees = absenceCongeRepository.findByStatut(StatutAbsenceConge.REFUSE).size();
+        long absencesRefusees   = absenceCongeRepository.findByStatut(StatutAbsenceConge.REFUSE).size();
 
         // ===== Par type =====
-        long absences = absenceCongeRepository.findByType(TypeAbsenceConge.ABSENCE).size();
-        long congesAnnuels = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_ANNUEL).size();
-        long congesMaladie = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_MALADIE).size();
+        long absences        = absenceCongeRepository.findByType(TypeAbsenceConge.ABSENCE).size();
+        long congesAnnuels   = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_ANNUEL).size();
+        long congesMaladie   = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_MALADIE).size();
         long congesMaternite = absenceCongeRepository.findByType(TypeAbsenceConge.CONGE_MATERNITE).size();
 
-        // ===== Formations ✅ maintenant avec le nouveau repository =====
-        long totalFormations = formationRepository.count();
+        // ===== Formations =====
+        long totalFormations     = formationRepository.count();
         long formationsInscrites = formationRepository.countByStatut(StatutFormation.OUVERTE);
-        long formationsEnCours = formationRepository.countByStatut(StatutFormation.EN_COURS);
+        long formationsEnCours   = formationRepository.countByStatut(StatutFormation.EN_COURS);
         long formationsTerminees = formationRepository.countByStatut(StatutFormation.TERMINEE);
 
         // ===== Dernières demandes en attente =====
@@ -56,7 +60,7 @@ public class DashboardService {
                 .findByStatut(StatutAbsenceConge.EN_ATTENTE)
                 .stream()
                 .limit(5)
-                .map(absenceCongeService::toDTO)
+                .map(this::toDTO)
                 .collect(Collectors.toList());
 
         // ===== Dernières animatrices =====
@@ -89,7 +93,8 @@ public class DashboardService {
                 .build();
     }
 
-    public AbsenceCongeDTO toDTO(com.tinyspring.garderie.entity.RH.AbsenceConge absenceConge) {
+    @Override
+    public AbsenceCongeDTO toDTO(AbsenceConge absenceConge) {
         return absenceCongeService.toDTO(absenceConge);
     }
 }

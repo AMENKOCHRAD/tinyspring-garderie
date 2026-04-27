@@ -1,7 +1,7 @@
 package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.dto.RH.AbsenceCongeDTO;
-import com.tinyspring.garderie.service.RH.AbsenceCongeService;
+import com.tinyspring.garderie.service.RH.IAbsenceCongeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnimatriceAbsenceCongeController {
 
-    private final AbsenceCongeService absenceCongeService;
+    private final IAbsenceCongeService absenceCongeService;
 
     @GetMapping("/{animatriceId}")
     public ResponseEntity<List<AbsenceCongeDTO>> getMesAbsenceConges(@PathVariable Long animatriceId) {

@@ -15,44 +15,36 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationService {
+public class NotificationServiceImpl implements INotificationService {
 
     private final NotificationRepository notificationRepository;
 
-    // ✅ Liste des connexions SSE actives
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    // ===== SSE =====
-
+    @Override
     public SseEmitter createEmitter() {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         emitters.add(emitter);
-
         emitter.onCompletion(() -> emitters.remove(emitter));
         emitter.onTimeout(() -> emitters.remove(emitter));
         emitter.onError((e) -> emitters.remove(emitter));
-
         return emitter;
     }
 
+    @Override
     public void sendToAll(NotificationDTO notification) {
         List<SseEmitter> deadEmitters = new ArrayList<>();
-
         for (SseEmitter emitter : emitters) {
             try {
-                emitter.send(SseEmitter.event()
-                        .name("notification")
-                        .data(notification));
+                emitter.send(SseEmitter.event().name("notification").data(notification));
             } catch (IOException e) {
                 deadEmitters.add(emitter);
             }
         }
-
         emitters.removeAll(deadEmitters);
     }
 
-    // ===== CRUD =====
-
+    @Override
     public NotificationDTO creerNotification(String message, String type) {
         Notification notification = Notification.builder()
                 .message(message)
@@ -62,31 +54,28 @@ public class NotificationService {
 
         Notification saved = notificationRepository.save(notification);
         NotificationDTO dto = toDTO(saved);
-
-        // ✅ Envoyer en temps réel à tous les admins connectés
         sendToAll(dto);
-
         return dto;
     }
 
+    @Override
     public List<NotificationDTO> getAllNotifications() {
         return notificationRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+                .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    @Override
     public List<NotificationDTO> getNonLues() {
         return notificationRepository.findByReadFalseOrderByCreatedAtDesc()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+                .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    @Override
     public long countNonLues() {
         return notificationRepository.countByReadFalse();
     }
 
+    @Override
     public void marquerCommeLue(Long id) {
         notificationRepository.findById(id).ifPresent(n -> {
             n.setRead(true);
@@ -94,17 +83,17 @@ public class NotificationService {
         });
     }
 
+    @Override
     public void marquerToutesCommeLues() {
         List<Notification> nonLues = notificationRepository.findByReadFalseOrderByCreatedAtDesc();
         nonLues.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(nonLues);
     }
 
+    @Override
     public void supprimerNotification(Long id) {
         notificationRepository.deleteById(id);
     }
-
-    // ===== MAPPING =====
 
     private NotificationDTO toDTO(Notification n) {
         return NotificationDTO.builder()

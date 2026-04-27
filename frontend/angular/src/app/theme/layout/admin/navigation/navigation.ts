@@ -131,14 +131,7 @@ export const NavigationItems: NavigationItem[] = [
             classes: 'nav-item',
             icon: 'feather icon-calendar'
           },
-          {
-            id: 'rh-quotas',
-            title: '⚙️ Moteur de règles',
-            type: 'item',
-            url: '/rh/quotas',
-            classes: 'nav-item',
-            icon: 'feather icon-settings'
-          },
+
           {
             id: 'rh-rapports',
             title: '🤖 Rapports IA',

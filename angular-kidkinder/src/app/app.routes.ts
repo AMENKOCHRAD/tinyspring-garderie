@@ -20,13 +20,13 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'tableau-de-bord', pathMatch: 'full' },
       { path: 'tableau-de-bord', component: ParentWorkspacePageComponent, data: { page: 'tableau-de-bord' } },
-      { path: 'enfants', component: ParentWorkspacePageComponent, data: { page: 'enfants' } },
-      { path: 'sante', component: ParentWorkspacePageComponent, data: { page: 'sante' } },
-      { path: 'activites', component: ParentWorkspacePageComponent, data: { page: 'activites' } },
-      { path: 'menus', component: ParentWorkspacePageComponent, data: { page: 'menus' } },
-      { path: 'messages', component: ParentWorkspacePageComponent, data: { page: 'messages' } },
-      { path: 'trajets', component: ParentWorkspacePageComponent, data: { page: 'trajets' } },
-      { path: 'boutique', component: ParentWorkspacePageComponent, data: { page: 'boutique' } },
+      { path: 'enfants',         component: ParentWorkspacePageComponent, data: { page: 'enfants' } },
+      { path: 'sante',           component: ParentWorkspacePageComponent, data: { page: 'sante' } },
+      { path: 'activites',       component: ParentWorkspacePageComponent, data: { page: 'activites' } },
+      { path: 'menus',           component: ParentWorkspacePageComponent, data: { page: 'menus' } },
+      { path: 'messages',        component: ParentWorkspacePageComponent, data: { page: 'messages' } },
+      { path: 'trajets',         component: ParentWorkspacePageComponent, data: { page: 'trajets' } },
+      { path: 'boutique',        component: ParentWorkspacePageComponent, data: { page: 'boutique' } },
     ]
   },
   {
@@ -37,16 +37,22 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'tableau-de-bord', pathMatch: 'full' },
       { path: 'tableau-de-bord', component: AnimatorWorkspacePageComponent, data: { page: 'tableau-de-bord' } },
-      { path: 'groupes', component: AnimatorWorkspacePageComponent, data: { page: 'groupes' } },
-      { path: 'sante', component: AnimatorWorkspacePageComponent, data: { page: 'sante' } },
-      { path: 'activites', component: AnimatorWorkspacePageComponent, data: { page: 'activites' } },
-      { path: 'messages', component: AnimatorWorkspacePageComponent, data: { page: 'messages' } },
-      { path: 'formations', component: AnimatorWorkspacePageComponent, data: { page: 'formations' } },
-      { path: 'planning', component: AnimatorWorkspacePageComponent, data: { page: 'planning' } },
-      // ✅ Routes RH absences
-      { path: 'rh/mes-absences', component: MesAbsencesComponent },
+      { path: 'groupes',         component: AnimatorWorkspacePageComponent, data: { page: 'groupes' } },
+      { path: 'sante',           component: AnimatorWorkspacePageComponent, data: { page: 'sante' } },
+      { path: 'activites',       component: AnimatorWorkspacePageComponent, data: { page: 'activites' } },
+      { path: 'messages',        component: AnimatorWorkspacePageComponent, data: { page: 'messages' } },
+      { path: 'formations',      component: AnimatorWorkspacePageComponent, data: { page: 'formations' } },
+      { path: 'planning',        component: AnimatorWorkspacePageComponent, data: { page: 'planning' } },
+      // ✅ NOUVEAU — Mon profil
+      {
+        path: 'mon-profil',
+        loadComponent: () =>
+          import('./RH/pages/mon-profil/mon-profil.component').then(c => c.MonProfilComponent)
+      },
+      // Routes RH absences
+      { path: 'rh/mes-absences',    component: MesAbsencesComponent },
       { path: 'rh/nouvelle-demande', component: NouvelleDemande },
-      // ✅ Nouvelles routes formations
+      // Routes formations
       {
         path: 'formations/disponibles',
         loadComponent: () =>

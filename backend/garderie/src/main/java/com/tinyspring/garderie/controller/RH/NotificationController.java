@@ -1,7 +1,7 @@
 package com.tinyspring.garderie.controller.RH;
 
 import com.tinyspring.garderie.dto.RH.NotificationDTO;
-import com.tinyspring.garderie.service.RH.NotificationService;
+import com.tinyspring.garderie.service.RH.INotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    private final INotificationService notificationService;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream() {

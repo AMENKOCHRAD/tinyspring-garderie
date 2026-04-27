@@ -1,36 +1,46 @@
-<div class="calendrier-wrapper">
+<div class="page-wrapper">
 
-  <div class="cal-header">
-    <div>
-      <h2 class="cal-title">Calendrier RH</h2>
-      <p class="cal-subtitle">Absences, congés et formations</p>
+  <!-- ===== HEADER ===== -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="breadcrumb-nav">
+        <span class="breadcrumb-home">🏠</span>
+        <span class="sep">/</span>
+        <span>RH & Formations</span>
+        <span class="sep">/</span>
+        <span class="active">Calendrier</span>
+      </div>
+      <h2 class="page-title">Calendrier RH</h2>
     </div>
   </div>
 
-  <!-- Légende -->
-  <div class="legende">
+  <!-- ===== LÉGENDE ===== -->
+  <div class="legende-bar">
     <div class="legende-item">
-      <span class="dot" style="background:#f59e0b"></span>
+      <span class="legende-dot legende-dot--amber"></span>
       <span>En attente</span>
     </div>
     <div class="legende-item">
-      <span class="dot" style="background:#10b981"></span>
+      <span class="legende-dot legende-dot--green"></span>
       <span>Approuvée</span>
     </div>
     <div class="legende-item">
-      <span class="dot" style="background:#ef4444"></span>
+      <span class="legende-dot legende-dot--red"></span>
       <span>Refusée</span>
     </div>
     <div class="legende-item">
-      <span class="dot" style="background:#6366f1"></span>
+      <span class="legende-dot legende-dot--indigo"></span>
       <span>Formation</span>
     </div>
   </div>
 
+  <!-- ===== LOADING ===== -->
   <div class="loading-state" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
     <p>Chargement du calendrier...</p>
   </div>
 
+  <!-- ===== CALENDRIER ===== -->
   <div class="calendar-card" *ngIf="!isLoading">
     <full-calendar [options]="calendarOptions"></full-calendar>
   </div>

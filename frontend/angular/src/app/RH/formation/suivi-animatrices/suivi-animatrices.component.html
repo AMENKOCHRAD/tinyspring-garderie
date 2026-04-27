@@ -1,17 +1,19 @@
 <div class="page-wrapper">
 
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <button class="btn-back" *ngIf="vue === 'profil'" (click)="retourListe()">← Retour</button>
-      <h2 class="page-title">
-        {{ vue === 'liste' ? '👥 Suivi Formations Animatrices' : '👤 Profil Formations — ' + animatriceSelectionnee?.prenom + ' ' + animatriceSelectionnee?.nom }}
-      </h2>
-      <nav class="breadcrumb-nav">
-        <span>🏠</span><span class="sep">/</span>
-        <span>Formations</span><span class="sep">/</span>
-        <span class="active">{{ vue === 'liste' ? 'Suivi Animatrices' : 'Profil' }}</span>
-      </nav>
+  <!-- ===== BOUTON RETOUR (vue profil) ===== -->
+  <div class="back-bar" *ngIf="vue === 'profil'">
+    <button class="btn-back" (click)="retourListe()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Retour à la liste
+    </button>
+    <div class="back-bar__breadcrumb">
+      <span>Formations</span>
+      <span class="sep">/</span>
+      <span>Suivi Animatrices</span>
+      <span class="sep">/</span>
+      <span class="active">{{ animatriceSelectionnee?.prenom }} {{ animatriceSelectionnee?.nom }}</span>
     </div>
   </div>
 
@@ -20,66 +22,125 @@
 
     <!-- Alertes globales -->
     <div class="alertes-section" *ngIf="alertesGlobales && alertesGlobales.totalAlertes > 0">
-      <h3 class="alertes-title">🚨 Alertes formations</h3>
+      <div class="alertes-section__header">
+        <div class="alertes-section__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="alertes-section__title">Alertes formations</h3>
+          <p class="alertes-section__sub">{{ alertesGlobales.totalAlertes }} alerte(s) nécessitent votre attention</p>
+        </div>
+      </div>
+
       <div class="alertes-grid">
+
         <div class="alerte-card alerte-card--red" *ngIf="alertesGlobales.expirees?.length > 0">
-          <span class="alerte-icon">🔴</span>
-          <div>
-            <span class="alerte-count">{{ alertesGlobales.expirees.length }}</span>
-            <span class="alerte-label">Formation(s) expirée(s)</span>
+          <div class="alerte-card__icon alerte-card__icon--red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="alerte-card__info">
+            <span class="alerte-card__count">{{ alertesGlobales.expirees.length }}</span>
+            <span class="alerte-card__label">Formation(s) expirée(s)</span>
           </div>
         </div>
+
         <div class="alerte-card alerte-card--orange" *ngIf="alertesGlobales.bientotExpirees?.length > 0">
-          <span class="alerte-icon">🟡</span>
-          <div>
-            <span class="alerte-count">{{ alertesGlobales.bientotExpirees.length }}</span>
-            <span class="alerte-label">Expirent bientôt</span>
+          <div class="alerte-card__icon alerte-card__icon--orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="alerte-card__info">
+            <span class="alerte-card__count">{{ alertesGlobales.bientotExpirees.length }}</span>
+            <span class="alerte-card__label">Expirent bientôt</span>
           </div>
         </div>
+
         <div class="alerte-card alerte-card--blue" *ngIf="alertesGlobales.sousInscrites?.length > 0">
-          <span class="alerte-icon">⚠️</span>
-          <div>
-            <span class="alerte-count">{{ alertesGlobales.sousInscrites.length }}</span>
-            <span class="alerte-label">Formation(s) sous-inscrite(s)</span>
+          <div class="alerte-card__icon alerte-card__icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/>
+              <line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <div class="alerte-card__info">
+            <span class="alerte-card__count">{{ alertesGlobales.sousInscrites.length }}</span>
+            <span class="alerte-card__label">Formation(s) sous-inscrite(s)</span>
           </div>
         </div>
+
         <div class="alerte-card alerte-card--grey" *ngIf="alertesGlobales.sanFormationRecente?.length > 0">
-          <span class="alerte-icon">💡</span>
-          <div>
-            <span class="alerte-count">{{ alertesGlobales.sanFormationRecente.length }}</span>
-            <span class="alerte-label">Sans formation récente</span>
+          <div class="alerte-card__icon alerte-card__icon--grey">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </div>
+          <div class="alerte-card__info">
+            <span class="alerte-card__count">{{ alertesGlobales.sanFormationRecente.length }}</span>
+            <span class="alerte-card__label">Sans formation récente</span>
           </div>
         </div>
+
       </div>
     </div>
 
     <!-- Loading -->
     <div class="loading-state" *ngIf="isLoading">
-      <div class="spinner"></div><p>Chargement...</p>
+      <div class="loading-spinner"></div>
+      <p>Chargement des animatrices...</p>
     </div>
 
-    <!-- Liste animatrices -->
+    <!-- Grid animatrices -->
     <div class="animatrices-grid" *ngIf="!isLoading">
-      <div *ngFor="let a of animatrices" class="animatrice-card"
+      <div *ngFor="let a of animatrices"
+           class="animatrice-card"
            [class.animatrice-card--alerte]="aDesAlertes(a.id)"
            (click)="voirProfil(a)">
 
-        <div class="animatrice-card__header">
-          <div class="avatar">
+        <div class="animatrice-card__body">
+          <div class="animatrice-avatar">
             {{ a.prenom?.charAt(0) }}{{ a.nom?.charAt(0) }}
           </div>
           <div class="animatrice-info">
             <span class="animatrice-nom">{{ a.prenom }} {{ a.nom }}</span>
             <span class="animatrice-specialite">{{ a.specialite || 'Animatrice' }}</span>
-          </div>
-          <div class="alertes-badges">
-            <span *ngIf="aDesAlertes(a.id)" class="badge-alerte">⚠️ Alerte</span>
-            <span *ngIf="estSansFormationRecente(a.id)" class="badge-inactif">💡 Sans formation</span>
+            <div class="animatrice-badges">
+              <span *ngIf="aDesAlertes(a.id)" class="badge badge--warn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                </svg>
+                Alerte
+              </span>
+              <span *ngIf="estSansFormationRecente(a.id)" class="badge badge--info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                Sans formation
+              </span>
+            </div>
           </div>
         </div>
 
         <div class="animatrice-card__footer">
-          <span class="voir-profil">Voir le profil formations →</span>
+          <span class="voir-profil-text">Voir le profil formations</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
         </div>
 
       </div>
@@ -92,114 +153,194 @@
 
     <!-- Loading profil -->
     <div class="loading-state" *ngIf="isLoadingProfil">
-      <div class="spinner"></div><p>Chargement du profil...</p>
+      <div class="loading-spinner"></div>
+      <p>Chargement du profil...</p>
     </div>
 
     <div *ngIf="profil && !isLoadingProfil">
 
-      <!-- Card animatrice -->
+      <!-- Hero profil -->
       <div class="profil-hero">
-        <div class="profil-avatar">
+        <div class="profil-hero__glow"></div>
+        <div class="profil-avatar-lg">
           {{ animatriceSelectionnee?.prenom?.charAt(0) }}{{ animatriceSelectionnee?.nom?.charAt(0) }}
         </div>
-        <div class="profil-info">
-          <h3>{{ animatriceSelectionnee?.prenom }} {{ animatriceSelectionnee?.nom }}</h3>
-          <span>{{ animatriceSelectionnee?.specialite || 'Animatrice' }}</span>
+        <div class="profil-hero__info">
+          <span class="profil-hero__name">
+            {{ animatriceSelectionnee?.prenom }} {{ animatriceSelectionnee?.nom }}
+          </span>
+          <span class="profil-hero__role">{{ animatriceSelectionnee?.specialite || 'Animatrice' }}</span>
         </div>
         <div class="profil-score">
-          <div class="score-circle">
-            <svg viewBox="0 0 36 36">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none" stroke="#e2e8f0" stroke-width="3"/>
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none" stroke="#4f46e5" stroke-width="3"
+          <div class="score-ring">
+            <svg viewBox="0 0 36 36" class="score-svg">
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke="#ffffff30" stroke-width="3"/>
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke="white" stroke-width="3"
                 [attr.stroke-dasharray]="getTauxCompletion() + ', 100'"/>
             </svg>
-            <span class="score-text">{{ getTauxCompletion() }}%</span>
+            <span class="score-value">{{ getTauxCompletion() }}%</span>
           </div>
           <span class="score-label">Taux de complétion</span>
         </div>
       </div>
 
       <!-- Stats -->
-      <div class="stats-grid">
+      <div class="stats-row">
+
         <div class="stat-card stat-card--blue">
-          <span class="stat-icon">📚</span>
-          <span class="stat-value">{{ profil.stats.total }}</span>
-          <span class="stat-label">Total formations</span>
+          <div class="stat-card__icon stat-card__icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
+          <div class="stat-card__info">
+            <span class="stat-card__value">{{ profil.stats.total }}</span>
+            <span class="stat-card__label">Total formations</span>
+          </div>
         </div>
+
         <div class="stat-card stat-card--green">
-          <span class="stat-icon">✅</span>
-          <span class="stat-value">{{ profil.stats.terminees }}</span>
-          <span class="stat-label">Terminées</span>
+          <div class="stat-card__icon stat-card__icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="stat-card__info">
+            <span class="stat-card__value">{{ profil.stats.terminees }}</span>
+            <span class="stat-card__label">Terminées</span>
+          </div>
         </div>
+
         <div class="stat-card stat-card--indigo">
-          <span class="stat-icon">⏳</span>
-          <span class="stat-value">{{ profil.stats.inscrites }}</span>
-          <span class="stat-label">En cours</span>
+          <div class="stat-card__icon stat-card__icon--indigo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="stat-card__info">
+            <span class="stat-card__value">{{ profil.stats.inscrites }}</span>
+            <span class="stat-card__label">En cours</span>
+          </div>
         </div>
+
         <div class="stat-card stat-card--orange">
-          <span class="stat-icon">⚠️</span>
-          <span class="stat-value">{{ profil.stats.bientotExpirees + profil.stats.expirees }}</span>
-          <span class="stat-label">Alertes validité</span>
+          <div class="stat-card__icon stat-card__icon--orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="stat-card__info">
+            <span class="stat-card__value">{{ profil.stats.bientotExpirees + profil.stats.expirees }}</span>
+            <span class="stat-card__label">Alertes validité</span>
+          </div>
         </div>
+
       </div>
 
       <!-- Alertes animatrice -->
-      <div class="alertes-animatrice" *ngIf="profil.alertes?.totalAlertes > 0">
-        <h4 class="alertes-animatrice__title">🚨 Alertes personnalisées</h4>
-        <div class="alerte-ligne" *ngIf="profil.alertes.expirees?.length > 0">
-          🔴 {{ profil.alertes.expirees.length }} formation(s) expirée(s) — renouvellement urgent
+      <div class="alertes-perso" *ngIf="profil.alertes?.totalAlertes > 0">
+        <div class="alertes-perso__header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>Alertes personnalisées</span>
         </div>
-        <div class="alerte-ligne" *ngIf="profil.alertes.bientotExpirees?.length > 0">
-          🟡 {{ profil.alertes.bientotExpirees.length }} formation(s) expirent dans moins de 3 mois
-        </div>
-        <div class="alerte-ligne" *ngIf="profil.alertes.obligatoiresNonSuivies?.length > 0">
-          ⚠️ {{ profil.alertes.obligatoiresNonSuivies.length }} formation(s) obligatoire(s) non suivie(s)
+        <div class="alertes-perso__list">
+          <div class="alerte-ligne alerte-ligne--red" *ngIf="profil.alertes.expirees?.length > 0">
+            <span class="alerte-ligne__dot alerte-ligne__dot--red"></span>
+            <span>{{ profil.alertes.expirees.length }} formation(s) expirée(s) — renouvellement urgent</span>
+          </div>
+          <div class="alerte-ligne alerte-ligne--orange" *ngIf="profil.alertes.bientotExpirees?.length > 0">
+            <span class="alerte-ligne__dot alerte-ligne__dot--orange"></span>
+            <span>{{ profil.alertes.bientotExpirees.length }} formation(s) expirent dans moins de 3 mois</span>
+          </div>
+          <div class="alerte-ligne alerte-ligne--yellow" *ngIf="profil.alertes.obligatoiresNonSuivies?.length > 0">
+            <span class="alerte-ligne__dot alerte-ligne__dot--yellow"></span>
+            <span>{{ profil.alertes.obligatoiresNonSuivies.length }} formation(s) obligatoire(s) non suivie(s)</span>
+          </div>
         </div>
       </div>
 
+      <!-- Contenu : historique + suggestions -->
       <div class="content-grid">
 
         <!-- Historique formations -->
         <div class="section-card">
-          <h3 class="section-title">📋 Historique Formations</h3>
+          <div class="section-card__header">
+            <h3 class="section-title">Historique Formations</h3>
+            <span class="section-count">{{ profil.formations.length }}</span>
+          </div>
 
           <div class="empty-section" *ngIf="profil.formations.length === 0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
             <p>Aucune formation suivie pour le moment</p>
           </div>
 
           <div class="formations-list">
-            <div *ngFor="let af of profil.formations" class="formation-item"
-                 [style.border-left]="'4px solid ' + getStatutColor(af.statut)">
+            <div *ngFor="let af of profil.formations"
+                 class="formation-item"
+                 [style.border-left-color]="getStatutColor(af.statut)">
 
-              <div class="formation-item__header">
+              <div class="formation-item__top">
                 <div class="formation-item__title">
                   <span class="type-icon">{{ getTypeIcon(af.formation?.type) }}</span>
                   <span class="formation-nom">{{ af.formation?.titre }}</span>
                 </div>
                 <div class="formation-item__badges">
-                  <span class="badge-statut"
-                        [style.background]="getStatutColor(af.statut) + '20'"
-                        [style.color]="getStatutColor(af.statut)">
+                  <span class="pill"
+                        [style.background]="getStatutColor(af.statut) + '1a'"
+                        [style.color]="getStatutColor(af.statut)"
+                        [style.border-color]="getStatutColor(af.statut) + '40'">
                     {{ af.statut?.replace('_', ' ') }}
                   </span>
                   <span *ngIf="af.statutValidite && af.statut === 'TERMINEE'"
-                        class="badge-validite"
-                        [style.background]="getValiditeColor(af.statutValidite) + '20'"
-                        [style.color]="getValiditeColor(af.statutValidite)">
+                        class="pill"
+                        [style.background]="getValiditeColor(af.statutValidite) + '1a'"
+                        [style.color]="getValiditeColor(af.statutValidite)"
+                        [style.border-color]="getValiditeColor(af.statutValidite) + '40'">
                     {{ af.statutValidite?.replace('_', ' ') }}
                   </span>
-                  <span *ngIf="af.certificationGeneree" class="badge-certificat">🎓</span>
+                  <span *ngIf="af.certificationGeneree" class="pill pill--certificat">🎓 Certifié</span>
                 </div>
               </div>
 
               <div class="formation-item__dates">
-                <span>📅 Inscrite : {{ formatDate(af.dateInscription) }}</span>
-                <span *ngIf="af.dateCompletion">✅ Complétée : {{ formatDate(af.dateCompletion) }}</span>
-                <span *ngIf="af.dateExpiration"
-                      [style.color]="getValiditeColor(af.statutValidite)">
-                  ⏰ Expire : {{ formatDate(af.dateExpiration) }}
+                <span class="date-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  {{ formatDate(af.dateInscription) }}
+                </span>
+                <span class="date-chip date-chip--done" *ngIf="af.dateCompletion">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {{ formatDate(af.dateCompletion) }}
+                </span>
+                <span class="date-chip"
+                      [style.color]="getValiditeColor(af.statutValidite)"
+                      *ngIf="af.dateExpiration">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Expire : {{ formatDate(af.dateExpiration) }}
                 </span>
               </div>
 
@@ -209,29 +350,58 @@
 
         <!-- Suggestions -->
         <div class="section-card">
-          <h3 class="section-title">💡 Formations Recommandées</h3>
+          <div class="section-card__header">
+            <h3 class="section-title">Formations Recommandées</h3>
+            <span class="section-count">{{ profil.suggestions.length }}</span>
+          </div>
 
-          <div class="empty-section" *ngIf="profil.suggestions.length === 0">
-            <p>✅ Toutes les formations sont à jour !</p>
+          <div class="empty-section empty-section--success" *ngIf="profil.suggestions.length === 0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <p>Toutes les formations sont à jour !</p>
           </div>
 
           <div class="suggestions-list">
-            <div *ngFor="let s of profil.suggestions" class="suggestion-item"
-                 [style.border-left]="'4px solid ' + getPrioriteColor(s.priorite)">
-              <div class="suggestion-header">
+            <div *ngFor="let s of profil.suggestions"
+                 class="suggestion-item"
+                 [style.border-left-color]="getPrioriteColor(s.priorite)">
+
+              <div class="suggestion-item__top">
                 <span class="suggestion-titre">{{ s.formation.titre }}</span>
-                <span class="priorite-badge"
-                      [style.background]="getPrioriteColor(s.priorite) + '20'"
-                      [style.color]="getPrioriteColor(s.priorite)">
+                <span class="priorite-pill"
+                      [style.background]="getPrioriteColor(s.priorite) + '1a'"
+                      [style.color]="getPrioriteColor(s.priorite)"
+                      [style.border-color]="getPrioriteColor(s.priorite) + '40'">
                   {{ s.priorite }}
                 </span>
               </div>
+
               <p class="suggestion-raison">{{ s.raison }}</p>
+
               <div class="suggestion-meta">
-                <span *ngIf="s.formation.dateDebut">📅 {{ formatDate(s.formation.dateDebut) }}</span>
-                <span>🪑 {{ s.formation.placesDisponibles }} place(s)</span>
-                <span *ngIf="s.formation.obligatoire" class="obligatoire-tag">⚠️ Obligatoire</span>
+                <span *ngIf="s.formation.dateDebut" class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  {{ formatDate(s.formation.dateDebut) }}
+                </span>
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                  </svg>
+                  {{ s.formation.placesDisponibles }} place(s)
+                </span>
+                <span *ngIf="s.formation.obligatoire" class="meta-chip meta-chip--obligatoire">
+                  Obligatoire
+                </span>
               </div>
+
             </div>
           </div>
         </div>
