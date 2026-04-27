@@ -26,7 +26,7 @@ import {
           <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
               <h4 class="mb-1">Statistiques Réclamations</h4>
-              <p class="text-muted mb-0">Vue synthétique des statuts et des priorités</p>
+              <p class="text-muted mb-0">Vue synthétique des statuts, des priorités et des récurrences</p>
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
@@ -134,6 +134,23 @@ import {
                     {{ getDecisionLabel(item.label) }}
                   </span>
                   <span>{{ item.count }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stats-card mt-4">
+              <h5 class="chart-title">Réclamations récurrentes</h5>
+
+              <div class="recurrence-dashboard">
+                <div class="recurrence-number">
+                  {{ getRecurringReclamationsCount() }}
+                </div>
+
+                <div>
+                  <div class="recurrence-title">Problèmes récurrents détectés</div>
+                  <div class="text-muted">
+                    Réclamations similaires détectées automatiquement par le backend durant les 30 derniers jours.
+                  </div>
                 </div>
               </div>
             </div>
@@ -429,6 +446,7 @@ import {
                     <th>Priorité</th>
                     <th>Statut</th>
                     <th>SLA</th>
+                    <th>Récurrence</th>
                     <th>Date création</th>
                     <th>Changer statut</th>
                     <th>Actions</th>
@@ -581,6 +599,21 @@ import {
                       <span class="badge" [ngClass]="getSlaBadgeClass(rec)">
                         {{ getSlaLabel(rec) }}
                       </span>
+                    </td>
+                    <td style="min-width: 220px;">
+                      <div *ngIf="rec.recurring === true; else noRecurrence">
+                        <span class="badge recurrence-badge">
+                          🔁 Récurrente ({{ rec.recurrenceCount || 0 }})
+                        </span>
+
+                        <div class="recurrence-reason mt-1">
+                          {{ rec.recurrenceReason }}
+                        </div>
+                      </div>
+
+                      <ng-template #noRecurrence>
+                        <span class="text-muted">-</span>
+                      </ng-template>
                     </td>
                     <td>{{ rec.createdAt | date:'short' }}</td>
                     <td style="min-width: 180px;">
@@ -797,6 +830,51 @@ import {
       font-weight: 700;
       margin-bottom: 18px;
       color: #1f2937;
+    }
+
+    .recurrence-dashboard {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #fff7ed;
+      border: 1px solid #fdba74;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .recurrence-number {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #fb923c;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .recurrence-title {
+      font-weight: 700;
+      color: #9a3412;
+    }
+
+    .recurrence-badge {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fdba74;
+      font-weight: 700;
+    }
+
+    .recurrence-reason {
+      font-size: 12px;
+      color: #7c2d12;
+      line-height: 1.4;
+      background: #fff7ed;
+      border-radius: 8px;
+      padding: 6px 8px;
     }
 
     .pie-chart-wrapper {
@@ -1391,7 +1469,9 @@ export class ReclamationPageComponent implements OnInit {
       default: return category || 'Non définie';
     }
   }
-
+getRecurringReclamationsCount(): number {
+  return this.reclamations.filter(rec => rec.recurring === true).length;
+}
   getDecisionLabel(decision?: string | null): string {
     switch (decision) {
       case 'REPAIR_NEEDED': return 'Réparation nécessaire';

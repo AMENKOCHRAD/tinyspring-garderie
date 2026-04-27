@@ -47,6 +47,9 @@ export interface Reclamation {
 
   decisionRecommendation?: string | null;
   decisionConfidence?: number | null;
+    recurring?: boolean | null;
+  recurrenceCount?: number | null;
+  recurrenceReason?: string | null;
 
   adminComment?: string | null;
   createdAt: string;

@@ -67,6 +67,13 @@ public class Reclamation {
     @Column(name = "decision_confidence")
     private Double decisionConfidence;
 
+    private Boolean recurring;
+
+    private Integer recurrenceCount;
+
+    @Column(columnDefinition = "TEXT")
+    private String recurrenceReason;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -101,6 +108,14 @@ public class Reclamation {
 
         if (this.autoClassified == null) {
             this.autoClassified = false;
+        }
+
+        if (this.recurring == null) {
+            this.recurring = false;
+        }
+
+        if (this.recurrenceCount == null) {
+            this.recurrenceCount = 0;
         }
     }
 

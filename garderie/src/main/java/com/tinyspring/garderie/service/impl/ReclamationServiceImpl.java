@@ -55,6 +55,10 @@ import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class ReclamationServiceImpl implements ReclamationService {
@@ -144,6 +148,8 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         applyMlPrediction(reclamation, cleanTitle, cleanDescription, priority, category);
 
+        detectRecurringReclamation(reclamation);
+
         handleImageUpload(reclamation, image);
         handleAttachmentUpload(reclamation, attachment);
 
@@ -206,7 +212,104 @@ public class ReclamationServiceImpl implements ReclamationService {
             );
         }
 
+        if (Boolean.TRUE.equals(savedReclamation.getRecurring())) {
+            addHistory(
+                    savedReclamation,
+                    ReclamationHistoryActionType.RECURRENCE_DETECTED,
+                    "Réclamation récurrente détectée",
+                    null,
+                    savedReclamation.getRecurrenceReason(),
+                    null
+            );
+        }
+
         return savedReclamation;
+    }
+    private void detectRecurringReclamation(Reclamation reclamation) {
+        if (reclamation.getCategory() == null || reclamation.getCategory() == ReclamationCategory.AUTRE) {
+            reclamation.setRecurring(false);
+            reclamation.setRecurrenceCount(0);
+            reclamation.setRecurrenceReason(null);
+            return;
+        }
+
+        LocalDateTime since = LocalDateTime.now().minusDays(30);
+
+        List<ReclamationStatus> activeStatuses = List.of(
+                ReclamationStatus.OPEN,
+                ReclamationStatus.IN_PROGRESS
+        );
+
+        List<Reclamation> possibleSimilarReclamations =
+                reclamationRepository.findByCategoryAndCreatedAtAfterAndStatusIn(
+                        reclamation.getCategory(),
+                        since,
+                        activeStatuses
+                );
+
+        String currentText = normalizeText(
+                reclamation.getTitle() + " " + reclamation.getDescription()
+        );
+
+        int similarCount = 0;
+
+        for (Reclamation existing : possibleSimilarReclamations) {
+            String existingText = normalizeText(
+                    existing.getTitle() + " " + existing.getDescription()
+            );
+
+            int commonWords = countCommonImportantWords(currentText, existingText);
+
+            if (commonWords >= 2) {
+                similarCount++;
+            }
+        }
+
+        if (similarCount >= 2) {
+            reclamation.setRecurring(true);
+            reclamation.setRecurrenceCount(similarCount + 1);
+            reclamation.setRecurrenceReason(
+                    "Problème récurrent détecté : "
+                            + (similarCount + 1)
+                            + " réclamations similaires dans la catégorie "
+                            + reclamation.getCategory().name()
+                            + " durant les 30 derniers jours."
+            );
+        } else {
+            reclamation.setRecurring(false);
+            reclamation.setRecurrenceCount(similarCount);
+            reclamation.setRecurrenceReason(null);
+        }
+    }
+
+    private String normalizeText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        return text.toLowerCase()
+                .replaceAll("[^a-zA-Zàâçéèêëîïôûùüÿñæœ\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private int countCommonImportantWords(String text1, String text2) {
+        Set<String> ignoredWords = new HashSet<>(Arrays.asList(
+                "le", "la", "les", "un", "une", "des", "de", "du", "dans",
+                "mon", "ma", "mes", "enfant", "enfants", "est", "sont",
+                "avec", "pour", "sur", "par", "pas", "plus", "très",
+                "reclamation", "problème", "probleme"
+        ));
+
+        Set<String> words1 = new HashSet<>(Arrays.asList(text1.split(" ")));
+        Set<String> words2 = new HashSet<>(Arrays.asList(text2.split(" ")));
+
+        words1.removeIf(word -> word.length() < 4 || ignoredWords.contains(word));
+        words2.removeIf(word -> word.length() < 4 || ignoredWords.contains(word));
+
+        words1.retainAll(words2);
+
+        return words1.size();
     }
 
     @Override
