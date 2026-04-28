@@ -67,23 +67,23 @@ public class MenuAllergenScheduledNotificationService {
 
                     for (String allergen : dishAllergens) {
                         if (childAllergies.contains(allergen)) {
-                            Long parentId = child.getParent().getId();
-
-                            alertsByParent
-                                    .computeIfAbsent(parentId, id -> new ParentAlertBucket(child.getParent()))
-                                    .messages
-                                    .add(
-                                            dailyMenu.getMenuDate()
-                                                    + " : "
-                                                    + dish.getName()
-                                                    + " contient du "
-                                                    + allergen
-                                                    + " — "
-                                                    + child.getFirstName()
-                                                    + " "
-                                                    + child.getLastName()
-                                                    + " est allergique."
-                                    );
+                            notificationRepository.save(
+                                    Notification.builder()
+                                            .parent(child.getParent())
+                                            .title("Alerte allergène")
+                                            .message(
+                                                    dish.getName()
+                                                            + " contient "
+                                                            + allergen
+                                                            + " — "
+                                                            + child.getFirstName()
+                                                            + " est allergique."
+                                            )
+                                            .type("ALLERGEN")
+                                            .seen(false)
+                                            .createdAt(LocalDateTime.now())
+                                            .build()
+                            );
                         }
                     }
                 }
@@ -197,4 +197,5 @@ public class MenuAllergenScheduledNotificationService {
             this.parent = parent;
         }
     }
+
 }

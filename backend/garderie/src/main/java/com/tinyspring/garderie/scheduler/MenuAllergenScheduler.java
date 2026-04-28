@@ -19,7 +19,7 @@ public class MenuAllergenScheduler {
     }
 
     // Chaque jour à 08:00 : menu de demain
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "0 0 12 * * *")
     public void sendTomorrowAlert() {
         service.sendTomorrowAllergenAlerts();
     }

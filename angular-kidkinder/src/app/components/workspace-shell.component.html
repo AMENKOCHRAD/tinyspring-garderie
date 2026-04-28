@@ -17,10 +17,41 @@
       </nav>
 
       <div class="workspace-tools">
-        <button type="button" class="icon-chip">
-          N
-          <span class="icon-chip__badge">{{ notificationCount() }}</span>
-        </button>
+     <div class="notification-wrapper" *ngIf="role() === 'PARENT'">
+
+  <button class="notification-trigger" (click)="toggleNotifications()">
+    🔔
+    <span *ngIf="notificationCount() > 0" class="badge">
+      {{ notificationCount() }}
+    </span>
+  </button>
+
+  <div *ngIf="notificationPanelOpen()" class="notification-dropdown">
+
+    <div class="header">
+      <strong>Notifications</strong>
+      <span>{{ notificationCount() }} non lues</span>
+    </div>
+
+    <div class="list">
+      <div *ngFor="let n of notifications()" 
+           class="item"
+           [class.unread]="!n.seen"
+           (click)="markNotificationAsSeen(n)">
+
+        <div class="icon">⚠️</div>
+
+        <div class="content">
+          <strong>{{ n.title }}</strong>
+          <p>{{ n.message }}</p>
+          <small>{{ n.createdAt | date:'shortTime' }}</small>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
 
         <button type="button" class="profile-trigger" (click)="toggleMenu()">
           <span class="profile-trigger__avatar">{{ currentUser()?.initiales }}</span>
@@ -54,4 +85,21 @@
   <main class="workspace-main">
     <router-outlet></router-outlet>
   </main>
+
+<div *ngIf="toastNotification() as toast" class="toast">
+
+  <div class="left-border"></div>
+
+  <div class="body">
+    <strong>{{ toast.title }}</strong>
+    <p>{{ toast.message }}</p>
+
+    <div class="actions">
+      <button   >Voir le menu</button>
+      <button (click)="closeToast()">Ignorer</button>
+    </div>
+  </div>
+
+  <button class="close" (click)="closeToast()">×</button>
+</div>
 </div>

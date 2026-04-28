@@ -1,3 +1,98 @@
 :host {
   display: block;
 }
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  width: 400px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 999;
+}
+
+.header {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+}
+
+.list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.item:hover {
+  background: #f5f7f7;
+}
+
+.item.unread {
+  background: #fff4f4;
+}
+
+.icon {
+  font-size: 18px;
+}
+
+.content p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 360px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  display: flex;
+  padding: 16px;
+  gap: 12px;
+}
+
+.left-border {
+  width: 4px;
+  background: red;
+  border-radius: 4px;
+}
+
+.body p {
+  font-size: 13px;
+  color: #555;
+}
+
+.actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.close {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  background: none;
+  border: none;
+  font-size: 18px;
+}

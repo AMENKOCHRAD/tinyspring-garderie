@@ -4,6 +4,13 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, Ro
 import { AuthService } from '../shared/auth.service';
 import { UserRole } from '../shared/auth.models';
 import { WorkspaceNavGroup, workspaceNavByRole } from '../shared/tinyspring-data';
+import { interval } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DestroyRef } from '@angular/core';
+import {
+  ParentNotification,
+  ParentNotificationService
+} from '../menus/parent-notification.service';
 
 @Component({
   selector: 'app-workspace-shell',
@@ -16,6 +23,8 @@ export class WorkspaceShellComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+private readonly notificationService = inject(ParentNotificationService);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly isScrolled = signal(false);
@@ -25,7 +34,13 @@ export class WorkspaceShellComponent {
   protected readonly navGroups = computed(() => workspaceNavByRole[this.role()]);
   protected readonly activeGroup = computed(() => this.getActiveGroup(this.navGroups(), this.currentPage()));
   protected readonly subnavItems = computed(() => this.activeGroup()?.children ?? []);
-  protected readonly notificationCount = computed(() => (this.role() === 'PARENT' ? 3 : 5));
+  protected readonly notifications = signal<ParentNotification[]>([]);
+protected readonly notificationPanelOpen = signal(false);
+protected readonly toastNotification = signal<ParentNotification | null>(null);
+
+protected readonly notificationCount = computed(() => {
+  return this.notifications().filter((notification) => !notification.seen).length;
+});
   protected readonly roleLabel = computed(() => (this.role() === 'PARENT' ? 'Espace parent' : 'Espace animateur'));
 
   public constructor() {
@@ -35,7 +50,61 @@ export class WorkspaceShellComponent {
         this.currentPage.set(this.getPageFromUrl(event.urlAfterRedirects));
       }
     });
+    if (this.role() === 'PARENT') {
+  this.loadNotifications();
+
+  interval(30000)
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe(() => this.loadNotifications());
+}
   }
+
+
+  protected toggleNotifications(): void {
+  this.notificationPanelOpen.update((value) => !value);
+}
+
+protected markNotificationAsSeen(notification: ParentNotification): void {
+  if (notification.seen) {
+    return;
+  }
+
+  this.notificationService.markAsSeen(notification.id).subscribe({
+    next: (updated) => {
+      this.notifications.update((items) =>
+        items.map((item) => item.id === updated.id ? updated : item)
+      );
+    }
+  });
+}
+
+protected closeToast(): void {
+  this.toastNotification.set(null);
+}
+
+private loadNotifications(): void {const parentId = Number(this.currentUser()?.id ?? 4);
+
+  this.notificationService.getNotifications(parentId).subscribe({
+    next: (notifications) => {
+      const previousIds = new Set(this.notifications().map((item) => item.id));
+      const newestUnread = notifications.find(
+        (item) => !item.seen && !previousIds.has(item.id)
+      );
+
+      this.notifications.set(notifications);
+
+      if (newestUnread) {
+        this.toastNotification.set(newestUnread);
+
+        setTimeout(() => {
+          if (this.toastNotification()?.id === newestUnread.id) {
+            this.toastNotification.set(null);
+          }
+        }, 6000);
+      }
+    }
+  });
+}
 
   @HostListener('window:scroll')
   protected onWindowScroll(): void {
