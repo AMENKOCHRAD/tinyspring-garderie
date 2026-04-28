@@ -19,37 +19,83 @@
       <div class="workspace-tools">
      <div class="notification-wrapper" *ngIf="role() === 'PARENT'">
 
-  <button class="notification-trigger" (click)="toggleNotifications()">
-    🔔
-    <span *ngIf="notificationCount() > 0" class="badge">
+  <button
+    type="button"
+    class="notification-trigger"
+    [class.has-alert]="notificationCount() > 0"
+    (click)="toggleNotifications()">
+    <span class="bell-icon">🔔</span>
+    <span *ngIf="notificationCount() > 0" class="notification-badge">
       {{ notificationCount() }}
     </span>
   </button>
 
   <div *ngIf="notificationPanelOpen()" class="notification-dropdown">
 
-    <div class="header">
-      <strong>Notifications</strong>
-      <span>{{ notificationCount() }} non lues</span>
-    </div>
+    <div class="notif-header">
+      <div>
+        <strong>Notifications</strong>
+        <span>{{ notificationCount() }} non lues</span>
+      </div>
 
-    <div class="list">
-      <div *ngFor="let n of notifications()" 
-           class="item"
-           [class.unread]="!n.seen"
-           (click)="markNotificationAsSeen(n)">
-
-        <div class="icon">⚠️</div>
-
-        <div class="content">
-          <strong>{{ n.title }}</strong>
-          <p>{{ n.message }}</p>
-          <small>{{ n.createdAt | date:'shortTime' }}</small>
-        </div>
-
+      <div class="notif-header-actions">
+        <button type="button" (click)="markAllRead()">Tout marquer lu</button>
+        <button type="button" class="notif-close" (click)="toggleNotifications()">✕</button>
       </div>
     </div>
 
+    <div class="notif-tabs">
+      <button type="button" [class.active]="activeNotifTab() === 'all'" (click)="setNotifTab('all')">
+        Toutes
+      </button>
+      <button type="button" [class.active]="activeNotifTab() === 'ALLERGEN'" (click)="setNotifTab('ALLERGEN')">
+        Allergènes
+      </button>
+      <button type="button" [class.active]="activeNotifTab() === 'EVENT'" (click)="setNotifTab('EVENT')">
+        Activités
+      </button>
+      <button type="button" [class.active]="activeNotifTab() === 'MENU'" (click)="setNotifTab('MENU')">
+        Menus
+      </button>
+    </div>
+
+    <div class="notif-list">
+      <div
+        *ngFor="let n of filteredNotifications()"
+        class="notif-item"
+        [class.unread]="!n.seen"
+        [class.urgent]="n.priority === 'URGENT'"
+        (click)="onNotifClick(n)">
+
+        <div class="notif-dot" *ngIf="!n.seen"></div>
+
+        <div class="notif-icon">
+          {{ n.type.startsWith('ALLERGEN') ? '⚠️' : n.relatedEntityType === 'EVENT' ? '📅' : '🍽️' }}
+        </div>
+
+        <div class="notif-content">
+          <div class="notif-title">{{ n.title }}</div>
+          <div class="notif-message">{{ n.message }}</div>
+
+          <div class="notif-meta">
+            <span>{{ n.createdAt | date:'dd/MM à HH:mm' }}</span>
+            <span
+              class="notif-type-badge"
+              [class.urgent]="n.priority === 'URGENT'">
+              {{ n.priority === 'URGENT' ? 'Urgent' : n.relatedEntityType === 'EVENT' ? 'Activité' : 'Menu' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif-empty" *ngIf="filteredNotifications().length === 0">
+        Aucune notification
+      </div>
+    </div>
+
+    <div class="notif-footer">
+      Voir toutes les notifications
+    </div>
   </div>
 </div>
 
@@ -86,20 +132,29 @@
     <router-outlet></router-outlet>
   </main>
 
-<div *ngIf="toastNotification() as toast" class="toast">
+<div
+  *ngIf="toastNotification() as toast"
+  class="notification-toast"
+  [class.urgent]="toast.priority === 'URGENT'">
 
-  <div class="left-border"></div>
+  <div class="toast-side"></div>
 
-  <div class="body">
-    <strong>{{ toast.title }}</strong>
-    <p>{{ toast.message }}</p>
+  <div class="toast-icon">
+    {{ toast.type.startsWith('ALLERGEN') ? '⚠️' : toast.relatedEntityType === 'EVENT' ? '📅' : '🍽️' }}
+  </div>
 
-    <div class="actions">
-      <button   >Voir le menu</button>
-      <button (click)="closeToast()">Ignorer</button>
+  <div class="toast-body">
+    <div class="toast-app">TinySpring · Espace parent</div>
+    <div class="toast-title">{{ toast.title }}</div>
+    <div class="toast-message">{{ toast.message }}</div>
+
+    <div class="toast-actions">
+      <button type="button" (click)="navigateFromToast(toast)">
+        {{ toast.relatedEntityType === 'EVENT' ? 'Voir l’événement' : 'Voir le menu' }}
+      </button>
+      <button type="button" class="secondary" (click)="closeToast()">Ignorer</button>
     </div>
   </div>
 
-  <button class="close" (click)="closeToast()">×</button>
-</div>
+  <button type="button" class="toast-close" (click)="closeToast()">✕</button>
 </div>

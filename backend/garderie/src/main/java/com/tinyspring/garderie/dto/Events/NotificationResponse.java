@@ -14,4 +14,7 @@ public class NotificationResponse {
     private String type;
     private boolean seen;
     private LocalDateTime createdAt;
+    private String priority;
+    private Long relatedEntityId;
+    private String relatedEntityType;
 }

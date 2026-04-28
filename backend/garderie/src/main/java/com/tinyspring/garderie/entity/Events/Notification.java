@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "notification")
+@Table(name = "NotificationEvents")
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,9 +26,17 @@ public class Notification {
 
     private String type;
 
-    private boolean seen;
+    @Builder.Default
+    private boolean seen = false;
 
     private LocalDateTime createdAt;
+
+    @Builder.Default
+    private String priority = "NORMAL";
+
+    private Long relatedEntityId;
+
+    private String relatedEntityType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", nullable = false)

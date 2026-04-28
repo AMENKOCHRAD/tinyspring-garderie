@@ -6,12 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public interface EventRepository extends JpaRepository<Event, Long>  {
-
+public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query("""
         SELECT e
@@ -38,6 +38,17 @@ public interface EventRepository extends JpaRepository<Event, Long>  {
     List<Event> findCompletedAttendedEventsForParent(
             @Param("eventIds") Set<Long> eventIds,
             @Param("status") EventStatus status
+    );
+
+    @Query("""
+        SELECT e FROM Event e
+        WHERE e.status = :status
+        AND e.updatedAt >= :since
+        ORDER BY e.updatedAt DESC
+    """)
+    List<Event> findByStatusAndUpdatedAtAfter(
+            @Param("status") EventStatus status,
+            @Param("since") LocalDateTime since
     );
 
     List<Event> findByStatusOrderByStartDatetimeAsc(EventStatus status);

@@ -41,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRatingRepository eventRatingRepository;
     private final ChildRepository childRepository;
+    private final ParentNotificationService parentNotificationService;
 
     @Override
     public Event create(EventRequest request) {
@@ -222,7 +223,14 @@ public class EventServiceImpl implements EventService {
         validateDates(event);
 
         event.setStatus(EventStatus.PUBLISHED);
-        return eventRepository.save(event);
+        event.setUpdatedAt(LocalDateTime.now());
+
+        Event saved = eventRepository.save(event);
+
+
+        parentNotificationService.notifyEventPublished(saved);
+
+        return saved;
     }
 
     @Override

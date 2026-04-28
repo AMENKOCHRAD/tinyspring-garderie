@@ -1,48 +1,37 @@
 package com.tinyspring.garderie.controller.Events;
 
 import com.tinyspring.garderie.dto.Events.NotificationResponse;
-import com.tinyspring.garderie.entity.Events.Notification;
-import com.tinyspring.garderie.repository.Events.NotificationRepository;
+import com.tinyspring.garderie.service.Events.ParentNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/parent/notifications")
 @RequiredArgsConstructor
 public class ParentNotificationController {
 
-    private final NotificationRepository notificationRepository;
+    private final ParentNotificationService parentNotificationService;
 
     @GetMapping
     public List<NotificationResponse> getNotifications(@RequestParam Long parentId) {
-        return notificationRepository.findByParentIdOrderByCreatedAtDesc(parentId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return parentNotificationService.getNotifications(parentId);
+    }
+
+    @GetMapping("/unread-count")
+    public Map<String, Long> getUnreadCount(@RequestParam Long parentId) {
+        return Map.of("count", parentNotificationService.countUnread(parentId));
     }
 
     @PutMapping("/{id}/seen")
     public NotificationResponse markAsSeen(@PathVariable Long id) {
-        Notification notification = notificationRepository.findById(id)
-                .orElseThrow();
-
-        notification.setSeen(true);
-        Notification saved = notificationRepository.save(notification);
-
-        return toResponse(saved);
+        return parentNotificationService.markAsSeen(id);
     }
 
-    private NotificationResponse toResponse(Notification notification) {
-        return NotificationResponse.builder()
-                .id(notification.getId())
-                .title(notification.getTitle())
-                .message(notification.getMessage())
-                .type(notification.getType())
-                .seen(notification.isSeen())
-                .createdAt(notification.getCreatedAt())
-                .build();
+    @PutMapping("/mark-all-read")
+    public void markAllRead(@RequestParam Long parentId) {
+        parentNotificationService.markAllRead(parentId);
     }
 }
-
