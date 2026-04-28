@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,28 +12,48 @@ import { AuthService } from '../../../shared/auth.service';
   templateUrl: './changer-mot-de-passe.component.html',
   styleUrl: './changer-mot-de-passe.component.scss'
 })
-export class ChangerMotDePasseComponent {
+export class ChangerMotDePasseComponent implements OnInit {
 
   private readonly fb          = inject(FormBuilder);
   private readonly router      = inject(Router);
   private readonly http        = inject(HttpClient);
   private readonly authService = inject(AuthService);
 
-  protected readonly isSubmitting  = signal(false);
+  protected readonly isSubmitting   = signal(false);
   protected readonly successMessage = signal('');
-  protected readonly errorMessage  = signal('');
-  protected readonly showAncien    = signal(false);
-  protected readonly showNouveau   = signal(false);
-  protected readonly showConfirm   = signal(false);
+  protected readonly errorMessage   = signal('');
+  protected readonly showAncien     = signal(false);
+  protected readonly showNouveau    = signal(false);
+  protected readonly showConfirm    = signal(false);
+
+  // ✅ ID réel de la table animatrices (résolu via par-email)
+  private animatriceId: number | null = null;
 
   protected readonly form = this.fb.nonNullable.group(
     {
-      ancienMotDePasse:  ['', [Validators.required]],
-      nouveauMotDePasse: ['', [Validators.required, Validators.minLength(6)]],
+      ancienMotDePasse:    ['', [Validators.required]],
+      nouveauMotDePasse:   ['', [Validators.required, Validators.minLength(6)]],
       confirmerMotDePasse: ['', [Validators.required]]
     },
     { validators: this.motsDePasseIdentiques }
   );
+
+  ngOnInit(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user) return;
+
+    // ✅ Récupérer l'ID animatrice via email — sans modifier les modèles partagés
+    this.http
+      .get<{ id: number }>(`/api/animatrice/profil/par-email?email=${user.email}`)
+      .subscribe({
+        next: (animatrice) => {
+          this.animatriceId = animatrice.id;
+        },
+        error: () => {
+          this.errorMessage.set('Impossible de charger le profil. Veuillez vous reconnecter.');
+        }
+      });
+  }
 
   private motsDePasseIdentiques(group: AbstractControl): ValidationErrors | null {
     const nouveau   = group.get('nouveauMotDePasse')?.value;
@@ -53,23 +73,26 @@ export class ChangerMotDePasseComponent {
       return;
     }
 
+    if (!this.animatriceId) {
+      this.errorMessage.set('Profil non chargé. Veuillez réessayer.');
+      return;
+    }
+
     this.isSubmitting.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    const animatriceId = parseInt(user.id);
     const { ancienMotDePasse, nouveauMotDePasse } = this.form.getRawValue();
 
     this.http
       .post<{ message: string }>(
-        `/api/animatrice/profil/${animatriceId}/changer-mot-de-passe`,
+        `/api/animatrice/profil/${this.animatriceId}/changer-mot-de-passe`,
         { ancienMotDePasse, nouveauMotDePasse }
       )
       .subscribe({
         next: (res) => {
           this.isSubmitting.set(false);
           this.successMessage.set(res.message);
-          // ✅ Rediriger vers le dashboard après 2 secondes
           setTimeout(() => {
             void this.router.navigate(['/animateur/tableau-de-bord']);
           }, 2000);

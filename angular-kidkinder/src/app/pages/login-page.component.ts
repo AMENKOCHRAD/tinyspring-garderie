@@ -14,7 +14,7 @@ import { AuthUser, UserRole } from '../shared/auth.models';
   styleUrls: ['./login-page.component.css']
 })
 export class LoginPageComponent implements OnInit {
-  private readonly fb         = inject(FormBuilder);
+  private readonly fb          = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router      = inject(Router);
   private readonly http        = inject(HttpClient);
@@ -74,26 +74,28 @@ export class LoginPageComponent implements OnInit {
         next: (user: AuthUser) => {
           this.isSubmitting.set(false);
 
-          // ✅ Si c'est une animatrice, vérifier si elle doit changer son mot de passe
           if (user.role === 'ANIMATRICE') {
-            const animatriceId = parseInt(user.id);
+            // ✅ Récupérer l'ID animatrice via email — sans toucher aux modèles partagés
             this.http
-              .get<{ mustChangePassword: boolean }>(
-                `/api/animatrice/profil/${animatriceId}/must-change-password`
-              )
+              .get<{ id: number }>(`/api/animatrice/profil/par-email?email=${user.email}`)
               .subscribe({
-                next: (res) => {
-                  if (res.mustChangePassword) {
-                    // ✅ Rediriger vers la page de changement de mot de passe
-                    void this.router.navigate(['/animateur/changer-mot-de-passe']);
-                  } else {
-                    void this.authService.redirectAfterLogin(user);
-                  }
+                next: (animatrice) => {
+                  this.http
+                    .get<{ mustChangePassword: boolean }>(
+                      `/api/animatrice/profil/${animatrice.id}/must-change-password`
+                    )
+                    .subscribe({
+                      next: (res) => {
+                        if (res.mustChangePassword) {
+                          void this.router.navigate(['/animateur/changer-mot-de-passe']);
+                        } else {
+                          void this.authService.redirectAfterLogin(user);
+                        }
+                      },
+                      error: () => void this.authService.redirectAfterLogin(user)
+                    });
                 },
-                error: () => {
-                  // En cas d'erreur API, on redirige quand même vers le dashboard
-                  void this.authService.redirectAfterLogin(user);
-                }
+                error: () => void this.authService.redirectAfterLogin(user)
               });
           } else {
             void this.authService.redirectAfterLogin(user);
