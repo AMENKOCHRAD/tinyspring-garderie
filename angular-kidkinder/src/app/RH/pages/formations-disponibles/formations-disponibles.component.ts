@@ -21,6 +21,10 @@ export class FormationsDisponiblesComponent implements OnInit {
   inscriptionEnCours: number | null = null;
   typeFiltre = '';
 
+  // ✅ PAGINATION
+  pageActuelle = 1;
+  parPage = 6;
+
   private apiUrl = 'http://localhost:8081/api/animatrice/formations';
   private adminUrl = 'http://localhost:8081/api/admin/formations';
 
@@ -54,6 +58,7 @@ export class FormationsDisponiblesComponent implements OnInit {
     this.http.get<any[]>(this.apiUrl).subscribe({
       next: (data) => {
         this.formations = data.filter(f => f.statut === 'OUVERTE' || f.statut === 'EN_COURS');
+        this.pageActuelle = 1; // ✅ reset page au chargement
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -69,9 +74,39 @@ export class FormationsDisponiblesComponent implements OnInit {
       });
   }
 
+  // ✅ Toutes les formations filtrées
   get formationsFiltrees(): any[] {
     if (!this.typeFiltre) return this.formations;
     return this.formations.filter(f => f.type === this.typeFiltre);
+  }
+
+  // ✅ Formations de la page actuelle
+  get formationsPaginées(): any[] {
+    const debut = (this.pageActuelle - 1) * this.parPage;
+    return this.formationsFiltrees.slice(debut, debut + this.parPage);
+  }
+
+  // ✅ Nombre total de pages
+  get totalPages(): number {
+    return Math.ceil(this.formationsFiltrees.length / this.parPage);
+  }
+
+  // ✅ Pages à afficher dans le paginateur
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  // ✅ Changer de page
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.pageActuelle = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ✅ Reset page quand filtre change
+  setFiltre(type: string): void {
+    this.typeFiltre = this.typeFiltre === type ? '' : type;
+    this.pageActuelle = 1;
   }
 
   isSuggere(formationId: number): any {

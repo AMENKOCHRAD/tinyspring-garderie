@@ -31,7 +31,10 @@ export class ListFormationComponent implements OnInit, OnDestroy {
   motifAnnulation = '';
   formationSelectionnee: Formation | null = null;
 
-  // ✅ Intervalle de rafraîchissement
+  // ✅ PAGINATION
+  pageActuelle = 1;
+  parPage = 6;
+
   private refreshInterval: any;
 
   types = ['SECOURISME', 'PEDAGOGIE', 'SANTE', 'MUSICAL', 'ARTISTIQUE', 'COMPORTEMENT', 'NUTRITION', 'SECURITE', 'AUTRE'];
@@ -63,19 +66,14 @@ export class ListFormationComponent implements OnInit, OnDestroy {
     this.loadStats();
     this.loadAlertes();
     this.loadAnimatrices();
-
-    // ✅ Rafraîchissement automatique toutes les 30 secondes
     this.refreshInterval = setInterval(() => {
       this.loadFormations();
       this.loadStats();
     }, 5000);
   }
 
-  // ✅ Arrêter le rafraîchissement quand on quitte la page
   ngOnDestroy(): void {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
   formVide(): Formation {
@@ -125,6 +123,31 @@ export class ListFormationComponent implements OnInit, OnDestroy {
       const matchStatut = !this.statutFiltre || f.statut === this.statutFiltre;
       return matchSearch && matchStatut;
     });
+    this.pageActuelle = 1; // ✅ reset page à chaque filtre
+  }
+
+  // ✅ Formations de la page actuelle
+  getFormationsPaginees(): Formation[] {
+    const debut = (this.pageActuelle - 1) * this.parPage;
+    return this.formationsFiltrees.slice(debut, debut + this.parPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.formationsFiltrees.length / this.parPage);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.pageActuelle = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  getLastItemIndex(): number {
+    return Math.min(this.pageActuelle * this.parPage, this.formationsFiltrees.length);
   }
 
   ouvrirModal(formation?: Formation): void {
@@ -228,21 +251,21 @@ export class ListFormationComponent implements OnInit, OnDestroy {
 
   getStatutColor(statut?: string): string {
     switch (statut) {
-      case 'OUVERTE':   return '#3b82f6';
-      case 'EN_COURS':  return '#f59e0b';
-      case 'TERMINEE':  return '#16a34a';
-      case 'ANNULEE':   return '#ef4444';
-      default:          return '#6b7280';
+      case 'OUVERTE':  return '#3b82f6';
+      case 'EN_COURS': return '#f59e0b';
+      case 'TERMINEE': return '#16a34a';
+      case 'ANNULEE':  return '#ef4444';
+      default:         return '#6b7280';
     }
   }
 
   getStatutIcon(statut?: string): string {
     switch (statut) {
-      case 'OUVERTE':   return '📝';
-      case 'EN_COURS':  return '⏳';
-      case 'TERMINEE':  return '✅';
-      case 'ANNULEE':   return '❌';
-      default:          return '❓';
+      case 'OUVERTE':  return '📝';
+      case 'EN_COURS': return '⏳';
+      case 'TERMINEE': return '✅';
+      case 'ANNULEE':  return '❌';
+      default:         return '❓';
     }
   }
 
@@ -266,9 +289,7 @@ export class ListFormationComponent implements OnInit, OnDestroy {
 
   getRemplissagePct(formation: Formation): number {
     if (!formation.placesMax) return 0;
-    return Math.min(100, Math.round(
-      ((formation.nbInscrits || 0) / formation.placesMax) * 100
-    ));
+    return Math.min(100, Math.round(((formation.nbInscrits || 0) / formation.placesMax) * 100));
   }
 
   formatDate(dateStr?: string): string {
@@ -283,6 +304,6 @@ export class ListFormationComponent implements OnInit, OnDestroy {
 
   peutDemarrer(f: Formation): boolean { return f.statut === 'OUVERTE'; }
   peutTerminer(f: Formation): boolean { return f.statut === 'EN_COURS'; }
-  peutAnnuler(f: Formation): boolean { return f.statut === 'OUVERTE' || f.statut === 'EN_COURS'; }
+  peutAnnuler(f: Formation): boolean  { return f.statut === 'OUVERTE' || f.statut === 'EN_COURS'; }
   peutModifier(f: Formation): boolean { return f.statut === 'OUVERTE'; }
 }

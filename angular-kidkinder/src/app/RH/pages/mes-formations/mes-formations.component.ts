@@ -17,6 +17,11 @@ export class MesFormationsComponent implements OnInit {
   animatriceId: number = 0;
   onglet: 'historique' | 'suggestions' | 'alertes' = 'historique';
 
+  // ✅ PAGINATION — une page par onglet
+  pageHistorique = 1;
+  pageSuggestions = 1;
+  parPage = 8;
+
   private adminUrl = 'http://localhost:8081/api/admin/formations';
 
   constructor(
@@ -54,6 +59,7 @@ export class MesFormationsComponent implements OnInit {
       });
   }
 
+  // ===== LISTES COMPLÈTES =====
   get formationsTerminees(): any[] {
     return this.profil?.formations?.filter((af: any) => af.statut === 'TERMINEE') || [];
   }
@@ -66,6 +72,55 @@ export class MesFormationsComponent implements OnInit {
     return this.profil?.formations?.filter((af: any) => af.statut === 'LISTE_ATTENTE') || [];
   }
 
+  get toutesFormations(): any[] {
+    return [...this.formationsEnCours, ...this.formationsAttente, ...this.formationsTerminees];
+  }
+
+  // ===== PAGINATION HISTORIQUE =====
+  get formationsPaginéesHistorique(): any[] {
+    const debut = (this.pageHistorique - 1) * this.parPage;
+    return this.toutesFormations.slice(debut, debut + this.parPage);
+  }
+
+  get totalPagesHistorique(): number {
+    return Math.ceil(this.toutesFormations.length / this.parPage);
+  }
+
+  get pagesHistorique(): number[] {
+    return Array.from({ length: this.totalPagesHistorique }, (_, i) => i + 1);
+  }
+
+  goToPageHistorique(page: number): void {
+    if (page < 1 || page > this.totalPagesHistorique) return;
+    this.pageHistorique = page;
+  }
+
+  // ===== PAGINATION SUGGESTIONS =====
+  get suggestionsPaginées(): any[] {
+    const debut = (this.pageSuggestions - 1) * this.parPage;
+    return (this.profil?.suggestions || []).slice(debut, debut + this.parPage);
+  }
+
+  get totalPagesSuggestions(): number {
+    return Math.ceil((this.profil?.suggestions?.length || 0) / this.parPage);
+  }
+
+  get pagesSuggestions(): number[] {
+    return Array.from({ length: this.totalPagesSuggestions }, (_, i) => i + 1);
+  }
+
+  goToPageSuggestions(page: number): void {
+    if (page < 1 || page > this.totalPagesSuggestions) return;
+    this.pageSuggestions = page;
+  }
+
+  // ===== RESET PAGE AU CHANGEMENT D'ONGLET =====
+  setOnglet(o: 'historique' | 'suggestions' | 'alertes'): void {
+    this.onglet = o;
+    this.pageHistorique = 1;
+    this.pageSuggestions = 1;
+  }
+
   getTauxCompletion(): number {
     if (!this.profil?.stats) return 0;
     const { terminees, total } = this.profil.stats;
@@ -74,11 +129,11 @@ export class MesFormationsComponent implements OnInit {
 
   getStatutColor(statut?: string): string {
     switch (statut) {
-      case 'INSCRITE':        return '#3b82f6';
-      case 'LISTE_ATTENTE':   return '#f59e0b';
-      case 'TERMINEE':        return '#16a34a';
-      case 'ABANDONNEE':      return '#ef4444';
-      default:                return '#6b7280';
+      case 'INSCRITE':      return '#3b82f6';
+      case 'LISTE_ATTENTE': return '#f59e0b';
+      case 'TERMINEE':      return '#16a34a';
+      case 'ABANDONNEE':    return '#ef4444';
+      default:              return '#6b7280';
     }
   }
 

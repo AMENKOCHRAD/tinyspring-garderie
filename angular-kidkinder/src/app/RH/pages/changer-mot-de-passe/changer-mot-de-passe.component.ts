@@ -15,7 +15,8 @@ import { AuthService } from '../../../shared/auth.service';
 export class ChangerMotDePasseComponent implements OnInit {
 
   private readonly fb          = inject(FormBuilder);
-  private readonly router      = inject(Router);
+  // ✅ router exposé en public pour le template
+  readonly router              = inject(Router);
   private readonly http        = inject(HttpClient);
   private readonly authService = inject(AuthService);
 
@@ -26,7 +27,6 @@ export class ChangerMotDePasseComponent implements OnInit {
   protected readonly showNouveau    = signal(false);
   protected readonly showConfirm    = signal(false);
 
-  // ✅ ID réel de la table animatrices (résolu via par-email)
   private animatriceId: number | null = null;
 
   protected readonly form = this.fb.nonNullable.group(
@@ -42,13 +42,10 @@ export class ChangerMotDePasseComponent implements OnInit {
     const user = this.authService.getCurrentUser();
     if (!user) return;
 
-    // ✅ Récupérer l'ID animatrice via email — sans modifier les modèles partagés
     this.http
       .get<{ id: number }>(`/api/animatrice/profil/par-email?email=${user.email}`)
       .subscribe({
-        next: (animatrice) => {
-          this.animatriceId = animatrice.id;
-        },
+        next: (animatrice) => { this.animatriceId = animatrice.id; },
         error: () => {
           this.errorMessage.set('Impossible de charger le profil. Veuillez vous reconnecter.');
         }

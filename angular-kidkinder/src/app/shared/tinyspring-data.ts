@@ -137,8 +137,7 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
         { label: '📚 Formations disponibles', route: '/animateur/formations/disponibles' },
         { label: '🎓 Mes formations', route: '/animateur/formations/mes-formations' }
       ]
-    },
-    // ✅ NOUVEAU — Mon profil
-    { key: 'mon-profil', label: '👤 Mon profil', route: '/animateur/mon-profil' }
+    }
+    // ✅ Mon profil supprimé de la navbar — accessible via le menu dropdown
   ]
 };

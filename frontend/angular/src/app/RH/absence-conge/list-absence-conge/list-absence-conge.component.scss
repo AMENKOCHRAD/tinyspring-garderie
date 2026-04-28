@@ -49,8 +49,8 @@
   .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
 
   &.orange { border-left: 4px solid #f0a500; .stat-number { color: #f0a500; } }
-  &.green { border-left: 4px solid #2ed8b6; .stat-number { color: #2ed8b6; } }
-  &.red { border-left: 4px solid #ff5370; .stat-number { color: #ff5370; } }
+  &.green  { border-left: 4px solid #2ed8b6; .stat-number { color: #2ed8b6; } }
+  &.red    { border-left: 4px solid #ff5370; .stat-number { color: #ff5370; } }
 }
 
 .filters-bar {
@@ -128,10 +128,10 @@
   font-size: 12px;
   font-weight: 500;
 
-  &.badge-waiting { background: #fff8e6; color: #f0a500; }
-  &.badge-active { background: #e8faf5; color: #2ed8b6; }
+  &.badge-waiting  { background: #fff8e6; color: #f0a500; }
+  &.badge-active   { background: #e8faf5; color: #2ed8b6; }
   &.badge-inactive { background: #fff0f3; color: #ff5370; }
-  &.badge-type { background: #eef2ff; color: #4680ff; }
+  &.badge-type     { background: #eef2ff; color: #4680ff; }
 }
 
 .actions {
@@ -149,8 +149,8 @@
   }
 
   .btn-validate:hover { background: #e8faf5; }
-  .btn-refuse:hover { background: #fff0f3; }
-  .btn-delete:hover { background: #fff0f3; }
+  .btn-refuse:hover   { background: #fff0f3; }
+  .btn-delete:hover   { background: #fff0f3; }
 }
 
 .empty-state {
@@ -158,4 +158,56 @@
   color: #aaa;
   padding: 40px !important;
   font-size: 15px;
+}
+
+/* ===== PAGINATION ===== */
+.pagination-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #888;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) {
+    border-color: #4680ff;
+    color: #4680ff;
+    background: #eef2ff;
+  }
+
+  &--active {
+    background: #4680ff;
+    color: white !important;
+    border-color: #4680ff;
+    box-shadow: 0 4px 10px rgba(70, 128, 255, 0.3);
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
 }

@@ -14,32 +14,7 @@
 
   <div *ngIf="profil && !isLoading">
 
-    <!-- Hero animatrice -->
-    <div class="hero-card">
-      <div class="hero-avatar">
-        {{ profil.animatrice.prenom?.charAt(0) }}{{ profil.animatrice.nom?.charAt(0) }}
-      </div>
-      <div class="hero-info">
-        <h3>{{ profil.animatrice.prenom }} {{ profil.animatrice.nom }}</h3>
-        <span>{{ profil.animatrice.specialite || 'Animatrice' }}</span>
-      </div>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <span class="hero-stat__value">{{ profil.stats.total }}</span>
-          <span class="hero-stat__label">Formations</span>
-        </div>
-        <div class="hero-stat">
-          <span class="hero-stat__value">{{ profil.stats.terminees }}</span>
-          <span class="hero-stat__label">Terminées</span>
-        </div>
-        <div class="hero-stat">
-          <span class="hero-stat__value">{{ getTauxCompletion() }}%</span>
-          <span class="hero-stat__label">Taux</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alerte si formations expirées -->
+    <!-- Alerte -->
     <div class="alerte-card" *ngIf="profil.alertes?.totalAlertes > 0">
       <span class="alerte-icon">🚨</span>
       <div class="alerte-content">
@@ -57,18 +32,18 @@
       <a routerLink="/animateur/formations/disponibles" class="alerte-btn">Voir les formations →</a>
     </div>
 
-    <!-- Onglets -->
+    <!-- Onglets — ✅ setOnglet() au lieu de onglet = '...' -->
     <div class="onglets">
       <button class="onglet" [class.onglet--active]="onglet === 'historique'"
-              (click)="onglet = 'historique'">
+              (click)="setOnglet('historique')">
         📋 Historique <span class="onglet-count">{{ profil.stats.total }}</span>
       </button>
       <button class="onglet" [class.onglet--active]="onglet === 'suggestions'"
-              (click)="onglet = 'suggestions'">
+              (click)="setOnglet('suggestions')">
         💡 Suggestions <span class="onglet-count">{{ profil.suggestions.length }}</span>
       </button>
       <button class="onglet" [class.onglet--active]="onglet === 'alertes'"
-              (click)="onglet = 'alertes'">
+              (click)="setOnglet('alertes')">
         🚨 Alertes
         <span class="onglet-count onglet-count--red" *ngIf="profil.alertes?.totalAlertes > 0">
           {{ profil.alertes.totalAlertes }}
@@ -95,9 +70,7 @@
               </div>
             </div>
             <span class="fi-badge" [style.background]="getStatutColor('INSCRITE') + '20'"
-                  [style.color]="getStatutColor('INSCRITE')">
-              Inscrite
-            </span>
+                  [style.color]="getStatutColor('INSCRITE')">Inscrite</span>
           </div>
         </div>
       </div>
@@ -114,9 +87,7 @@
                 <span class="fi-meta">📅 En attente depuis le {{ formatDate(af.dateInscription) }}</span>
               </div>
             </div>
-            <span class="fi-badge" style="background: #fef3c7; color: #92400e;">
-              Liste attente
-            </span>
+            <span class="fi-badge" style="background: #fef3c7; color: #92400e;">Liste attente</span>
           </div>
         </div>
       </div>
@@ -157,6 +128,17 @@
           Voir les formations disponibles →
         </a>
       </div>
+
+      <!-- ✅ PAGINATION HISTORIQUE -->
+      <div class="pagination" *ngIf="totalPagesHistorique > 1">
+        <button class="page-btn" (click)="goToPageHistorique(pageHistorique - 1)"
+                [disabled]="pageHistorique === 1">‹</button>
+        <button *ngFor="let p of pagesHistorique" class="page-btn"
+                [class.page-btn--active]="p === pageHistorique"
+                (click)="goToPageHistorique(p)">{{ p }}</button>
+        <button class="page-btn" (click)="goToPageHistorique(pageHistorique + 1)"
+                [disabled]="pageHistorique === totalPagesHistorique">›</button>
+      </div>
     </div>
 
     <!-- ===== ONGLET SUGGESTIONS ===== -->
@@ -165,7 +147,8 @@
         <p>✅ Toutes vos formations sont à jour !</p>
       </div>
       <div class="suggestions-list">
-        <div *ngFor="let s of profil.suggestions" class="suggestion-item"
+        <!-- ✅ suggestionsPaginées -->
+        <div *ngFor="let s of suggestionsPaginées" class="suggestion-item"
              [style.border-left]="'4px solid ' + getPrioriteColor(s.priorite)">
           <div class="suggestion-header">
             <div class="suggestion-left">
@@ -187,11 +170,20 @@
               <span>🪑 {{ s.formation.placesDisponibles }} place(s)</span>
               <span *ngIf="s.formation.obligatoire" class="obligatoire-tag">⚠️ Obligatoire</span>
             </div>
-            <a routerLink="/animateur/formations/disponibles" class="btn-link-sm">
-              S'inscrire →
-            </a>
+            <a routerLink="/animateur/formations/disponibles" class="btn-link-sm">S'inscrire →</a>
           </div>
         </div>
+      </div>
+
+      <!-- ✅ PAGINATION SUGGESTIONS -->
+      <div class="pagination" *ngIf="totalPagesSuggestions > 1">
+        <button class="page-btn" (click)="goToPageSuggestions(pageSuggestions - 1)"
+                [disabled]="pageSuggestions === 1">‹</button>
+        <button *ngFor="let p of pagesSuggestions" class="page-btn"
+                [class.page-btn--active]="p === pageSuggestions"
+                (click)="goToPageSuggestions(p)">{{ p }}</button>
+        <button class="page-btn" (click)="goToPageSuggestions(pageSuggestions + 1)"
+                [disabled]="pageSuggestions === totalPagesSuggestions">›</button>
       </div>
     </div>
 

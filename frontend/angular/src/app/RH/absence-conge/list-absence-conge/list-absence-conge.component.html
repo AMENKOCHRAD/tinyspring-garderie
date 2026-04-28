@@ -38,7 +38,7 @@
   </div>
 
   <div class="filters-bar">
-    <select class="filter-select" [(ngModel)]="filterStatut">
+    <select class="filter-select" [(ngModel)]="filterStatut" (ngModelChange)="onFilterChange()">
       <option value="">Tous les statuts</option>
       <option value="EN_ATTENTE">En attente</option>
       <option value="APPROUVE">Approuvé</option>
@@ -63,8 +63,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let ac of getFilteredAbsenceConges(); let i = index">
-            <td>{{ i + 1 }}</td>
+          <!-- ✅ getAbsencesPaginees() sans accent -->
+          <tr *ngFor="let ac of getAbsencesPaginees(); let i = index">
+            <td>{{ (pageActuelle - 1) * parPage + i + 1 }}</td>
             <td>
               <div class="animatrice-info">
                 <div class="avatar">
@@ -73,9 +74,7 @@
                 <span>{{ ac.animatricePrenom }} {{ ac.animatriceNom }}</span>
               </div>
             </td>
-            <td>
-              <span class="badge badge-type">{{ ac.type | titlecase }}</span>
-            </td>
+            <td><span class="badge badge-type">{{ ac.type | titlecase }}</span></td>
             <td>{{ ac.dateDebut }}</td>
             <td>{{ ac.dateFin }}</td>
             <td>{{ ac.nbJours }} j</td>
@@ -105,6 +104,23 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- ✅ PAGINATION -->
+    <div class="pagination-wrapper" *ngIf="totalPages > 1">
+      <div class="pagination-info">
+        {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
+        sur {{ getFilteredAbsenceConges().length }} demandes
+      </div>
+      <div class="pagination">
+        <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
+                [disabled]="pageActuelle === 1">‹</button>
+        <button *ngFor="let p of pages" class="page-btn"
+                [class.page-btn--active]="p === pageActuelle"
+                (click)="goToPage(p)">{{ p }}</button>
+        <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
+                [disabled]="pageActuelle === totalPages">›</button>
+      </div>
     </div>
   </div>
 

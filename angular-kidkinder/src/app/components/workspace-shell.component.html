@@ -31,7 +31,8 @@
         </button>
 
         <div class="profile-menu" *ngIf="menuOpen()">
-          <button type="button">Mon profil</button>
+          <!-- ✅ Navigation vers Mon profil selon le rôle -->
+          <button type="button" (click)="goToProfil()">Mon profil</button>
           <button type="button">Parametres</button>
           <button type="button" (click)="logout()">Se deconnecter</button>
         </div>

@@ -1,6 +1,5 @@
 <div class="page-wrapper">
 
-  <!-- Header -->
   <div class="rh-page-header">
     <div class="rh-page-header__left">
       <h2 class="page-title">Gestion des Animatrices</h2>
@@ -13,7 +12,6 @@
     </div>
   </div>
 
-  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-card">
       <div class="stat-card__icon stat-card__icon--blue">
@@ -28,9 +26,7 @@
         <span class="stat-card__value">{{ animatrices.length }}</span>
         <span class="stat-card__label">Total animatrices</span>
       </div>
-      <div class="stat-card__trend">
-        <span>Équipe</span>
-      </div>
+      <div class="stat-card__trend"><span>Équipe</span></div>
     </div>
 
     <div class="stat-card">
@@ -74,7 +70,6 @@
     </div>
   </div>
 
-  <!-- Filters -->
   <div class="filters-bar">
     <div class="search-wrapper">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -82,24 +77,22 @@
       </svg>
       <input type="text" class="search-input"
              placeholder="Rechercher par nom, prénom, email..."
-             [(ngModel)]="searchTerm"/>
+             [(ngModel)]="searchTerm"
+             (ngModelChange)="onSearchChange()"/>
       <span class="search-count" *ngIf="searchTerm">
         {{ getFilteredAnimatrices().length }} résultat(s)
       </span>
     </div>
-    <select class="filter-select" [(ngModel)]="filterStatut">
+    <select class="filter-select" [(ngModel)]="filterStatut" (ngModelChange)="onFilterChange()">
       <option value="">Tous les statuts</option>
       <option value="ACTIVE">✅ Active</option>
       <option value="INACTIVE">⛔ Inactive</option>
     </select>
   </div>
 
-  <!-- Table -->
   <div class="table-card">
     <div class="table-header">
-      <span class="table-count">
-        {{ getFilteredAnimatrices().length }} animatrice(s)
-      </span>
+      <span class="table-count">{{ getFilteredAnimatrices().length }} animatrice(s)</span>
     </div>
 
     <div class="table-responsive">
@@ -117,8 +110,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let a of getFilteredAnimatrices(); let i = index" class="table-row">
-            <td class="td-index">{{ i + 1 }}</td>
+          <!-- ✅ getAnimatricesPaginees() sans accent -->
+          <tr *ngFor="let a of getAnimatricesPaginees(); let i = index" class="table-row">
+            <td class="td-index">{{ (pageActuelle - 1) * parPage + i + 1 }}</td>
             <td>
               <div class="animatrice-cell">
                 <div class="avatar" *ngIf="!a.photoUrl"
@@ -184,6 +178,23 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- ✅ PAGINATION -->
+    <div class="pagination-wrapper" *ngIf="totalPages > 1">
+      <div class="pagination-info">
+        {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
+        sur {{ getFilteredAnimatrices().length }} animatrices
+      </div>
+      <div class="pagination">
+        <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
+                [disabled]="pageActuelle === 1">‹</button>
+        <button *ngFor="let p of pages" class="page-btn"
+                [class.page-btn--active]="p === pageActuelle"
+                (click)="goToPage(p)">{{ p }}</button>
+        <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
+                [disabled]="pageActuelle === totalPages">›</button>
+      </div>
     </div>
   </div>
 

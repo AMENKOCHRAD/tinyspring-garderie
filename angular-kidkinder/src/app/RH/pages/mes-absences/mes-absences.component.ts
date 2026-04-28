@@ -20,13 +20,16 @@ export class MesAbsencesComponent implements OnInit, OnDestroy {
   animatriceId = 0;
   private refreshInterval: any;
 
+  // ✅ PAGINATION
+  pageActuelle = 1;
+  parPage = 8;
+
   constructor(
     private absenceCongeService: AbsenceCongeService,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    // ✅ Nouvelle template — getCurrentUser() retourne directement l'objet
     const user = this.authService.getCurrentUser();
     if (user?.email) {
       this.absenceCongeService.getMonProfil(user.email).subscribe({
@@ -52,6 +55,7 @@ export class MesAbsencesComponent implements OnInit, OnDestroy {
     this.absenceCongeService.getMesAbsenceConges(this.animatriceId).subscribe({
       next: (data: AbsenceConge[]) => {
         this.absences = data;
+        this.pageActuelle = 1; // ✅ reset page
         this.isLoading = false;
       },
       error: (err: any) => {
@@ -60,6 +64,29 @@ export class MesAbsencesComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  // ✅ Absences de la page actuelle
+  get absencesPaginées(): AbsenceConge[] {
+    const debut = (this.pageActuelle - 1) * this.parPage;
+    return this.absences.slice(debut, debut + this.parPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.absences.length / this.parPage);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.pageActuelle = page;
+  }
+
+  getLastItemIndex(): number {
+    return Math.min(this.pageActuelle * this.parPage, this.absences.length);
   }
 
   getCountByStatut(statut: string): number {

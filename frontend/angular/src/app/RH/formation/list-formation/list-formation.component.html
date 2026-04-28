@@ -82,9 +82,9 @@
     <button class="btn-primary" (click)="ouvrirModal()">+ Ajouter une formation</button>
   </div>
 
-  <!-- Grid -->
+  <!-- Grid — ✅ getFormationsPaginees() -->
   <div class="formations-grid" *ngIf="!isLoading && formationsFiltrees.length > 0">
-    <div *ngFor="let f of formationsFiltrees" class="formation-card"
+    <div *ngFor="let f of getFormationsPaginees()" class="formation-card"
          [style.border-top]="'4px solid ' + getStatutColor(f.statut)">
 
       <div class="formation-card__header">
@@ -105,7 +105,6 @@
         <div class="formation-meta">
           <div class="meta-row"><span class="meta-icon">👨‍🏫</span><span>{{ f.formateur }}</span></div>
           <div class="meta-row" *ngIf="f.lieu"><span class="meta-icon">📍</span><span>{{ f.lieu }}</span></div>
-          <!-- ✅ Date + Horaire -->
           <div class="meta-row" *ngIf="f.dateFormation">
             <span class="meta-icon">📅</span>
             <span>{{ formatDate(f.dateFormation) }}</span>
@@ -119,7 +118,6 @@
           <div class="meta-row" *ngIf="f.obligatoire">
             <span class="obligatoire-badge">⚠️ Obligatoire</span>
           </div>
-          <!-- ✅ Badge auto-scheduling -->
           <div class="meta-row" *ngIf="f.heureDebut && f.statut === 'OUVERTE'">
             <span class="auto-badge">🤖 Démarrage automatique à {{ formatHeure(f.heureDebut) }}</span>
           </div>
@@ -157,7 +155,23 @@
           <button class="btn-icon btn-icon--delete" (click)="supprimer(f.id!)">🗑️</button>
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- ✅ PAGINATION -->
+  <div class="pagination-wrapper" *ngIf="totalPages > 1">
+    <div class="pagination-info">
+      {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
+      sur {{ formationsFiltrees.length }} formations
+    </div>
+    <div class="pagination">
+      <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
+              [disabled]="pageActuelle === 1">‹</button>
+      <button *ngFor="let p of pages" class="page-btn"
+              [class.page-btn--active]="p === pageActuelle"
+              (click)="goToPage(p)">{{ p }}</button>
+      <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
+              [disabled]="pageActuelle === totalPages">›</button>
     </div>
   </div>
 
@@ -169,16 +183,13 @@
     <h3>{{ isEditing ? '✏️ Modifier' : '➕ Nouvelle' }} formation</h3>
     <button class="modal-close" (click)="fermerModal()">✕</button>
   </div>
-
   <div class="modal-body">
     <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
-
     <div class="form-group">
       <label>Titre *</label>
       <input type="text" [(ngModel)]="form.titre" class="form-input"
              placeholder="Ex: Premiers secours enfants">
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label>Type *</label>
@@ -193,14 +204,11 @@
                placeholder="Nom du formateur">
       </div>
     </div>
-
     <div class="form-group">
       <label>Description</label>
       <textarea [(ngModel)]="form.description" class="form-input" rows="2"
                 placeholder="Description de la formation..."></textarea>
     </div>
-
-    <!-- ✅ Date unique + Horaires -->
     <div class="form-section-title">📅 Date & Horaires</div>
     <div class="form-row form-row--3">
       <div class="form-group">
@@ -220,8 +228,6 @@
       🤖 La formation démarrera automatiquement à <strong>{{ formatHeure(form.heureDebut) }}</strong>
       et se terminera à <strong>{{ formatHeure(form.heureFin) }}</strong>
     </div>
-
-    <!-- ✅ Salle dropdown -->
     <div class="form-row">
       <div class="form-group">
         <label>📍 Salle / Lieu</label>
@@ -236,7 +242,6 @@
                placeholder="Ex: 10" min="1">
       </div>
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label>Durée validité (mois) — vide = pas d'expiration</label>
@@ -252,7 +257,6 @@
       </div>
     </div>
   </div>
-
   <div class="modal-footer">
     <button class="btn-secondary" (click)="fermerModal()">Annuler</button>
     <button class="btn-primary" (click)="sauvegarder()">

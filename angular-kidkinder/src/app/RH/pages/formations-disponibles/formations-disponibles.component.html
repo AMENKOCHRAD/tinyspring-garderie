@@ -31,11 +31,11 @@
   <!-- Filtres type -->
   <div class="filters-bar">
     <button class="chip" [class.chip--active]="typeFiltre === ''"
-            (click)="typeFiltre = ''">Tous</button>
+            (click)="setFiltre('')">Tous</button>
     <button *ngFor="let t of types" class="chip"
             [class.chip--active]="typeFiltre === t"
             [style.border-color]="typeFiltre === t ? getTypeColor(t) : ''"
-            (click)="typeFiltre = typeFiltre === t ? '' : t">
+            (click)="setFiltre(t)">
       {{ getTypeIcon(t) }} {{ t }}
     </button>
   </div>
@@ -52,19 +52,17 @@
     <p>Revenez plus tard pour découvrir les prochaines formations</p>
   </div>
 
-  <!-- Grid -->
+  <!-- Grid — ✅ formationsPaginées au lieu de formationsFiltrees -->
   <div class="formations-grid" *ngIf="!isLoading && formationsFiltrees.length > 0">
-    <div *ngFor="let f of formationsFiltrees" class="formation-card"
+    <div *ngFor="let f of formationsPaginées" class="formation-card"
          [class.formation-card--suggere]="isSuggere(f.id)"
          [class.formation-card--inscrit]="estInscrit(f)">
 
-      <!-- Badge suggestion -->
       <div class="badge-suggestion" *ngIf="isSuggere(f.id)"
            [style.background]="getPrioriteColor(isSuggere(f.id).priorite)">
         💡 {{ isSuggere(f.id).priorite }}
       </div>
 
-      <!-- Badge inscrit -->
       <div class="badge-inscrit" *ngIf="estInscrit(f)">
         {{ getStatutInscription(f) === 'LISTE_ATTENTE' ? '⏳ Liste attente' : '✅ Inscrite' }}
       </div>
@@ -82,7 +80,6 @@
         <h4 class="formation-titre">{{ f.titre }}</h4>
         <p class="formation-desc" *ngIf="f.description">{{ f.description }}</p>
 
-        <!-- Raison suggestion -->
         <div class="suggestion-raison" *ngIf="isSuggere(f.id)">
           {{ isSuggere(f.id).raison }}
         </div>
@@ -96,7 +93,6 @@
           </div>
         </div>
 
-        <!-- Barre places -->
         <div class="places-section" *ngIf="f.placesMax">
           <div class="places-bar">
             <div class="places-fill"
@@ -115,7 +111,6 @@
       </div>
 
       <div class="formation-card__footer">
-        <!-- Déjà inscrite -->
         <div *ngIf="estInscrit(f)" class="inscrit-info">
           <span *ngIf="getStatutInscription(f) === 'INSCRITE'" class="inscrit-badge">
             ✅ Vous êtes inscrite
@@ -125,7 +120,6 @@
           </span>
         </div>
 
-        <!-- Bouton inscription -->
         <button *ngIf="!estInscrit(f) && f.statut === 'OUVERTE'"
                 class="btn-inscrire"
                 [class.btn-inscrire--attente]="getPlacesDisponibles(f) === 0"
@@ -137,13 +131,38 @@
           <span *ngIf="inscriptionEnCours === f.id">⏳ En cours...</span>
         </button>
 
-        <!-- Formation en cours — non ouverte -->
         <span *ngIf="!estInscrit(f) && f.statut === 'EN_COURS'" class="ferme-badge">
           🔒 Inscriptions fermées
         </span>
       </div>
 
     </div>
+  </div>
+
+  <!-- ✅ PAGINATION -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
+            [disabled]="pageActuelle === 1">
+      ‹
+    </button>
+
+    <button *ngFor="let p of pages"
+            class="page-btn"
+            [class.page-btn--active]="p === pageActuelle"
+            (click)="goToPage(p)">
+      {{ p }}
+    </button>
+
+    <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
+            [disabled]="pageActuelle === totalPages">
+      ›
+    </button>
+  </div>
+
+  <!-- ✅ Info pagination -->
+  <div class="pagination-info" *ngIf="formationsFiltrees.length > 0">
+    {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
+    sur {{ formationsFiltrees.length }} formations
   </div>
 
 </div>

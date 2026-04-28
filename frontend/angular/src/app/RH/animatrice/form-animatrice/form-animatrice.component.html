@@ -23,17 +23,17 @@
   <div class="alert alert-error" *ngIf="errorMessage">
     ❌ {{ errorMessage }}
   </div>
-  
+
   <div class="alert alert-password" *ngIf="motDePasseTemporaire">
-  <div class="password-title">🔑 Compte créé automatiquement !</div>
-  <div class="password-info">
-    <span><strong>Email :</strong> {{ animatrice.email }}</span>
-    <span><strong>Mot de passe temporaire :</strong>
-      <code>{{ motDePasseTemporaire }}</code>
-    </span>
+    <div class="password-title">🔑 Compte créé automatiquement !</div>
+    <div class="password-info">
+      <span><strong>Email :</strong> {{ animatrice.email }}</span>
+      <span><strong>Mot de passe temporaire :</strong>
+        <code>{{ motDePasseTemporaire }}</code>
+      </span>
+    </div>
+    <small>Communiquez ces informations à l'animatrice.</small>
   </div>
-  <small>Communiquez ces informations à l'animatrice.</small>
-</div>
 
   <!-- Form Card -->
   <div class="form-card">
@@ -102,15 +102,31 @@
             class="form-input"
           />
         </div>
+
+        <!-- ✅ Spécialité — liste déroulante -->
         <div class="form-group">
           <label>Spécialité</label>
-          <input
-            type="text"
+          <select
             [(ngModel)]="animatrice.specialite"
             name="specialite"
-            placeholder="Ex: Éveil musical"
-            class="form-input"
-          />
+            class="form-input">
+            <option value="">— Sélectionner une spécialité —</option>
+            <option value="Éveil musical">🎵 Éveil musical</option>
+            <option value="Arts plastiques">🎨 Arts plastiques</option>
+            <option value="Activités motrices">🏃 Activités motrices</option>
+            <option value="Premiers secours">🛡️ Premiers secours</option>
+            <option value="Psychomotricité">🧠 Psychomotricité</option>
+            <option value="Éveil sensoriel">🌟 Éveil sensoriel</option>
+            <option value="Contes et langage">📚 Contes et langage</option>
+            <option value="Jeux éducatifs">🎲 Jeux éducatifs</option>
+            <option value="Nutrition enfantine">🥗 Nutrition enfantine</option>
+            <option value="Soin et hygiène">🧼 Soin et hygiène</option>
+            <option value="Activités aquatiques">🏊 Activités aquatiques</option>
+            <option value="Danse et expression corporelle">💃 Danse et expression corporelle</option>
+            <option value="Théâtre et marionnettes">🎭 Théâtre et marionnettes</option>
+            <option value="Jardinage et nature">🌱 Jardinage et nature</option>
+            <option value="Informatique enfantine">💻 Informatique enfantine</option>
+          </select>
         </div>
       </div>
 
@@ -122,31 +138,31 @@
             <option value="INACTIVE">Inactive</option>
           </select>
         </div>
-       <div class="form-group">
-  <label>Photo de profil</label>
-  <div class="photo-upload">
-    <div class="photo-preview" *ngIf="previewUrl">
-      <img [src]="previewUrl" alt="Preview" class="preview-img" />
-    </div>
-    <div class="avatar-placeholder" *ngIf="!previewUrl">
-      <span>{{ animatrice.prenom ? animatrice.prenom[0] : '?' }}{{ animatrice.nom ? animatrice.nom[0] : '' }}</span>
-    </div>
-    <div class="upload-actions">
-      <label class="btn-upload" for="fileInput">
-        Choisir une photo
-      </label>
-      <input
-        type="file"
-        id="fileInput"
-        accept="image/*"
-        (change)="onFileSelected($event)"
-        style="display: none"
-      />
-      <span class="file-name" *ngIf="selectedFile">{{ selectedFile.name }}</span>
-      <span class="file-hint" *ngIf="!selectedFile">JPG, PNG — max 5MB</span>
-    </div>
-  </div>
-</div>
+        <div class="form-group">
+          <label>Photo de profil</label>
+          <div class="photo-upload">
+            <div class="photo-preview" *ngIf="previewUrl">
+              <img [src]="previewUrl" alt="Preview" class="preview-img" />
+            </div>
+            <div class="avatar-placeholder" *ngIf="!previewUrl">
+              <span>{{ animatrice.prenom ? animatrice.prenom[0] : '?' }}{{ animatrice.nom ? animatrice.nom[0] : '' }}</span>
+            </div>
+            <div class="upload-actions">
+              <label class="btn-upload" for="fileInput">
+                Choisir une photo
+              </label>
+              <input
+                type="file"
+                id="fileInput"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                style="display: none"
+              />
+              <span class="file-name" *ngIf="selectedFile">{{ selectedFile.name }}</span>
+              <span class="file-hint" *ngIf="!selectedFile">JPG, PNG — max 5MB</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-actions">

@@ -51,6 +51,16 @@ export class WorkspaceShellComponent {
     this.authService.logout();
   }
 
+  // ✅ AJOUT — navigation vers la page profil selon le rôle
+  protected goToProfil(): void {
+    this.menuOpen.set(false);
+    if (this.role() === 'ANIMATRICE') {
+      void this.router.navigate(['/animateur/mon-profil']);
+    } else {
+      void this.router.navigate(['/parent/mon-profil']);
+    }
+  }
+
   protected isGroupActive(group: WorkspaceNavGroup): boolean {
     return this.activeGroup()?.key === group.key;
   }
@@ -65,7 +75,6 @@ export class WorkspaceShellComponent {
       if (group.children?.some((child) => this.getPageFromUrl(child.route) === currentPage)) {
         return true;
       }
-
       return this.getPageFromUrl(group.route) === currentPage;
     });
   }

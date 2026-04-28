@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ProfilService, AnimatriceProfilData } from '../../services/profil.service';
 import { AuthService } from '../../../shared/auth.service';
 
@@ -24,12 +24,12 @@ export class MonProfilComponent implements OnInit {
   previewUrl: string | null = null;
   isUploadingPhoto = false;
 
-  // Copie de travail pour le formulaire
   form: Partial<AnimatriceProfilData> = {};
 
   constructor(
     private profilService: ProfilService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -55,24 +55,18 @@ export class MonProfilComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (!file) return;
-
-    // Vérification taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       this.errorMessage = 'La photo ne doit pas dépasser 5MB.';
       return;
     }
-
     this.selectedFile = file;
     const reader = new FileReader();
-    reader.onload = (e: any) => {
-      this.previewUrl = e.target.result;
-    };
+    reader.onload = (e: any) => { this.previewUrl = e.target.result; };
     reader.readAsDataURL(file);
   }
 
   onSubmit(): void {
     if (!this.profil?.id) return;
-
     this.isSaving = true;
     this.successMessage = '';
     this.errorMessage = '';
@@ -93,8 +87,6 @@ export class MonProfilComponent implements OnInit {
       next: (updated) => {
         this.profil = updated;
         this.form = { ...updated };
-
-        // Si une photo a été sélectionnée, on l'upload après la sauvegarde
         if (this.selectedFile) {
           this.uploadPhoto();
         } else {
@@ -109,9 +101,13 @@ export class MonProfilComponent implements OnInit {
     });
   }
 
+  // ✅ AJOUT — naviguer vers la page de changement de mot de passe
+  changerMotDePasse(): void {
+    void this.router.navigate(['/animateur/changer-mot-de-passe']);
+  }
+
   private uploadPhoto(): void {
     if (!this.profil?.id || !this.selectedFile) return;
-
     this.isUploadingPhoto = true;
     this.profilService.uploadPhoto(this.profil.id, this.selectedFile).subscribe({
       next: (updated) => {
@@ -136,12 +132,5 @@ export class MonProfilComponent implements OnInit {
     const prenom = this.form.prenom || '';
     const nom = this.form.nom || '';
     return `${prenom[0] || ''}${nom[0] || ''}`.toUpperCase();
-  }
-
-  private extractError(err: any, fallback: string): string {
-    if (err?.error?.message) return err.error.message;
-    if (err?.status === 0) return 'Serveur inaccessible.';
-    if (err?.status === 401) return 'Session expirée. Veuillez vous reconnecter.';
-    return fallback;
   }
 }

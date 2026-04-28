@@ -18,7 +18,9 @@ export class ListAnimatriceComponent implements OnInit, OnDestroy {
   searchTerm: string = '';
   filterStatut: string = '';
 
-  
+  pageActuelle = 1;
+  parPage = 10;
+
   private refreshInterval: any;
   private readonly REFRESH_DELAY_MS = 10000;
 
@@ -29,24 +31,18 @@ export class ListAnimatriceComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadAnimatrices();
-
-    // ✅ Rafraîchissement automatique toutes les 15 secondes
-    this.refreshInterval = setInterval(() => {
-      this.loadAnimatrices();
-    }, this.REFRESH_DELAY_MS);
+    this.refreshInterval = setInterval(() => this.loadAnimatrices(), this.REFRESH_DELAY_MS);
   }
 
   ngOnDestroy(): void {
-    // ✅ Nettoyage quand on quitte la page
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
   loadAnimatrices(): void {
     this.animatriceService.getAllAnimatrices().subscribe({
       next: (data) => {
         this.animatrices = data;
+        this.pageActuelle = 1;
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Erreur chargement animatrices', err)
@@ -64,6 +60,33 @@ export class ListAnimatriceComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ✅ Sans accent
+  getAnimatricesPaginees(): Animatrice[] {
+    const filtered = this.getFilteredAnimatrices();
+    const debut = (this.pageActuelle - 1) * this.parPage;
+    return filtered.slice(debut, debut + this.parPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.getFilteredAnimatrices().length / this.parPage);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.pageActuelle = page;
+  }
+
+  getLastItemIndex(): number {
+    return Math.min(this.pageActuelle * this.parPage, this.getFilteredAnimatrices().length);
+  }
+
+  onSearchChange(): void { this.pageActuelle = 1; }
+  onFilterChange(): void { this.pageActuelle = 1; }
+
   getActiveCount(): number {
     return this.animatrices.filter(a => a.statut === 'ACTIVE').length;
   }
@@ -77,6 +100,7 @@ export class ListAnimatriceComponent implements OnInit, OnDestroy {
       this.animatriceService.deleteAnimatrice(id).subscribe({
         next: () => {
           this.animatrices = this.animatrices.filter(a => a.id !== id);
+          this.pageActuelle = 1;
           this.cdr.detectChanges();
         },
         error: (err) => console.error('Erreur suppression', err)
