@@ -1,7 +1,10 @@
 package com.tinyspring.garderie.service.Events;
 
 import com.tinyspring.garderie.dto.Events.DishRequest;
+import com.tinyspring.garderie.entity.Events.AlternativeDish;
 import com.tinyspring.garderie.entity.Events.MealType;
+import com.tinyspring.garderie.repository.Events.AlternativeDishRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
@@ -9,33 +12,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AlternativeDishServiceImpl implements AlternativeDishService {
 
-    private record AlternativeOption(
-            MealType mealType,
-            String name,
-            String description
-    ) {}
-
-    private static final Map<MealType, List<AlternativeOption>> SAFE_OPTIONS = Map.of(
-            MealType.ENTREE, List.of(
-                    new AlternativeOption(MealType.ENTREE, "Soupe de légumes doux", "Entrée légère aux légumes cuits, sans allergènes majeurs."),
-                    new AlternativeOption(MealType.ENTREE, "Salade de carottes cuites", "Carottes douces assaisonnées simplement.")
-            ),
-            MealType.PLAT_PRINCIPAL, List.of(
-                    new AlternativeOption(MealType.PLAT_PRINCIPAL, "Riz aux légumes doux", "Riz tendre accompagné de légumes cuits."),
-                    new AlternativeOption(MealType.PLAT_PRINCIPAL, "Pommes de terre vapeur aux légumes", "Pommes de terre douces avec légumes cuits."),
-                    new AlternativeOption(MealType.PLAT_PRINCIPAL, "Poulet aux légumes et riz", "Poulet tendre avec riz et légumes doux.")
-            ),
-            MealType.DESSERT, List.of(
-                    new AlternativeOption(MealType.DESSERT, "Compote de pommes", "Dessert doux à base de pommes cuites."),
-                    new AlternativeOption(MealType.DESSERT, "Fruit frais", "Fruit de saison coupé.")
-            ),
-            MealType.GOUTER, List.of(
-                    new AlternativeOption(MealType.GOUTER, "Fruits frais coupés", "Goûter naturel avec fruits de saison."),
-                    new AlternativeOption(MealType.GOUTER, "Compote maison", "Goûter doux à base de fruits.")
-            )
-    );
+    private final AlternativeDishRepository alternativeDishRepository;
 
     @Override
     public DishRequest generateAlternativeFor(DishRequest originalDish) {
@@ -49,33 +29,98 @@ public class AlternativeDishServiceImpl implements AlternativeDishService {
             throw new IllegalArgumentException("Le plat original ne contient aucun allergène");
         }
 
-        List<AlternativeOption> options = SAFE_OPTIONS.getOrDefault(
-                originalDish.getMealType(),
-                List.of()
-        );
+        for (String allergen : forbiddenAllergens) {
+            List<AlternativeDish> alternatives =
+                    alternativeDishRepository.findByOriginalAllergenIgnoreCaseAndMealTypeOrderByPriorityAsc(
+                            allergen,
+                            originalDish.getMealType()
+                    );
 
-        for (AlternativeOption option : options) {
-            if (isSafe(option, forbiddenAllergens)) {
-                return DishRequest.builder()
-                        .mealType(originalDish.getMealType())
-                        .name(option.name())
-                        .description(option.description())
-                        .allergens("")
-                        .allergenConflictFlags("PLAT_ADAPTE")
-                        .build();
+            for (AlternativeDish alternative : alternatives) {
+                if (isSafe(alternative, forbiddenAllergens)) {
+                    return toDishRequest(alternative, originalDish.getMealType());
+                }
             }
         }
 
-        throw new IllegalStateException(
-                "Aucune alternative sûre trouvée pour le plat : " + originalDish.getName()
-        );
+        AlternativeDish fallback = createAndSaveFallbackAlternative(originalDish, forbiddenAllergens);
+
+        return toDishRequest(fallback, originalDish.getMealType());
     }
 
-    private boolean isSafe(AlternativeOption option, Set<String> forbiddenAllergens) {
-        String text = normalize(option.name() + " " + option.description());
+    private DishRequest toDishRequest(AlternativeDish alternative, MealType mealType) {
+        return DishRequest.builder()
+                .mealType(mealType)
+                .name(alternative.getName())
+                .description(alternative.getDescription())
+                .allergens(alternative.getAllergens() == null ? "" : alternative.getAllergens())
+                .allergenConflictFlags("PLAT_ADAPTE")
+                .build();
+    }
+
+    private AlternativeDish createAndSaveFallbackAlternative(
+            DishRequest originalDish,
+            Set<String> forbiddenAllergens
+    ) {
+        String firstAllergen = forbiddenAllergens.iterator().next();
+
+        AlternativeData data = getFallbackData(originalDish.getMealType(), firstAllergen);
+
+        return alternativeDishRepository
+                .findByNameIgnoreCaseAndOriginalAllergenIgnoreCaseAndMealType(
+                        data.name(),
+                        firstAllergen,
+                        originalDish.getMealType()
+                )
+                .orElseGet(() -> alternativeDishRepository.save(
+                        AlternativeDish.builder()
+                                .name(data.name())
+                                .description(data.description())
+                                .allergens("")
+                                .originalAllergen(firstAllergen)
+                                .mealType(originalDish.getMealType())
+                                .priority(99)
+                                .build()
+                ));
+    }
+
+    private AlternativeData getFallbackData(MealType mealType, String allergen) {
+        return switch (mealType) {
+            case ENTREE -> new AlternativeData(
+                    "Soupe de légumes doux",
+                    "Entrée légère aux légumes cuits, alternative générée automatiquement sans " + allergen + "."
+            );
+            case PLAT_PRINCIPAL -> new AlternativeData(
+                    "Riz aux légumes doux",
+                    "Riz tendre accompagné de légumes cuits, alternative générée automatiquement sans " + allergen + "."
+            );
+            case DESSERT -> new AlternativeData(
+                    "Compote de pommes",
+                    "Dessert doux à base de pommes cuites, alternative générée automatiquement sans " + allergen + "."
+            );
+            case GOUTER -> new AlternativeData(
+                    "Fruits frais coupés",
+                    "Goûter naturel avec fruits de saison, alternative générée automatiquement sans " + allergen + "."
+            );
+        };
+    }
+
+    private boolean isSafe(AlternativeDish alternative, Set<String> forbiddenAllergens) {
+        Set<String> alternativeAllergens = normalizeToSet(alternative.getAllergens());
 
         for (String allergen : forbiddenAllergens) {
-            if (containsForbiddenKeyword(text, allergen)) {
+            String normalizedAllergen = normalize(allergen);
+
+            if (alternativeAllergens.contains(normalizedAllergen)) {
+                return false;
+            }
+
+            String text = normalize(
+                    (alternative.getName() == null ? "" : alternative.getName()) + " " +
+                            (alternative.getDescription() == null ? "" : alternative.getDescription())
+            );
+
+            if (containsForbiddenKeyword(text, normalizedAllergen)) {
                 return false;
             }
         }
@@ -102,7 +147,7 @@ public class AlternativeDishServiceImpl implements AlternativeDishService {
 
     private Set<String> normalizeToSet(String value) {
         if (value == null || value.isBlank()) {
-            return Set.of();
+            return new LinkedHashSet<>();
         }
 
         return Arrays.stream(value.split("[,;\\n]"))
@@ -128,5 +173,8 @@ public class AlternativeDishServiceImpl implements AlternativeDishService {
             }
         }
         return false;
+    }
+
+    private record AlternativeData(String name, String description) {
     }
 }

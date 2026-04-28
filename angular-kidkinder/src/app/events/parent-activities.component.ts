@@ -30,6 +30,8 @@ export class ParentActivitiesComponent {
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly selectedFilter = signal<ActivityFilter>('TOUS');
+  protected readonly currentPage = signal(1);
+protected readonly pageSize = signal(3);
   protected readonly selectedEventId = signal<number | null>(null);
   protected readonly selectedChildId = signal<number | null>(null);
   protected readonly parentNotes = signal('');
@@ -54,6 +56,32 @@ export class ParentActivitiesComponent {
 
     return data.events.filter((event) => this.matchesFilter(event, this.selectedFilter()));
   });
+
+  protected readonly totalPages = computed(() =>
+  Math.max(1, Math.ceil(this.filteredEvents().length / this.pageSize()))
+);
+
+protected readonly paginatedEvents = computed(() => {
+  const safePage = Math.min(this.currentPage(), this.totalPages());
+  const startIndex = (safePage - 1) * this.pageSize();
+  return this.filteredEvents().slice(startIndex, startIndex + this.pageSize());
+});
+
+protected readonly startIndex = computed(() => {
+  if (!this.filteredEvents().length) {
+    return 0;
+  }
+
+  return (Math.min(this.currentPage(), this.totalPages()) - 1) * this.pageSize() + 1;
+});
+
+protected readonly endIndex = computed(() =>
+  Math.min(this.startIndex() + this.pageSize() - 1, this.filteredEvents().length)
+);
+
+protected readonly pageNumbers = computed(() =>
+  Array.from({ length: this.totalPages() }, (_, index) => index + 1)
+);
 
   protected readonly selectedEvent = computed(() => {
     const selectedId = this.selectedEventId();
@@ -119,6 +147,8 @@ export class ParentActivitiesComponent {
     this.selectedFilter.set(filter);
     this.selectedEventId.set(null);
     this.resetParticipationDraft();
+    this.currentPage.set(1);
+
   }
 
   protected showDetails(event: DecoratedParentEvent): void {
@@ -541,6 +571,21 @@ export class ParentActivitiesComponent {
       day.getDate() === date.getDate()
     );
   }
+  protected goToPage(page: number): void {
+  if (page < 1 || page > this.totalPages()) {
+    return;
+  }
+
+  this.currentPage.set(page);
+}
+
+protected previousPage(): void {
+  this.goToPage(this.currentPage() - 1);
+}
+
+protected nextPage(): void {
+  this.goToPage(this.currentPage() + 1);
+}
 
   private getErrorMessage(error: HttpErrorResponse | Error, fallback: string): string {
     if (error instanceof HttpErrorResponse) {

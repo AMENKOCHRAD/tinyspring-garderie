@@ -34,7 +34,6 @@ public class MenuAiService {
     public WeeklyMenuRequest generateWeeklyMenuDraft(WeeklyMenuAiGenerateRequest request) {
         try {
             LocalDate weekStart = LocalDate.parse(request.getWeekStartDate());
-
             String prompt = buildPrompt(weekStart);
 
             ResponseEntity<Map<String, Object>> response = callOllama(prompt, 3500);
@@ -227,9 +226,12 @@ public class MenuAiService {
                     dailyMenu.getDishes().add(dish);
 
                     if (!allergens.isBlank()) {
-                        dailyMenu.getDishes().add(
-                                alternativeDishService.generateAlternativeFor(dish)
-                        );
+                        try {
+                            DishRequest alternative = alternativeDishService.generateAlternativeFor(dish);
+                            dailyMenu.getDishes().add(alternative);
+                        } catch (Exception e) {
+                            System.err.println("Alternative non générée pour " + dish.getName() + " : " + e.getMessage());
+                        }
                     }
                 }
 
@@ -334,7 +336,6 @@ public class MenuAiService {
                 return true;
             }
         }
-
         return false;
     }
 
