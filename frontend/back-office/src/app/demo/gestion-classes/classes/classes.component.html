@@ -1,0 +1,151 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Gestion des Classes</h5>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="saveClasse()" #classeForm="ngForm">
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            <strong>⚠️ Erreur :</strong> {{ errorMessage }}
+          </div>
+          
+          <!-- IA Suggestions Section -->
+          <div class="alert alert-info mt-3 shadow-sm rounded border-info position-relative" *ngIf="isSuggesting || aiSuggestion">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close" (click)="clearSuggestion()"></button>
+            <h5 class="alert-heading text-info">✨ Suggestions d'activités avec l'IA <span *ngIf="suggestingClasseName"> - {{suggestingClasseName}}</span></h5>
+            <hr>
+            <div *ngIf="isSuggesting" class="d-flex align-items-center mb-2">
+              <div class="spinner-border text-info me-3" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <strong>Gemini est en train de réfléchir... Veuillez patienter.</strong>
+            </div>
+            <div *ngIf="aiSuggestion" style="white-space: pre-wrap;">
+              {{ aiSuggestion }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Nom de la classe <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="nom" [(ngModel)]="currentClasse.nom"
+                     required minlength="2" maxlength="50" #nomCtrl="ngModel"
+                     [ngClass]="{'is-invalid': nomCtrl.invalid && nomCtrl.touched, 'is-valid': nomCtrl.valid && nomCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['required'] && nomCtrl.touched">Le nom est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['minlength'] && nomCtrl.touched">Minimum 2 caractères.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Niveau <span class="text-danger">*</span></label>
+              <select class="form-control" name="niveau" [(ngModel)]="currentClasse.niveau"
+                      required #nivCtrl="ngModel"
+                      [ngClass]="{'is-invalid': nivCtrl.invalid && nivCtrl.touched, 'is-valid': nivCtrl.valid && nivCtrl.touched}">
+                <option value="">-- Sélectionner --</option>
+                <option value="Crèche">Crèche (0-2 ans)</option>
+                <option value="Petite Section">Petite Section (2-3 ans)</option>
+                <option value="Moyenne Section">Moyenne Section (3-4 ans)</option>
+                <option value="Grande Section">Grande Section (4-5 ans)</option>
+                <option value="Préparatoire">Préparatoire (5-6 ans)</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="nivCtrl.invalid && nivCtrl.touched">Veuillez sélectionner un niveau.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Année Scolaire <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="anneeScolaire" [(ngModel)]="currentClasse.anneeScolaire"
+                     required pattern="^[0-9]{4}/[0-9]{4}$" #annCtrl="ngModel" placeholder="2025/2026"
+                     [ngClass]="{'is-invalid': annCtrl.invalid && annCtrl.touched, 'is-valid': annCtrl.valid && annCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="annCtrl.errors?.['required'] && annCtrl.touched">L'année scolaire est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="annCtrl.errors?.['pattern'] && annCtrl.touched">Format attendu : AAAA/AAAA (ex: 2025/2026).</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Capacité max. <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="capaciteMax" [(ngModel)]="currentClasse.capaciteMax"
+                     required min="1" max="50" #capCtrl="ngModel"
+                     [ngClass]="{'is-invalid': capCtrl.invalid && capCtrl.touched, 'is-valid': capCtrl.valid && capCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="capCtrl.errors?.['required'] && capCtrl.touched">Ce champ est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="capCtrl.errors?.['min'] && capCtrl.touched">Minimum 1 place.</div>
+              <div class="invalid-feedback" *ngIf="capCtrl.errors?.['max'] && capCtrl.touched">Maximum 50 places.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Âge minimum <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="ageMinimum" [(ngModel)]="currentClasse.ageMinimum"
+                     required min="0" max="6" #ageMinCtrl="ngModel"
+                     [ngClass]="{'is-invalid': ageMinCtrl.invalid && ageMinCtrl.touched, 'is-valid': ageMinCtrl.valid && ageMinCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="ageMinCtrl.errors?.['required'] && ageMinCtrl.touched">L'âge minimum est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="ageMinCtrl.errors?.['min'] && ageMinCtrl.touched">L'âge ne peut pas être négatif.</div>
+              <div class="invalid-feedback" *ngIf="ageMinCtrl.errors?.['max'] && ageMinCtrl.touched">L'âge max. pour une garderie est 6 ans.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Âge maximum <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="ageMaximum" [(ngModel)]="currentClasse.ageMaximum"
+                     required min="1" max="6" #ageMaxCtrl="ngModel"
+                     [ngClass]="{'is-invalid': ageMaxCtrl.invalid && ageMaxCtrl.touched, 'is-valid': ageMaxCtrl.valid && ageMaxCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="ageMaxCtrl.errors?.['required'] && ageMaxCtrl.touched">L'âge maximum est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="ageMaxCtrl.errors?.['min'] && ageMaxCtrl.touched">Minimum 1 an.</div>
+              <div class="invalid-feedback" *ngIf="ageMaxCtrl.errors?.['max'] && ageMaxCtrl.touched">L'âge max. pour une garderie est 6 ans.</div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Salle affectée <span class="text-danger">*</span></label>
+              <select class="form-control" name="salleId" [(ngModel)]="selectedSalleId"
+                      required #salCtrl="ngModel"
+                      [ngClass]="{'is-invalid': salCtrl.invalid && salCtrl.touched, 'is-valid': salCtrl.valid && salCtrl.touched}">
+                <option value="">-- Sélectionner une salle --</option>
+                <option *ngFor="let s of salles" [value]="s.id">{{ s.nom }} ({{ s.type }}, {{ s.surface }} m²)</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="salCtrl.invalid && salCtrl.touched">Veuillez affecter une salle à cette classe.</div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="classeForm.invalid">
+            <i class="feather icon-save me-1"></i>{{ isEditMode ? 'Modifier' : 'Ajouter' }}
+          </button>
+          <button type="button" class="btn btn-secondary ms-2" *ngIf="isEditMode" (click)="resetForm()">Annuler</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 mt-4">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des Classes</h5>
+        <button class="btn btn-sm btn-outline-secondary" (click)="loadClasses()">🔄 Rafraîchir</button>
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Niveau</th>
+              <th>Capacité</th>
+              <th>Tranche d'âge</th>
+              <th>Année</th>
+              <th>Salle</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of classes">
+              <td>{{ c.id }}</td>
+              <td>{{ c.nom }}</td>
+              <td><span class="badge bg-info">{{ c.niveau }}</span></td>
+              <td>{{ c.capaciteMax }} places</td>
+              <td>{{ c.ageMinimum }} - {{ c.ageMaximum }} ans</td>
+              <td>{{ c.anneeScolaire }}</td>
+              <td>{{ c.salle?.nom || 'Non assignée' }}</td>
+              <td>
+                <button class="btn btn-sm btn-info me-2" (click)="editClasse(c)">Modifier</button>
+                <button class="btn btn-sm btn-danger me-2" (click)="deleteClasse(c.id)">Supprimer</button>
+                <button class="btn btn-sm btn-outline-warning" (click)="suggestActivities(c)" title="Obtenir des suggestions d'activités via IA">💡 IA</button>
+              </td>
+            </tr>
+            <tr *ngIf="classes.length === 0">
+              <td colspan="8" class="text-center">Aucune classe trouvée.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

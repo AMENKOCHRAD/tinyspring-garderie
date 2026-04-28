@@ -1,0 +1,150 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Gestion des Groupes</h5>
+      </div>
+      <div class="card-body">
+        <!-- ML Room Recommendation Banner -->
+        <div class="alert alert-success mt-0 mb-3 shadow-sm rounded border-success position-relative" *ngIf="roomRecommendation || isRecommendingRoom">
+          <button type="button" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close" (click)="clearRoomRecommendation()"></button>
+          <h5 class="alert-heading text-success">🏫 Recommandation de Salle (Decision Tree ML) <span *ngIf="recommendingGroupeName"> - {{ recommendingGroupeName }}</span>
+            <span class="badge bg-dark ms-2" style="font-size: 0.6rem;">Entraîné sur room_dataset.csv</span>
+          </h5>
+          <hr>
+          <div *ngIf="isRecommendingRoom" class="d-flex align-items-center mb-2">
+            <div class="spinner-border text-success me-3" role="status" style="width: 2rem; height: 2rem;"><span class="visually-hidden">Loading...</span></div>
+            <strong>Le modèle DecisionTreeClassifier s'exécute sur le dataset de 50 salles...</strong>
+          </div>
+          <div *ngIf="roomRecommendation">
+            <p class="mb-1"><strong>Type de salle idéal :</strong> {{ roomRecommendation }}</p>
+            <p class="mb-1 small" *ngIf="roomConfidence"><strong>Confiance :</strong> {{ roomConfidence }}%</p>
+            <p class="mb-1 small" *ngIf="roomAccuracy"><strong>Accuracy du modèle :</strong> {{ roomAccuracy }}%</p>
+            <small class="text-muted">Calculé par DecisionTreeClassifier (scikit-learn) entraîné sur le dataset <code>room_dataset.csv</code> (50 lignes).</small>
+          </div>
+        </div>
+        <form (ngSubmit)="saveGroupe()" #groupeForm="ngForm">
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            <strong>⚠️ Erreur :</strong> {{ errorMessage }}
+          </div>
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Nom du groupe <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="nom" [(ngModel)]="currentGroupe.nom"
+                     required minlength="2" maxlength="30" #nomCtrl="ngModel"
+                     [ngClass]="{'is-invalid': nomCtrl.invalid && nomCtrl.touched, 'is-valid': nomCtrl.valid && nomCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['required'] && nomCtrl.touched">Le nom du groupe est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['minlength'] && nomCtrl.touched">Minimum 2 caractères.</div>
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['maxlength'] && nomCtrl.touched">Maximum 30 caractères.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Capacité <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="capacite" [(ngModel)]="currentGroupe.capacite"
+                     required min="1" max="30" #capCtrl="ngModel"
+                     [ngClass]="{'is-invalid': capCtrl.invalid && capCtrl.touched, 'is-valid': capCtrl.valid && capCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="capCtrl.errors?.['required'] && capCtrl.touched">La capacité est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="capCtrl.errors?.['min'] && capCtrl.touched">Minimum 1 enfant.</div>
+              <div class="invalid-feedback" *ngIf="capCtrl.errors?.['max'] && capCtrl.touched">Maximum 30 enfants par groupe.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Heure Début <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" name="horaireDebut" [(ngModel)]="currentGroupe.horaireDebut"
+                     required #hdCtrl="ngModel"
+                     [ngClass]="{'is-invalid': hdCtrl.invalid && hdCtrl.touched, 'is-valid': hdCtrl.valid && hdCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="hdCtrl.invalid && hdCtrl.touched">L'heure de début est obligatoire.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Heure Fin <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" name="horaireFin" [(ngModel)]="currentGroupe.horaireFin"
+                     required #hfCtrl="ngModel"
+                     [ngClass]="{'is-invalid': hfCtrl.invalid && hfCtrl.touched, 'is-valid': hfCtrl.valid && hfCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="hfCtrl.invalid && hfCtrl.touched">L'heure de fin est obligatoire.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">ID Animatrice <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="animatriceId" [(ngModel)]="currentGroupe.animatriceId"
+                     required min="1" #animCtrl="ngModel"
+                     [ngClass]="{'is-invalid': animCtrl.invalid && animCtrl.touched, 'is-valid': animCtrl.valid && animCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="animCtrl.errors?.['required'] && animCtrl.touched">L'ID de l'animatrice est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="animCtrl.errors?.['min'] && animCtrl.touched">L'ID doit être supérieur à 0.</div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Langue d'enseignement <span class="text-danger">*</span></label>
+              <select class="form-control" name="languePrincipale" [(ngModel)]="currentGroupe.languePrincipale"
+                      required #langCtrl="ngModel"
+                      [ngClass]="{'is-invalid': langCtrl.invalid && langCtrl.touched, 'is-valid': langCtrl.valid && langCtrl.touched}">
+                <option value="">-- Sélectionner --</option>
+                <option value="Français">Français</option>
+                <option value="Anglais">Anglais</option>
+                <option value="Arabe">Arabe</option>
+                <option value="Bilingue (FR/EN)">Bilingue (FR/EN)</option>
+                <option value="Bilingue (FR/AR)">Bilingue (FR/AR)</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="langCtrl.invalid && langCtrl.touched">Veuillez choisir une langue.</div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Classe d'appartenance <span class="text-danger">*</span></label>
+              <select class="form-control" name="classeId" [(ngModel)]="selectedClasseId"
+                      required #clsCtrl="ngModel"
+                      [ngClass]="{'is-invalid': clsCtrl.invalid && clsCtrl.touched, 'is-valid': clsCtrl.valid && clsCtrl.touched}">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let c of classes" [value]="c.id">{{ c.nom }} ({{ c.niveau }})</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="clsCtrl.invalid && clsCtrl.touched">Veuillez affecter ce groupe à une classe.</div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="groupeForm.invalid">
+            <i class="feather icon-save me-1"></i>{{ isEditMode ? 'Modifier' : 'Ajouter' }}
+          </button>
+          <button type="button" class="btn btn-secondary ms-2" *ngIf="isEditMode" (click)="resetForm()">Annuler</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 mt-4">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des Groupes</h5>
+        <button class="btn btn-sm btn-outline-secondary" (click)="loadGroupes()">🔄 Rafraîchir</button>
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Animatrice ID</th>
+              <th>Horaires</th>
+              <th>Langue</th>
+              <th>Classe</th>
+              <th>Capacité</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let g of groupes">
+              <td>{{ g.id }}</td>
+              <td><strong>{{ g.nom }}</strong></td>
+              <td>#{{ g.animatriceId }}</td>
+              <td><span class="badge bg-light text-dark border">{{ g.horaireDebut }} - {{ g.horaireFin }}</span></td>
+              <td>{{ g.languePrincipale }}</td>
+              <td>{{ g.classe?.nom || '-' }}</td>
+              <td>{{ g.capacite }}</td>
+              <td>
+                <button class="btn btn-sm btn-info me-2" (click)="editGroupe(g)">Modifier</button>
+                <button class="btn btn-sm btn-danger me-2" (click)="deleteGroupe(g.id)">Supprimer</button>
+                <button class="btn btn-sm btn-outline-success" (click)="recommendRoom(g)" title="Recommander une salle via ML (Arbre de Décision)">🏫 IA</button>
+              </td>
+            </tr>
+            <tr *ngIf="groupes.length === 0">
+              <td colspan="8" class="text-center">Aucun groupe.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

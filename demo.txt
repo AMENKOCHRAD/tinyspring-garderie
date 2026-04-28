@@ -1,0 +1,63 @@
+Cahier de Démonstration (Soutenance Universitaire)
+--------------------------------------------------
+
+PRÉPARATION (AVANT LA SOUTENANCE)
+1. Ouvrez votre terminal.
+2. Lancez ./start.sh. (Important: comme la dernière fois, Angular a tenté de compiler entre l'écriture de deux fichiers, provoquant un crash. Maintenant que tout est écrit, la commande passera du premier coup !).
+3. Ouvrez deux fenêtres de navigateur côte à côte :
+   - Fenêtre 1 (Front-Office) : http://localhost:4200 (Portail Parent)
+   - Fenêtre 2 (Back-Office)  : http://localhost:4201 (Portail Administrateur)
+
+---
+
+SCÈNE 1 : LE TABLEAU DE BORD INTELLIGENT (Business Intelligence)
+Où : Back-Office -> Accueil (Dashboard)
+
+Action :
+1. Connectez-vous en tant qu'administrateur.
+2. Arrivez sur la page d'accueil (Analytics).
+3. Discours au jury : 
+   "Voici une vraie feature d'ingénierie. Plutôt qu'une simple interface statique, j'ai développé un moteur d'Analyse de Données et de Business Intelligence. Mon backend (Spring Boot) agrège à chaud les bases de données pour remonter des 'Data Cubes' précis."
+4. Montrez la 'Jauge du Taux d'Occupation' (RadialBar animée) et le 'Graphique de Répartition des Langues' (Donut). Jouez avec le survol de la souris.
+
+---
+
+SCÈNE 2 : LE BOUCLIER ANTI-COLLISION (Algorithmique d'Intervalles Temporels)
+Où : Back-Office -> Classes & Salles -> Groupes (puis Planning Visuel)
+
+VOS DONNÉES EN BD AVANT LA DEMO :
+- Ayez au moins 2 Salles (ex: Salle Papillon, Salle Girafe).
+- Ayez au moins 2 Classes (associées à ces salles).
+- Ayez des utilisateurs avec le rôle "Animatrice" créés (User 1, User 2).
+
+Action Devant le Jury :
+1. Créez un Groupe : Nom="Les Poussins", Animatrice="User 1", Classe="Classe Papillon", Début="08:00", Fin="12:00".
+2. Allez dans le menu de gauche "Planning Visuel". Montrez au jury la barre chronologique bleue foncée qui s'est créée dynamiquement en fonction du temps.
+3. Retournez dans "Groupes" et TENTEZ L'IMPOSSIBLE. Créez un nouveau Groupe "Les Renards" avec:
+   - Animatrice="User 2" (Différente)
+   - Classe="Classe Papillon" (La même salle !)
+   - Début="10:00", Fin="14:00"
+4. Cliquez sur 'Sauvegarder'.
+5. BOUM ! Un pop-up rouge/message d'erreur vous bloque sèchement !
+6. Discours au jury : 
+   "Ici, j'ai implémenté un système de sécurité absolu. Une logique d'algorithme sur des plages d'Intervalles vérifie les chevauchements. Le système a détecté que la salle est déjà physiquement occupée de 8h à 12h. Le Backend Spring Boot a donc mathématiquement rejeté la transaction pour éviter un Double-Booking."
+
+---
+
+SCÈNE 3 : LE LOAD-BALANCING ET L'ASSISTANT I.A D'AFFECTATION
+Où : Front-Office (Parent) ET Back-Office (Affectation)
+
+Action :
+1. Allez sur le Portail Parent (localhost:4200).
+2. Descendez jusqu'à "Inscription assistée par I.A".
+3. Tapez Âge="4", Langue="Français" et lancez la recherche.
+4. L'algorithme sort les cartes de suggestions avec des scores de %.
+5. Discours au jury : 
+   "Le système ne suggère pas au hasard. Il fait de l'équilibrage de charge (Load Balancing) ! L'heuristique valorise non seulement l'âge, mais le taux de remplissage effectif du groupe pour éviter d'engorger une classe."
+6. Puis basculez sur l'écran Back-Office -> Classes & Salles -> Affectations.
+7. Simulez l'arrivée physique d'un enfant et créez une Nouvelle Affectation Administrateur. 
+8. Au lieu de cliquer sur la liste basique "Groupe d'accueil", cliquez sur "✨ IA Assistant".
+9. Entrez Âge="4", Langue="Français". Les calculs s'opèrent.
+10. Cliquez sur le badge coloré de réponse à l'écran. Magique : le menu déroulant HTML classique s'autoverrouille sur l'ID de la recommandation !!
+11. Discours final de conclusion : "Dans un esprit SOA (Services), une même API ultra complexe de calcul (mon Backend) est ici consommée par deux clients Angular totalement différents, l'un par le parent, l'autre comme outil de productivité (Auto-complétion magique) pour la secrétaire."
+12. Applaudissements prévus ! 🎓

@@ -1,0 +1,111 @@
+<div class="row" *ngIf="loading">
+  <div class="col-12 text-center py-5">
+    <div class="spinner-grow text-primary" style="width: 4rem; height: 4rem;"></div>
+    <h4 class="mt-3 text-muted">Construction du Cube de Données (Business Intelligence)...</h4>
+  </div>
+</div>
+
+<div class="row" *ngIf="!loading && stats">
+  
+  <!-- KPI Metrics Row -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm bg-gradient-blue text-white h-100">
+      <div class="card-body">
+        <h6 class="text-uppercase font-weight-bold mb-3"><i class="feather icon-users mr-2"></i>Enfants Actifs</h6>
+        <h2 class="mb-0">{{ stats.totalEnfantsActifs }}</h2>
+        <p class="mb-0 mt-2 text-white-50 small">Inscrits cette année</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm bg-gradient-green text-white h-100">
+      <div class="card-body">
+        <h6 class="text-uppercase font-weight-bold mb-3"><i class="feather icon-box mr-2"></i>Groupes Répartis</h6>
+        <h2 class="mb-0">{{ stats.totalGroupes }}</h2>
+        <p class="mb-0 mt-2 text-white-50 small">Groupes gérés par l'IA</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm bg-gradient-purple text-white h-100">
+      <div class="card-body">
+        <h6 class="text-uppercase font-weight-bold mb-3"><i class="feather icon-layout mr-2"></i>Classes Squelette</h6>
+        <h2 class="mb-0">{{ stats.totalClasses }}</h2>
+        <p class="mb-0 mt-2 text-white-50 small">Divisions disponibles</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm bg-gradient-orange text-white h-100">
+      <div class="card-body">
+        <h6 class="text-uppercase font-weight-bold mb-3"><i class="feather icon-home mr-2"></i>Salles Physiques</h6>
+        <h2 class="mb-0">{{ stats.totalSalles }}</h2>
+        <p class="mb-0 mt-2 text-white-50 small">Capacités immobilières</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="col-xl-4 col-md-12 mb-4">
+    <div class="card shadow-sm h-100 border-0">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0 text-dark"><i class="feather icon-pie-chart text-info mr-2"></i>Demande Linguistique</h5>
+      </div>
+      <div class="card-body d-flex align-items-center justify-content-center">
+        <apx-chart 
+          *ngIf="chartOptionsLanguage"
+          [series]="chartOptionsLanguage.series"
+          [chart]="chartOptionsLanguage.chart"
+          [labels]="chartOptionsLanguage.labels"
+          [colors]="chartOptionsLanguage.colors"
+          [responsive]="chartOptionsLanguage.responsive">
+        </apx-chart>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4 col-md-12 mb-4">
+    <div class="card shadow-sm h-100 border-0">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0 text-dark"><i class="feather icon-activity text-success mr-2"></i>Taux d'Occupation Global</h5>
+      </div>
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
+        <apx-chart 
+          *ngIf="chartOptionsOccupancy"
+          [series]="chartOptionsOccupancy.series"
+          [chart]="chartOptionsOccupancy.chart"
+          [plotOptions]="chartOptionsOccupancy.plotOptions"
+          [colors]="chartOptionsOccupancy.colors"
+          [labels]="chartOptionsOccupancy.labels">
+        </apx-chart>
+        <p class="text-muted text-center mt-3 small">Jauge de charge de la garderie selon la somme des places maximales.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4 col-md-12 mb-4">
+    <div class="card shadow-sm h-100 border-0">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0 text-dark"><i class="feather icon-bar-chart-2 text-primary mr-2"></i>Enfants / Salles</h5>
+      </div>
+      <div class="card-body">
+        <apx-chart 
+          *ngIf="chartOptionsSalles"
+          [series]="chartOptionsSalles.series"
+          [chart]="chartOptionsSalles.chart"
+          [plotOptions]="chartOptionsSalles.plotOptions"
+          [dataLabels]="chartOptionsSalles.dataLabels"
+          [colors]="chartOptionsSalles.colors"
+          [xaxis]="chartOptionsSalles.xaxis">
+        </apx-chart>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+

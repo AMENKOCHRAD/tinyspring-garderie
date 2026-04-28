@@ -1,0 +1,74 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="text-white mb-0">✨ Générateur de Rapports Journaliers (IA)</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted">Générez rapidement un rapport professionnel pour les parents à partir de simples mots-clés.</p>
+        
+        <div class="alert alert-danger" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Nom de l'enfant</label>
+            <input type="text" class="form-control" [(ngModel)]="childName" placeholder="Ex: Lucas, Emma..." />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <label class="form-label">Notes de l'éducatrice (mots-clés bruts)</label>
+            <textarea class="form-control" [(ngModel)]="animatorNotes" rows="3" placeholder="Ex: bien mangé la purée, sieste 2h difficile de s'endormir, a adoré l'activité peinture, tout va bien."></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" (click)="generateReport()" [disabled]="isGenerating">
+          <span *ngIf="isGenerating" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          <i class="feather icon-cpu me-1" *ngIf="!isGenerating"></i>Générer le rapport
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 mt-3" *ngIf="isGenerating || generatedReport">
+    <div class="card border-info">
+      <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h5 class="text-white mb-0">Rapport Généré</h5>
+        <div>
+          <button *ngIf="generatedReport" class="btn btn-sm btn-light text-info me-2" (click)="copyToClipboard()">
+            <i class="feather icon-copy"></i> Copier
+          </button>
+          <button *ngIf="generatedReport" class="btn btn-sm btn-light text-danger" (click)="downloadPDF()">
+            <i class="feather icon-file-text"></i> PDF
+          </button>
+        </div>
+      </div>
+      <div class="card-body position-relative">
+        <div *ngIf="isGenerating" class="text-center py-4 text-info">
+          <div class="spinner-border text-info" style="width: 3rem; height: 3rem;" role="status"></div>
+          <p class="mt-2 text-info">L'Intelligence Artificielle rédige le rapport...</p>
+        </div>
+        
+        <div *ngIf="generatedReport" class="bg-light p-3 rounded">
+          <!-- Zone capturée pour le PDF -->
+          <div id="pdf-report-content" class="bg-white p-4 border rounded" style="color: #333; font-family: Arial, sans-serif;">
+            <div class="text-center mb-4 pb-3 border-bottom">
+              <h3 style="color: #4680ff; margin-bottom: 5px;">🏫 TinySpring Garderie</h3>
+              <h5 class="text-secondary">Rapport Journalier</h5>
+              <p class="mb-0" style="font-size: 0.9rem;">Enfant : <strong>{{ childName || 'Non spécifié' }}</strong></p>
+              <p class="text-muted mb-0" style="font-size: 0.8rem;">Date : {{ currentDate | date:'dd/MM/yyyy' }}</p>
+            </div>
+            
+            <div class="generated-text" style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.6;">{{ generatedReport }}</div>
+            
+            <div class="mt-5 pt-3 border-top text-center">
+              <p class="text-muted mb-0" style="font-size: 0.8rem;">Généré par le système d'Intelligence Artificielle de la Garderie</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

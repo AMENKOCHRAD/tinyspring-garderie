@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:4201"})
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -39,10 +41,15 @@ public class AuthController {
                     .body("Mot de passe incorrect");
         }
 
+        String token = Base64.getEncoder().encodeToString(
+                (request.getEmail() + ":" + request.getPassword()).getBytes(StandardCharsets.UTF_8)
+        );
+
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Login success");
         response.put("email", user.getEmail());
         response.put("role", user.getRole().getName().name());
+        response.put("token", token);
 
         return ResponseEntity.ok(response);
     }
