@@ -49,7 +49,7 @@ export class EventListComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(EventNotificationService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
-   
+
   private readonly loadingSubject = new BehaviorSubject<boolean>(true);
   private readonly errorSubject = new BehaviorSubject<string>('');
   private readonly searchSubject = new BehaviorSubject<string>('');
@@ -58,15 +58,20 @@ export class EventListComponent implements OnInit, OnDestroy {
   private readonly dateFilterSubject = new BehaviorSubject<EventDateFilter>('ALL');
   private readonly priceFilterSubject = new BehaviorSubject<EventPriceFilter>('ALL');
 
+  private readonly currentPageSubject = new BehaviorSubject<number>(1);
+  private readonly pageSizeSubject = new BehaviorSubject<number>(6);
+
   readonly toast$ = this.notificationService.message$;
   readonly loading$ = this.loadingSubject.asObservable();
   readonly errorMessage$ = this.errorSubject.asObservable();
-Math = Math;
+
+  Math = Math;
+
   ratingsModalOpen = false;
   ratingsLoading = false;
   selectedRatingsEventTitle = '';
   selectedRatings: EventRatingAdmin[] = [];
-   ratingsErrorMessage: string = '';
+  ratingsErrorMessage = '';
 
   readonly statusOptions: FilterOption<EventStatus | 'ALL'>[] = [
     { value: 'ALL', label: 'Tous' },
@@ -94,6 +99,9 @@ Math = Math;
   selectedType = 'ALL';
   selectedDateFilter: EventDateFilter = 'ALL';
   selectedPriceFilter: EventPriceFilter = 'ALL';
+
+  currentPage = 1;
+  pageSize = 6;
 
   actionInProgressId: number | null = null;
 
@@ -153,7 +161,9 @@ Math = Math;
     this.typeFilterSubject.asObservable(),
     this.dateFilterSubject.asObservable(),
     this.priceFilterSubject.asObservable(),
-    this.typeOptions$
+    this.typeOptions$,
+    this.currentPageSubject.asObservable(),
+    this.pageSizeSubject.asObservable()
   ]).pipe(
     map(([
       events,
@@ -165,7 +175,9 @@ Math = Math;
       typeFilter,
       dateFilter,
       priceFilter,
-      typeOptions
+      typeOptions,
+      currentPage,
+      pageSize
     ]) => {
       const filteredEvents = events.filter((event) =>
         this.matchesSearch(event, searchTerm) &&
@@ -175,13 +187,28 @@ Math = Math;
         this.matchesPrice(event, priceFilter)
       );
 
+      const totalFilteredEvents = filteredEvents.length;
+      const totalPages = Math.max(1, Math.ceil(totalFilteredEvents / pageSize));
+      const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+      const startIndexRaw = (safeCurrentPage - 1) * pageSize;
+      const endIndexRaw = startIndexRaw + pageSize;
+      const paginatedEvents = filteredEvents.slice(startIndexRaw, endIndexRaw);
+
       return {
         events,
         filteredEvents,
+        paginatedEvents,
         loading,
         errorMessage,
         toast,
         typeOptions,
+        currentPage: safeCurrentPage,
+        pageSize,
+        totalPages,
+        totalFilteredEvents,
+        startIndex: totalFilteredEvents === 0 ? 0 : startIndexRaw + 1,
+        endIndex: Math.min(endIndexRaw, totalFilteredEvents),
         hasActiveFilters:
           searchTerm.length > 0 ||
           statusFilter !== 'ALL' ||
@@ -208,7 +235,8 @@ Math = Math;
         this.updateCalendarEvents(vm.filteredEvents);
       });
   }
-ngOnDestroy(): void {
+
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -220,34 +248,83 @@ ngOnDestroy(): void {
   updateSearchTerm(value: string): void {
     this.searchTerm = value;
     this.searchSubject.next(value.trim());
+    this.resetPagination();
   }
 
   updateStatusFilter(value: EventStatus | 'ALL'): void {
     this.selectedStatus = value;
     this.statusFilterSubject.next(value);
+    this.resetPagination();
   }
 
   updateTypeFilter(value: string): void {
     this.selectedType = value;
     this.typeFilterSubject.next(value);
+    this.resetPagination();
   }
 
   updateDateFilter(value: EventDateFilter): void {
     this.selectedDateFilter = value;
     this.dateFilterSubject.next(value);
+    this.resetPagination();
   }
 
   updatePriceFilter(value: EventPriceFilter): void {
     this.selectedPriceFilter = value;
     this.priceFilterSubject.next(value);
+    this.resetPagination();
   }
 
   resetFilters(): void {
-    this.updateSearchTerm('');
-    this.updateStatusFilter('ALL');
-    this.updateTypeFilter('ALL');
-    this.updateDateFilter('ALL');
-    this.updatePriceFilter('ALL');
+    this.searchTerm = '';
+    this.selectedStatus = 'ALL';
+    this.selectedType = 'ALL';
+    this.selectedDateFilter = 'ALL';
+    this.selectedPriceFilter = 'ALL';
+
+    this.searchSubject.next('');
+    this.statusFilterSubject.next('ALL');
+    this.typeFilterSubject.next('ALL');
+    this.dateFilterSubject.next('ALL');
+    this.priceFilterSubject.next('ALL');
+    this.resetPagination();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1) {
+      return;
+    }
+
+    this.currentPage = page;
+    this.currentPageSubject.next(page);
+  }
+
+  previousPage(): void {
+    if (this.currentPage <= 1) {
+      return;
+    }
+
+    this.goToPage(this.currentPage - 1);
+  }
+
+  nextPage(totalPages: number): void {
+    if (this.currentPage >= totalPages) {
+      return;
+    }
+
+    this.goToPage(this.currentPage + 1);
+  }
+
+  updatePageSize(value: number | string): void {
+    const size = Number(value) || 6;
+
+    this.pageSize = size;
+    this.pageSizeSubject.next(size);
+    this.resetPagination();
+  }
+
+  getPageNumbers(totalPages: number): number[] {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
   }
 
   goToNewEvent(): void {
@@ -437,7 +514,6 @@ ngOnDestroy(): void {
       createdBy: event.createdBy,
       eventPrice: event.eventPrice,
       photoEvent: event.photoEvent
-      
     };
 
     this.eventService
@@ -456,6 +532,11 @@ ngOnDestroy(): void {
           );
         }
       });
+  }
+
+  private resetPagination(): void {
+    this.currentPage = 1;
+    this.currentPageSubject.next(1);
   }
 
   private getCalendarStatusColor(status: EventStatus): string {

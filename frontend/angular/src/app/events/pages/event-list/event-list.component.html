@@ -148,7 +148,7 @@
           </div>
         } @else {
           <div class="event-card-grid">
-            @for (event of vm.filteredEvents; track event.id) {
+            @for (event of vm.paginatedEvents; track event.id) {
               <article class="event-card">
                 <div class="event-card-media">
                   @if (getEventPhotoUrl(event.photoEvent); as photoUrl) {
@@ -200,23 +200,25 @@
                     <span class="event-card-id">#{{ event.id }}</span>
                     <span class="event-capacity">Capacité : {{ event.maxCapacity }}</span>
                   </div>
-<div class="event-rating"  tabindex="0">
-  <div class="stars">
-    <ng-container *ngFor="let star of [1,2,3,4,5]">
-      <span
-        class="star"
-        [class.filled]="star <= Math.round(event.averageRating ?? 0)">
-        ★
-      </span>
-    </ng-container>
-  </div>
 
-  <span class="rating-text">
-    {{ (event.ratingCount ?? 0) > 0
-      ? ((event.averageRating ?? 0) | number:'1.1-1') + ' (' + (event.ratingCount ?? 0) + ' avis)'
-      : 'Pas encore noté' }}
-  </span>
-</div>
+                  <div class="event-rating" tabindex="0">
+                    <div class="stars">
+                      <ng-container *ngFor="let star of [1,2,3,4,5]">
+                        <span
+                          class="star"
+                          [class.filled]="star <= Math.round(event.averageRating ?? 0)"
+                        >
+                          ★
+                        </span>
+                      </ng-container>
+                    </div>
+
+                    <span class="rating-text">
+                      {{ (event.ratingCount ?? 0) > 0
+                        ? ((event.averageRating ?? 0) | number:'1.1-1') + ' (' + (event.ratingCount ?? 0) + ' avis)'
+                        : 'Pas encore noté' }}
+                    </span>
+                  </div>
 
                   @if (getStatusActionHint(event); as statusHint) {
                     <p class="event-status-hint">{{ statusHint }}</p>
@@ -343,21 +345,53 @@
             }
           </div>
 
-          <div class="calendar-section">
-  <div class="calendar-section-header">
-    <h3>Calendrier des événements</h3>
-    <p>Vue mensuelle des événements avec leur statut.</p>
-  </div>
+         <div class="modern-pagination">
+  <button
+    type="button"
+    class="pagination-arrow"
+    (click)="previousPage()"
+    [disabled]="vm.currentPage <= 1"
+  >
+    ‹
+  </button>
 
-  <div class="calendar-panel">
-    <full-calendar
-  [options]="calendarOptions"
-></full-calendar>
-  </div>
+  @for (page of getPageNumbers(vm.totalPages); track page) {
+    <button
+      type="button"
+      class="pagination-page"
+      [class.active]="page === vm.currentPage"
+      (click)="goToPage(page)"
+    >
+      {{ page }}
+    </button>
+  }
+
+  <button
+    type="button"
+    class="pagination-arrow"
+    (click)="nextPage(vm.totalPages)"
+    [disabled]="vm.currentPage >= vm.totalPages"
+  >
+    ›
+  </button>
 </div>
+
+<div class="pagination-summary">
+  {{ vm.startIndex }}-{{ vm.endIndex }} sur {{ vm.totalFilteredEvents }} événements
+</div>
+
+          <div class="calendar-section">
+            <div class="calendar-section-header">
+              <h3>Calendrier des événements</h3>
+              <p>Vue mensuelle des événements avec leur statut.</p>
+            </div>
+
+            <div class="calendar-panel">
+              <full-calendar [options]="calendarOptions"></full-calendar>
+            </div>
+          </div>
         }
       }
     </div>
   </section>
 }
-
