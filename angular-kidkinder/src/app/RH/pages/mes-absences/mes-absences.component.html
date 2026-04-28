@@ -55,8 +55,8 @@
         </tr>
       </thead>
       <tbody>
-        <!-- ✅ absencesPaginées au lieu de absences -->
-        <tr *ngFor="let absence of absencesPaginées">
+        <!-- ✅ getAbsencesPaginees() sans accent -->
+        <tr *ngFor="let absence of getAbsencesPaginees()">
           <td><span class="type-badge">{{ getTypeLabel(absence.type) }}</span></td>
           <td>{{ absence.dateDebut }}</td>
           <td>{{ absence.dateFin }}</td>
@@ -83,19 +83,13 @@
   <div class="pagination" *ngIf="totalPages > 1">
     <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
             [disabled]="pageActuelle === 1">‹</button>
-
-    <button *ngFor="let p of pages"
-            class="page-btn"
+    <button *ngFor="let p of pages" class="page-btn"
             [class.page-btn--active]="p === pageActuelle"
-            (click)="goToPage(p)">
-      {{ p }}
-    </button>
-
+            (click)="goToPage(p)">{{ p }}</button>
     <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
             [disabled]="pageActuelle === totalPages">›</button>
   </div>
 
-  <!-- ✅ Info pagination -->
   <div class="pagination-info" *ngIf="absences.length > parPage">
     {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
     sur {{ absences.length }} demandes

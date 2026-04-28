@@ -21,6 +21,12 @@ public class AdminAbsenceCongeController {
         return ResponseEntity.ok(absenceCongeService.getAllAbsenceConges());
     }
 
+    // ✅ AJOUT — Détail d'une absence par ID
+    @GetMapping("/{id}")
+    public ResponseEntity<AbsenceCongeDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(absenceCongeService.getAbsenceCongeById(id));
+    }
+
     @GetMapping("/statut/{statut}")
     public ResponseEntity<List<AbsenceCongeDTO>> getByStatut(@PathVariable StatutAbsenceConge statut) {
         return ResponseEntity.ok(absenceCongeService.getAbsenceCongesByStatut(statut));

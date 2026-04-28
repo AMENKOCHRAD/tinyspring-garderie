@@ -75,7 +75,6 @@ export class LoginPageComponent implements OnInit {
           this.isSubmitting.set(false);
 
           if (user.role === 'ANIMATRICE') {
-            // ✅ Récupérer l'ID animatrice via email — sans toucher aux modèles partagés
             this.http
               .get<{ id: number }>(`/api/animatrice/profil/par-email?email=${user.email}`)
               .subscribe({

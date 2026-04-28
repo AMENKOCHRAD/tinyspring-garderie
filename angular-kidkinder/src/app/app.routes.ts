@@ -46,8 +46,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { role: 'ANIMATRICE', roles: ['ANIMATRICE'] },
     children: [
-      { path: '', redirectTo: 'tableau-de-bord', pathMatch: 'full' },
-      { path: 'tableau-de-bord', component: AnimatorWorkspacePageComponent, data: { page: 'tableau-de-bord' } },
+{ path: '', redirectTo: '/animateur/rh/mes-absences', pathMatch: 'full' },      { path: 'tableau-de-bord', component: AnimatorWorkspacePageComponent, data: { page: 'tableau-de-bord' } },
       { path: 'groupes',         component: AnimatorWorkspacePageComponent, data: { page: 'groupes' } },
       { path: 'sante',           component: AnimatorWorkspacePageComponent, data: { page: 'sante' } },
       { path: 'activites',       component: AnimatorWorkspacePageComponent, data: { page: 'activites' } },

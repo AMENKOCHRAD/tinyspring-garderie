@@ -132,8 +132,8 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
       label: 'RH',
       route: '/animateur/formations',
       children: [
-        { label: 'Mes absences', route: '/animateur/rh/mes-absences' },
-        { label: 'Nouvelle demande', route: '/animateur/rh/nouvelle-demande' },
+        { label: '📋 Mes absences', route: '/animateur/rh/mes-absences' },
+        { label: '➕ Nouvelle demande', route: '/animateur/rh/nouvelle-demande' },
         { label: '📚 Formations disponibles', route: '/animateur/formations/disponibles' },
         { label: '🎓 Mes formations', route: '/animateur/formations/mes-formations' }
       ]

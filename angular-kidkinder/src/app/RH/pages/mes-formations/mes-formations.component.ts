@@ -17,7 +17,7 @@ export class MesFormationsComponent implements OnInit {
   animatriceId: number = 0;
   onglet: 'historique' | 'suggestions' | 'alertes' = 'historique';
 
-  // ✅ PAGINATION — une page par onglet
+  // ✅ PAGINATION
   pageHistorique = 1;
   pageSuggestions = 1;
   parPage = 8;
@@ -59,7 +59,6 @@ export class MesFormationsComponent implements OnInit {
       });
   }
 
-  // ===== LISTES COMPLÈTES =====
   get formationsTerminees(): any[] {
     return this.profil?.formations?.filter((af: any) => af.statut === 'TERMINEE') || [];
   }
@@ -76,8 +75,8 @@ export class MesFormationsComponent implements OnInit {
     return [...this.formationsEnCours, ...this.formationsAttente, ...this.formationsTerminees];
   }
 
-  // ===== PAGINATION HISTORIQUE =====
-  get formationsPaginéesHistorique(): any[] {
+  // ✅ PAGINATION HISTORIQUE — sans accent
+  getFormationsPagineesHistorique(): any[] {
     const debut = (this.pageHistorique - 1) * this.parPage;
     return this.toutesFormations.slice(debut, debut + this.parPage);
   }
@@ -95,8 +94,8 @@ export class MesFormationsComponent implements OnInit {
     this.pageHistorique = page;
   }
 
-  // ===== PAGINATION SUGGESTIONS =====
-  get suggestionsPaginées(): any[] {
+  // ✅ PAGINATION SUGGESTIONS — sans accent
+  getSuggestionsPaginees(): any[] {
     const debut = (this.pageSuggestions - 1) * this.parPage;
     return (this.profil?.suggestions || []).slice(debut, debut + this.parPage);
   }
@@ -114,7 +113,6 @@ export class MesFormationsComponent implements OnInit {
     this.pageSuggestions = page;
   }
 
-  // ===== RESET PAGE AU CHANGEMENT D'ONGLET =====
   setOnglet(o: 'historique' | 'suggestions' | 'alertes'): void {
     this.onglet = o;
     this.pageHistorique = 1;

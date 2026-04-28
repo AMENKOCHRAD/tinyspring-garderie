@@ -1,1 +1,98 @@
-<p>detail-absence-conge works!</p>
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">Détail de la demande</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span>
+        <span class="separator">/</span>
+        <span>RH & Formations</span>
+        <span class="separator">/</span>
+        <a routerLink="/rh/absences-conges" class="link">Absences & Congés</a>
+        <span class="separator">/</span>
+        <span class="active">Détail</span>
+      </nav>
+    </div>
+    <button class="btn-back" (click)="retour()">← Retour à la liste</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-error" *ngIf="errorMessage">⚠️ {{ errorMessage }}</div>
+
+  <!-- Contenu -->
+  <div *ngIf="absence && !isLoading">
+
+    <!-- Card animatrice -->
+    <div class="info-card">
+      <div class="card-section-title">👤 Animatrice</div>
+      <div class="animatrice-row">
+        <div class="avatar">
+          {{ absence.animatricePrenom?.[0] }}{{ absence.animatriceNom?.[0] }}
+        </div>
+        <div>
+          <div class="animatrice-name">{{ absence.animatricePrenom }} {{ absence.animatriceNom }}</div>
+        </div>
+        <span class="statut-badge ms-auto" [ngClass]="getBadgeClass(absence.statut)">
+          {{ getStatutLabel(absence.statut) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Card détails -->
+    <div class="info-card">
+      <div class="card-section-title">📋 Détails de la demande</div>
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Type</span>
+          <span class="detail-value">
+            <span class="type-badge">{{ getTypeLabel(absence.type) }}</span>
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Nb jours</span>
+          <span class="detail-value"><strong>{{ absence.nbJours }} jour(s)</strong></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Date début</span>
+          <span class="detail-value">{{ absence.dateDebut }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Date fin</span>
+          <span class="detail-value">{{ absence.dateFin }}</span>
+        </div>
+        <div class="detail-item detail-item--full" *ngIf="absence.motif">
+          <span class="detail-label">Motif</span>
+          <span class="detail-value">{{ absence.motif }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-card" *ngIf="absence.statut === 'EN_ATTENTE'">
+      <div class="card-section-title">⚡ Actions</div>
+      <div class="actions-row">
+        <button class="btn-valider" (click)="valider()">✅ Valider la demande</button>
+        <button class="btn-refuser" (click)="refuser()">❌ Refuser la demande</button>
+      </div>
+    </div>
+
+    <!-- Décision déjà prise -->
+    <div class="decision-card" *ngIf="absence.statut !== 'EN_ATTENTE'">
+      <div class="card-section-title">📌 Décision</div>
+      <div class="decision-content"
+           [class.decision-content--approuve]="absence.statut === 'APPROUVE'"
+           [class.decision-content--refuse]="absence.statut === 'REFUSE'">
+        {{ getStatutLabel(absence.statut) }} — décision enregistrée
+      </div>
+    </div>
+
+  </div>
+
+</div>

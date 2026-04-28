@@ -28,21 +28,14 @@ export class AuthService {
         map((response) => {
           const role = response.role as UserRole;
 
-          // ✅ Vérifie que le rôle est PARENT ou ANIMATRICE
           if (!this.isAllowedRole(role)) {
             throw new Error('Seuls les parents et les animatrices peuvent acceder a cet espace.');
           }
-
-          // ✅ Supprimé — le backend retourne le vrai rôle, pas besoin de vérifier
-          // if (payload.selectedRole !== role) {
-          //   throw new Error('Le role selectionne ne correspond pas a votre compte.');
-          // }
 
           if (!response.accessToken) {
             throw new Error('Le serveur n a pas retourne de token JWT valide.');
           }
 
-          // ✅ Sauvegarder le token et l'utilisateur
           const user = this.buildSessionUser(response, role);
           localStorage.setItem(this.storageKey, JSON.stringify(user));
           this.currentUserSignal.set(user);
@@ -83,7 +76,8 @@ export class AuthService {
   }
 
   getHomeRouteForRole(role: UserRole): string {
-    return role === 'PARENT' ? '/parent/tableau-de-bord' : '/animateur/tableau-de-bord';
+    // ✅ Animatrice → Mes Absences & Congés comme page d'accueil
+    return role === 'PARENT' ? '/parent/tableau-de-bord' : '/animateur/rh/mes-absences';
   }
 
   private getUserFromStorage(): AuthUser | null {

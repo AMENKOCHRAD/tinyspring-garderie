@@ -17,11 +17,7 @@
     <div class="suggestions-scroll">
       <div *ngFor="let s of suggestions.slice(0, 3)" class="suggestion-chip"
            [style.border-color]="getPrioriteColor(s.priorite)">
-        <span class="chip-priorite"
-              [style.background]="getPrioriteColor(s.priorite) + '20'"
-              [style.color]="getPrioriteColor(s.priorite)">
-          {{ s.priorite }}
-        </span>
+        <span class="chip-priorite">{{ s.priorite }}</span>
         <span class="chip-titre">{{ s.formation.titre }}</span>
         <span class="chip-raison">{{ s.raison }}</span>
       </div>
@@ -34,7 +30,6 @@
             (click)="setFiltre('')">Tous</button>
     <button *ngFor="let t of types" class="chip"
             [class.chip--active]="typeFiltre === t"
-            [style.border-color]="typeFiltre === t ? getTypeColor(t) : ''"
             (click)="setFiltre(t)">
       {{ getTypeIcon(t) }} {{ t }}
     </button>
@@ -52,14 +47,14 @@
     <p>Revenez plus tard pour découvrir les prochaines formations</p>
   </div>
 
-  <!-- Grid — ✅ formationsPaginées au lieu de formationsFiltrees -->
+  <!-- Grid -->
   <div class="formations-grid" *ngIf="!isLoading && formationsFiltrees.length > 0">
-    <div *ngFor="let f of formationsPaginées" class="formation-card"
+    <!-- ✅ getFormationsPaginees() sans accent -->
+    <div *ngFor="let f of getFormationsPaginees()" class="formation-card"
          [class.formation-card--suggere]="isSuggere(f.id)"
          [class.formation-card--inscrit]="estInscrit(f)">
 
-      <div class="badge-suggestion" *ngIf="isSuggere(f.id)"
-           [style.background]="getPrioriteColor(isSuggere(f.id).priorite)">
+      <div class="badge-suggestion" *ngIf="isSuggere(f.id)">
         💡 {{ isSuggere(f.id).priorite }}
       </div>
 
@@ -68,9 +63,7 @@
       </div>
 
       <div class="formation-card__header">
-        <span class="type-badge"
-              [style.background]="getTypeColor(f.type) + '20'"
-              [style.color]="getTypeColor(f.type)">
+        <span class="type-badge">
           {{ getTypeIcon(f.type) }} {{ f.type }}
         </span>
         <span *ngIf="f.obligatoire" class="obligatoire-badge">⚠️ Obligatoire</span>
@@ -102,8 +95,7 @@
           </div>
           <div class="places-info">
             <span>{{ f.inscriptions?.length || 0 }}/{{ f.placesMax }} inscrits</span>
-            <span class="places-dispo"
-                  [class.places-dispo--zero]="getPlacesDisponibles(f) === 0">
+            <span class="places-dispo" [class.places-dispo--zero]="getPlacesDisponibles(f) === 0">
               {{ getPlacesDisponibles(f) === 0 ? 'Complet' : getPlacesDisponibles(f) + ' place(s) dispo' }}
             </span>
           </div>
@@ -142,25 +134,15 @@
   <!-- ✅ PAGINATION -->
   <div class="pagination" *ngIf="totalPages > 1">
     <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
-            [disabled]="pageActuelle === 1">
-      ‹
-    </button>
-
-    <button *ngFor="let p of pages"
-            class="page-btn"
+            [disabled]="pageActuelle === 1">‹</button>
+    <button *ngFor="let p of pages" class="page-btn"
             [class.page-btn--active]="p === pageActuelle"
-            (click)="goToPage(p)">
-      {{ p }}
-    </button>
-
+            (click)="goToPage(p)">{{ p }}</button>
     <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
-            [disabled]="pageActuelle === totalPages">
-      ›
-    </button>
+            [disabled]="pageActuelle === totalPages">›</button>
   </div>
 
-  <!-- ✅ Info pagination -->
-  <div class="pagination-info" *ngIf="formationsFiltrees.length > 0">
+  <div class="pagination-info" *ngIf="formationsFiltrees.length > parPage">
     {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
     sur {{ formationsFiltrees.length }} formations
   </div>

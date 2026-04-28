@@ -29,42 +29,47 @@ export class RhCalendrierComponent implements OnInit {
     this.loadEvents();
   }
 
-  // ✅ Supprimé getHeaders() — l'intercepteur JWT gère ça automatiquement
-
   loadEvents(): void {
     this.http.get<any[]>('http://localhost:8081/api/admin/calendrier/events')
-    .subscribe({
-      next: (events) => {
-        this.calendarOptions = {
-          plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
-          initialView: 'dayGridMonth',
-          locale: 'fr',
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listMonth'
-          },
-          buttonText: {
-            today: "Aujourd'hui",
-            month: 'Mois',
-            week: 'Semaine',
-            list: 'Liste'
-          },
-          events: events,
-          eventDisplay: 'block',
-          dayMaxEvents: 3,
-          height: 'auto',
-          eventClick: (info) => {
-            alert(`📅 ${info.event.title}\nDu : ${info.event.startStr}\nAu : ${info.event.endStr}`);
-          }
-        };
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err: any) => {
-        console.error('Erreur calendrier', err);
-        this.isLoading = false;
-      }
-    });
+      .subscribe({
+        next: (events) => {
+          this.calendarOptions = {
+            plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            buttonText: {
+              today:  "Aujourd'hui",
+              month:  'Mois',
+              week:   'Semaine',
+              list:   'Liste'
+            },
+            events: events,
+            eventDisplay: 'block',
+            dayMaxEvents: 3,
+            height: 'auto',
+            firstDay: 1, // ✅ Semaine commence le lundi
+            eventClick: (info) => {
+              const start = info.event.start
+                ? new Date(info.event.start).toLocaleDateString('fr-FR')
+                : '—';
+              const end = info.event.end
+                ? new Date(info.event.end).toLocaleDateString('fr-FR')
+                : '—';
+              alert(`📅 ${info.event.title}\n\nDébut : ${start}\nFin : ${end}`);
+            }
+          };
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err: any) => {
+          console.error('Erreur calendrier', err);
+          this.isLoading = false;
+        }
+      });
   }
 }

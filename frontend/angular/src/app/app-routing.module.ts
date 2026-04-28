@@ -106,7 +106,14 @@ const routes: Routes = [
           import('./RH/formation/detail-formation/detail-formation.component').then(
             c => c.DetailFormationComponent
           )
-      }
+      },
+      {
+  path: 'rh/absences-conges/:id',
+  loadComponent: () =>
+    import('./RH/absence-conge/detail-absence-conge/detail-absence-conge.component').then(
+      c => c.DetailAbsenceCongeComponent
+    )
+}
     ]
   },
   {

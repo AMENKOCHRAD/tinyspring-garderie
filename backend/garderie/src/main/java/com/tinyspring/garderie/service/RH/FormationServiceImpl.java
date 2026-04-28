@@ -24,6 +24,101 @@ public class FormationServiceImpl implements IFormationService {
     private final AnimatriceRepository animatriceRepository;
     private final INotificationService notificationService;
 
+    // ===== MAPPING SPÉCIALITÉ → TYPES DE FORMATIONS =====
+    // Structure : specialite → { TypeFormation → [priorite, raison] }
+    private static final Map<String, Map<String, String[]>> SPECIALITE_MAPPING = new LinkedHashMap<>();
+
+    static {
+        SPECIALITE_MAPPING.put("éveil musical", Map.of(
+                "MUSICAL",    new String[]{"RECOMMANDÉE", "🎵 Directement liée à votre spécialité en éveil musical"},
+                "ARTISTIQUE", new String[]{"SUGGÉRÉE",    "🎨 Complémentaire à l'éveil musical"},
+                "PEDAGOGIE",  new String[]{"SUGGÉRÉE",    "📚 Enrichit votre approche pédagogique musicale"}
+        ));
+
+        SPECIALITE_MAPPING.put("arts plastiques", Map.of(
+                "ARTISTIQUE", new String[]{"RECOMMANDÉE", "🎨 Directement liée à votre spécialité en arts plastiques"},
+                "PEDAGOGIE",  new String[]{"SUGGÉRÉE",    "📚 Renforce vos méthodes pédagogiques créatives"}
+        ));
+
+        SPECIALITE_MAPPING.put("activités motrices", Map.of(
+                "SECOURISME", new String[]{"IMPORTANT",   "🛡️ Essentielle pour encadrer les activités physiques en sécurité"},
+                "SANTE",      new String[]{"RECOMMANDÉE", "❤️ Complémentaire à l'encadrement moteur des enfants"},
+                "SECURITE",   new String[]{"RECOMMANDÉE", "🔒 Indispensable pour la sécurité des activités motrices"},
+                "PEDAGOGIE",  new String[]{"SUGGÉRÉE",    "📚 Approches pédagogiques adaptées aux activités motrices"}
+        ));
+
+        SPECIALITE_MAPPING.put("premiers secours", Map.of(
+                "SECOURISME", new String[]{"RECOMMANDÉE", "🛡️ Directement liée à votre spécialité en premiers secours"},
+                "SANTE",      new String[]{"IMPORTANT",   "❤️ Approfondit vos compétences en santé et soins"},
+                "SECURITE",   new String[]{"RECOMMANDÉE", "🔒 Renforce votre expertise en sécurité enfant"}
+        ));
+
+        SPECIALITE_MAPPING.put("psychomotricité", Map.of(
+                "PEDAGOGIE",    new String[]{"RECOMMANDÉE", "📚 Enrichit votre approche psychomotrice avec des outils pédagogiques"},
+                "COMPORTEMENT", new String[]{"RECOMMANDÉE", "🧠 Complémentaire à la psychomotricité et gestion comportementale"},
+                "SANTE",        new String[]{"SUGGÉRÉE",    "❤️ Utile pour le suivi du développement moteur et sanitaire"}
+        ));
+
+        SPECIALITE_MAPPING.put("éveil sensoriel", Map.of(
+                "PEDAGOGIE",  new String[]{"RECOMMANDÉE", "📚 Méthodes pédagogiques pour enrichir l'éveil sensoriel"},
+                "ARTISTIQUE", new String[]{"RECOMMANDÉE", "🎨 L'art stimule les sens et complète l'éveil sensoriel"},
+                "SANTE",      new String[]{"SUGGÉRÉE",    "❤️ Lien entre développement sensoriel et santé de l'enfant"}
+        ));
+
+        SPECIALITE_MAPPING.put("contes et langage", Map.of(
+                "PEDAGOGIE",    new String[]{"RECOMMANDÉE", "📚 Directement liée au développement du langage et à la pédagogie"},
+                "COMPORTEMENT", new String[]{"SUGGÉRÉE",    "🧠 Les contes sont un outil pour le comportement et l'expression"}
+        ));
+
+        SPECIALITE_MAPPING.put("jeux éducatifs", Map.of(
+                "PEDAGOGIE",    new String[]{"RECOMMANDÉE", "📚 Directement liée à votre pratique des jeux éducatifs"},
+                "COMPORTEMENT", new String[]{"RECOMMANDÉE", "🧠 Le jeu favorise le développement comportemental"},
+                "ARTISTIQUE",   new String[]{"SUGGÉRÉE",    "🎨 Les jeux créatifs enrichissent votre pratique"}
+        ));
+
+        SPECIALITE_MAPPING.put("nutrition enfantine", Map.of(
+                "NUTRITION",  new String[]{"RECOMMANDÉE", "🥗 Directement liée à votre spécialité en nutrition enfantine"},
+                "SANTE",      new String[]{"IMPORTANT",   "❤️ La santé et la nutrition sont indissociables"},
+                "SECURITE",   new String[]{"SUGGÉRÉE",    "🔒 Sécurité alimentaire et allergies alimentaires"}
+        ));
+
+        SPECIALITE_MAPPING.put("soin et hygiène", Map.of(
+                "SANTE",      new String[]{"RECOMMANDÉE", "❤️ Directement liée à votre spécialité en soins et hygiène"},
+                "SECOURISME", new String[]{"IMPORTANT",   "🛡️ Les premiers secours complètent les soins quotidiens"},
+                "NUTRITION",  new String[]{"SUGGÉRÉE",    "🥗 Hygiène alimentaire et nutrition vont de pair"}
+        ));
+
+        SPECIALITE_MAPPING.put("activités aquatiques", Map.of(
+                "SECOURISME", new String[]{"IMPORTANT",   "🛡️ Indispensable pour encadrer les activités aquatiques en sécurité"},
+                "SECURITE",   new String[]{"IMPORTANT",   "🔒 La sécurité aquatique est une priorité absolue"},
+                "SANTE",      new String[]{"RECOMMANDÉE", "❤️ Lien entre activités aquatiques et santé de l'enfant"}
+        ));
+
+        SPECIALITE_MAPPING.put("danse et expression corporelle", Map.of(
+                "MUSICAL",    new String[]{"RECOMMANDÉE", "🎵 La musique est au cœur de la danse et l'expression"},
+                "ARTISTIQUE", new String[]{"RECOMMANDÉE", "🎨 Complémentaire à votre pratique d'expression corporelle"},
+                "PEDAGOGIE",  new String[]{"SUGGÉRÉE",    "📚 Approches pédagogiques pour l'enseignement de la danse"}
+        ));
+
+        SPECIALITE_MAPPING.put("théâtre et marionnettes", Map.of(
+                "ARTISTIQUE", new String[]{"RECOMMANDÉE", "🎨 Directement liée à votre pratique théâtrale"},
+                "COMPORTEMENT",new String[]{"RECOMMANDÉE", "🧠 Le théâtre développe l'expression émotionnelle"},
+                "PEDAGOGIE",  new String[]{"SUGGÉRÉE",    "📚 Outils pédagogiques pour l'enseignement par le jeu dramatique"}
+        ));
+
+        SPECIALITE_MAPPING.put("jardinage et nature", Map.of(
+                "SANTE",     new String[]{"RECOMMANDÉE", "❤️ Le contact avec la nature contribue au bien-être"},
+                "NUTRITION", new String[]{"RECOMMANDÉE", "🥗 Le jardinage sensibilise à la nutrition naturelle"},
+                "SECURITE",  new String[]{"SUGGÉRÉE",    "🔒 Sécurité lors des activités extérieures en nature"}
+        ));
+
+        SPECIALITE_MAPPING.put("informatique enfantine", Map.of(
+                "PEDAGOGIE",  new String[]{"RECOMMANDÉE", "📚 Méthodes pédagogiques pour l'enseignement numérique"},
+                "SECURITE",   new String[]{"SUGGÉRÉE",    "🔒 Sécurité numérique et usage responsable des écrans"},
+                "COMPORTEMENT",new String[]{"SUGGÉRÉE",   "🧠 Impact du numérique sur le comportement des enfants"}
+        ));
+    }
+
     // ===== CRUD =====
 
     @Override
@@ -272,6 +367,8 @@ public class FormationServiceImpl implements IFormationService {
         return profil;
     }
 
+    // ===== SUGGESTIONS AMÉLIORÉES PAR SPÉCIALITÉ =====
+
     @Override
     public List<Map<String, Object>> getSuggestions(Long animatriceId) {
         Animatrice animatrice = animatriceRepository.findById(animatriceId)
@@ -283,60 +380,77 @@ public class FormationServiceImpl implements IFormationService {
                 animatriceFormationRepository.findFormationsExpireesByAnimatrice(animatriceId);
         List<Formation> toutesFormations = formationRepository.findByStatut(StatutFormation.OUVERTE);
 
+        // Normaliser la spécialité de l'animatrice (minuscules, sans accents pour comparaison)
+        String specialite = animatrice.getSpecialite() != null
+                ? animatrice.getSpecialite().toLowerCase().trim()
+                : "";
+
+        // Récupérer le mapping de priorités pour cette spécialité
+        Map<String, String[]> prioritesParType = SPECIALITE_MAPPING.getOrDefault(specialite, Map.of());
+
         List<Map<String, Object>> suggestions = new ArrayList<>();
 
         for (Formation formation : toutesFormations) {
+            // Exclure les formations où l'animatrice est déjà inscrite ou en attente
             if (animatriceFormationRepository.existsByAnimatriceIdAndFormationId(
                     animatriceId, formation.getId())) continue;
 
             String priorite = null;
-            String raison = null;
+            String raison   = null;
+            String typeFormation = formation.getType().name();
 
+            // === RÈGLE 1 : Recyclage urgent (formation expirée du même type) ===
             boolean estRecyclage = formationsExpirees.stream()
                     .anyMatch(af -> af.getFormation().getType().equals(formation.getType()));
             if (estRecyclage) {
                 priorite = "URGENT";
-                raison = "🔁 Recyclage requis — formation expirée du même type";
+                raison   = "🔁 Recyclage requis — votre certification de type "
+                        + typeFormation + " a expiré";
             }
 
+            // === RÈGLE 2 : Formation obligatoire non suivie ===
             if (priorite == null && Boolean.TRUE.equals(formation.getObligatoire())
                     && !formationsSuivies.contains(formation.getId())) {
                 priorite = "IMPORTANT";
-                raison = "⚠️ Formation obligatoire non encore suivie";
+                raison   = "⚠️ Formation obligatoire non encore suivie";
             }
 
-            if (priorite == null) {
-                String specialite = animatrice.getSpecialite() != null ?
-                        animatrice.getSpecialite().toLowerCase() : "";
-                String typeFormation = formation.getType().name().toLowerCase();
-                boolean lieASpecialite =
-                        (specialite.contains("musical") && typeFormation.contains("musical")) ||
-                                (specialite.contains("artistique") && typeFormation.contains("artistique")) ||
-                                typeFormation.contains("secourisme") ||
-                                typeFormation.contains("sante") ||
-                                typeFormation.contains("securite");
-                if (lieASpecialite && !formationsSuivies.contains(formation.getId())) {
-                    priorite = "RECOMMANDÉE";
-                    raison = "⭐ Recommandée selon votre spécialité";
+            // === RÈGLE 3 : Recommandation basée sur la spécialité ===
+            if (priorite == null && !prioritesParType.isEmpty()) {
+                String[] mapping = prioritesParType.get(typeFormation);
+                if (mapping != null) {
+                    priorite = mapping[0];
+                    raison   = mapping[1];
                 }
             }
 
+            // === RÈGLE 4 : Toutes les formations SECOURISME et SANTE sont toujours suggérées
+            //               (sécurité enfant = priorité universelle) ===
+            if (priorite == null
+                    && (typeFormation.equals("SECOURISME") || typeFormation.equals("SANTE"))) {
+                priorite = "SUGGÉRÉE";
+                raison   = typeFormation.equals("SECOURISME")
+                        ? "🛡️ Le secourisme est essentiel pour toute animatrice de garderie"
+                        : "❤️ La formation en santé est recommandée pour toutes les animatrices";
+            }
+
+            // === RÈGLE 5 : Formations disponibles non suivies (suggestion générale) ===
             if (priorite == null && !formationsSuivies.contains(formation.getId())) {
                 priorite = "SUGGÉRÉE";
-                raison = "📚 Formation disponible non encore suivie";
+                raison   = "📚 Formation disponible non encore suivie — élargissez vos compétences";
             }
 
             if (priorite != null) {
                 Map<String, Object> suggestion = new HashMap<>();
                 suggestion.put("formation", Map.of(
-                        "id", formation.getId(),
-                        "titre", formation.getTitre(),
-                        "type", formation.getType(),
-                        "dateFormation", formation.getDateFormation() != null ?
-                                formation.getDateFormation().toString() : "",
+                        "id",               formation.getId(),
+                        "titre",            formation.getTitre(),
+                        "type",             formation.getType(),
+                        "dateFormation",    formation.getDateFormation() != null
+                                ? formation.getDateFormation().toString() : "",
                         "placesDisponibles", formation.getPlacesDisponibles(),
-                        "obligatoire", Boolean.TRUE.equals(formation.getObligatoire()),
-                        "lieu", formation.getLieu() != null ? formation.getLieu() : ""
+                        "obligatoire",      Boolean.TRUE.equals(formation.getObligatoire()),
+                        "lieu",             formation.getLieu() != null ? formation.getLieu() : ""
                 ));
                 suggestion.put("priorite", priorite);
                 suggestion.put("raison", raison);
@@ -344,11 +458,13 @@ public class FormationServiceImpl implements IFormationService {
             }
         }
 
+        // Tri par priorité : URGENT > IMPORTANT > RECOMMANDÉE > SUGGÉRÉE
         Map<String, Integer> ordre = Map.of(
                 "URGENT", 0, "IMPORTANT", 1, "RECOMMANDÉE", 2, "SUGGÉRÉE", 3);
         suggestions.sort((a, b) ->
                 ordre.getOrDefault(a.get("priorite").toString(), 4)
                         .compareTo(ordre.getOrDefault(b.get("priorite").toString(), 4)));
+
         return suggestions;
     }
 

@@ -32,7 +32,7 @@
       <a routerLink="/animateur/formations/disponibles" class="alerte-btn">Voir les formations →</a>
     </div>
 
-    <!-- Onglets — ✅ setOnglet() au lieu de onglet = '...' -->
+    <!-- Onglets -->
     <div class="onglets">
       <button class="onglet" [class.onglet--active]="onglet === 'historique'"
               (click)="setOnglet('historique')">
@@ -54,7 +54,6 @@
     <!-- ===== ONGLET HISTORIQUE ===== -->
     <div *ngIf="onglet === 'historique'">
 
-      <!-- En cours -->
       <div class="section" *ngIf="formationsEnCours.length > 0">
         <h3 class="section-title">⏳ En cours ({{ formationsEnCours.length }})</h3>
         <div class="formations-list">
@@ -75,7 +74,6 @@
         </div>
       </div>
 
-      <!-- Liste attente -->
       <div class="section" *ngIf="formationsAttente.length > 0">
         <h3 class="section-title">⏳ Liste d'attente ({{ formationsAttente.length }})</h3>
         <div class="formations-list">
@@ -92,7 +90,6 @@
         </div>
       </div>
 
-      <!-- Terminées -->
       <div class="section" *ngIf="formationsTerminees.length > 0">
         <h3 class="section-title">✅ Terminées ({{ formationsTerminees.length }})</h3>
         <div class="formations-list">
@@ -121,7 +118,6 @@
         </div>
       </div>
 
-      <!-- Vide -->
       <div class="empty-section" *ngIf="profil.stats.total === 0">
         <p>📚 Vous n'avez encore suivi aucune formation</p>
         <a routerLink="/animateur/formations/disponibles" class="btn-link-sm">
@@ -147,8 +143,8 @@
         <p>✅ Toutes vos formations sont à jour !</p>
       </div>
       <div class="suggestions-list">
-        <!-- ✅ suggestionsPaginées -->
-        <div *ngFor="let s of suggestionsPaginées" class="suggestion-item"
+        <!-- ✅ getSuggestionsPaginees() sans accent -->
+        <div *ngFor="let s of getSuggestionsPaginees()" class="suggestion-item"
              [style.border-left]="'4px solid ' + getPrioriteColor(s.priorite)">
           <div class="suggestion-header">
             <div class="suggestion-left">

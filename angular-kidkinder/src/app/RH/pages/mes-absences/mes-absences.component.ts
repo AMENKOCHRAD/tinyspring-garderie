@@ -55,7 +55,7 @@ export class MesAbsencesComponent implements OnInit, OnDestroy {
     this.absenceCongeService.getMesAbsenceConges(this.animatriceId).subscribe({
       next: (data: AbsenceConge[]) => {
         this.absences = data;
-        this.pageActuelle = 1; // ✅ reset page
+        this.pageActuelle = 1;
         this.isLoading = false;
       },
       error: (err: any) => {
@@ -66,8 +66,8 @@ export class MesAbsencesComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Absences de la page actuelle
-  get absencesPaginées(): AbsenceConge[] {
+  // ✅ Sans accent
+  getAbsencesPaginees(): AbsenceConge[] {
     const debut = (this.pageActuelle - 1) * this.parPage;
     return this.absences.slice(debut, debut + this.parPage);
   }

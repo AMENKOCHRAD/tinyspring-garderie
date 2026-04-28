@@ -36,6 +36,14 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
                 .collect(Collectors.toList());
     }
 
+    // ✅ AJOUT — Détail par ID
+    @Override
+    public AbsenceCongeDTO getAbsenceCongeById(Long id) {
+        AbsenceConge absenceConge = absenceCongeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Demande non trouvée : " + id));
+        return absenceCongeMapper.toDTO(absenceConge);
+    }
+
     @Override
     public List<AbsenceCongeDTO> getAbsenceCongesByStatut(StatutAbsenceConge statut) {
         return absenceCongeRepository.findByStatut(statut).stream()

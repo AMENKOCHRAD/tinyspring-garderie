@@ -7,9 +7,11 @@ import java.util.List;
 
 public interface IAbsenceCongeService {
 
-    // ========== ADMIN ==========
-
+    // ===== ADMIN =====
     List<AbsenceCongeDTO> getAllAbsenceConges();
+
+    // ✅ AJOUT
+    AbsenceCongeDTO getAbsenceCongeById(Long id);
 
     List<AbsenceCongeDTO> getAbsenceCongesByStatut(StatutAbsenceConge statut);
 
@@ -19,8 +21,7 @@ public interface IAbsenceCongeService {
 
     void deleteAbsenceConge(Long id);
 
-    // ========== ANIMATRICE ==========
-
+    // ===== ANIMATRICE =====
     AbsenceCongeDTO soumettreDemandeAbsenceConge(AbsenceCongeDTO dto);
 
     List<AbsenceCongeDTO> getMesAbsenceConges(Long animatriceId);
