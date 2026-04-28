@@ -143,6 +143,20 @@ export const NavigationItems: NavigationItem[] = [
             type: 'item',
             url: '/admin/boutique/predictions',
             icon: 'feather icon-activity'
+          },
+          {
+            id: 'boutique-affinites',
+            title: 'Affinites parents',
+            type: 'item',
+            url: '/admin/boutique/affinites',
+            icon: 'feather icon-users'
+          },
+          {
+            id: 'marketing-assistant',
+            title: 'Assistant Marketing',
+            type: 'item',
+            url: '/admin/marketing',
+            icon: 'feather icon-cpu'
           }
         ]
       },

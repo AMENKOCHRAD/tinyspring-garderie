@@ -50,15 +50,25 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
-                // ✅ JWT filter appliqué SAUF sur le webhook Stripe
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
 
                         // ── Auth publique ──────────────────────────────────
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // ── Webhook Stripe — DOIT être en premier et permitAll ──
+                        // ── Webhook Stripe ─────────────────────────────────
                         .requestMatchers(HttpMethod.POST, "/api/stripe/webhook").permitAll()
+
+                        // ✅ Magic links email — AVANT toute règle commandes/**
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/boutique/commandes/action/especes/**",
+                                "/api/boutique/commandes/action/refuser/**"
+                        ).permitAll()
+
+                        // ── Endpoint échec paiement — public ───────────────
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/boutique/commandes/echec-par-session/**"
+                        ).permitAll()
 
                         // ── Ressources publiques ───────────────────────────
                         .requestMatchers("/images/**").permitAll()
@@ -69,6 +79,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/boutique/commandes").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/boutique/commandes/*/checkout-session").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/boutique/commandes/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/boutique/commandes/**").authenticated()
 
                         // ── Boutique back-office admin ─────────────────────
                         .requestMatchers("/api/admin/boutique/**").hasRole("ADMIN")
@@ -78,6 +89,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE")
+                        .requestMatchers(HttpMethod.GET, "/api/boutique/produits/recommandes").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/boutique/interactions").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/boutique/affinites/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 );
@@ -102,7 +116,6 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         // ✅ Config CORS séparée pour le webhook Stripe
-        // Stripe n'envoie pas de header Origin → pas de CORS check
         CorsConfiguration stripeConfig = new CorsConfiguration();
         stripeConfig.setAllowedOrigins(List.of("*"));
         stripeConfig.setAllowedMethods(List.of("POST"));
@@ -110,7 +123,7 @@ public class SecurityConfig {
         stripeConfig.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/stripe/webhook", stripeConfig); // ✅ webhook en premier
+        source.registerCorsConfiguration("/api/stripe/webhook", stripeConfig);
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

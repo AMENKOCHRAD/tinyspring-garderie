@@ -4,10 +4,14 @@ import com.tinyspring.garderie.dto.boutique.CommandeDto;
 import com.tinyspring.garderie.dto.boutique.CommandeItemRequest;
 import com.tinyspring.garderie.dto.boutique.CommandeRequest;
 import com.tinyspring.garderie.service.boutique.CommandeService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.tinyspring.garderie.repository.boutique.CommandeRepository;
 
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -19,9 +23,11 @@ import java.util.Map;
 public class CommandeController {
 
     private final CommandeService commandeService;
+    private final CommandeRepository commandeRepository;
 
-    public CommandeController(CommandeService commandeService) {
+    public CommandeController(CommandeService commandeService ,CommandeRepository commandeRepository) {
         this.commandeService = commandeService;
+        this.commandeRepository = commandeRepository;
     }
 
     // ── FRONT-OFFICE ──────────────────────────────────────────────────────────
@@ -109,6 +115,70 @@ public class CommandeController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Erreur : " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/api/boutique/commandes/session/{sessionId}")
+    public ResponseEntity<CommandeDto> getBySession(
+            @PathVariable String sessionId) {
+        return commandeRepository.findByStripeSessionId(sessionId)
+                .map(commande -> ResponseEntity.ok(commandeService.findById(commande.getId())))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ✅ Parent clique "Payer en espèces"
+    @GetMapping("/api/boutique/commandes/action/especes/{token}")
+    public void accepterEspeces(
+            @PathVariable String token,
+            HttpServletResponse response) throws IOException {
+
+        try {
+            commandeService.accepterPaiementEspeces(token);
+            // Rediriger vers page succès frontoffice
+            response.sendRedirect(
+                    "http://localhost:4200/parent/boutique/paiement/especes-confirme"
+            );
+        } catch (Exception e) {
+            response.sendRedirect(
+                    "http://localhost:4200/parent/boutique/paiement/lien-expire"
+            );
+        }
+    }
+
+    // ❌ Parent clique "Non, annuler"
+    @GetMapping("/api/boutique/commandes/action/refuser/{token}")
+    public void refuserCommande(
+            @PathVariable String token,
+            HttpServletResponse response) throws IOException {
+
+        try {
+            commandeService.refuserEtAnnuler(token);
+            response.sendRedirect(
+                    "http://localhost:4200/parent/boutique/paiement/commande-annulee"
+            );
+        } catch (Exception e) {
+            response.sendRedirect(
+                    "http://localhost:4200/parent/boutique/paiement/lien-expire"
+            );
+        }
+    }
+
+    @PostMapping("/api/boutique/commandes/echec-par-session/{sessionId}")
+    public ResponseEntity<?> signalerEchec(
+            @PathVariable String sessionId) {
+        try {
+            commandeRepository.findByStripeSessionId(sessionId)
+                    .ifPresent(commande -> {
+                        if ("PENDING".equals(commande.getStatut())) {
+                            commandeService.envoyerEmailEchecPaiement(
+                                    commande.getId());
+                            System.out.println("📧 Email échec envoyé — Commande #"
+                                    + commande.getId());
+                        }
+                    });
+            return ResponseEntity.ok("ok");
+        } catch (Exception e) {
+            return ResponseEntity.ok("ignored");
         }
     }
 }

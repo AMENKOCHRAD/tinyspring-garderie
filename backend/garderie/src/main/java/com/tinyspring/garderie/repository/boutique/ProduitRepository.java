@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.repository.boutique;
 
 import com.tinyspring.garderie.entity.boutique.Produit;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -31,6 +32,8 @@ public interface ProduitRepository extends JpaRepository<Produit, Long> {
     @Query("SELECT COUNT(cp) > 0 FROM CommandeProduit cp WHERE cp.produit.id = :produitId")
     boolean existsInCommandes(@Param("produitId") Long produitId);
 
+
+
     // ✅ Top produits via CommandeProduit (plus de p.commandes)
     @Query("""
         SELECT cp.produit.id, cp.produit.nom, cp.produit.imageUrl, SUM(cp.quantite)
@@ -39,4 +42,10 @@ public interface ProduitRepository extends JpaRepository<Produit, Long> {
         ORDER BY SUM(cp.quantite) DESC
     """)
     List<Object[]> findTopProduitsByCommandes(Pageable pageable);
+
+    Page<Produit> findByNomContainingIgnoreCase(String nom, Pageable pageable);
+    Page<Produit> findByCategorieId(Long categorieId, Pageable pageable);
+
+
+
 }

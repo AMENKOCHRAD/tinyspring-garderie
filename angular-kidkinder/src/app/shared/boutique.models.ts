@@ -17,6 +17,23 @@ export interface ProduitDto {
   categorieNom: string;
 }
 
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface ProduitQueryParams {
+  page: number;
+  size: number;
+  nom?: string;
+  categorieId?: number | null;
+}
+
 export interface CommandeItemRequest {
   produitId: number;
   quantite: number;

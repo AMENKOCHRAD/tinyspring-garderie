@@ -1,0 +1,64 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">Produit</span>
+      <h1>Fiche produit</h1>
+      <p class="muted">Retrouvez les informations completes avant d'ajouter cet article a votre panier.</p>
+    </div>
+    <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Retour au catalogue</a>
+  </section>
+
+  <section class="table-card" *ngIf="!isLoading(); else loadingState">
+    <p class="muted" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+    <ng-container *ngIf="produit() as product">
+      <div class="product-detail-grid">
+        <div class="product-detail-media">
+          <img
+            *ngIf="hasImage(product.imageUrl); else fallbackImage"
+            [src]="getImageUrl(product.imageUrl)"
+            [alt]="product.nom"
+            class="product-detail-image" />
+          <ng-template #fallbackImage>
+            <div class="product-detail-image product-detail-image--fallback">{{ product.nom.charAt(0) }}</div>
+          </ng-template>
+        </div>
+
+        <article class="product-detail-content">
+          <div class="chip-row">
+            <span class="tag tag--mint">{{ product.categorieNom }}</span>
+            <span *ngIf="product.stock === 0" class="tag tag--blush">Rupture</span>
+            <span *ngIf="isLowStock(product.stock)" class="tag tag--lime">Faible stock</span>
+          </div>
+
+          <h2>{{ product.nom }}</h2>
+          <p class="muted">{{ product.description }}</p>
+
+          <div class="product-detail-summary">
+            <div>
+              <span class="muted">Prix</span>
+              <strong>{{ product.prix | number: '1.2-2' }} TND</strong>
+            </div>
+            <div>
+              <span class="muted">Stock</span>
+              <strong>{{ product.stock }} disponible(s)</strong>
+            </div>
+          </div>
+
+          <div class="product-detail-actions">
+            <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Continuer mes achats</a>
+            <a routerLink="/parent/boutique/cart" class="ts-button ts-button--primary">Voir le panier</a>
+          </div>
+        </article>
+      </div>
+    </ng-container>
+  </section>
+</div>
+
+<ng-template #loadingState>
+  <div class="ts-container">
+    <section class="table-card">
+      <p class="muted">Chargement du produit...</p>
+    </section>
+  </div>
+</ng-template>

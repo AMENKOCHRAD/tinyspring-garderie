@@ -35,7 +35,7 @@ export class AdminComponent implements OnInit {
   ngOnInit(): void {
     this.router.events.subscribe((event: Event) => {
       if (event instanceof NavigationEnd) {
-        this.isBoutiquePage = event.url.startsWith('/admin/boutique/');
+        this.isBoutiquePage = event.url.startsWith('/admin/boutique/') || event.url.startsWith('/admin/marketing');
       }
     });
   }

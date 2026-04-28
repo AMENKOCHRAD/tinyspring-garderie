@@ -1,76 +1,78 @@
-// ── Variables ──────────────────────────────────────────
-$primary:       #4680ff;
-$success:       #2ca87f;
-$danger:        #dc3545;
-$warning:       #e58a00;
-$info:          #4680ff;
-$muted:         #6c757d;
-$border:        #e9ecef;
-$bg-light:      #fafafa;
-$shadow:        0 2px 8px rgba(0,0,0,0.06);
-$radius:        8px;
+$primary: #4680ff;
+$success: #2ca87f;
+$danger: #dc3545;
+$warning: #e58a00;
+$muted: #6c757d;
+$border: #e9ecef;
+$bg-light: #fafafa;
+$shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+$radius: 8px;
 
-// ── Layout page ────────────────────────────────────────
 .b-page {
-  padding: 24px 24px;
+  padding: 24px;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
-// ── Alertes ────────────────────────────────────────────
 .b-alert {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
-  border-radius: $radius;
   margin-bottom: 16px;
+  border-radius: $radius;
   font-size: 14px;
 
-  &--danger  { background: #fde8e8; color: #842029; border: 1px solid #f5c2c7; }
-  &--success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+  &--danger {
+    background: #fde8e8;
+    border: 1px solid #f5c2c7;
+    color: #842029;
+  }
+
+  &--success {
+    background: #d1e7dd;
+    border: 1px solid #badbcc;
+    color: #0f5132;
+  }
 
   &--warning {
     background: #fff3cd;
-    color: #664d03;
     border: 1px solid #ffecb5;
+    color: #664d03;
   }
 
   &--stock {
     align-items: flex-start;
-    gap: 12px;
 
     .b-alert__icon {
+      color: $warning;
       flex-shrink: 0;
       margin-top: 2px;
-      color: #e58a00;
     }
 
     .b-alert__body {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      font-size: 14px;
-
-      strong { font-weight: 700; }
-      span { opacity: 0.85; }
+      gap: 4px;
     }
   }
 
   &__close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.6;
     padding: 0;
-    &:hover { opacity: 1; }
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 20px;
+    opacity: 0.65;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 
-// ── En-tête avec titre et actions ───────────────────────
 .b-page-header {
   display: flex;
   align-items: flex-start;
@@ -81,33 +83,31 @@ $radius:        8px;
 
 .b-header-section {
   flex: 1;
-  margin-bottom: 0;
 }
 
 .b-header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
   gap: 16px;
+  margin-bottom: 12px;
 }
 
 .b-page-title {
+  margin: 0;
   font-size: 24px;
   font-weight: 700;
   color: #212529;
-  margin: 0;
 }
 
-// ── Breadcrumb ────────────────────────────────────────
 .b-breadcrumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: $muted;
   margin: 0;
   padding: 0;
+  font-size: 13px;
+  color: $muted;
 
   &__item {
     display: flex;
@@ -115,29 +115,18 @@ $radius:        8px;
     gap: 6px;
     color: inherit;
     text-decoration: none;
-    cursor: pointer;
-    transition: color 0.15s;
-
-    &:hover { color: $primary; }
 
     &.active {
       color: $primary;
       font-weight: 500;
     }
-
-    svg {
-      width: 14px;
-      height: 14px;
-      stroke-width: 2;
-    }
   }
 
   &__separator {
-    color: $border;
+    color: #c9ced4;
   }
 }
 
-// ── Cards statistiques ─────────────────────────────────
 .b-stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -151,37 +140,30 @@ $radius:        8px;
   gap: 16px;
   padding: 20px;
   background: #fff;
+  border-left: 4px solid;
   border-radius: $radius;
   box-shadow: $shadow;
-  border-left: 4px solid;
-  transition: transform 0.15s, box-shadow 0.15s;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  &--blue {
+    border-left-color: $primary;
   }
 
-  &--blue   { border-left-color: #4680ff; }
-  &--green  { border-left-color: #2ca87f; }
-  &--orange { border-left-color: #e58a00; }
-  &--red    { border-left-color: #dc3545; }
-  &--purple { border-left-color: #7759de; }
+  &--green {
+    border-left-color: $success;
+  }
+
+  &--red {
+    border-left-color: $danger;
+  }
 
   &__icon {
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
     color: $primary;
     flex-shrink: 0;
-
-    svg {
-      width: 24px;
-      height: 24px;
-      stroke-width: 1.5;
-    }
   }
 
   &__content {
@@ -189,20 +171,19 @@ $radius:        8px;
   }
 
   &__number {
+    color: $primary;
     font-size: 28px;
     font-weight: 700;
-    color: $primary;
     line-height: 1;
   }
 
   &__label {
+    margin-top: 4px;
     font-size: 13px;
     color: $muted;
-    margin-top: 4px;
   }
 }
 
-// ── Barre de recherche ──────────────────────────────────
 .b-search-bar {
   display: flex;
   gap: 12px;
@@ -215,13 +196,11 @@ $radius:        8px;
 
   &__icon {
     position: absolute;
-    left: 14px;
     top: 50%;
+    left: 14px;
     transform: translateY(-50%);
     color: $muted;
     pointer-events: none;
-    width: 16px;
-    height: 16px;
   }
 
   &__input {
@@ -229,40 +208,33 @@ $radius:        8px;
     padding: 10px 16px 10px 40px;
     border: 1px solid $border;
     border-radius: $radius;
-    font-size: 14px;
     background: #fff;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    font-size: 14px;
     outline: none;
-
-    &::placeholder {
-      color: $muted;
-    }
+    transition: border-color 0.2s, box-shadow 0.2s;
 
     &:focus {
       border-color: $primary;
-      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+      box-shadow: 0 0 0 3px rgba($primary, 0.12);
     }
   }
 }
 
-// ── Select filtre ──────────────────────────────────────
 .b-select {
   padding: 10px 16px;
   border: 1px solid $border;
   border-radius: $radius;
-  font-size: 14px;
   background: #fff;
-  cursor: pointer;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.15s;
+  cursor: pointer;
 
   &:focus {
     border-color: $primary;
-    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
   }
 }
 
-// ── Card tableau ───────────────────────────────────────
 .b-card {
   background: #fff;
   border-radius: $radius;
@@ -270,26 +242,28 @@ $radius:        8px;
   overflow: hidden;
 }
 
-// ── Tableau ────────────────────────────────────────────
+.table-responsive {
+  overflow-x: auto;
+}
+
 .b-table {
   width: 100%;
   border-collapse: collapse;
-  transition: background 0.15s;
 
   thead {
-    background: #fff;
+    background: $bg-light;
   }
 
   th {
     padding: 14px 20px;
+    border-bottom: 1px solid $border;
     font-size: 12px;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-transform: uppercase;
     color: $muted;
-    border-bottom: 2px solid $border;
-    white-space: nowrap;
     text-align: left;
+    white-space: nowrap;
   }
 
   td {
@@ -301,12 +275,7 @@ $radius:        8px;
   }
 
   tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  &--sm th,
-  &--sm td {
-    padding: 10px 16px;
+    border-bottom: 0;
   }
 }
 
@@ -322,66 +291,56 @@ $radius:        8px;
   }
 }
 
-// ── Image ──────────────────────────────────────────────
-.b-img {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
+.b-img,
+.b-img-placeholder {
+  width: 48px;
+  height: 48px;
   border-radius: 8px;
+}
+
+.b-img {
   display: block;
+  object-fit: cover;
 }
 
 .b-img-placeholder {
-  width: 44px;
-  height: 44px;
-  background: #e9ecef;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: $bg-light;
   border: 1px solid $border;
 }
 
-// ── Typographie cellules ───────────────────────────────
 .b-name {
+  display: block;
   font-weight: 600;
-  font-size: 14px;
   color: #212529;
-  display: block;
 }
 
-.b-sub {
-  font-size: 12px;
-  color: $muted;
-  display: block;
-  margin-top: 2px;
-}
-
-.b-desc {
-  font-size: 13px;
-  color: $muted;
-  max-width: 240px;
-}
-
-// ── Badges ─────────────────────────────────────────────
 .b-badge {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 99px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  background: #cfe2ff;
-  color: #084298;
 
-  &--info    { background: #cfe2ff; color: #084298; }
-  &--success { background: #d1e7dd; color: #0f5132; }
-  &--warning { background: #fff3cd; color: #856404; }
-  &--danger  { background: #f8d7da; color: #842029; }
-  &--orange  { background: #fff3cd; color: #856404; }
+  &--success {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+
+  &--warning {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  &--danger {
+    background: #f8d7da;
+    color: #842029;
+  }
 }
 
-// ── Boutons actions ────────────────────────────────────
 .b-actions {
   display: flex;
   align-items: center;
@@ -390,102 +349,79 @@ $radius:        8px;
 }
 
 .b-btn-icon {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
   background: transparent;
   cursor: pointer;
-  transition: opacity 0.15s;
-  font-size: 18px;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    stroke-width: 2;
-  }
+  transition: background 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
 
   &--edit {
-    color: #fd7e14;
+    color: $primary;
+    border-color: rgba($primary, 0.4);
 
     &:hover {
-      opacity: 0.7;
+      background: $primary;
+      color: #fff;
     }
   }
 
   &--delete {
-    color: $muted;
+    color: $danger;
+    border-color: rgba($danger, 0.4);
 
     &:hover {
-      opacity: 0.7;
-    }
-  }
-
-  &--view {
-    color: $primary;
-
-    &:hover {
-      opacity: 0.7;
+      background: $danger;
+      color: #fff;
     }
   }
 }
 
-// ── État vide ──────────────────────────────────────────
 .b-empty {
-  padding: 48px 24px;
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-
-  svg {
-    width: 56px;
-    height: 56px;
-  }
+  padding: 48px 24px;
+  text-align: center;
 
   &__text {
-    font-size: 15px;
-    color: $muted;
     margin: 0;
+    font-size: 15px;
     font-weight: 500;
+    color: $muted;
   }
 
   &__subtext {
+    margin: 0 0 8px;
     font-size: 13px;
     color: #adb5bd;
-    margin: 0 0 8px;
   }
 }
 
-// ── Boutons principaux ─────────────────────────────────
 .b-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: 6px;
+  border: 0;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  border: none;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s, opacity 0.2s;
-  white-space: nowrap;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    stroke-width: 2;
-  }
+  transition: filter 0.2s, box-shadow 0.2s, background 0.2s;
 
   &--primary {
     background: $primary;
     color: #fff;
 
     &:hover {
-      background: darken($primary, 6%);
+      filter: brightness(0.96);
       box-shadow: 0 2px 8px rgba($primary, 0.3);
     }
   }
@@ -500,35 +436,23 @@ $radius:        8px;
     }
   }
 
-  &--ghost {
-    background: transparent;
-    color: $muted;
-    border: 1px solid $border;
-
-    &:hover {
-      background: $bg-light;
-    }
-  }
-
   &--danger {
     background: $danger;
     color: #fff;
 
     &:hover {
-      background: darken($danger, 6%);
+      filter: brightness(0.96);
     }
   }
 }
 
-// ── Modals ─────────────────────────────────────────────
 .b-modal-header {
-  padding: 18px 20px;
-  background: $primary;
-  color: #fff;
-  border-bottom: 1px solid $border;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 18px 20px;
+  background: $primary;
+  color: #fff;
 
   &--danger {
     background: $danger;
@@ -545,25 +469,20 @@ $radius:        8px;
   padding: 20px;
 
   p {
+    margin-bottom: 8px;
     font-size: 14px;
     color: #495057;
-    margin-bottom: 8px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
   }
 }
 
 .b-modal-footer {
-  padding: 14px 20px;
-  border-top: 1px solid $border;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid $border;
 }
 
-// ── Formulaire ─────────────────────────────────────────
 .b-field {
   margin-bottom: 16px;
 
@@ -574,10 +493,10 @@ $radius:        8px;
 
 .b-label {
   display: block;
+  margin-bottom: 6px;
   font-size: 14px;
   font-weight: 500;
   color: #212529;
-  margin-bottom: 6px;
 }
 
 .b-required {
@@ -588,52 +507,48 @@ $radius:        8px;
   width: 100%;
   padding: 10px 14px;
   border: 1px solid $border;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 8px;
   background: #fff;
   color: #495057;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  font-size: 14px;
   outline: none;
-
-  &::placeholder {
-    color: $muted;
-  }
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
     border-color: $primary;
-    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
   }
 
   &--error {
     border-color: $danger;
 
     &:focus {
-      box-shadow: 0 0 0 3px rgba($danger, 0.1);
+      box-shadow: 0 0 0 3px rgba($danger, 0.12);
     }
   }
 
   &--file {
     padding: 8px;
-    color: $muted;
   }
 }
 
 .b-textarea {
+  min-height: 80px;
   resize: vertical;
 }
 
 .b-error {
   display: block;
+  margin-top: 4px;
   font-size: 12px;
   color: $danger;
-  margin-top: 4px;
 }
 
 .b-hint {
   display: block;
+  margin-top: 4px;
   font-size: 12px;
   color: $muted;
-  margin-top: 4px;
 }
 
 .b-preview {
@@ -641,9 +556,9 @@ $radius:        8px;
 
   img {
     max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
+    max-height: 180px;
     border: 1px solid $border;
+    border-radius: 8px;
   }
 }
 
@@ -653,19 +568,76 @@ $radius:        8px;
   gap: 12px;
 }
 
-// ── Responsive ─────────────────────────────────────────
+.b-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-top: 1px solid $border;
+  background: $bg-light;
+  flex-wrap: wrap;
+
+  &__summary {
+    font-size: 13px;
+    color: $muted;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+}
+
+.b-page-btn {
+  min-width: 40px;
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba($primary, 0.24);
+  border-radius: 8px;
+  background: #fff;
+  color: $primary;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba($primary, 0.08);
+    border-color: $primary;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    background: $primary;
+    border-color: $primary;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba($primary, 0.24);
+  }
+
+  &--nav {
+    padding: 0 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .b-header-top {
     flex-direction: column;
     align-items: flex-start;
-
-    .b-btn {
-      width: 100%;
-      justify-content: center;
-    }
   }
 
-  .b-stats-row {
+  .b-stats-row,
+  .b-row {
     grid-template-columns: 1fr;
   }
 
@@ -673,246 +645,26 @@ $radius:        8px;
     flex-direction: column;
   }
 
-  .table-responsive {
-    overflow-x: auto;
-  }
+  .b-pagination {
+    align-items: flex-start;
 
-  .b-breadcrumb {
-    font-size: 12px;
-  }
-
-  .b-row {
-    grid-template-columns: 1fr;
+    &__controls {
+      margin-left: 0;
+    }
   }
 }
 
-// ── Select filtre ──────────────────────────────────────
-.b-select {
-  padding: 9px 16px;
-  border: 1px solid $border;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  cursor: pointer;
-  outline: none;
-  transition: border-color .2s;
-
-  &:focus { border-color: $primary; }
-}
-
-// ── Card tableau ───────────────────────────────────────
-.b-card {
-  background: #fff;
-  border-radius: $radius;
-  box-shadow: $shadow;
-  overflow: hidden;
-}
-
-// ── Tableau ────────────────────────────────────────────
-.b-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  thead tr { background: $bg-light; }
-
-  th {
-    padding: 14px 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: $muted;
-    border-bottom: 1px solid $border;
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 14px 20px;
-    border-bottom: 1px solid $border;
-    font-size: 14px;
-    color: #495057;
-    vertical-align: middle;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-
-  &--sm th, &--sm td { padding: 10px 16px; }
-}
-
-.b-tr {
-  transition: background .15s;
-  &:hover { background: $bg-light; }
-}
-
-.b-th--id, .b-td--id {
-  color: $muted;
-  font-size: 13px;
-  width: 56px;
-}
-
-// ── Image ──────────────────────────────────────────────
-.b-img {
-  width: 52px; height: 52px;
-  object-fit: cover;
-  border-radius: 8px;
-  display: block;
-}
-
-.b-img-placeholder {
-  width: 52px; height: 52px;
-  background: $bg-light;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid $border;
-}
-
-// ── Typographie cellules ───────────────────────────────
-.b-name  { font-weight: 600; font-size: 14px; color: #212529; display: block; }
-.b-sub   { font-size: 12px; color: $muted; display: block; margin-top: 2px; }
-.b-price { font-weight: 600; color: $primary; }
-
-// ── Badges stock ───────────────────────────────────────
-.b-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 99px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-
-  &--blue    { background: #cfe2ff; color: #084298; }
-  &--success { background: #d1e7dd; color: #0f5132; }
-  &--warning { background: #fff3cd; color: #664d03; }
-  &--danger  { background: #f8d7da; color: #842029; }
-}
-
-// ── Boutons actions ────────────────────────────────────
-.b-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.b-btn-icon {
-  width: 32px; height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  transition: background .2s, color .2s, border-color .2s;
-
-  &--edit {
-    color: $primary; border-color: $primary;
-    &:hover { background: $primary; color: #fff; }
-  }
-
-  &--delete {
-    color: $danger; border-color: $danger;
-    &:hover { background: $danger; color: #fff; }
-  }
-}
-
-// ── État vide ──────────────────────────────────────────
-.b-empty {
-  padding: 48px 24px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-
-  &__text { font-size: 15px; color: $muted; margin: 0; }
-}
-
-// ── Boutons principaux ─────────────────────────────────
-.b-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: background .2s, box-shadow .2s;
-
-  &--primary {
-    background: $primary; color: #fff;
-    &:hover { background: darken($primary, 8%); box-shadow: 0 2px 8px rgba($primary, 0.3); }
-  }
-
-  &--ghost {
-    background: transparent; color: $muted; border: 1px solid $border;
-    &:hover { background: $bg-light; }
-  }
-
-  &--danger {
-    background: $danger; color: #fff;
-    &:hover { background: darken($danger, 8%); }
-  }
-}
-
-// ── Modals ─────────────────────────────────────────────
-.b-modal-header { padding: 18px 20px; border-bottom: 1px solid $border; }
-
-.b-modal-title {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 16px; font-weight: 600; color: #212529;
-  &--danger { color: $danger; }
-
-  &__icon {
-    width: 34px; height: 34px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba($primary, 0.1); border-radius: 8px; color: $primary; flex-shrink: 0;
-    &--danger { background: rgba($danger, 0.1); color: $danger; }
-  }
-}
-
-.b-modal-body { padding: 20px; p { font-size: 14px; color: #495057; margin-bottom: 6px; } }
-
-.b-modal-footer {
-  padding: 14px 20px; border-top: 1px solid $border;
-  display: flex; justify-content: flex-end; gap: 8px;
-}
-
-// ── Formulaire ─────────────────────────────────────────
-.b-field     { margin-bottom: 18px; }
-.b-label     { display: block; font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 6px; }
-.b-required  { color: $danger; }
-
-.b-input {
-  width: 100%; padding: 10px 14px;
-  border: 1px solid $border; border-radius: 8px; font-size: 14px;
-  transition: border-color .2s, box-shadow .2s; outline: none; background: #fff; color: #212529;
-
-  &:focus { border-color: $primary; box-shadow: 0 0 0 3px rgba($primary, 0.15); }
-  &--error { border-color: $danger; &:focus { box-shadow: 0 0 0 3px rgba($danger, 0.15); } }
-  &--file  { cursor: pointer; }
-}
-
-.b-textarea { resize: vertical; min-height: 80px; }
-.b-row      { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.b-error    { display: block; font-size: 12px; color: $danger; margin-top: 4px; }
-.b-hint     { font-size: 12px; color: $muted; display: block; margin-top: 4px; }
-
-.b-preview {
-  margin-bottom: 8px;
-  img { max-height: 120px; max-width: 100%; border-radius: 8px; border: 1px solid $border; object-fit: cover; }
-}
-
-// ── Responsive ─────────────────────────────────────────
 @media (max-width: 576px) {
-  .b-header  { flex-direction: column; align-items: flex-start; }
-  .b-row     { grid-template-columns: 1fr; }
-  .b-actions { flex-direction: column; }
-  .b-search  { max-width: 100%; }
-  .b-toolbar { flex-direction: column; align-items: stretch; }
+  .b-page {
+    padding: 18px 16px;
+  }
+
+  .b-page-header {
+    flex-direction: column;
+  }
+
+  .b-btn,
+  .b-select {
+    width: 100%;
+  }
 }

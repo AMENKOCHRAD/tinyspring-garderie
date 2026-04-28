@@ -7,9 +7,12 @@ import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.tinyspring.garderie.service.boutique.CommandeService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/stripe")
@@ -40,9 +43,9 @@ public class StripeWebhookController {
 
         System.out.println("✅ Webhook reçu : " + event.getType());
 
+        // ── Paiement réussi ───────────────────────────────────────────────────
         if ("checkout.session.completed".equals(event.getType())) {
             try {
-                // ✅ Lire directement depuis le JSON brut — compatible Stripe API 2025
                 JsonObject dataObject = JsonParser.parseString(payload)
                         .getAsJsonObject()
                         .getAsJsonObject("data")
@@ -84,6 +87,7 @@ public class StripeWebhookController {
             }
         }
 
+        // ── Session expirée → Email avec boutons espèces/refus ────────────────
         if ("checkout.session.expired".equals(event.getType())) {
             try {
                 JsonObject dataObject = JsonParser.parseString(payload)
@@ -93,12 +97,20 @@ public class StripeWebhookController {
 
                 if (dataObject.has("client_reference_id")
                         && !dataObject.get("client_reference_id").isJsonNull()) {
+
                     Long commandeId = Long.valueOf(
                             dataObject.get("client_reference_id").getAsString());
-                    commandeService.updateStatut(commandeId, "ANNULEE");
+
+                    System.out.println("⚠️ Session expirée — Commande #" + commandeId);
+
+                    // ✅ Envoyer l'email avec les 2 boutons espèces/refus
+                    commandeService.envoyerEmailEchecPaiement(commandeId);
+
+                    System.out.println("📧 Email échec paiement envoyé — Commande #" + commandeId);
                 }
             } catch (Exception e) {
                 System.err.println("Erreur session expirée : " + e.getMessage());
+                e.printStackTrace();
             }
         }
 

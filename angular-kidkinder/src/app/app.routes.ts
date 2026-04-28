@@ -4,9 +4,13 @@ import { AnimatorWorkspacePageComponent } from './pages/animator-workspace-page.
 import { HomePageComponent } from './pages/home-page.component';
 import { LoginPageComponent } from './pages/login-page.component';
 import { ParentBoutiqueCartPageComponent } from './pages/parent-boutique-cart-page.component';
+import { ParentBoutiqueCommandeAnnuleePageComponent } from './pages/parent-boutique-commande-annulee-page.component';
+import { ParentBoutiqueEspecesConfirmePageComponent } from './pages/parent-boutique-especes-confirme-page.component';
+import { ParentBoutiqueLienExpirePageComponent } from './pages/parent-boutique-lien-expire-page.component';
 import { ParentBoutiqueOrderDetailPageComponent } from './pages/parent-boutique-order-detail-page.component';
 import { ParentBoutiqueOrdersPageComponent } from './pages/parent-boutique-orders-page.component';
 import { ParentBoutiquePaymentCancelPageComponent } from './pages/parent-boutique-payment-cancel-page.component';
+import { ParentBoutiqueProduitDetailPageComponent } from './pages/parent-boutique-produit-detail-page.component';
 import { ParentBoutiquePaymentSuccessPageComponent } from './pages/parent-boutique-payment-success-page.component';
 import { ParentBoutiquePageComponent } from './pages/parent-boutique-page.component';
 import { ParentWorkspacePageComponent } from './pages/parent-workspace-page.component';
@@ -31,11 +35,15 @@ export const routes: Routes = [
       { path: 'messages', component: ParentWorkspacePageComponent, data: { page: 'messages' } },
       { path: 'trajets', component: ParentWorkspacePageComponent, data: { page: 'trajets' } },
       { path: 'boutique', component: ParentBoutiquePageComponent },
+      { path: 'boutique/produits/:id', component: ParentBoutiqueProduitDetailPageComponent },
       { path: 'boutique/cart', component: ParentBoutiqueCartPageComponent },
       { path: 'boutique/orders', component: ParentBoutiqueOrdersPageComponent },
       { path: 'boutique/orders/:id', component: ParentBoutiqueOrderDetailPageComponent },
       { path: 'boutique/paiement/success', component: ParentBoutiquePaymentSuccessPageComponent },
       { path: 'boutique/paiement/cancel', component: ParentBoutiquePaymentCancelPageComponent },
+      { path: 'boutique/paiement/especes-confirme', component: ParentBoutiqueEspecesConfirmePageComponent },
+      { path: 'boutique/paiement/commande-annulee', component: ParentBoutiqueCommandeAnnuleePageComponent },
+      { path: 'boutique/paiement/lien-expire', component: ParentBoutiqueLienExpirePageComponent },
       { path: 'enfants-sante', redirectTo: 'enfants', pathMatch: 'full' },
       { path: 'activites-menus', redirectTo: 'activites', pathMatch: 'full' },
       { path: 'paiements', redirectTo: 'tableau-de-bord', pathMatch: 'full' }

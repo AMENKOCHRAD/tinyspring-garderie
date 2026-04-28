@@ -98,6 +98,22 @@ const routes: Routes = [
           import('./admin/boutique/predictions/predictions.component').then(
             (c) => c.PredictionsComponent
           )
+      },
+      {
+        path: 'admin/boutique/affinites',
+        canActivate: [adminBoutiqueGuard],
+        loadComponent: () =>
+          import('./admin/boutique/affinites/affinite-dashboard.component').then(
+            (c) => c.AffiniteDashboardComponent
+          )
+      },
+      {
+        path: 'admin/marketing',
+        canActivate: [adminBoutiqueGuard],
+        loadComponent: () =>
+          import('./admin/marketing/marketing-advisor.component').then(
+            (c) => c.MarketingAdvisorComponent
+          )
       }
     ]
   },

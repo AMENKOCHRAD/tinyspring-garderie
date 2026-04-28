@@ -42,6 +42,18 @@ public class Commande {
     @Column(name = "stripe_payment_intent_id")
     private String stripePaymentIntentId;
 
+    @Column(name = "mode_paiement")
+    private String modePaiement = "STRIPE";
+
+    @Column(name = "paiement_especes_demande")
+    private Boolean paiementEspecesDemande = false;
+
+    @Column(name = "date_choix_especes")
+    private LocalDateTime dateChoixEspeces;
+
+    @Column(name = "token_action", unique = true)
+    private String tokenAction;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,0 +1,181 @@
+<div class="b-page">
+  @if (errorMsg) {
+    <div class="b-alert b-alert--danger">
+      <span>{{ errorMsg }}</span>
+      <button class="b-alert__close" (click)="errorMsg = ''">x</button>
+    </div>
+  }
+
+  <div class="b-page-header">
+    <div class="b-header-section">
+      <div class="b-header-top">
+        <h4 class="b-page-title">Profils d'affinite parents</h4>
+      </div>
+      <nav class="b-breadcrumb">
+        <span class="b-breadcrumb__item">Boutique en ligne</span>
+        <span class="b-breadcrumb__separator">/</span>
+        <span class="b-breadcrumb__item active">Affinites parents</span>
+      </nav>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="b-loading">
+      <div class="b-spinner"></div>
+      <span>Chargement des profils d'affinite...</span>
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="b-stats-row">
+      <div class="b-stat-card b-stat-card--blue">
+        <div class="b-stat-card__value">{{ stats.totalInteractions }}</div>
+        <div class="b-stat-card__label">Total interactions enregistrees</div>
+      </div>
+      <div class="b-stat-card b-stat-card--green">
+        <div class="b-stat-card__value">{{ stats.parentsWithProfile }}</div>
+        <div class="b-stat-card__label">Parents avec un profil</div>
+      </div>
+      <div class="b-stat-card b-stat-card--cyan">
+        <div class="b-stat-card__value">{{ stats.topCategorie }}</div>
+        <div class="b-stat-card__label">{{ stats.topCategorieInteractions }} interactions cumulees</div>
+      </div>
+      <div class="b-stat-card b-stat-card--orange">
+        <div class="b-stat-card__value">{{ stats.topParent }}</div>
+        <div class="b-stat-card__label">{{ stats.topParentInteractions }} interactions cumulees</div>
+      </div>
+    </div>
+
+    <div class="b-card">
+      <div class="b-card__header">
+        <div class="b-search">
+          <svg class="b-search__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            class="b-search__input"
+            placeholder="Filtrer par nom de parent..."
+            [(ngModel)]="searchQuery"
+          />
+        </div>
+
+        <button class="b-sort-btn" (click)="toggleSortDirection()">
+          Score
+          <span>{{ sortDirection === 'desc' ? '↓' : '↑' }}</span>
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="b-table">
+          <thead>
+            <tr>
+              <th>Parent</th>
+              <th>Categorie</th>
+              <th>Score</th>
+              <th>Nb interactions</th>
+              <th>Derniere interaction</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (filteredScores.length > 0) {
+              @for (score of filteredScores; track trackScore($index, score)) {
+                <tr class="b-table__row" [class.b-table__row--selected]="isSelectedUser(score.userId)" (click)="selectParent(score)">
+                  <td>
+                    <div class="b-parent-cell">
+                      <strong>{{ score.userNom }}</strong>
+                      <span>{{ score.userEmail }}</span>
+                    </div>
+                  </td>
+                  <td>{{ score.categorieNom }}</td>
+                  <td>
+                    <div class="b-score-cell">
+                      <strong>{{ score.score }}</strong>
+                      <span class="b-badge" [ngClass]="getScoreBadgeClass(score.score)">
+                        {{ getScoreBadgeLabel(score.score) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>{{ score.nbInteractions }}</td>
+                  <td>{{ score.derniereInteraction | date:'dd/MM/yyyy HH:mm' }}</td>
+                </tr>
+              }
+            } @else {
+              <tr>
+                <td colspan="5">
+                  <div class="b-empty">
+                    <strong>{{ hasData ? 'Aucun parent ne correspond au filtre.' : 'Aucun profil d affinite disponible.' }}</strong>
+                    <span>
+                      {{
+                        hasData
+                          ? 'Essayez un autre nom pour afficher les lignes correspondantes.'
+                          : 'Les donnees apparaitront ici des que le moteur commencera a alimenter le dashboard.'
+                      }}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    @if (selectedParent) {
+      <div class="b-card b-detail-card">
+        <div class="b-card__header b-card__header--detail">
+          <div>
+            <h5 class="b-detail-title">{{ selectedParent.userNom }}</h5>
+            <span class="b-detail-subtitle">{{ selectedParent.userEmail }}</span>
+          </div>
+          <button class="b-btn b-btn--outline" (click)="closeSelectedParent()">Fermer</button>
+        </div>
+
+        <div class="b-card__body">
+          @if (detailErrorMsg) {
+            <div class="b-alert b-alert--danger b-alert--inline">
+              <span>{{ detailErrorMsg }}</span>
+            </div>
+          }
+
+          @if (detailLoading) {
+            <div class="b-loading b-loading--compact">
+              <div class="b-spinner"></div>
+              <span>Chargement du profil du parent...</span>
+            </div>
+          }
+
+          @if (!detailLoading && !detailErrorMsg && selectedParentScores.length > 0) {
+            <div class="b-profile-list">
+              @for (score of selectedParentScores; track trackScore($index, score)) {
+                <div class="b-profile-item">
+                  <div class="b-profile-item__header">
+                    <strong>{{ score.categorieNom }}</strong>
+                    <span>{{ score.score }}</span>
+                  </div>
+
+                  <div class="b-progress">
+                    <div class="b-progress__fill" [style.width.%]="getProgressWidth(score.score)"></div>
+                  </div>
+
+                  <div class="b-profile-item__meta">
+                    <span>{{ score.nbInteractions }} interactions</span>
+                    <span>{{ score.derniereInteraction | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (!detailLoading && !detailErrorMsg && selectedParentScores.length === 0) {
+            <div class="b-empty b-empty--inline">
+              <strong>Aucune categorie a afficher pour ce parent.</strong>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

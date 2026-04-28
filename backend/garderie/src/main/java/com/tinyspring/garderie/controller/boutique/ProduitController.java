@@ -3,6 +3,10 @@ package com.tinyspring.garderie.controller.boutique;
 import com.tinyspring.garderie.dto.boutique.ProduitDto;
 import com.tinyspring.garderie.service.boutique.FileStorageService;
 import com.tinyspring.garderie.service.boutique.ProduitService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +32,22 @@ public class ProduitController {
     // ── FRONT-OFFICE (public) ─────────────────────────────────────────────────
 
     @GetMapping("/api/boutique/produits")
-    public ResponseEntity<List<ProduitDto>> getAllPublic() {
-        return ResponseEntity.ok(produitService.findAll());
+    public ResponseEntity<Page<ProduitDto>> getAllPublic(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "9")  int size,
+            @RequestParam(required = false)    String nom,
+            @RequestParam(required = false)    Long categorieId) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("nom"));
+
+        if (nom != null && !nom.isBlank()) {
+            return ResponseEntity.ok(produitService.searchPaginated(nom, pageable));
+        }
+        if (categorieId != null) {
+            return ResponseEntity.ok(
+                    produitService.findByCategoriePaginated(categorieId, pageable));
+        }
+        return ResponseEntity.ok(produitService.findAllPaginated(pageable));
     }
 
     @GetMapping("/api/boutique/produits/{id}")
@@ -54,9 +72,24 @@ public class ProduitController {
 
     // ── BACK-OFFICE ADMIN ─────────────────────────────────────────────────────
 
+    // BACK-OFFICE paginé
     @GetMapping("/api/admin/boutique/produits")
-    public ResponseEntity<List<ProduitDto>> getAllAdmin() {
-        return ResponseEntity.ok(produitService.findAll());
+    public ResponseEntity<Page<ProduitDto>> getAllAdmin(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false)    String nom,
+            @RequestParam(required = false)    Long categorieId) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("nom"));
+
+        if (nom != null && !nom.isBlank()) {
+            return ResponseEntity.ok(produitService.searchPaginated(nom, pageable));
+        }
+        if (categorieId != null) {
+            return ResponseEntity.ok(
+                    produitService.findByCategoriePaginated(categorieId, pageable));
+        }
+        return ResponseEntity.ok(produitService.findAllPaginated(pageable));
     }
 
     @GetMapping("/api/admin/boutique/produits/{id}")

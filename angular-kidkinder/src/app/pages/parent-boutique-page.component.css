@@ -119,6 +119,10 @@
   transform: translateY(-1px);
 }
 
+.catalogue-results-anchor {
+  scroll-margin-top: 24px;
+}
+
 .product-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
@@ -126,6 +130,52 @@
 
 .product-grid--refresh .product-card {
   animation: product-fade-in 0.32s ease both;
+}
+
+.catalogue-pagination,
+.catalogue-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.catalogue-pagination {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.catalogue-pagination__button,
+.catalogue-pagination__page {
+  min-width: 44px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(42, 157, 143, 0.22);
+  background: #fff;
+  color: #2a9d8f;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catalogue-pagination__button:hover:not(:disabled),
+.catalogue-pagination__page:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(42, 157, 143, 0.14);
+}
+
+.catalogue-pagination__page--active {
+  background: #2a9d8f;
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(42, 157, 143, 0.2);
+}
+
+.catalogue-pagination__button:disabled,
+.catalogue-pagination__page:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .product-card {
@@ -144,6 +194,16 @@
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(90, 122, 117, 0.12);
+}
+
+.product-card-media-link,
+.product-card-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-card-media-link {
+  display: block;
 }
 
 .product-card-image {
@@ -233,6 +293,18 @@
   line-clamp: 3;
   min-height: 58px;
   margin: 0;
+}
+
+.product-card-detail-link {
+  width: fit-content;
+  color: #2a9d8f;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.product-card-detail-link:hover {
+  text-decoration: underline;
 }
 
 .product-card-footer {

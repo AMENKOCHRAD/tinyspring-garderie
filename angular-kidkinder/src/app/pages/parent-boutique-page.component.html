@@ -51,7 +51,7 @@
     </div>
 
     <div class="catalogue-toolbar__footer">
-      <p class="muted">{{ produits().length }} produit(s) trouve(s)</p>
+      <p class="muted">{{ totalProduits() }} produit(s) trouve(s)</p>
       <button
         *ngIf="searchTerm() || selectedCategorieId() !== null"
         type="button"
@@ -63,6 +63,8 @@
 
     <p class="muted" *ngIf="errorMessage()">{{ errorMessage() }}</p>
   </section>
+
+  <div #catalogueResultsTop class="catalogue-results-anchor" aria-hidden="true"></div>
 
   <section *ngIf="isLoading(); else loadedState" class="product-grid">
     <article class="product-card product-card--skeleton" *ngFor="let _ of skeletonCards">
@@ -82,46 +84,98 @@
   </section>
 
   <ng-template #loadedState>
-    <section class="product-grid" *ngIf="produits().length; else emptyProducts" [class.product-grid--refresh]="isGridRefreshing()">
-      <article class="product-card" *ngFor="let produit of produits()">
-        <div class="product-card-image" #productImageHost>
-          <img
-            *ngIf="hasImage(produit.imageUrl); else productFallback"
-            [src]="getImageUrl(produit.imageUrl)"
-            [alt]="produit.nom"
-            class="product-card-image__img" />
-          <ng-template #productFallback>
-            <div class="product-card__image product-card-image__fallback">{{ produit.nom.charAt(0) }}</div>
-          </ng-template>
+    <ng-container *ngIf="produits().length; else emptyProducts">
+      <section class="product-grid" [class.product-grid--refresh]="isGridRefreshing()">
+        <article
+          class="product-card"
+          *ngFor="let produit of produits()"
+          (mouseenter)="onProduitMouseEnter(produit.id)"
+          (mouseleave)="onProduitMouseLeave(produit.id)">
+          <a
+            class="product-card-media-link"
+            [routerLink]="['/parent/boutique/produits', produit.id]"
+            (click)="onDetailClick(produit.id)">
+            <div class="product-card-image" #productImageHost>
+              <img
+                *ngIf="hasImage(produit.imageUrl); else productFallback"
+                [src]="getImageUrl(produit.imageUrl)"
+                [alt]="produit.nom"
+                class="product-card-image__img" />
+              <ng-template #productFallback>
+                <div class="product-card__image product-card-image__fallback">{{ produit.nom.charAt(0) }}</div>
+              </ng-template>
 
-          <span class="product-card-badge product-card-badge--category">{{ produit.categorieNom }}</span>
-          <span *ngIf="produit.stock === 0" class="product-card-badge product-card-badge--danger">Rupture</span>
-          <span *ngIf="isLowStock(produit.stock)" class="product-card-badge product-card-badge--warning">Faible stock</span>
-        </div>
-
-        <div class="product-card-body">
-          <h3 class="product-card-title">{{ produit.nom }}</h3>
-          <p class="muted product-card-description">{{ produit.description }}</p>
-
-          <div class="product-card-footer">
-            <div class="product-card-price-row">
-              <strong class="product-card-price">{{ produit.prix | number: '1.2-2' }} TND</strong>
-              <span class="product-card-stock">○ {{ produit.stock }} en stock</span>
+              <span class="product-card-badge product-card-badge--category">{{ produit.categorieNom }}</span>
+              <span *ngIf="produit.stock === 0" class="product-card-badge product-card-badge--danger">Rupture</span>
+              <span *ngIf="isLowStock(produit.stock)" class="product-card-badge product-card-badge--warning">Faible stock</span>
             </div>
+          </a>
 
-            <button
-              type="button"
-              class="btn-add-to-cart"
-              [class.added]="isAdded(produit.id)"
-              [disabled]="produit.stock === 0"
-              (click)="addToCart(produit, productImageHost)">
-              <span *ngIf="!isAdded(produit.id)">🛒 Ajouter au panier</span>
-              <span *ngIf="isAdded(produit.id)">✓ Ajoute !</span>
-            </button>
+          <div class="product-card-body">
+            <a
+              class="product-card-title-link"
+              [routerLink]="['/parent/boutique/produits', produit.id]"
+              (click)="onDetailClick(produit.id)">
+              <h3 class="product-card-title">{{ produit.nom }}</h3>
+            </a>
+            <p class="muted product-card-description">{{ produit.description }}</p>
+            <a
+              class="product-card-detail-link"
+              [routerLink]="['/parent/boutique/produits', produit.id]"
+              (click)="onDetailClick(produit.id)">
+              Voir detail
+            </a>
+
+            <div class="product-card-footer">
+              <div class="product-card-price-row">
+                <strong class="product-card-price">{{ produit.prix | number: '1.2-2' }} TND</strong>
+                <span class="product-card-stock">○ {{ produit.stock }} en stock</span>
+              </div>
+
+              <button
+                type="button"
+                class="btn-add-to-cart"
+                [class.added]="isAdded(produit.id)"
+                [disabled]="produit.stock === 0"
+                (click)="addToCart(produit, productImageHost)">
+                <span *ngIf="!isAdded(produit.id)">🛒 Ajouter au panier</span>
+                <span *ngIf="isAdded(produit.id)">✓ Ajoute !</span>
+              </button>
+            </div>
           </div>
+        </article>
+      </section>
+
+      <nav *ngIf="totalPages() > 1" class="catalogue-pagination" aria-label="Pagination des produits">
+        <button
+          type="button"
+          class="catalogue-pagination__button"
+          [disabled]="isFirstPage()"
+          (click)="goToPreviousPage()">
+          Precedent
+        </button>
+
+        <div class="catalogue-pagination__pages">
+          <button
+            type="button"
+            class="catalogue-pagination__page"
+            *ngFor="let page of visiblePages()"
+            [class.catalogue-pagination__page--active]="page === currentPage()"
+            [attr.aria-current]="page === currentPage() ? 'page' : null"
+            (click)="goToPage(page)">
+            {{ page + 1 }}
+          </button>
         </div>
-      </article>
-    </section>
+
+        <button
+          type="button"
+          class="catalogue-pagination__button"
+          [disabled]="isLastPage()"
+          (click)="goToNextPage()">
+          Suivant
+        </button>
+      </nav>
+    </ng-container>
   </ng-template>
 </div>
 

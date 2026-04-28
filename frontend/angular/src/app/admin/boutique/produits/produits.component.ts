@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, TemplateRef, inject, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -8,6 +8,7 @@ import { CategorieService } from 'src/app/services/boutique/categorie.service';
 import { NotificationService } from 'src/app/services/notification.service';
 import { Produit } from 'src/app/models/boutique/produit.model';
 import { Categorie } from 'src/app/models/boutique/categorie.model';
+import { SpringPage, createEmptySpringPage } from 'src/app/models/boutique/spring-page.model';
 
 const BASE_URL = 'http://localhost:8081';
 
@@ -19,6 +20,7 @@ const BASE_URL = 'http://localhost:8081';
   styleUrls: ['./produits.component.scss']
 })
 export class AdminProduitsComponent implements OnInit {
+  private readonly pageSize = 10;
   private produitService = inject(ProduitService);
   private categorieService = inject(CategorieService);
   private modalService = inject(NgbModal);
@@ -32,6 +34,7 @@ export class AdminProduitsComponent implements OnInit {
 
   produits: Produit[] = [];
   filteredProduits: Produit[] = [];
+  produitsPage: SpringPage<Produit> = createEmptySpringPage<Produit>(this.pageSize);
   categories: Categorie[] = [];
   selectedProduit: Produit | null = null;
   isEditMode = false;
@@ -39,7 +42,7 @@ export class AdminProduitsComponent implements OnInit {
   successMsg = '';
   filterCategorieId: number | null = null;
   searchQuery = '';
-  lowStockProduits: any[] = [];
+  lowStockProduits: Produit[] = [];
 
   selectedFile: File | null = null;
   imagePreview: string | null = null;
@@ -54,7 +57,8 @@ export class AdminProduitsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
-    this.loadProduits();
+    this.loadProduitStats();
+    this.loadProduits(0);
   }
 
   loadCategories(): void {
@@ -64,21 +68,47 @@ export class AdminProduitsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.errorMsg = 'Erreur lors du chargement des catégories.';
+        this.errorMsg = 'Erreur lors du chargement des categories.';
         this.cdr.detectChanges();
       }
     });
   }
 
-  loadProduits(): void {
-    this.errorMsg = '';
+  loadProduitStats(): void {
     this.produitService.getAllAdmin().subscribe({
       next: (data) => {
         this.produits = data;
-        this.applyFilter();
-        this.lowStockProduits = data.filter(p => p.stock <= (p.seuilAlerte ?? 3));
+        this.lowStockProduits = data.filter((produit) => produit.stock <= (produit.seuilAlerte ?? 3));
         this.notifService.lowStockProduits.set(this.lowStockProduits);
         this.notifService.lowStockCount.set(this.lowStockProduits.length);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.produits = [];
+        this.lowStockProduits = [];
+        this.notifService.lowStockProduits.set([]);
+        this.notifService.lowStockCount.set(0);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadProduits(page = this.produitsPage.number): void {
+    this.errorMsg = '';
+    this.produitService.getAdminPage({
+      page,
+      size: this.pageSize,
+      nom: this.searchQuery,
+      categorieId: this.filterCategorieId
+    }).subscribe({
+      next: (data) => {
+        if (data.totalPages > 0 && data.content.length === 0 && page >= data.totalPages) {
+          this.loadProduits(data.totalPages - 1);
+          return;
+        }
+
+        this.produitsPage = data;
+        this.filteredProduits = data.content;
         this.cdr.detectChanges();
       },
       error: () => {
@@ -88,32 +118,62 @@ export class AdminProduitsComponent implements OnInit {
     });
   }
 
-  applyFilter(): void {
-    let result = [...this.produits];
-    if (this.filterCategorieId) {
-      result = result.filter(p => p.categorieId === Number(this.filterCategorieId));
-    }
-    const q = this.searchQuery.toLowerCase().trim();
-    if (q) {
-      result = result.filter(p => p.nom.toLowerCase().includes(q));
-    }
-    this.filteredProduits = result;
-  }
-
   getStockCount(): number {
-    return this.produits.filter(p => p.stock > 0).length;
+    return this.produits.filter((produit) => produit.stock > 0).length;
   }
 
   getRuptureCount(): number {
-    return this.produits.filter(p => p.stock === 0).length;
+    return this.produits.filter((produit) => produit.stock === 0).length;
   }
 
   getLowStockList(): string {
-    return this.lowStockProduits.map(p => p.nom).join(', ');
+    return this.lowStockProduits.map((produit) => produit.nom).join(', ');
+  }
+
+  get displayStart(): number {
+    if (this.produitsPage.totalElements === 0 || this.filteredProduits.length === 0) {
+      return 0;
+    }
+
+    return this.produitsPage.number * this.produitsPage.size + 1;
+  }
+
+  get displayEnd(): number {
+    if (this.produitsPage.totalElements === 0 || this.filteredProduits.length === 0) {
+      return 0;
+    }
+
+    return this.produitsPage.number * this.produitsPage.size + this.filteredProduits.length;
+  }
+
+  get visiblePages(): number[] {
+    if (this.produitsPage.totalPages === 0) {
+      return [];
+    }
+
+    let start = Math.max(0, this.produitsPage.number - 2);
+    let end = Math.min(this.produitsPage.totalPages - 1, start + 4);
+
+    start = Math.max(0, end - 4);
+
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery = query;
+    this.loadProduits(0);
   }
 
   onFilterChange(): void {
-    this.applyFilter();
+    this.loadProduits(0);
+  }
+
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.produitsPage.totalPages || page === this.produitsPage.number) {
+      return;
+    }
+
+    this.loadProduits(page);
   }
 
   onFileChange(event: Event): void {
@@ -155,6 +215,7 @@ export class AdminProduitsComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+
     const fd = new FormData();
     fd.append('nom', this.form.value.nom ?? '');
     fd.append('description', this.form.value.description ?? '');
@@ -172,10 +233,14 @@ export class AdminProduitsComponent implements OnInit {
     request$.subscribe({
       next: () => {
         modal.close();
-        this.successMsg = this.isEditMode ? 'Produit modifié.' : 'Produit ajouté.';
+        this.successMsg = this.isEditMode ? 'Produit modifie.' : 'Produit ajoute.';
         this.cdr.detectChanges();
-        this.loadProduits();
-        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);
+        this.loadProduitStats();
+        this.loadProduits(this.produitsPage.number);
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 3000);
       },
       error: () => {
         this.errorMsg = 'Erreur lors de la sauvegarde.';
@@ -190,14 +255,18 @@ export class AdminProduitsComponent implements OnInit {
       () => {
         this.produitService.delete(+produit.id).subscribe({
           next: () => {
-            this.successMsg = 'Produit supprimé.';
+            this.successMsg = 'Produit supprime.';
             this.cdr.detectChanges();
-            this.loadProduits();
-            setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);
+            this.loadProduitStats();
+            this.loadProduits(this.produitsPage.number);
+            setTimeout(() => {
+              this.successMsg = '';
+              this.cdr.detectChanges();
+            }, 3000);
           },
           error: (error) => {
             if (error.status === 409) {
-              this.errorMsg = error.error?.message || 'Ce produit est lié à des commandes, supprimez-les d\'abord.';
+              this.errorMsg = error.error?.message || 'Ce produit est lie a des commandes, supprimez-les d abord.';
             } else if (error.status === 404) {
               this.errorMsg = 'Produit introuvable.';
             } else {

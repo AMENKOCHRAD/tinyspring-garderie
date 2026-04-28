@@ -1,12 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   CategorieDto,
   CheckoutSessionResponse,
   CommandeDto,
   CommandeRequest,
-  ProduitDto
+  PageResponse,
+  ProduitDto,
+  ProduitQueryParams
 } from './boutique.models';
 
 @Injectable({
@@ -21,8 +23,28 @@ export class BoutiqueService {
     return this.http.get<CategorieDto[]>(`${this.apiUrl}/categories`);
   }
 
-  getProduits(): Observable<ProduitDto[]> {
-    return this.http.get<ProduitDto[]>(`${this.apiUrl}/produits`);
+  getProduits(params: ProduitQueryParams): Observable<PageResponse<ProduitDto>> {
+    let httpParams = new HttpParams()
+      .set('page', params.page)
+      .set('size', params.size);
+
+    const nom = params.nom?.trim();
+
+    if (nom) {
+      httpParams = httpParams.set('nom', nom);
+    }
+
+    if (params.categorieId !== null && params.categorieId !== undefined) {
+      httpParams = httpParams.set('categorieId', params.categorieId);
+    }
+
+    return this.http.get<PageResponse<ProduitDto>>(`${this.apiUrl}/produits`, {
+      params: httpParams
+    });
+  }
+
+  getProduitById(produitId: number): Observable<ProduitDto> {
+    return this.http.get<ProduitDto>(`${this.apiUrl}/produits/${produitId}`);
   }
 
   getProduitsByCategorie(categorieId: number): Observable<ProduitDto[]> {

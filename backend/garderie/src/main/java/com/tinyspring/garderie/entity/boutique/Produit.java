@@ -27,6 +27,9 @@ public class Produit {
     @Column(nullable = false)
     private Integer stock;
 
+    @Column(name = "tags", length = 500)
+    private String tags;
+
     @Column(name = "image_url")
     private String imageUrl;
 
@@ -38,6 +41,4 @@ public class Produit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_id", nullable = false)
     private Categorie categorie;
-
-    // ✅ Supprimé : @ManyToMany commandes — maintenant via CommandeProduit
 }
