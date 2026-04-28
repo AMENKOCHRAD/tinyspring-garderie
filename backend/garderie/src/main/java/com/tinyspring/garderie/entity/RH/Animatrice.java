@@ -46,10 +46,13 @@ public class Animatrice {
     @Column(name = "mot_de_passe_temporaire")
     private String motDePasseTemporaire;
 
+    // ✅ AJOUT — true = l'animatrice doit changer son mot de passe au premier login
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Builder.Default
+    private boolean mustChangePassword = true;
+
     // ✅ JsonIgnore pour éviter la boucle infinie JSON
     @JsonIgnore
     @OneToMany(mappedBy = "animatrice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AbsenceConge> absenceConges;
-
-    // ✅ formations supprimé — sera recréé avec la nouvelle logique
 }

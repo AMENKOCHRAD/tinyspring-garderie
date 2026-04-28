@@ -7,12 +7,18 @@ import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
 import com.tinyspring.garderie.entity.Role;
 import com.tinyspring.garderie.entity.RoleName;
 import com.tinyspring.garderie.entity.User;
+import com.tinyspring.garderie.repository.RH.AnimatriceFormationRepository;
 import com.tinyspring.garderie.repository.RH.AnimatriceRepository;
+import com.tinyspring.garderie.repository.RH.HistoriqueDecisionRepository;
 import com.tinyspring.garderie.repository.RoleRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -31,6 +37,9 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
     private final IEmailService emailService;
     private final INotificationService notificationService;
     private final AnimatriceMapper animatriceMapper;
+    private final AuthenticationManager authenticationManager;
+    private final HistoriqueDecisionRepository historiqueDecisionRepository;
+    private final AnimatriceFormationRepository animatriceFormationRepository;
 
     public AnimatriceServiceImpl(AnimatriceRepository animatriceRepository,
                                  IFileStorageService fileStorageService,
@@ -39,15 +48,21 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
                                  PasswordEncoder passwordEncoder,
                                  IEmailService emailService,
                                  INotificationService notificationService,
-                                 AnimatriceMapper animatriceMapper) {
-        this.animatriceRepository = animatriceRepository;
-        this.fileStorageService = fileStorageService;
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.emailService = emailService;
-        this.notificationService = notificationService;
-        this.animatriceMapper = animatriceMapper;
+                                 AnimatriceMapper animatriceMapper,
+                                 AuthenticationManager authenticationManager,
+                                 HistoriqueDecisionRepository historiqueDecisionRepository,
+                                 AnimatriceFormationRepository animatriceFormationRepository) {
+        this.animatriceRepository         = animatriceRepository;
+        this.fileStorageService           = fileStorageService;
+        this.userRepository               = userRepository;
+        this.roleRepository               = roleRepository;
+        this.passwordEncoder              = passwordEncoder;
+        this.emailService                 = emailService;
+        this.notificationService          = notificationService;
+        this.animatriceMapper             = animatriceMapper;
+        this.authenticationManager        = authenticationManager;
+        this.historiqueDecisionRepository  = historiqueDecisionRepository;
+        this.animatriceFormationRepository = animatriceFormationRepository;
     }
 
     @Override
@@ -144,17 +159,27 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
     }
 
     @Override
+    @Transactional
     public void deleteAnimatrice(Long id) {
         Animatrice animatrice = animatriceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée avec l'id : " + id));
 
+        // ✅ 1. Supprimer les historiques de décision (référencent absence_conges)
+        historiqueDecisionRepository.deleteByAbsenceCongeAnimatriceId(id);
+
+        // ✅ 2. Supprimer les inscriptions aux formations (référencent animatrices)
+        animatriceFormationRepository.deleteByAnimatriceId(id);
+
+        // ✅ 3. Supprimer le compte utilisateur
         userRepository.findByEmail(animatrice.getEmail()).ifPresent(userRepository::delete);
 
+        // ✅ 4. Supprimer la photo
         if (animatrice.getPhotoUrl() != null) {
             try { fileStorageService.deleteFile(animatrice.getPhotoUrl()); }
             catch (IOException e) { System.err.println("Erreur suppression photo : " + e.getMessage()); }
         }
 
+        // ✅ 5. Supprimer l'animatrice (cascade supprime les absence_conges)
         animatriceRepository.deleteById(id);
     }
 
@@ -176,6 +201,38 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
         String fileName = fileStorageService.saveFile(file);
         animatrice.setPhotoUrl(fileName);
         return animatriceMapper.toDTO(animatriceRepository.save(animatrice));
+    }
+
+    @Override
+    public boolean mustChangePassword(Long id) {
+        Animatrice animatrice = animatriceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée"));
+        return animatrice.isMustChangePassword();
+    }
+
+    @Override
+    public void changerMotDePasse(Long id, String ancienMotDePasse, String nouveauMotDePasse) {
+        Animatrice animatrice = animatriceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée"));
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(animatrice.getEmail(), ancienMotDePasse)
+            );
+        } catch (BadCredentialsException e) {
+            throw new RuntimeException("Ancien mot de passe incorrect.");
+        }
+
+        if (nouveauMotDePasse.length() < 6)
+            throw new RuntimeException("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+
+        User user = userRepository.findByEmail(animatrice.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("Compte utilisateur non trouvé"));
+        user.setPassword(passwordEncoder.encode(nouveauMotDePasse));
+        userRepository.save(user);
+
+        animatrice.setMustChangePassword(false);
+        animatriceRepository.save(animatrice);
     }
 
     private String genererMotDePasse() {

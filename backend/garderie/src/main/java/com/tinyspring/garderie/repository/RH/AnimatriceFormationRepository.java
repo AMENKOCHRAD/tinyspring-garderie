@@ -4,7 +4,9 @@ import com.tinyspring.garderie.entity.RH.AnimatriceFormation;
 import com.tinyspring.garderie.entity.RH.enums.StatutInscription;
 import com.tinyspring.garderie.entity.RH.enums.StatutValidite;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -52,6 +54,13 @@ public interface AnimatriceFormationRepository extends JpaRepository<AnimatriceF
     @Query("SELECT COUNT(af) FROM AnimatriceFormation af WHERE af.formation.id = :formationId AND af.statut = 'INSCRITE'")
     long countInscritsActifs(Long formationId);
 
-    // ✅ NOUVEAU — Supprimer toutes les inscriptions d'une formation
-    void deleteByFormationId(Long formationId);
+    // ✅ Supprimer toutes les inscriptions d'une formation
+    @Modifying
+    @Query("DELETE FROM AnimatriceFormation af WHERE af.formation.id = :formationId")
+    void deleteByFormationId(@Param("formationId") Long formationId);
+
+    // ✅ Supprimer toutes les inscriptions d'une animatrice — SQL direct sans Hibernate
+    @Modifying
+    @Query("DELETE FROM AnimatriceFormation af WHERE af.animatrice.id = :animatriceId")
+    void deleteByAnimatriceId(@Param("animatriceId") Long animatriceId);
 }

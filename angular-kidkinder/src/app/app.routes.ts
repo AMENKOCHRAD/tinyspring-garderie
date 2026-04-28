@@ -12,6 +12,17 @@ import { NouvelleDemande } from './RH/pages/nouvelle-demande/nouvelle-demande.co
 export const routes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'connexion', component: LoginPageComponent },
+
+  // ✅ AJOUT — Page changement mot de passe (hors WorkspaceShell, pas de sidebar)
+  {
+    path: 'animateur/changer-mot-de-passe',
+    canActivate: [AuthGuard],
+    loadComponent: () =>
+      import('./RH/pages/changer-mot-de-passe/changer-mot-de-passe.component').then(
+        c => c.ChangerMotDePasseComponent
+      )
+  },
+
   {
     path: 'parent',
     component: WorkspaceShellComponent,
@@ -43,16 +54,13 @@ export const routes: Routes = [
       { path: 'messages',        component: AnimatorWorkspacePageComponent, data: { page: 'messages' } },
       { path: 'formations',      component: AnimatorWorkspacePageComponent, data: { page: 'formations' } },
       { path: 'planning',        component: AnimatorWorkspacePageComponent, data: { page: 'planning' } },
-      // ✅ NOUVEAU — Mon profil
       {
         path: 'mon-profil',
         loadComponent: () =>
           import('./RH/pages/mon-profil/mon-profil.component').then(c => c.MonProfilComponent)
       },
-      // Routes RH absences
-      { path: 'rh/mes-absences',    component: MesAbsencesComponent },
+      { path: 'rh/mes-absences',     component: MesAbsencesComponent },
       { path: 'rh/nouvelle-demande', component: NouvelleDemande },
-      // Routes formations
       {
         path: 'formations/disponibles',
         loadComponent: () =>

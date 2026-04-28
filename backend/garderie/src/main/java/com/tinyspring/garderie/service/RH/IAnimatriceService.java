@@ -26,4 +26,10 @@ public interface IAnimatriceService {
     List<AnimatriceDTO> getAnimatricesByStatut(StatutAnimatrice statut);
 
     AnimatriceDTO uploadPhoto(Long id, MultipartFile file) throws IOException;
+
+    // ✅ AJOUT — vérifier si l'animatrice doit changer son mot de passe
+    boolean mustChangePassword(Long id);
+
+    // ✅ AJOUT — changer le mot de passe au premier login
+    void changerMotDePasse(Long id, String ancienMotDePasse, String nouveauMotDePasse);
 }
