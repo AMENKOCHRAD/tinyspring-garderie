@@ -6,15 +6,33 @@
         <span>TinySpring</span>
       </a>
 
-      <nav class="workspace-main-nav">
-        <a
-          *ngFor="let item of navGroups()"
-          [routerLink]="item.route"
-          [class.workspace-main-nav__link--active]="isGroupActive(item)"
-          class="workspace-main-nav__link">
-          {{ item.label }}
-        </a>
-      </nav>
+  <nav class="workspace-main-nav">
+  <div
+    *ngFor="let item of navGroups()"
+    class="workspace-main-nav__item"
+    [class.open]="openedNavKey() === item.key">
+
+    <a
+      [routerLink]="item.route"
+      [class.workspace-main-nav__link--active]="isGroupActive(item)"
+      class="workspace-main-nav__link"
+      (click)="item.children?.length ? toggleNavDropdown(item.key) : closeNavDropdown()">
+      {{ item.label }}
+      <span *ngIf="item.children?.length" class="nav-arrow">▾</span>
+    </a>
+
+    <div *ngIf="item.children?.length" class="workspace-dropdown">
+      <a
+        *ngFor="let child of item.children"
+        [routerLink]="child.route"
+        routerLinkActive="workspace-dropdown__link--active"
+        class="workspace-dropdown__link"
+        (click)="closeNavDropdown()">
+        {{ child.label }}
+      </a>
+    </div>
+  </div>
+</nav>
 
       <div class="workspace-tools">
      <div class="notification-wrapper" *ngIf="role() === 'PARENT'">

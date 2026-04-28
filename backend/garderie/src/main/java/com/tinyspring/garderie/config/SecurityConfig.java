@@ -134,6 +134,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/menus/daily").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/menus/daily/*").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/menus/daily/*").hasRole("ADMIN")
+                                .requestMatchers("/api/parent/notifications/**").permitAll()
 
 
                                 .requestMatchers(HttpMethod.GET, "/api/menus/daily/**").hasAnyRole("ADMIN", "PARENT")

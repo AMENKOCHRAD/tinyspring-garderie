@@ -49,7 +49,6 @@ public class ParentNotificationService {
                 .orElseThrow(() -> new RuntimeException("Notification introuvable"));
 
         notification.setSeen(true);
-
         return toResponse(notificationRepository.save(notification));
     }
 
@@ -137,9 +136,11 @@ public class ParentNotificationService {
         }
     }
 
-    @Scheduled(cron = "0 0 8 * * MON")
+    @Scheduled(cron = "0 40 18 * * TUE")
     @Transactional
     public void sendWeeklyAllergenSummary() {
+        System.out.println("SCHEDULE WEEKLY ALLERGEN NOTIFICATIONS RUNNING");
+
         LocalDate today = LocalDate.now();
 
         weeklyMenuRepository
@@ -151,9 +152,11 @@ public class ParentNotificationService {
                 .ifPresent(this::createWeeklyAllergenNotifications);
     }
 
-    @Scheduled(cron = "0 16 16 * * *")
+    @Scheduled(cron = "0 40 18 * * *")
     @Transactional
     public void sendTomorrowAllergenAlerts() {
+        System.out.println("SCHEDULE DAILY ALLERGEN NOTIFICATIONS RUNNING");
+
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 
         weeklyMenuRepository
@@ -179,7 +182,7 @@ public class ParentNotificationService {
                         dailyMenu,
                         dish,
                         children,
-                        "ALLERGEN_WEEKLY_" + dailyMenu.getId() + "_" + dish.getId()
+                        "ALLERGEN_WEEKLY"
                 );
             }
         }
@@ -205,7 +208,7 @@ public class ParentNotificationService {
                     dailyMenu,
                     dish,
                     children,
-                    "ALLERGEN_DAILY_" + dailyMenu.getId() + "_" + dish.getId()
+                    "ALLERGEN_DAILY"
             );
         }
     }
@@ -235,8 +238,17 @@ public class ParentNotificationService {
                     continue;
                 }
 
-                Long parentId = child.getParent().getId();
-                String type = typePrefix + "_" + child.getId() + "_" + allergen;
+                User parent = child.getParent();
+                Long parentId = parent.getId();
+
+                String type = buildAllergenNotificationType(
+                        typePrefix,
+                        weeklyMenu,
+                        dailyMenu,
+                        dish,
+                        child,
+                        allergen
+                );
 
                 if (notificationRepository.existsByParent_IdAndType(parentId, type)) {
                     continue;
@@ -244,7 +256,7 @@ public class ParentNotificationService {
 
                 notificationRepository.save(
                         Notification.builder()
-                                .parent(child.getParent())
+                                .parent(parent)
                                 .title("Alerte allergène — " + formatDayLabel(dailyMenu.getMenuDate()))
                                 .message(
                                         "Le plat " + dish.getName()
@@ -261,8 +273,37 @@ public class ParentNotificationService {
                                 .createdAt(LocalDateTime.now())
                                 .build()
                 );
+
+                System.out.println(
+                        "ALLERGEN NOTIFICATION CREATED: parent="
+                                + parentId
+                                + ", menu="
+                                + weeklyMenu.getId()
+                                + ", dish="
+                                + dish.getId()
+                                + ", child="
+                                + child.getId()
+                                + ", allergen="
+                                + allergen
+                );
             }
         }
+    }
+
+    private String buildAllergenNotificationType(
+            String typePrefix,
+            WeeklyMenu weeklyMenu,
+            DailyMenu dailyMenu,
+            Dish dish,
+            Child child,
+            String allergen
+    ) {
+        return typePrefix
+                + "_MENU_" + weeklyMenu.getId()
+                + "_DAY_" + dailyMenu.getId()
+                + "_DISH_" + dish.getId()
+                + "_CHILD_" + child.getId()
+                + "_ALLERGEN_" + normalizeText(allergen);
     }
 
     private String buildEventPublishedMessage(Event event) {
@@ -338,6 +379,10 @@ public class ParentNotificationService {
     }
 
     private String normalizeText(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "";
+        }
+
         return Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "");
     }

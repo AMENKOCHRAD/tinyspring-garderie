@@ -109,6 +109,7 @@ protected isGroupActive(group: WorkspaceNavGroup): boolean {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.notificationPanelOpen.set(false);
+        this.closeNavDropdown();
       }
     });
 
@@ -136,6 +137,16 @@ protected isGroupActive(group: WorkspaceNavGroup): boolean {
   protected closeToast(): void {
     this.toastNotification.set(null);
   }
+
+  protected readonly openedNavKey = signal<string | null>(null);
+
+protected toggleNavDropdown(key: string): void {
+  this.openedNavKey.update(current => current === key ? null : key);
+}
+
+protected closeNavDropdown(): void {
+  this.openedNavKey.set(null);
+}
 
   // ===============================
   // 🔄 LOAD NOTIFICATIONS

@@ -13,10 +13,10 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.Normalizer;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,38 +24,39 @@ public class MenuAiService {
 
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
+    private final AlternativeDishService alternativeDishService;
+
+    private static final Set<String> ALLOWED_ALLERGENS = Set.of(
+            "gluten", "lait", "oeufs", "poisson", "arachides",
+            "soja", "noix", "céleri", "moutarde", "sésame", "sulfites"
+    );
 
     public WeeklyMenuRequest generateWeeklyMenuDraft(WeeklyMenuAiGenerateRequest request) {
         try {
             LocalDate weekStart = LocalDate.parse(request.getWeekStartDate());
 
             String prompt = buildPrompt(weekStart);
-            System.out.println("=== PROMPT ENVOYE A OLLAMA ===");
-            System.out.println(prompt);
 
-            ResponseEntity<Map> response = callOllama(prompt, 3500);
-
-            System.out.println("=== REPONSE BRUTE OLLAMA ===");
-            System.out.println(response.getBody());
+            ResponseEntity<Map<String, Object>> response = callOllama(prompt, 3500);
 
             if (response.getBody() == null) {
                 throw new IllegalStateException("Réponse Ollama null");
             }
 
             Object rawResponse = response.getBody().get("response");
+
             if (rawResponse == null) {
-                throw new IllegalStateException("Réponse IA vide.");
+                throw new IllegalStateException("Réponse IA vide");
             }
 
             return parseAiResponse(rawResponse.toString(), weekStart);
 
         } catch (Exception e) {
-            e.printStackTrace();
             throw new IllegalStateException("Erreur pendant la génération IA : " + e.getMessage(), e);
         }
     }
 
-    private ResponseEntity<Map> callOllama(String prompt, int numPredict) {
+    private ResponseEntity<Map<String, Object>> callOllama(String prompt, int numPredict) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -74,11 +75,14 @@ public class MenuAiService {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
+        @SuppressWarnings("unchecked")
+        Class<Map<String, Object>> responseType = (Class<Map<String, Object>>) (Class<?>) Map.class;
+
         return restTemplate.exchange(
                 "http://localhost:11434/api/generate",
                 HttpMethod.POST,
                 entity,
-                Map.class
+                responseType
         );
     }
 
@@ -86,7 +90,9 @@ public class MenuAiService {
         return """
         Réponds uniquement avec un JSON valide. Aucun texte avant ou après.
 
-        Génère un menu de garderie tunisienne pour enfants 2-6 ans.
+        Génère uniquement le menu principal d'une garderie tunisienne pour enfants 2-6 ans.
+        Ne génère PAS les alternatives : le backend les ajoute automatiquement.
+
         Menu doux, simple, équilibré, non épicé.
 
         Dates obligatoires :
@@ -96,7 +102,7 @@ public class MenuAiService {
         THURSDAY=%s
         FRIDAY=%s
 
-        Format :
+        Format exact :
         {
           "title": "Menu semaine du %s",
           "dailyMenus": [
@@ -118,40 +124,29 @@ public class MenuAiService {
 
         Contraintes :
         - dailyMenus contient exactement 5 jours.
-        - Chaque jour contient exactement : 1 ENTREE, 1 PLAT_PRINCIPAL, 1 DESSERT, 1 GOUTER.
-        - mealType autorisé : ENTREE, PLAT_PRINCIPAL, DESSERT, GOUTER.
+        - Chaque jour contient exactement 4 plats :
+          1 ENTREE, 1 PLAT_PRINCIPAL, 1 DESSERT, 1 GOUTER.
+        - mealType autorisé uniquement : ENTREE, PLAT_PRINCIPAL, DESSERT, GOUTER.
         - allergens autorisés uniquement : gluten, lait, oeufs, poisson, arachides, soja, noix, céleri, moutarde, sésame, sulfites.
-                - Chaque jour doit contenir obligatoirement AU MOINS 2 plats avec allergènes.
-                
-                - Pour garantir cela, utilise des plats naturels contenant allergènes :
-                  yaourt, fromage, pain, couscous, pâtes, cake, omelette, poisson.
-                
-                - Règles obligatoires :
-                  - pain, couscous, pâtes, semoule, biscuit, cake => allergens doit contenir "gluten"
-                  - lait, yaourt, fromage, beurre, crème => allergens doit contenir "lait"
-                  - oeuf, omelette, gâteau, cake => allergens doit contenir "oeufs"
-                  - poisson, thon, sardine, saumon => allergens doit contenir "poisson"
-                
-                - Chaque jour doit contenir :
-                  → au moins 1 plat avec "gluten"
-                  → au moins 1 plat avec "lait" ou "oeufs" ou "poisson"
-                
-                - Interdictions :
-                  - ne jamais mettre allergen incohérent
-                  - exemple interdit : poulet avec poisson
-                  - exemple interdit : riz avec gluten
-        - Exemples cohérents :
-          pain/couscous/pâtes/semoule = gluten
-          yaourt/fromage/lait = lait
-          poisson/thon/sardine = poisson
-          omelette/gâteau = oeufs
-        - Exemples interdits :
-          poulet avec poisson
-          riz simple avec gluten
-          compote avec lait
-        - Évite harissa, merguez, fritures lourdes, plats épicés, plats sophistiqués.
-        - Varie les plats entre les jours.
-        - JSON complet et fermé.
+        - Chaque jour doit contenir au moins 2 plats avec allergènes.
+        - Chaque jour doit contenir au moins 1 plat avec gluten.
+        - Chaque jour doit contenir au moins 1 plat avec lait ou oeufs ou poisson.
+
+        Règles allergènes :
+        - pain, couscous, pâtes, semoule, biscuit, cake, gâteau, tarte => gluten
+        - lait, yaourt, fromage, beurre, crème => lait
+        - oeuf, omelette, cake, gâteau => oeufs
+        - poisson, thon, sardine, saumon => poisson
+        - cacahuète, arachide => arachides
+        - noix, amande, noisette => noix
+
+        Interdictions :
+        - ne jamais mettre poulet avec allergène poisson
+        - ne jamais mettre riz simple avec gluten
+        - ne jamais mettre compote avec lait
+        - éviter harissa, merguez, fritures lourdes, plats épicés, plats sophistiqués.
+
+        JSON complet et fermé.
         """.formatted(
                 weekStart,
                 weekStart.plusDays(1),
@@ -169,9 +164,6 @@ public class MenuAiService {
                     .replace("```", "")
                     .trim();
 
-            System.out.println("=== JSON NETTOYE ===");
-            System.out.println(cleaned);
-
             JsonNode root = objectMapper.readTree(cleaned);
 
             WeeklyMenuRequest request = WeeklyMenuRequest.builder()
@@ -185,6 +177,7 @@ public class MenuAiService {
                     .build();
 
             JsonNode dailyMenusNode = root.path("dailyMenus");
+
             if (!dailyMenusNode.isArray()) {
                 throw new IllegalStateException("dailyMenus absent ou invalide");
             }
@@ -209,124 +202,49 @@ public class MenuAiService {
 
                 JsonNode dishesNode = dayNode.path("dishes");
 
-                if (dishesNode.isArray()) {
-                    for (JsonNode dishNode : dishesNode) {
-                        String dishName = dishNode.path("name").asText("");
-                        String description = dishNode.path("description").asText("");
+                if (!dishesNode.isArray()) {
+                    throw new IllegalStateException("dishes absent ou invalide");
+                }
 
-                        String allergens = normalizeAllergens(
-                                dishNode.path("allergens").asText(""),
-                                dishName,
-                                description
+                for (JsonNode dishNode : dishesNode) {
+                    String dishName = dishNode.path("name").asText("").trim();
+                    String description = dishNode.path("description").asText("").trim();
+
+                    String allergens = normalizeAllergens(
+                            dishNode.path("allergens").asText(""),
+                            dishName,
+                            description
+                    );
+
+                    DishRequest dish = DishRequest.builder()
+                            .mealType(safeMealType(dishNode.path("mealType").asText()))
+                            .name(dishName)
+                            .description(description)
+                            .allergens(allergens)
+                            .allergenConflictFlags("")
+                            .build();
+
+                    dailyMenu.getDishes().add(dish);
+
+                    if (!allergens.isBlank()) {
+                        dailyMenu.getDishes().add(
+                                alternativeDishService.generateAlternativeFor(dish)
                         );
-
-                        DishRequest dish = DishRequest.builder()
-                                .mealType(safeMealType(dishNode.path("mealType").asText()))
-                                .name(dishName)
-                                .description(description)
-                                .allergens(allergens)
-                                .allergenConflictFlags("")
-                                .build();
-
-                        dailyMenu.getDishes().add(dish);
-
-                        if (!allergens.isBlank()) {
-                            DishRequest alternative = generateAlternativeDishOnly(dish);
-
-                            if (alternative != null) {
-                                dailyMenu.getDishes().add(alternative);
-                            }
-                        }
                     }
                 }
 
                 request.getDailyMenus().add(dailyMenu);
             }
 
-            if (request.getDailyMenus().size() < 5) {
-                System.out.println("⚠️ Menu incomplet généré par IA : " + request.getDailyMenus().size());
+            if (request.getDailyMenus().size() != 5) {
+                throw new IllegalStateException("Le menu généré doit contenir exactement 5 jours");
             }
 
             return request;
+
         } catch (Exception e) {
             throw new IllegalStateException("Impossible d'interpréter la réponse IA : " + e.getMessage(), e);
         }
-    }
-
-    private DishRequest generateAlternativeDishOnly(DishRequest dish) {
-        try {
-            String prompt = """
-            Réponds uniquement avec un JSON valide.
-
-            Génère un plat alternatif pour enfants allergiques.
-
-            Plat original :
-            {
-              "mealType": "%s",
-              "name": "%s",
-              "description": "%s",
-              "allergens": "%s"
-            }
-
-            Règles :
-            - Même mealType que le plat original.
-            - Ne contient aucun des allergènes du plat original.
-            - Ressemble au plat original en apparence, texture et valeur nutritionnelle.
-            - Adapté à une garderie tunisienne.
-            - Doux, simple, non épicé.
-            - Ne mets jamais le mot "alternative" dans le nom.
-            - Mets toujours "allergens": "".
-
-            Format exact :
-            {
-              "mealType": "%s",
-              "name": "string",
-              "description": "string",
-              "allergens": ""
-            }
-            """.formatted(
-                    dish.getMealType().name(),
-                    safeText(dish.getName()),
-                    safeText(dish.getDescription()),
-                    safeText(dish.getAllergens()),
-                    dish.getMealType().name()
-            );
-
-            ResponseEntity<Map> response = callOllama(prompt, 450);
-
-            if (response.getBody() == null || response.getBody().get("response") == null) {
-                return null;
-            }
-
-            String raw = response.getBody().get("response").toString()
-                    .replace("```json", "")
-                    .replace("```", "")
-                    .trim();
-
-            JsonNode node = objectMapper.readTree(raw);
-
-            return DishRequest.builder()
-                    .mealType(dish.getMealType())
-                    .name(node.path("name").asText(""))
-                    .description(node.path("description").asText(""))
-                    .allergens("")
-                    .allergenConflictFlags("")
-                    .build();
-
-        } catch (Exception e) {
-            System.out.println("⚠️ Alternative IA non générée : " + e.getMessage());
-            return null;
-        }
-    }
-
-    private String safeText(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"");
     }
 
     private MealType safeMealType(String value) {
@@ -334,11 +252,12 @@ public class MenuAiService {
             return MealType.ENTREE;
         }
 
-        String normalized = value.trim().toUpperCase()
+        String normalized = normalize(value)
+                .toUpperCase()
                 .replace("PLAT PRINCIPAL", "PLAT_PRINCIPAL")
-                .replace("PLAT_PRINCIPALE", "PLAT_PRINCIPAL")
-                .replace("ENTRÉE", "ENTREE")
-                .replace("GOÛTER", "GOUTER");
+                .replace("PLAT PRINCIPALE", "PLAT_PRINCIPAL")
+                .replace("ENTREE", "ENTREE")
+                .replace("GOUTER", "GOUTER");
 
         try {
             return MealType.valueOf(normalized);
@@ -347,34 +266,30 @@ public class MenuAiService {
         }
     }
 
-    private static final java.util.Set<String> ALLOWED_ALLERGENS = java.util.Set.of(
-            "gluten", "lait", "oeufs", "poisson", "arachides",
-            "soja", "noix", "céleri", "moutarde", "sésame", "sulfites"
-    );
-
     private String normalizeAllergens(String raw, String dishName, String description) {
-        java.util.Set<String> allergens = new java.util.LinkedHashSet<>();
+        Set<String> allergens = new LinkedHashSet<>();
 
         if (raw != null && !raw.isBlank()) {
-            java.util.Arrays.stream(raw.split("[,;]"))
+            Arrays.stream(raw.split("[,;\\n]"))
                     .map(String::trim)
-                    .map(String::toLowerCase)
+                    .map(this::normalize)
                     .filter(ALLOWED_ALLERGENS::contains)
                     .forEach(allergens::add);
         }
 
-        String text = ((dishName == null ? "" : dishName) + " " + (description == null ? "" : description))
-                .toLowerCase();
+        String text = normalize(
+                (dishName == null ? "" : dishName) + " " + (description == null ? "" : description)
+        );
 
-        if (containsAny(text, "pain", "couscous", "pâtes", "pates", "semoule", "biscuit", "biscuits", "cake", "gâteau", "gateau", "tarte")) {
+        if (containsAny(text, "pain", "couscous", "pates", "semoule", "biscuit", "biscuits", "cake", "gateau", "tarte")) {
             allergens.add("gluten");
         }
 
-        if (containsAny(text, "lait", "yaourt", "fromage", "beurre", "crème", "creme")) {
+        if (containsAny(text, "lait", "yaourt", "fromage", "beurre", "creme")) {
             allergens.add("lait");
         }
 
-        if (containsAny(text, "oeuf", "œuf", "oeufs", "œufs", "omelette", "cake", "gâteau", "gateau")) {
+        if (containsAny(text, "oeuf", "oeufs", "omelette", "cake", "gateau")) {
             allergens.add("oeufs");
         }
 
@@ -382,7 +297,7 @@ public class MenuAiService {
             allergens.add("poisson");
         }
 
-        if (containsAny(text, "cacahuète", "cacahuete", "arachide", "arachides")) {
+        if (containsAny(text, "cacahuete", "arachide", "arachides")) {
             allergens.add("arachides");
         }
 
@@ -390,18 +305,45 @@ public class MenuAiService {
             allergens.add("noix");
         }
 
-        if (containsAny(text, "céleri", "celeri")) {
+        if (containsAny(text, "celeri")) {
             allergens.add("céleri");
+        }
+
+        if (containsAny(text, "moutarde")) {
+            allergens.add("moutarde");
+        }
+
+        if (containsAny(text, "sesame")) {
+            allergens.add("sésame");
+        }
+
+        if (containsAny(text, "soja")) {
+            allergens.add("soja");
+        }
+
+        if (containsAny(text, "sulfite", "sulfites")) {
+            allergens.add("sulfites");
         }
 
         return String.join(", ", allergens);
     }
+
     private boolean containsAny(String text, String... keywords) {
         for (String keyword : keywords) {
             if (text.contains(keyword)) {
                 return true;
             }
         }
+
         return false;
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
     }
 }
