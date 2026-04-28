@@ -4,6 +4,7 @@ import com.tinyspring.garderie.entity.enums.DecisionRecommendation;
 import com.tinyspring.garderie.entity.enums.ReclamationCategory;
 import com.tinyspring.garderie.entity.enums.ReclamationPriority;
 import com.tinyspring.garderie.entity.enums.ReclamationStatus;
+import com.tinyspring.garderie.entity.enums.SmartPriorityLevel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -74,6 +75,38 @@ public class Reclamation {
     @Column(columnDefinition = "TEXT")
     private String recurrenceReason;
 
+    @Column(name = "smart_priority_score")
+    private Integer smartPriorityScore;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "smart_priority_level")
+    private SmartPriorityLevel smartPriorityLevel;
+
+    @Column(name = "smart_priority_reason", columnDefinition = "TEXT")
+    private String smartPriorityReason;
+
+    // ─────────────────────────────────────────────
+    // Escalade automatique intelligente
+    // ─────────────────────────────────────────────
+
+    @Column(name = "auto_escalated")
+    private Boolean autoEscalated;
+
+    @Column(name = "escalated_at")
+    private LocalDateTime escalatedAt;
+
+    @Column(name = "escalation_reason", columnDefinition = "TEXT")
+    private String escalationReason;
+
+    @Column(name = "recommended_service")
+    private String recommendedService;
+
+    @Column(name = "recommended_delay")
+    private String recommendedDelay;
+
+    @Column(name = "recommended_action", columnDefinition = "TEXT")
+    private String recommendedAction;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -116,6 +149,18 @@ public class Reclamation {
 
         if (this.recurrenceCount == null) {
             this.recurrenceCount = 0;
+        }
+
+        if (this.smartPriorityScore == null) {
+            this.smartPriorityScore = 0;
+        }
+
+        if (this.smartPriorityLevel == null) {
+            this.smartPriorityLevel = SmartPriorityLevel.LOW;
+        }
+
+        if (this.autoEscalated == null) {
+            this.autoEscalated = false;
         }
     }
 

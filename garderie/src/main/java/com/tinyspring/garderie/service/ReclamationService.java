@@ -1,5 +1,7 @@
 package com.tinyspring.garderie.service;
 
+import com.tinyspring.garderie.dto.AdminDashboardResponse;
+import com.tinyspring.garderie.dto.EscalationInfoResponse;
 import com.tinyspring.garderie.dto.RecommendedAdminActionResponse;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
@@ -37,4 +39,12 @@ public interface ReclamationService {
     String generateSuggestedAdminResponse(Long reclamationId);
 
     RecommendedAdminActionResponse getRecommendedAdminAction(Long reclamationId);
+
+    EscalationInfoResponse getEscalationInfo(Long reclamationId);
+
+    /**
+     * Retourne le dashboard intelligent pour l'admin :
+     * réclamations actives triées par smartPriorityScore DESC + statistiques globales.
+     */
+    AdminDashboardResponse getAdminDashboard();
 }

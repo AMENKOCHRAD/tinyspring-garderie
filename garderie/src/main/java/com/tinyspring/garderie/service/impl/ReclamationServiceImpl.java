@@ -9,6 +9,9 @@ import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.tinyspring.garderie.dto.AdminDashboardResponse;
+import com.tinyspring.garderie.dto.EscalationResult;
+import com.tinyspring.garderie.dto.EscalationInfoResponse;
 import com.tinyspring.garderie.dto.MlPredictionResponse;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
@@ -28,6 +31,7 @@ import com.tinyspring.garderie.repository.ReclamationHistoryRepository;
 import com.tinyspring.garderie.repository.ReclamationRepository;
 import com.tinyspring.garderie.repository.UserRepository;
 import com.tinyspring.garderie.service.BadWordFilterService;
+import com.tinyspring.garderie.service.EscalationService;
 import com.tinyspring.garderie.service.MlPredictionService;
 import com.tinyspring.garderie.service.ReclamationService;
 import org.apache.poi.ss.usermodel.Cell;
@@ -60,6 +64,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.tinyspring.garderie.dto.SmartPriorityResult;
+import com.tinyspring.garderie.service.SmartPriorityEngine;
+
 @Service
 public class ReclamationServiceImpl implements ReclamationService {
 
@@ -69,19 +76,25 @@ public class ReclamationServiceImpl implements ReclamationService {
     private final UserRepository userRepository;
     private final BadWordFilterService badWordFilterService;
     private final MlPredictionService mlPredictionService;
+    private final SmartPriorityEngine smartPriorityEngine;
+    private final EscalationService escalationService;
 
     public ReclamationServiceImpl(ReclamationRepository reclamationRepository,
                                   ReclamationHistoryRepository reclamationHistoryRepository,
                                   ConversationRepository conversationRepository,
                                   UserRepository userRepository,
                                   BadWordFilterService badWordFilterService,
-                                  MlPredictionService mlPredictionService) {
+                                  MlPredictionService mlPredictionService,
+                                  SmartPriorityEngine smartPriorityEngine,
+                                  EscalationService escalationService) {
         this.reclamationRepository = reclamationRepository;
         this.reclamationHistoryRepository = reclamationHistoryRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
         this.badWordFilterService = badWordFilterService;
         this.mlPredictionService = mlPredictionService;
+        this.smartPriorityEngine = smartPriorityEngine;
+        this.escalationService = escalationService;
     }
 
     @Override
@@ -155,6 +168,18 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         Reclamation savedReclamation = reclamationRepository.save(reclamation);
 
+        // ── Calcul initial du score de priorité intelligente ────────────
+        // createdAt vient d'être initialisé par @PrePersist — le moteur peut calculer
+        SmartPriorityResult smartResult = smartPriorityEngine.calculateAndApply(savedReclamation);
+        savedReclamation = reclamationRepository.save(savedReclamation);
+
+        // ── Escalade automatique intelligente si la réclamation est critique ──
+        savedReclamation = applyEscalationAndHistory(
+                savedReclamation,
+                "Escalade automatique déclenchée à la création",
+                null
+        );
+
         addHistory(
                 savedReclamation,
                 ReclamationHistoryActionType.CREATED,
@@ -222,6 +247,16 @@ public class ReclamationServiceImpl implements ReclamationService {
                     null
             );
         }
+
+        // ── Historique du score de priorité intelligente ────────────────
+        addHistory(
+                savedReclamation,
+                ReclamationHistoryActionType.SMART_PRIORITY_CALCULATED,
+                "Score de priorité intelligente calculé",
+                null,
+                savedReclamation.getSmartPriorityReason(),
+                null
+        );
 
         return savedReclamation;
     }
@@ -548,6 +583,56 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     @Override
+    public EscalationInfoResponse getEscalationInfo(Long reclamationId) {
+        User currentUser = getCurrentUser();
+        String roleName = currentUser.getRole().getName().name();
+
+        if (!roleName.equals("ADMIN")) {
+            throw new RuntimeException("Seul un admin peut consulter les informations d'escalade");
+        }
+
+        Reclamation reclamation = reclamationRepository.findById(reclamationId)
+                .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
+
+        EscalationResult liveEvaluation = escalationService.evaluate(reclamation);
+
+        return EscalationInfoResponse.builder()
+                .reclamationId(reclamation.getId())
+                .autoEscalated(Boolean.TRUE.equals(reclamation.getAutoEscalated()))
+                .escalatedAt(reclamation.getEscalatedAt())
+                .escalationReason(
+                        reclamation.getEscalationReason() != null && !reclamation.getEscalationReason().isBlank()
+                                ? reclamation.getEscalationReason()
+                                : liveEvaluation.getEscalationReason()
+                )
+                .recommendedService(
+                        reclamation.getRecommendedService() != null && !reclamation.getRecommendedService().isBlank()
+                                ? reclamation.getRecommendedService()
+                                : liveEvaluation.getRecommendedService()
+                )
+                .recommendedUrgency(liveEvaluation.getRecommendedUrgency())
+                .recommendedDelay(
+                        reclamation.getRecommendedDelay() != null && !reclamation.getRecommendedDelay().isBlank()
+                                ? reclamation.getRecommendedDelay()
+                                : liveEvaluation.getRecommendedDelay()
+                )
+                .recommendedAction(
+                        reclamation.getRecommendedAction() != null && !reclamation.getRecommendedAction().isBlank()
+                                ? reclamation.getRecommendedAction()
+                                : liveEvaluation.getRecommendedAction()
+                )
+                .smartPriorityScore(reclamation.getSmartPriorityScore())
+                .smartPriorityLevel(reclamation.getSmartPriorityLevel() != null
+                        ? reclamation.getSmartPriorityLevel().name()
+                        : null)
+                .smartPriorityReason(reclamation.getSmartPriorityReason())
+                .recurring(Boolean.TRUE.equals(reclamation.getRecurring()))
+                .recurrenceCount(reclamation.getRecurrenceCount())
+                .status(reclamation.getStatus() != null ? reclamation.getStatus().name() : null)
+                .build();
+    }
+
+    @Override
     public byte[] exportReclamationsExcel() {
         User currentUser = getCurrentUser();
         String roleName = currentUser.getRole().getName().name();
@@ -767,6 +852,18 @@ public class ReclamationServiceImpl implements ReclamationService {
 
             Reclamation saved = reclamationRepository.save(reclamation);
 
+            // ── Recalcul du score de priorité intelligente ──────────────
+            // La priorité ou catégorie a peut-être changé → score mis à jour
+            SmartPriorityResult smartResult = smartPriorityEngine.calculateAndApply(saved);
+            saved = reclamationRepository.save(saved);
+
+            // ── Réévaluation de l escalade après modification du contenu ──
+            saved = applyEscalationAndHistory(
+                    saved,
+                    "Escalade automatique déclenchée après modification",
+                    currentUser
+            );
+
             if (!safeEquals(oldTitle, saved.getTitle())) {
                 addHistory(saved, ReclamationHistoryActionType.TITLE_CHANGED, "Titre modifié", oldTitle, saved.getTitle(), currentUser);
             }
@@ -842,6 +939,16 @@ public class ReclamationServiceImpl implements ReclamationService {
                 );
             }
 
+            // ── Historique du recalcul Smart Priority ───────────────────
+            addHistory(
+                    saved,
+                    ReclamationHistoryActionType.SMART_PRIORITY_CALCULATED,
+                    "Score de priorité intelligente recalculé (modification réclamation)",
+                    null,
+                    saved.getSmartPriorityReason(),
+                    currentUser
+            );
+
             return saved;
         }
 
@@ -906,11 +1013,34 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setAssignedAdmin(currentUser);
 
         Reclamation saved = reclamationRepository.save(reclamation);
+
+        // ── Recalcul du score de priorité intelligente ──────────────────
+        // Le statut est pris en compte dans la résolution du workflow admin
+        SmartPriorityResult smartResult = smartPriorityEngine.calculateAndApply(saved);
+        saved = reclamationRepository.save(saved);
+
+        // ── Réévaluation de l escalade après changement de statut ──
+        saved = applyEscalationAndHistory(
+                saved,
+                "Escalade automatique déclenchée après changement de statut",
+                currentUser
+        );
+
         String newStatus = saved.getStatus() != null ? saved.getStatus().name() : null;
 
         if (!safeEquals(oldStatus, newStatus)) {
             addHistory(saved, ReclamationHistoryActionType.STATUS_CHANGED, "Statut changé", oldStatus, newStatus, currentUser);
         }
+
+        // ── Historique du recalcul Smart Priority ───────────────────────
+        addHistory(
+                saved,
+                ReclamationHistoryActionType.SMART_PRIORITY_CALCULATED,
+                "Score de priorité intelligente recalculé (changement de statut)",
+                null,
+                saved.getSmartPriorityReason(),
+                currentUser
+        );
 
         return saved;
     }
@@ -943,6 +1073,86 @@ public class ReclamationServiceImpl implements ReclamationService {
         if (conversation != null) {
             conversationRepository.delete(conversation);
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //   DASHBOARD ADMIN INTELLIGENT
+    // ════════════════════════════════════════════════════════════════════
+
+    @Override
+    public AdminDashboardResponse getAdminDashboard() {
+        User currentUser = getCurrentUser();
+        String roleName = currentUser.getRole().getName().name();
+
+        if (!roleName.equals("ADMIN")) {
+            throw new RuntimeException("Seul un admin peut accéder au dashboard intelligent");
+        }
+
+        // Statuts actifs (réclamations à traiter)
+        List<ReclamationStatus> activeStatuses = List.of(
+                ReclamationStatus.OPEN,
+                ReclamationStatus.IN_PROGRESS
+        );
+
+        // ── 1. Liste principale triée par score DESC ─────────────────────
+        List<Reclamation> prioritized =
+                reclamationRepository.findActiveReclamationsSortedBySmartPriority(activeStatuses);
+
+        // ── 2. Compteurs par niveau SmartPriority ─────────────────────────
+        int criticalCount = (int) reclamationRepository
+                .countByStatusInAndSmartPriorityLevel(activeStatuses, com.tinyspring.garderie.entity.enums.SmartPriorityLevel.CRITICAL);
+        int highCount = (int) reclamationRepository
+                .countByStatusInAndSmartPriorityLevel(activeStatuses, com.tinyspring.garderie.entity.enums.SmartPriorityLevel.HIGH);
+        int mediumCount = (int) reclamationRepository
+                .countByStatusInAndSmartPriorityLevel(activeStatuses, com.tinyspring.garderie.entity.enums.SmartPriorityLevel.MEDIUM);
+        int lowCount = (int) reclamationRepository
+                .countByStatusInAndSmartPriorityLevel(activeStatuses, com.tinyspring.garderie.entity.enums.SmartPriorityLevel.LOW);
+
+        // ── 3. Compteurs d'alertes ────────────────────────────────────────
+        // SLA dépassé = score SLA max (30 pts) contribue → smartPriorityScore >= 30
+        int slaBreachedCount = (int) reclamationRepository
+                .countActiveWithScoreGreaterOrEqual(activeStatuses, 30);
+        int recurringCount = (int) reclamationRepository
+                .countRecurringActive(activeStatuses);
+        int unassignedCount = (int) reclamationRepository
+                .countUnassignedActive(activeStatuses);
+
+        // ── 4. Compteurs par statut (historique complet) ──────────────────
+        int openCount       = (int) reclamationRepository.countByStatus(ReclamationStatus.OPEN);
+        int inProgressCount = (int) reclamationRepository.countByStatus(ReclamationStatus.IN_PROGRESS);
+        int resolvedCount   = (int) reclamationRepository.countByStatus(ReclamationStatus.RESOLVED);
+        int rejectedCount   = (int) reclamationRepository.countByStatus(ReclamationStatus.REJECTED);
+
+        // ── 5. Répartition par catégorie (réclamations actives) ───────────
+        java.util.Map<String, Long> activeByCategory = prioritized.stream()
+                .filter(r -> r.getCategory() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getCategory().name(),
+                        java.util.stream.Collectors.counting()
+                ));
+
+        // ── 6. Score moyen et max ─────────────────────────────────────────
+        double averageSmartScore = reclamationRepository.averageSmartPriorityScore(activeStatuses);
+        int    maxSmartScore     = reclamationRepository.maxSmartPriorityScore(activeStatuses);
+
+        return AdminDashboardResponse.builder()
+                .prioritizedReclamations(prioritized)
+                .totalActive(prioritized.size())
+                .criticalCount(criticalCount)
+                .highCount(highCount)
+                .mediumCount(mediumCount)
+                .lowCount(lowCount)
+                .slaBreachedCount(slaBreachedCount)
+                .recurringCount(recurringCount)
+                .unassignedCount(unassignedCount)
+                .openCount(openCount)
+                .inProgressCount(inProgressCount)
+                .resolvedCount(resolvedCount)
+                .rejectedCount(rejectedCount)
+                .activeByCategory(activeByCategory)
+                .averageSmartScore(Math.round(averageSmartScore * 100.0) / 100.0)
+                .maxSmartScore(maxSmartScore)
+                .build();
     }
 
     private void applyMlPrediction(Reclamation reclamation,
@@ -1123,6 +1333,44 @@ public class ReclamationServiceImpl implements ReclamationService {
         } catch (IOException e) {
             throw new RuntimeException("Erreur upload pièce jointe réclamation : " + e.getMessage(), e);
         }
+    }
+
+    private Reclamation applyEscalationAndHistory(Reclamation reclamation,
+                                                  String actionLabel,
+                                                  User actor) {
+        boolean wasAlreadyEscalated = Boolean.TRUE.equals(reclamation.getAutoEscalated());
+        String oldStatus = reclamation.getStatus() != null ? reclamation.getStatus().name() : null;
+
+        EscalationResult escalationResult = escalationService.evaluateAndApply(reclamation);
+        Reclamation saved = reclamationRepository.save(reclamation);
+
+        boolean isNowEscalated = Boolean.TRUE.equals(saved.getAutoEscalated());
+
+        if (escalationResult.isEscalationRequired() && !wasAlreadyEscalated && isNowEscalated) {
+            String newStatus = saved.getStatus() != null ? saved.getStatus().name() : null;
+
+            StringBuilder details = new StringBuilder();
+            details.append(escalationResult.getEscalationReason());
+            details.append(" | Service recommandé : ").append(escalationResult.getRecommendedService());
+            details.append(" | Urgence : ").append(escalationResult.getRecommendedUrgency());
+            details.append(" | Délai : ").append(escalationResult.getRecommendedDelay());
+            details.append(" | Action : ").append(escalationResult.getRecommendedAction());
+
+            if (!safeEquals(oldStatus, newStatus)) {
+                details.append(" | Statut auto : ").append(oldStatus).append(" -> ").append(newStatus);
+            }
+
+            addHistory(
+                    saved,
+                    ReclamationHistoryActionType.ESCALATION_TRIGGERED,
+                    actionLabel,
+                    wasAlreadyEscalated ? "Déjà escaladée" : "Non escaladée",
+                    details.toString(),
+                    actor
+            );
+        }
+
+        return saved;
     }
 
     private void addHistory(Reclamation reclamation,

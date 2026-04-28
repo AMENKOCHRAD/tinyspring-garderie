@@ -1,5 +1,7 @@
 package com.tinyspring.garderie.controller;
 
+import com.tinyspring.garderie.dto.AdminDashboardResponse;
+import com.tinyspring.garderie.dto.EscalationInfoResponse;
 import com.tinyspring.garderie.dto.RecommendedAdminActionResponse;
 import com.tinyspring.garderie.dto.UpdateReclamationRequest;
 import com.tinyspring.garderie.dto.UpdateReclamationStatusRequest;
@@ -36,6 +38,12 @@ public class ReclamationController {
             @RequestParam(value = "attachment", required = false) MultipartFile attachment
     ) {
         return reclamationService.createReclamation(title, description, priority, category, image, attachment);
+    }
+
+    @GetMapping("/admin/dashboard")
+    public ResponseEntity<AdminDashboardResponse> getAdminDashboard() {
+        AdminDashboardResponse dashboard = reclamationService.getAdminDashboard();
+        return ResponseEntity.ok(dashboard);
     }
 
     @GetMapping
@@ -98,6 +106,12 @@ public class ReclamationController {
     @GetMapping("/{id}/recommended-admin-action")
     public ResponseEntity<RecommendedAdminActionResponse> getRecommendedAdminAction(@PathVariable Long id) {
         RecommendedAdminActionResponse response = reclamationService.getRecommendedAdminAction(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/escalation")
+    public ResponseEntity<EscalationInfoResponse> getEscalationInfo(@PathVariable Long id) {
+        EscalationInfoResponse response = reclamationService.getEscalationInfo(id);
         return ResponseEntity.ok(response);
     }
 

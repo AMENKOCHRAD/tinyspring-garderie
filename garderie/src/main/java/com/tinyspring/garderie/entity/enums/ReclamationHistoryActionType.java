@@ -11,5 +11,9 @@ public enum ReclamationHistoryActionType {
     ADMIN_COMMENT_ADDED,
     ADMIN_COMMENT_UPDATED,
     ADMIN_COMMENT_REMOVED,
-    RECURRENCE_DETECTED
+    RECURRENCE_DETECTED,
+    SMART_PRIORITY_CALCULATED,
+
+    // Escalade automatique intelligente
+    ESCALATION_TRIGGERED
 }

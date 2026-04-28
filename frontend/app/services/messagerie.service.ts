@@ -47,9 +47,21 @@ export interface Reclamation {
 
   decisionRecommendation?: string | null;
   decisionConfidence?: number | null;
-    recurring?: boolean | null;
+
+  recurring?: boolean | null;
   recurrenceCount?: number | null;
   recurrenceReason?: string | null;
+
+  smartPriorityScore?: number | null;
+  smartPriorityLevel?: string | null;
+  smartPriorityReason?: string | null;
+
+  autoEscalated?: boolean | null;
+  escalatedAt?: string | null;
+  escalationReason?: string | null;
+  recommendedService?: string | null;
+  recommendedDelay?: string | null;
+  recommendedAction?: string | null;
 
   adminComment?: string | null;
   createdAt: string;
@@ -72,11 +84,48 @@ export interface ReclamationHistory {
   actorRole: string;
   createdAt: string;
 }
+
 export interface RecommendedAdminActionResponse {
   recommendedService: string;
   recommendedUrgency: string;
   recommendedAction: string;
   recommendedDelay: string;
+}
+
+export interface EscalationInfoResponse {
+  reclamationId: number;
+  autoEscalated: boolean;
+  escalatedAt?: string | null;
+  escalationReason?: string | null;
+  recommendedService?: string | null;
+  recommendedUrgency?: string | null;
+  recommendedDelay?: string | null;
+  recommendedAction?: string | null;
+  smartPriorityScore?: number | null;
+  smartPriorityLevel?: string | null;
+  smartPriorityReason?: string | null;
+  recurring?: boolean | null;
+  recurrenceCount?: number | null;
+  status?: string | null;
+}
+
+export interface AdminDashboardResponse {
+  prioritizedReclamations: Reclamation[];
+  totalActive: number;
+  criticalCount: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+  slaBreachedCount: number;
+  recurringCount: number;
+  unassignedCount: number;
+  openCount: number;
+  inProgressCount: number;
+  resolvedCount: number;
+  rejectedCount: number;
+  activeByCategory: { [key: string]: number };
+  averageSmartScore: number;
+  maxSmartScore: number;
 }
 
 @Injectable({
@@ -134,12 +183,6 @@ export class MessagerieService {
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
-  getRecommendedAdminAction(id: number): Observable<RecommendedAdminActionResponse> {
-  return this.http.get<RecommendedAdminActionResponse>(
-    `${this.apiUrl}/reclamations/${id}/recommended-admin-action`,
-    { headers: this.authService.getBasicAuthHeaders() }
-  );
-}
 
   sendMessage(conversationId: number, content: string, image?: File | null): Observable<Message> {
     const formData = new FormData();
@@ -216,6 +259,13 @@ export class MessagerieService {
   getMyReclamations(): Observable<Reclamation[]> {
     return this.http.get<Reclamation[]>(
       `${this.apiUrl}/reclamations`,
+      { headers: this.authService.getBasicAuthHeaders() }
+    );
+  }
+
+  getAdminDashboard(): Observable<AdminDashboardResponse> {
+    return this.http.get<AdminDashboardResponse>(
+      `${this.apiUrl}/reclamations/admin/dashboard`,
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
@@ -306,9 +356,23 @@ export class MessagerieService {
     );
   }
 
-  getSuggestedResponse(id: number): Observable<any> {
-    return this.http.get<any>(
+  getSuggestedResponse(id: number): Observable<{ suggestedResponse: string }> {
+    return this.http.get<{ suggestedResponse: string }>(
       `${this.apiUrl}/reclamations/${id}/suggested-response`,
+      { headers: this.authService.getBasicAuthHeaders() }
+    );
+  }
+
+  getRecommendedAdminAction(id: number): Observable<RecommendedAdminActionResponse> {
+    return this.http.get<RecommendedAdminActionResponse>(
+      `${this.apiUrl}/reclamations/${id}/recommended-admin-action`,
+      { headers: this.authService.getBasicAuthHeaders() }
+    );
+  }
+
+  getEscalationInfo(id: number): Observable<EscalationInfoResponse> {
+    return this.http.get<EscalationInfoResponse>(
+      `${this.apiUrl}/reclamations/${id}/escalation`,
       { headers: this.authService.getBasicAuthHeaders() }
     );
   }
