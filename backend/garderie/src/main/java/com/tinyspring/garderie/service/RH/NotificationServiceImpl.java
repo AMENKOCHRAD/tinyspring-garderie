@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.service.RH;
 
 import com.tinyspring.garderie.dto.RH.NotificationDTO;
+import com.tinyspring.garderie.dto.RH.mapper.NotificationMapper;
 import com.tinyspring.garderie.entity.RH.Notification;
 import com.tinyspring.garderie.repository.RH.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,9 @@ public class NotificationServiceImpl implements INotificationService {
 
     private final NotificationRepository notificationRepository;
 
+    // ✅ MapStruct mapper injecté
+    private final NotificationMapper notificationMapper;
+
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
     @Override
@@ -27,7 +31,7 @@ public class NotificationServiceImpl implements INotificationService {
         emitters.add(emitter);
         emitter.onCompletion(() -> emitters.remove(emitter));
         emitter.onTimeout(() -> emitters.remove(emitter));
-        emitter.onError((e) -> emitters.remove(emitter));
+        emitter.onError(e -> emitters.remove(emitter));
         return emitter;
     }
 
@@ -53,21 +57,23 @@ public class NotificationServiceImpl implements INotificationService {
                 .build();
 
         Notification saved = notificationRepository.save(notification);
-        NotificationDTO dto = toDTO(saved);
+        NotificationDTO dto = notificationMapper.toDTO(saved);
         sendToAll(dto);
         return dto;
     }
 
     @Override
     public List<NotificationDTO> getAllNotifications() {
-        return notificationRepository.findAllByOrderByCreatedAtDesc()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+        return notificationRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(notificationMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<NotificationDTO> getNonLues() {
-        return notificationRepository.findByReadFalseOrderByCreatedAtDesc()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+        return notificationRepository.findByReadFalseOrderByCreatedAtDesc().stream()
+                .map(notificationMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -93,15 +99,5 @@ public class NotificationServiceImpl implements INotificationService {
     @Override
     public void supprimerNotification(Long id) {
         notificationRepository.deleteById(id);
-    }
-
-    private NotificationDTO toDTO(Notification n) {
-        return NotificationDTO.builder()
-                .id(n.getId())
-                .message(n.getMessage())
-                .type(n.getType())
-                .read(n.isRead())
-                .createdAt(n.getCreatedAt())
-                .build();
     }
 }

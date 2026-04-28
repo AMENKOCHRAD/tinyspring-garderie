@@ -2,6 +2,7 @@ package com.tinyspring.garderie.service.RH;
 
 import com.tinyspring.garderie.dto.RH.AbsenceCongeDTO;
 import com.tinyspring.garderie.dto.RH.ResultatEvaluationDTO;
+import com.tinyspring.garderie.dto.RH.mapper.AbsenceCongeMapper;
 import com.tinyspring.garderie.entity.RH.AbsenceConge;
 import com.tinyspring.garderie.entity.RH.Animatrice;
 import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
@@ -21,27 +22,24 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
 
     private final AbsenceCongeRepository absenceCongeRepository;
     private final AnimatriceRepository animatriceRepository;
-
-    // ✅ Injection par interfaces
     private final IEmailService emailService;
     private final INotificationService notificationService;
     private final IMoteurReglesService moteurReglesService;
+    private final AbsenceCongeMapper absenceCongeMapper;
 
     // ========== ADMIN ==========
 
     @Override
     public List<AbsenceCongeDTO> getAllAbsenceConges() {
-        return absenceCongeRepository.findAll()
-                .stream()
-                .map(this::toDTO)
+        return absenceCongeRepository.findAll().stream()
+                .map(absenceCongeMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<AbsenceCongeDTO> getAbsenceCongesByStatut(StatutAbsenceConge statut) {
-        return absenceCongeRepository.findByStatut(statut)
-                .stream()
-                .map(this::toDTO)
+        return absenceCongeRepository.findByStatut(statut).stream()
+                .map(absenceCongeMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -53,7 +51,6 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
         absenceConge.setStatut(StatutAbsenceConge.APPROUVE);
         absenceConge.setDecisionAutomatique(false);
         absenceConge.setMotifDecision("✅ Validée manuellement par l'administrateur.");
-        AbsenceCongeDTO result = toDTO(absenceCongeRepository.save(absenceConge));
 
         emailService.envoyerDecisionAbsence(
                 absenceConge.getAnimatrice().getEmail(),
@@ -62,11 +59,10 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
                 absenceConge.getType().name(),
                 absenceConge.getDateDebut().toString(),
                 absenceConge.getDateFin().toString(),
-                true,
-                null
+                true, null
         );
 
-        return result;
+        return absenceCongeMapper.toDTO(absenceCongeRepository.save(absenceConge));
     }
 
     @Override
@@ -77,7 +73,6 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
         absenceConge.setStatut(StatutAbsenceConge.REFUSE);
         absenceConge.setDecisionAutomatique(false);
         absenceConge.setMotifDecision("❌ Refusée manuellement par l'administrateur.");
-        AbsenceCongeDTO result = toDTO(absenceCongeRepository.save(absenceConge));
 
         emailService.envoyerDecisionAbsence(
                 absenceConge.getAnimatrice().getEmail(),
@@ -86,11 +81,10 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
                 absenceConge.getType().name(),
                 absenceConge.getDateDebut().toString(),
                 absenceConge.getDateFin().toString(),
-                false,
-                null
+                false, null
         );
 
-        return result;
+        return absenceCongeMapper.toDTO(absenceCongeRepository.save(absenceConge));
     }
 
     @Override
@@ -110,35 +104,33 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
         Animatrice animatrice = animatriceRepository.findById(dto.getAnimatriceId())
                 .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée"));
 
-        // 1. Créer et sauvegarder la demande EN_ATTENTE
-        AbsenceConge absenceConge = toEntity(dto, animatrice);
-        absenceConge.setStatut(StatutAbsenceConge.EN_ATTENTE);
-        absenceConge.setNbJours(
-                (int) ChronoUnit.DAYS.between(dto.getDateDebut(), dto.getDateFin()) + 1
-        );
+        AbsenceConge absenceConge = AbsenceConge.builder()
+                .animatrice(animatrice)
+                .type(dto.getType())
+                .dateDebut(dto.getDateDebut())
+                .dateFin(dto.getDateFin())
+                .motif(dto.getMotif())
+                .statut(StatutAbsenceConge.EN_ATTENTE)
+                .nbJours((int) ChronoUnit.DAYS.between(dto.getDateDebut(), dto.getDateFin()) + 1)
+                .build();
         AbsenceConge saved = absenceCongeRepository.save(absenceConge);
 
-        // 2. Évaluation par le moteur de règles
         ResultatEvaluationDTO resultat = moteurReglesService.evaluer(saved);
 
-        // 3. Appliquer la décision automatique
         switch (resultat.getDecision()) {
             case "AUTO_APPROUVE" -> {
                 saved.setStatut(StatutAbsenceConge.APPROUVE);
                 saved.setDecisionAutomatique(true);
                 saved.setMotifDecision(resultat.getExplication());
                 absenceCongeRepository.save(saved);
-
                 emailService.envoyerDecisionAbsence(
                         animatrice.getEmail(), animatrice.getPrenom(), animatrice.getNom(),
                         dto.getType().name(), dto.getDateDebut().toString(),
                         dto.getDateFin().toString(), true, null
                 );
-
                 notificationService.creerNotification(
                         "✅ Demande de " + animatrice.getPrenom() + " " + animatrice.getNom()
-                                + " auto-approuvée par le moteur de règles.",
-                        "ABSENCE"
+                                + " auto-approuvée par le moteur de règles.", "ABSENCE"
                 );
             }
             case "AUTO_REFUSE" -> {
@@ -146,75 +138,38 @@ public class AbsenceCongeServiceImpl implements IAbsenceCongeService {
                 saved.setDecisionAutomatique(true);
                 saved.setMotifDecision(resultat.getExplication());
                 absenceCongeRepository.save(saved);
-
                 emailService.envoyerDecisionAbsence(
                         animatrice.getEmail(), animatrice.getPrenom(), animatrice.getNom(),
                         dto.getType().name(), dto.getDateDebut().toString(),
                         dto.getDateFin().toString(), false, resultat.getExplication()
                 );
-
                 notificationService.creerNotification(
                         "❌ Demande de " + animatrice.getPrenom() + " " + animatrice.getNom()
-                                + " auto-refusée : " + resultat.getRegleDeclenchee(),
-                        "ABSENCE"
+                                + " auto-refusée : " + resultat.getRegleDeclenchee(), "ABSENCE"
                 );
             }
             default -> {
-                // TRANSMIS_ADMIN — reste EN_ATTENTE
                 saved.setMotifDecision(resultat.getExplication());
                 absenceCongeRepository.save(saved);
-
                 notificationService.creerNotification(
                         "🔔 Nouvelle demande de " + animatrice.getPrenom() + " " + animatrice.getNom()
                                 + " — " + dto.getType().name().replace("_", " ")
-                                + " (validation manuelle requise)",
-                        "ABSENCE"
+                                + " (validation manuelle requise)", "ABSENCE"
                 );
             }
         }
 
-        // 4. Retourner le DTO final avec le résultat d'évaluation
-        AbsenceCongeDTO result = toDTO(absenceCongeRepository.findById(saved.getId()).orElse(saved));
+        AbsenceCongeDTO result = absenceCongeMapper.toDTO(
+                absenceCongeRepository.findById(saved.getId()).orElse(saved)
+        );
         result.setResultatEvaluation(resultat);
         return result;
     }
 
     @Override
     public List<AbsenceCongeDTO> getMesAbsenceConges(Long animatriceId) {
-        return absenceCongeRepository.findByAnimatriceId(animatriceId)
-                .stream()
-                .map(this::toDTO)
+        return absenceCongeRepository.findByAnimatriceId(animatriceId).stream()
+                .map(absenceCongeMapper::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    // ========== MAPPING ==========
-
-    // ✅ public — déclaré dans IAbsenceCongeService
-    @Override
-    public AbsenceCongeDTO toDTO(AbsenceConge absenceConge) {
-        return AbsenceCongeDTO.builder()
-                .id(absenceConge.getId())
-                .animatriceId(absenceConge.getAnimatrice().getId())
-                .animatriceNom(absenceConge.getAnimatrice().getNom())
-                .animatricePrenom(absenceConge.getAnimatrice().getPrenom())
-                .type(absenceConge.getType())
-                .dateDebut(absenceConge.getDateDebut())
-                .dateFin(absenceConge.getDateFin())
-                .motif(absenceConge.getMotif())
-                .statut(absenceConge.getStatut())
-                .nbJours(absenceConge.getNbJours())
-                .decisionAutomatique(Boolean.TRUE.equals(absenceConge.getDecisionAutomatique()))
-                .motifDecision(absenceConge.getMotifDecision())
-                .build();
-    }
-
-    private AbsenceConge toEntity(AbsenceCongeDTO dto, Animatrice animatrice) {
-        return AbsenceConge.builder()
-                .animatrice(animatrice)
-                .type(dto.getType())
-                .dateDebut(dto.getDateDebut())
-                .dateFin(dto.getDateFin())
-                .motif(dto.getMotif())
-                .build();
     }
 }

@@ -1,7 +1,6 @@
 package com.tinyspring.garderie.service.RH;
 
 import com.tinyspring.garderie.dto.RH.AbsenceCongeDTO;
-import com.tinyspring.garderie.entity.RH.AbsenceConge;
 import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
 
 import java.util.List;
@@ -25,8 +24,4 @@ public interface IAbsenceCongeService {
     AbsenceCongeDTO soumettreDemandeAbsenceConge(AbsenceCongeDTO dto);
 
     List<AbsenceCongeDTO> getMesAbsenceConges(Long animatriceId);
-
-    // ========== MAPPING ==========
-
-    AbsenceCongeDTO toDTO(AbsenceConge absenceConge);
 }

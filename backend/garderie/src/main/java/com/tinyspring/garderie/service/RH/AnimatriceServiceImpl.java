@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.service.RH;
 
 import com.tinyspring.garderie.dto.RH.AnimatriceDTO;
+import com.tinyspring.garderie.dto.RH.mapper.AnimatriceMapper;
 import com.tinyspring.garderie.entity.RH.Animatrice;
 import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
 import com.tinyspring.garderie.entity.Role;
@@ -29,6 +30,7 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
     private final PasswordEncoder passwordEncoder;
     private final IEmailService emailService;
     private final INotificationService notificationService;
+    private final AnimatriceMapper animatriceMapper;
 
     public AnimatriceServiceImpl(AnimatriceRepository animatriceRepository,
                                  IFileStorageService fileStorageService,
@@ -36,7 +38,8 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
                                  RoleRepository roleRepository,
                                  PasswordEncoder passwordEncoder,
                                  IEmailService emailService,
-                                 INotificationService notificationService) {
+                                 INotificationService notificationService,
+                                 AnimatriceMapper animatriceMapper) {
         this.animatriceRepository = animatriceRepository;
         this.fileStorageService = fileStorageService;
         this.userRepository = userRepository;
@@ -44,24 +47,25 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.notificationService = notificationService;
+        this.animatriceMapper = animatriceMapper;
     }
 
     @Override
     public List<AnimatriceDTO> getAllAnimatrices() {
         return animatriceRepository.findAll().stream()
-                .map(this::toDTO)
+                .map(animatriceMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public AnimatriceDTO getAnimatriceById(Long id) {
-        return toDTO(animatriceRepository.findById(id)
+        return animatriceMapper.toDTO(animatriceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée avec l'id : " + id)));
     }
 
     @Override
     public AnimatriceDTO getAnimatriceByEmail(String email) {
-        return toDTO(animatriceRepository.findByEmail(email)
+        return animatriceMapper.toDTO(animatriceRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Animatrice non trouvée avec l'email : " + email)));
     }
 
@@ -70,7 +74,7 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
         if (animatriceRepository.existsByEmail(dto.getEmail()))
             throw new RuntimeException("Email déjà utilisé : " + dto.getEmail());
 
-        Animatrice animatrice = toEntity(dto);
+        Animatrice animatrice = animatriceMapper.toEntity(dto);
         animatrice.setStatut(StatutAnimatrice.ACTIVE);
         Animatrice savedAnimatrice = animatriceRepository.save(animatrice);
 
@@ -97,7 +101,7 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
                 "ANIMATRICE"
         );
 
-        AnimatriceDTO result = toDTO(savedAnimatrice);
+        AnimatriceDTO result = animatriceMapper.toDTO(savedAnimatrice);
         result.setMotDePasseTemporaire(motDePasseTemporaire);
         return result;
     }
@@ -116,7 +120,7 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
         animatrice.setSpecialite(dto.getSpecialite());
         animatrice.setPhotoUrl(dto.getPhotoUrl());
 
-        return toDTO(animatriceRepository.save(animatrice));
+        return animatriceMapper.toDTO(animatriceRepository.save(animatrice));
     }
 
     @Override
@@ -136,7 +140,7 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
             userRepository.save(user);
         });
 
-        return toDTO(animatriceRepository.save(animatrice));
+        return animatriceMapper.toDTO(animatriceRepository.save(animatrice));
     }
 
     @Override
@@ -157,7 +161,7 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
     @Override
     public List<AnimatriceDTO> getAnimatricesByStatut(StatutAnimatrice statut) {
         return animatriceRepository.findByStatut(statut).stream()
-                .map(this::toDTO)
+                .map(animatriceMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -171,39 +175,10 @@ public class AnimatriceServiceImpl implements IAnimatriceService {
 
         String fileName = fileStorageService.saveFile(file);
         animatrice.setPhotoUrl(fileName);
-        return toDTO(animatriceRepository.save(animatrice));
-    }
-
-    // ✅ public — déclaré dans IAnimatriceService
-    @Override
-    public AnimatriceDTO toDTO(Animatrice animatrice) {
-        return AnimatriceDTO.builder()
-                .id(animatrice.getId())
-                .nom(animatrice.getNom())
-                .prenom(animatrice.getPrenom())
-                .email(animatrice.getEmail())
-                .telephone(animatrice.getTelephone())
-                .dateEmbauche(animatrice.getDateEmbauche())
-                .statut(animatrice.getStatut())
-                .specialite(animatrice.getSpecialite())
-                .photoUrl(animatrice.getPhotoUrl())
-                .build();
+        return animatriceMapper.toDTO(animatriceRepository.save(animatrice));
     }
 
     private String genererMotDePasse() {
         return UUID.randomUUID().toString().substring(0, 8);
-    }
-
-    private Animatrice toEntity(AnimatriceDTO dto) {
-        return Animatrice.builder()
-                .nom(dto.getNom())
-                .prenom(dto.getPrenom())
-                .email(dto.getEmail())
-                .telephone(dto.getTelephone())
-                .dateEmbauche(dto.getDateEmbauche())
-                .statut(dto.getStatut())
-                .specialite(dto.getSpecialite())
-                .photoUrl(dto.getPhotoUrl())
-                .build();
     }
 }

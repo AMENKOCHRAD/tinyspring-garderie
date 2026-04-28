@@ -3,7 +3,8 @@ package com.tinyspring.garderie.service.RH;
 import com.tinyspring.garderie.dto.RH.AbsenceCongeDTO;
 import com.tinyspring.garderie.dto.RH.AnimatriceDTO;
 import com.tinyspring.garderie.dto.RH.DashboardStatsDTO;
-import com.tinyspring.garderie.entity.RH.AbsenceConge;
+import com.tinyspring.garderie.dto.RH.mapper.AbsenceCongeMapper;
+import com.tinyspring.garderie.dto.RH.mapper.AnimatriceMapper;
 import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
 import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
 import com.tinyspring.garderie.entity.RH.enums.StatutFormation;
@@ -24,10 +25,8 @@ public class DashboardServiceImpl implements IDashboardService {
     private final AnimatriceRepository animatriceRepository;
     private final AbsenceCongeRepository absenceCongeRepository;
     private final FormationRepository formationRepository;
-
-    // ✅ Injection par interfaces
-    private final IAnimatriceService animatriceService;
-    private final IAbsenceCongeService absenceCongeService;
+    private final AnimatriceMapper animatriceMapper;
+    private final AbsenceCongeMapper absenceCongeMapper;
 
     @Override
     public DashboardStatsDTO getStats() {
@@ -60,7 +59,7 @@ public class DashboardServiceImpl implements IDashboardService {
                 .findByStatut(StatutAbsenceConge.EN_ATTENTE)
                 .stream()
                 .limit(5)
-                .map(this::toDTO)
+                .map(absenceCongeMapper::toDTO)
                 .collect(Collectors.toList());
 
         // ===== Dernières animatrices =====
@@ -69,7 +68,7 @@ public class DashboardServiceImpl implements IDashboardService {
                 .stream()
                 .sorted((a, b) -> b.getId().compareTo(a.getId()))
                 .limit(5)
-                .map(animatriceService::toDTO)
+                .map(animatriceMapper::toDTO)
                 .collect(Collectors.toList());
 
         return DashboardStatsDTO.builder()
@@ -91,10 +90,5 @@ public class DashboardServiceImpl implements IDashboardService {
                 .dernieresDemandesEnAttente(dernieresDemandesEnAttente)
                 .dernieresAnimatrices(dernieresAnimatrices)
                 .build();
-    }
-
-    @Override
-    public AbsenceCongeDTO toDTO(AbsenceConge absenceConge) {
-        return absenceCongeService.toDTO(absenceConge);
     }
 }

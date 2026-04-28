@@ -1,7 +1,6 @@
 package com.tinyspring.garderie.service.RH;
 
 import com.tinyspring.garderie.dto.RH.AnimatriceDTO;
-import com.tinyspring.garderie.entity.RH.Animatrice;
 import com.tinyspring.garderie.entity.RH.enums.StatutAnimatrice;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,7 +26,4 @@ public interface IAnimatriceService {
     List<AnimatriceDTO> getAnimatricesByStatut(StatutAnimatrice statut);
 
     AnimatriceDTO uploadPhoto(Long id, MultipartFile file) throws IOException;
-
-    // ✅ Exposé pour DashboardServiceImpl
-    AnimatriceDTO toDTO(Animatrice animatrice);
 }

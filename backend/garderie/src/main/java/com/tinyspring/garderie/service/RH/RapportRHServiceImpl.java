@@ -1,6 +1,7 @@
 package com.tinyspring.garderie.service.RH;
 
 import com.tinyspring.garderie.dto.RH.RapportRHDTO;
+import com.tinyspring.garderie.dto.RH.mapper.RapportRHMapper;
 import com.tinyspring.garderie.entity.RH.AbsenceConge;
 import com.tinyspring.garderie.entity.RH.RapportRH;
 import com.tinyspring.garderie.entity.RH.enums.StatutAbsenceConge;
@@ -20,11 +21,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RapportRHServiceImpl implements IRapportRHService {
 
-    // ✅ Injection par interface
     private final IOllamaService ollamaService;
     private final RapportRHRepository rapportRHRepository;
     private final AbsenceCongeRepository absenceCongeRepository;
     private final AnimatriceRepository animatriceRepository;
+
+    // ✅ MapStruct mapper injecté
+    private final RapportRHMapper rapportRHMapper;
 
     @Override
     public RapportRHDTO genererRapport(String question) {
@@ -40,20 +43,20 @@ public class RapportRHServiceImpl implements IRapportRHService {
                 .donneesContexte(donneesContexte)
                 .build();
 
-        RapportRH saved = rapportRHRepository.save(rapport);
-        return toDTO(saved);
+        return rapportRHMapper.toDTO(rapportRHRepository.save(rapport));
     }
 
     @Override
     public List<RapportRHDTO> getTousLesRapports() {
-        return rapportRHRepository.findAllByOrderByDateGenerationDesc()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+        return rapportRHRepository.findAllByOrderByDateGenerationDesc().stream()
+                .map(rapportRHMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public RapportRHDTO getRapportById(Long id) {
         return rapportRHRepository.findById(id)
-                .map(this::toDTO)
+                .map(rapportRHMapper::toDTO)
                 .orElseThrow(() -> new RuntimeException("Rapport non trouvé : " + id));
     }
 
@@ -69,22 +72,19 @@ public class RapportRHServiceImpl implements IRapportRHService {
 
         sb.append("=== DONNÉES RH TINYSPRING GARDERIE ===\n");
         sb.append("Date : ").append(maintenant.format(fmt)).append("\n\n");
-        sb.append("ANIMATRICES\n");
-        sb.append("Total : ").append(totalAnimatrices).append("\n");
-        sb.append("Actives : ").append(actives).append("\n");
-        sb.append("Inactives : ").append(inactives).append("\n\n");
+        sb.append("ANIMATRICES\nTotal : ").append(totalAnimatrices)
+                .append("\nActives : ").append(actives)
+                .append("\nInactives : ").append(inactives).append("\n\n");
 
         List<AbsenceConge> absences = absenceCongeRepository.findAll();
-
         long enAttente  = absences.stream().filter(a -> StatutAbsenceConge.EN_ATTENTE.equals(a.getStatut())).count();
         long approuvees = absences.stream().filter(a -> StatutAbsenceConge.APPROUVE.equals(a.getStatut())).count();
         long refusees   = absences.stream().filter(a -> StatutAbsenceConge.REFUSE.equals(a.getStatut())).count();
 
-        sb.append("ABSENCES\n");
-        sb.append("Total : ").append(absences.size()).append("\n");
-        sb.append("Approuvées : ").append(approuvees).append("\n");
-        sb.append("Refusées : ").append(refusees).append("\n");
-        sb.append("En attente : ").append(enAttente).append("\n\n");
+        sb.append("ABSENCES\nTotal : ").append(absences.size())
+                .append("\nApprouvées : ").append(approuvees)
+                .append("\nRefusées : ").append(refusees)
+                .append("\nEn attente : ").append(enAttente).append("\n\n");
 
         sb.append("PAR TYPE\n");
         for (TypeAbsenceConge type : TypeAbsenceConge.values()) {
@@ -92,17 +92,15 @@ public class RapportRHServiceImpl implements IRapportRHService {
             int totalJours = absences.stream()
                     .filter(a -> type.equals(a.getType()))
                     .filter(a -> !StatutAbsenceConge.REFUSE.equals(a.getStatut()))
-                    .mapToInt(a -> a.getNbJours() != null ? a.getNbJours() : 0)
-                    .sum();
+                    .mapToInt(a -> a.getNbJours() != null ? a.getNbJours() : 0).sum();
             sb.append(type.name()).append(" : ").append(count)
                     .append(" demandes, ").append(totalJours).append(" jours\n");
         }
-
         return sb.toString();
     }
 
     private String construirePrompt(String question, String donnees) {
-        return "Tu es TinySpring-RH, un assistant expert en gestion RH pour TinySpring Garderie.\n\n" +
+        return "Tu es TinySpring-RH, un assistant expert en gestion RH.\n\n" +
                 "### Instruction:\n" + question + "\n\n" +
                 "### Input:\n" + donnees + "\n\n" +
                 "### Response:\n";
@@ -111,11 +109,11 @@ public class RapportRHServiceImpl implements IRapportRHService {
     private String detecterTypeRapport(String question) {
         String q = question.toLowerCase();
         if (q.contains("mensuel") || q.contains("mois")) return "MENSUEL";
-        if (q.contains("trimestriel") || q.contains("trimestre")) return "TRIMESTRIEL";
-        if (q.contains("annuel") || q.contains("année")) return "ANNUEL";
+        if (q.contains("trimestriel"))  return "TRIMESTRIEL";
+        if (q.contains("annuel"))       return "ANNUEL";
         if (q.contains("absence") || q.contains("congé")) return "ABSENCES";
-        if (q.contains("formation")) return "FORMATIONS";
-        if (q.contains("animatrice")) return "ANIMATRICES";
+        if (q.contains("formation"))    return "FORMATIONS";
+        if (q.contains("animatrice"))   return "ANIMATRICES";
         if (q.contains("alerte") || q.contains("quota")) return "ALERTES";
         return "GENERAL";
     }
@@ -129,18 +127,7 @@ public class RapportRHServiceImpl implements IRapportRHService {
                 return m.substring(0, 1).toUpperCase() + m.substring(1);
         }
         if (q.contains("semaine")) return "Semaine en cours";
-        if (q.contains("mois")) return "Mois en cours";
+        if (q.contains("mois"))    return "Mois en cours";
         return "Période générale";
-    }
-
-    private RapportRHDTO toDTO(RapportRH rapport) {
-        return RapportRHDTO.builder()
-                .id(rapport.getId())
-                .question(rapport.getQuestion())
-                .typeRapport(rapport.getTypeRapport())
-                .periode(rapport.getPeriode())
-                .contenu(rapport.getContenu())
-                .dateGeneration(rapport.getDateGeneration())
-                .build();
     }
 }
