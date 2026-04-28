@@ -175,11 +175,10 @@ def compute_context_bonus(row, request: RecommendationRequest) -> float:
 def health():
     return {
         "status": "ok",
-        "rows": len(df),
-        "features": len(feature_cols),
-        "classes": list(le.classes_)
+        "rows": int(len(df)),
+        "features": int(len(feature_cols)),
+        "classes": [str(c) for c in le.classes_]
     }
-
 
 @app.post("/recommend-events")
 def recommend(request: RecommendationRequest):
