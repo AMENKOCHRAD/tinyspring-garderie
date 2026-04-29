@@ -4,6 +4,8 @@ import com.tinyspring.garderie.security.CustomUserDetailsService;
 import com.tinyspring.garderie.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,6 +42,11 @@ public class SecurityConfig {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider(userDetailsService);
         auth.setPasswordEncoder(passwordEncoder);
         return auth;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(DaoAuthenticationProvider authenticationProvider) {
+        return new ProviderManager(authenticationProvider);
     }
 
     @Bean

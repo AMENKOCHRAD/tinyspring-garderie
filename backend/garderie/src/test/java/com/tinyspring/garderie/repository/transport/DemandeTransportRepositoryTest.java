@@ -43,7 +43,8 @@ class DemandeTransportRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        parentRole = roleRepository.save(new Role(RoleName.PARENT));
+        parentRole = roleRepository.findByName(RoleName.PARENT)
+                .orElseGet(() -> roleRepository.save(new Role(RoleName.PARENT)));
     }
 
     @Test

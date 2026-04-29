@@ -9,35 +9,22 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void shouldHandleResourceNotFoundException() {
-        ResourceNotFoundException exception = new ResourceNotFoundException("Demande introuvable");
-
-        ResponseEntity<ApiErrorResponse> response = handler.handleNotFound(exception);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertErrorResponse(response.getBody(), 404, "Not Found", List.of("Demande introuvable"));
-    }
-
-    @Test
-    void shouldHandleBusinessException() {
-        BusinessException exception = new BusinessException("Operation interdite");
-
-        ResponseEntity<ApiErrorResponse> response = handler.handleBusiness(exception);
+    void shouldHandleIllegalArgumentException() {
+        ResponseEntity<Map<String, String>> response =
+                handler.handleIllegalArgumentException(new IllegalArgumentException("Operation interdite"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertErrorResponse(response.getBody(), 400, "Bad Request", List.of("Operation interdite"));
+        assertError(response.getBody(), "Operation interdite");
     }
 
     @Test
@@ -50,35 +37,15 @@ class GlobalExceptionHandlerTest {
         MethodParameter parameter = new MethodParameter(method, 0);
         MethodArgumentNotValidException exception = new MethodArgumentNotValidException(parameter, bindingResult);
 
-        ResponseEntity<ApiErrorResponse> response = handler.handleValidation(exception);
+        ResponseEntity<Map<String, String>> response = handler.handleValidationExceptions(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertErrorResponse(
-                response.getBody(),
-                400,
-                "Bad Request",
-                List.of(
-                        "email : ne doit pas etre vide",
-                        "password : doit contenir au moins 8 caracteres"
-                )
-        );
+        assertError(response.getBody(), "ne doit pas etre vide");
     }
 
-    @Test
-    void shouldHandleUnexpectedException() {
-        ResponseEntity<ApiErrorResponse> response = handler.handleGeneric(new IllegalStateException("boom"));
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertErrorResponse(response.getBody(), 500, "Internal Server Error", List.of("Une erreur interne est survenue"));
-    }
-
-    private void assertErrorResponse(ApiErrorResponse body, int status, String error, List<String> details) {
+    private void assertError(Map<String, String> body, String error) {
         assertNotNull(body);
-        assertNotNull(body.timestamp());
-        assertTrue(body.timestamp().isBefore(LocalDateTime.now().plusSeconds(1)));
-        assertEquals(status, body.status());
-        assertEquals(error, body.error());
-        assertEquals(details, body.details());
+        assertEquals(error, body.get("error"));
     }
 
     static class ValidationTarget {

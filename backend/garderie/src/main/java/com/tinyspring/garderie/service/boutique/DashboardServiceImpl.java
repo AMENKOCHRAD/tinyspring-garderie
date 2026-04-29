@@ -8,7 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
-@Service
+@Service("boutiqueDashboardServiceImpl")
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 

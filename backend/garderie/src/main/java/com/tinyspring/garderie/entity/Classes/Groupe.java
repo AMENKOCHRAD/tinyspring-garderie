@@ -21,7 +21,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalTime;
 
-@Entity
+@Entity(name = "ClassesGroupe")
 @Getter
 @Setter
 @NoArgsConstructor

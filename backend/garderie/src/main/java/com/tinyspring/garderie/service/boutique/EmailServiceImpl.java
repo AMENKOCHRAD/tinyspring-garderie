@@ -13,7 +13,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import java.time.format.DateTimeFormatter;
 
-@Service
+@Service("boutiqueEmailServiceImpl")
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 

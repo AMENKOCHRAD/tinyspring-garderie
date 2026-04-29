@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
-@Repository
+@Repository("mainEnfantRepository")
 public interface EnfantRepository extends JpaRepository<Enfant, Long> {
 
     List<Enfant> findByParentId(Long parentId);

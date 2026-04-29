@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.UUID;
 
-@Service
+@Service("boutiqueFileStorageServiceImpl")
 public class FileStorageServiceImpl implements FileStorageService {
 
     @Value("${file.upload-dir:uploads/boutique}")

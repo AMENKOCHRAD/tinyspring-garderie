@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
-@Repository
+@Repository("rhNotificationRepository")
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByReadFalseOrderByCreatedAtDesc();
     List<Notification> findAllByOrderByCreatedAtDesc();

@@ -16,7 +16,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
-@Entity
+@Entity(name = "ClassesSalle")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-@Service
+@Service("rhFileStorageServiceImpl")
 public class FileStorageServiceImpl implements IFileStorageService {
 
     @Value("${app.upload.dir}")

@@ -19,7 +19,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDate;
 
-@Entity
+@Entity(name = "ClassesAffectation")
 @Getter
 @Setter
 @NoArgsConstructor

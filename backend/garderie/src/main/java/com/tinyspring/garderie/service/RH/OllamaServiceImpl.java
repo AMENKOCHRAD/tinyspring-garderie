@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
-@Service
+@Service("rhOllamaServiceImpl")
 public class OllamaServiceImpl implements IOllamaService {
 
     @Value("${ollama.api.url:http://localhost:11434/api/generate}")

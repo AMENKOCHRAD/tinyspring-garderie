@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/classes")
+@RequestMapping("/api/classes/options")
 @RequiredArgsConstructor
 public class ClasseRestController {
     private final ClasseRepository classeRepository;

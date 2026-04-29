@@ -20,7 +20,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
-@Entity
+@Entity(name = "ClassesClasse")
 @Getter
 @Setter
 @NoArgsConstructor

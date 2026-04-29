@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@Service("boutiqueOllamaServiceImpl")
 public class OllamaServiceImpl implements OllamaService {
 
     @Value("${ollama.url}")

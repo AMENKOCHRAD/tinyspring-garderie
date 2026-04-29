@@ -5,7 +5,7 @@ import com.tinyspring.garderie.service.boutique.DashboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@RestController("boutiqueDashboardController")
 @RequestMapping("/api/admin/boutique/dashboard")
 @CrossOrigin(origins = "http://localhost:4200")
 public class DashboardController {

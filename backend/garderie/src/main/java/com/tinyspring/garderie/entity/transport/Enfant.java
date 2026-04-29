@@ -12,7 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-@Entity
+import java.time.LocalDate;
+
+@Entity(name = "TransportEnfant")
 @Table(name = "enfants")
 public class Enfant {
 
@@ -25,6 +27,12 @@ public class Enfant {
 
     @Column(nullable = false)
     private String prenom;
+
+    @Column(nullable = false)
+    private LocalDate dateNaissance = LocalDate.of(2020, 1, 1);
+
+    @Column(nullable = false)
+    private boolean archive = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", nullable = false)
@@ -58,6 +66,22 @@ public class Enfant {
 
     public void setPrenom(String prenom) {
         this.prenom = prenom;
+    }
+
+    public LocalDate getDateNaissance() {
+        return dateNaissance;
+    }
+
+    public void setDateNaissance(LocalDate dateNaissance) {
+        this.dateNaissance = dateNaissance;
+    }
+
+    public boolean isArchive() {
+        return archive;
+    }
+
+    public void setArchive(boolean archive) {
+        this.archive = archive;
     }
 
     public User getParent() {

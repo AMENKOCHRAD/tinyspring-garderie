@@ -30,7 +30,7 @@ class CustomUserDetailsServiceTest {
         ReflectionTestUtils.setField(service, "userRepository", userRepository);
 
         User user = new User("Parent Test", "parent@test.tn", "encoded-password", true, new Role(RoleName.PARENT));
-        when(userRepository.findByEmail("parent@test.tn")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailIgnoreCase("parent@test.tn")).thenReturn(Optional.of(user));
 
         UserDetails userDetails = service.loadUserByUsername("parent@test.tn");
 
@@ -44,7 +44,7 @@ class CustomUserDetailsServiceTest {
         CustomUserDetailsService service = new CustomUserDetailsService();
         ReflectionTestUtils.setField(service, "userRepository", userRepository);
 
-        when(userRepository.findByEmail("missing@test.tn")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("missing@test.tn")).thenReturn(Optional.empty());
 
         UsernameNotFoundException exception = assertThrows(
                 UsernameNotFoundException.class,

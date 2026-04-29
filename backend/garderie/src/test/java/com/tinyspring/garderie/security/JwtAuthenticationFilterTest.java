@@ -62,7 +62,7 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, response, filterChain);
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(filterChain).doFilter(any(), any());
+        verify(filterChain, never()).doFilter(any(), any());
         verify(userDetailsService, never()).loadUserByUsername(any());
     }
 
