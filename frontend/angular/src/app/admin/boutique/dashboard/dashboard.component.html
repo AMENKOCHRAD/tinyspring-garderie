@@ -1,0 +1,379 @@
+<div class="b-page">
+  @if (errorMsg) {
+    <div class="b-alert b-alert--danger">
+      <span>{{ errorMsg }}</span>
+      <button class="b-alert__close" (click)="errorMsg = ''">×</button>
+    </div>
+  }
+
+  <!-- En-tête avec titre et breadcrumb -->
+  <div class="b-page-header">
+    <div class="b-header-section">
+      <div class="b-header-top">
+        <h4 class="b-page-title">Dashboard Boutique</h4>
+      </div>
+      <nav class="b-breadcrumb">
+        <a href="#" class="b-breadcrumb__item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </a>
+        <span class="b-breadcrumb__separator">/</span>
+        <span class="b-breadcrumb__item">Boutique en ligne</span>
+        <span class="b-breadcrumb__separator">/</span>
+        <span class="b-breadcrumb__item active">Dashboard</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Chargement -->
+  @if (loading) {
+    <div class="b-loading">
+      <div class="b-spinner"></div>
+      <span>Chargement des statistiques...</span>
+    </div>
+  }
+
+  <!-- Contenu si chargé -->
+  @if (!loading && stats) {
+    <!-- Première ligne : Produits -->
+    <div class="b-stats-row">
+      <div class="b-stat-card b-stat-card--blue">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.totalProduits }}</div>
+          <div class="b-stat-card__label">Total produits</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--green">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.produitsEnStock }}</div>
+          <div class="b-stat-card__label">En stock</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--red">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.produitsRupture }}</div>
+          <div class="b-stat-card__label">Rupture</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--orange">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.produitsStockFaible }}</div>
+          <div class="b-stat-card__label">Stock faible</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deuxième ligne : Catégories et Commandes -->
+    <div class="b-stats-row">
+      <div class="b-stat-card b-stat-card--purple">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.totalCategories }}</div>
+          <div class="b-stat-card__label">Catégories</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--indigo">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.totalCommandes }}</div>
+          <div class="b-stat-card__label">Total commandes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Troisième ligne : Statuts commandes -->
+    <div class="b-stats-row">
+      <div class="b-stat-card b-stat-card--gray">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.commandesPendingPayment }}</div>
+          <div class="b-stat-card__label">En attente paiement</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--cyan">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/><path d="M20 21H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.commandesConfirmees }}</div>
+          <div class="b-stat-card__label">Confirmées</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--pink">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6"/>
+            <path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24"/>
+            <path d="M1 12h6m6 0h6"/><path d="M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.commandesExpediees }}</div>
+          <div class="b-stat-card__label">Expédiées</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--teal">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/><polyline points="9 17 14 22 20 6"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.commandesLivrees }}</div>
+          <div class="b-stat-card__label">Livrées</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quatrième ligne : Annulées et Montant -->
+    <div class="b-stats-row">
+      <div class="b-stat-card b-stat-card--danger">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 4 21 4 23 6 23 20a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6"/><line x1="10" y1="11" x2="14" y2="15"/><line x1="14" y1="11" x2="10" y2="15"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.commandesAnnulees }}</div>
+          <div class="b-stat-card__label">Annulées</div>
+        </div>
+      </div>
+
+      <div class="b-stat-card b-stat-card--lime">
+        <div class="b-stat-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="b-stat-card__content">
+          <div class="b-stat-card__number">{{ stats.montantTotalVentes | number:'1.2-2' }} €</div>
+          <div class="b-stat-card__label">Montant total</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloc résumé / alerte -->
+    <div class="b-summary-block">
+      <div class="b-summary-block__title">Résumé</div>
+      <div class="b-summary-block__content">
+        <p class="b-summary-block__message">{{ summaryMessage }}</p>
+        <div class="b-summary-block__details">
+          <div class="b-summary-detail">
+            <span class="b-summary-detail__label">Ventes totales :</span>
+            <span class="b-summary-detail__value">{{ stats.montantTotalVentes | number:'1.2-2' }} €</span>
+          </div>
+          <div class="b-summary-detail">
+            <span class="b-summary-detail__label">Commandes livrées :</span>
+            <span class="b-summary-detail__value">{{ stats.commandesLivrees }}</span>
+          </div>
+          <div class="b-summary-detail">
+            <span class="b-summary-detail__label">En attente paiement :</span>
+            <span class="b-summary-detail__value">{{ stats.commandesPendingPayment }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertes supplémentaires si nécessaire -->
+    @if (stats.produitsRupture > 0) {
+      <div class="b-alert b-alert--danger b-alert--urgent">
+        <div class="b-alert__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="b-alert__body">
+          <strong>Rupture de stock !</strong>
+          <span>{{ stats.produitsRupture }} produit(s) sont en rupture de stock.</span>
+        </div>
+      </div>
+    }
+
+    @if (stats.produitsStockFaible > 0 && stats.produitsRupture === 0) {
+      <div class="b-alert b-alert--warning">
+        <div class="b-alert__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="b-alert__body">
+          <strong>Stock faible détecté !</strong>
+          <span>{{ stats.produitsStockFaible }} produit(s) avec un stock faible.</span>
+        </div>
+      </div>
+    }
+
+    @if (stats.totalCommandes === 0) {
+      <div class="b-empty">
+        <div class="b-empty__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="b-empty__text">Aucune commande pour le moment</div>
+        <div class="b-empty__subtext">Les statistiques des commandes s'afficheront ici.</div>
+      </div>
+    }
+
+    <!-- BLOC A : Dernières commandes -->
+    @if (stats.dernieresCommandes && stats.dernieresCommandes.length > 0) {
+      <div class="b-card b-recent-orders">
+        <div class="b-card__header">
+          <h4 class="b-card__title">Dernières commandes</h4>
+          <span class="b-card__badge">{{ stats.dernieresCommandes.length }} commande(s)</span>
+        </div>
+        <div class="b-card__body">
+          <div class="b-table-wrapper">
+            <table class="b-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Client</th>
+                  <th>Email</th>
+                  <th>Date</th>
+                  <th>Statut</th>
+                  <th>Montant</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (commande of stats.dernieresCommandes.slice(0, 5); track commande.id) {
+                  <tr>
+                    <td class="b-table__id">#{{ commande.id }}</td>
+                    <td>{{ commande.userNom }}</td>
+                    <td>{{ commande.userEmail }}</td>
+                    <td>{{ formatDate(commande.dateCommande) }}</td>
+                    <td>
+                      <span class="b-badge" [ngClass]="getStatutBadgeClass(commande.statut)">
+                        {{ getStatutLabel(commande.statut) }}
+                      </span>
+                    </td>
+                    <td class="b-table__amount">{{ commande.montantTotal | number:'1.2-2' }} €</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- BLOC B : Top produits -->
+    @if (stats.topProduits && stats.topProduits.length > 0) {
+      <div class="b-card b-top-products">
+        <div class="b-card__header">
+          <h4 class="b-card__title">Top produits</h4>
+          <span class="b-card__badge">{{ stats.topProduits.length }} produit(s)</span>
+        </div>
+        <div class="b-card__body">
+          <div class="b-products-grid">
+            @for (produit of stats.topProduits.slice(0, 5); track produit.id) {
+              <div class="b-product-card">
+                <div class="b-product-card__image">
+                  <img [src]="getImageUrl(produit.imageUrl)" 
+                       [alt]="produit.nom"
+                       class="b-product-card__img"
+                       (error)="onImageError($event)" />
+                </div>
+                <div class="b-product-card__content">
+                  <h5 class="b-product-card__name">{{ produit.nom }}</h5>
+                  <div class="b-product-card__stat">
+                    <span class="b-product-card__label">Commandes :</span>
+                    <span class="b-product-card__value">{{ produit.totalCommandes }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- BLOC C : Ventes par mois -->
+    @if (stats.ventesParMois && stats.ventesParMois.length > 0) {
+      <div class="b-card b-monthly-sales">
+        <div class="b-card__header">
+          <h4 class="b-card__title">Ventes par mois</h4>
+          <span class="b-card__badge">{{ stats.ventesParMois.length }} mois</span>
+        </div>
+        <div class="b-card__body">
+          <div class="b-sales-list">
+            @for (vente of stats.ventesParMois; track vente.mois) {
+              <div class="b-sales-item">
+                <div class="b-sales-item__header">
+                  <span class="b-sales-item__month">{{ vente.mois }}</span>
+                  <span class="b-sales-item__amount">{{ vente.montant | number:'1.2-2' }} €</span>
+                </div>
+                <div class="b-sales-item__bar-wrapper">
+                  <div class="b-sales-item__bar" [style.width.%]="getVentesPercentage(vente.montant)"></div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+
+.payment-state {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding-block: 56px;
+  text-align: center;
+}
+
+.payment-state__icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(249, 115, 22, 0.14);
+  color: #f97316;
+  font-size: 2.2rem;
+  font-weight: 700;
+  animation: payment-pop 0.4s ease both;
+}
+
+.payment-state__actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@keyframes payment-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -4,11 +4,15 @@
   "private": true,
   "scripts": {
 <<<<<<< HEAD
+<<<<<<< HEAD
     "start": "ng serve --proxy-config proxy.conf.json",
     "start:noproxy": "ng serve",
 =======
     "start": "ng serve",
 >>>>>>> origin/gestion-evenements
+=======
+    "start": "ng serve",
+>>>>>>> origin/gestion_boutique
     "build": "ng build"
   },
   "dependencies": {

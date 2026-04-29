@@ -147,10 +147,60 @@ export const NavigationItems: NavigationItem[] = [
       {
         id: 'boutique',
         title: 'Boutique en ligne',
-        type: 'item',
-        url: '/boutique',
+        type: 'collapse',
         classes: 'nav-item',
-        icon: 'feather icon-shopping-cart'
+        icon: 'feather icon-shopping-cart',
+        children: [
+          {
+            id: 'boutique-dashboard',
+            title: 'Dashboard',
+            type: 'item',
+            url: '/admin/boutique/dashboard',
+            icon: 'feather icon-bar-chart-2'
+          },
+          {
+            id: 'boutique-categories',
+            title: 'Catégories',
+            type: 'item',
+            url: '/admin/boutique/categories',
+            icon: 'feather icon-tag'
+          },
+          {
+            id: 'boutique-produits',
+            title: 'Produits',
+            type: 'item',
+            url: '/admin/boutique/produits',
+            icon: 'feather icon-package'
+          },
+          {
+            id: 'boutique-commandes',
+            title: 'Commandes',
+            type: 'item',
+            url: '/admin/boutique/commandes',
+            icon: 'feather icon-clipboard'
+          },
+          {
+            id: 'boutique-predictions',
+            title: 'Predictions ML',
+            type: 'item',
+            url: '/admin/boutique/predictions',
+            icon: 'feather icon-activity'
+          },
+          {
+            id: 'boutique-affinites',
+            title: 'Affinites parents',
+            type: 'item',
+            url: '/admin/boutique/affinites',
+            icon: 'feather icon-users'
+          },
+          {
+            id: 'marketing-assistant',
+            title: 'Assistant Marketing',
+            type: 'item',
+            url: '/admin/marketing',
+            icon: 'feather icon-cpu'
+          }
+        ]
       },
       {
         id: 'transport',

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 40px auto;
+            background: white; border-radius: 12px;
+            padding: 40px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #2d6a4f; font-size: 24px; }
+        .commande-box { background: #f8f9fa; border-radius: 8px;
+            padding: 20px; margin: 20px 0; }
+        .montant { font-size: 24px; font-weight: bold;
+            color: #2d6a4f; text-align: center; }
+        .buttons { text-align: center; margin: 30px 0; }
+        .btn-especes { background: #1D9E75; color: white;
+            padding: 16px 32px; border-radius: 8px;
+            text-decoration: none; font-size: 16px;
+            font-weight: bold; display: inline-block;
+            margin: 8px; }
+        .btn-refus { background: white; color: #dc3545;
+            border: 2px solid #dc3545;
+            padding: 14px 32px; border-radius: 8px;
+            text-decoration: none; font-size: 16px;
+            display: inline-block; margin: 8px; }
+        .warning { background: #fff3cd; border: 1px solid #ffc107;
+            border-radius: 8px; padding: 16px;
+            margin: 20px 0; text-align: center;
+            color: #856404; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>🛒 TinySpring Garderie</h1>
+        <h2 style="color:#dc3545;">Paiement non abouti</h2>
+    </div>
+
+    <p>Bonjour <strong th:text="${nomParent}">Parent</strong>,</p>
+
+    <p>Votre paiement en ligne pour la commande
+        <strong th:text="'#' + ${commandeId}">commande</strong>
+        n'a pas pu être traité.</p>
+
+    <div class="commande-box">
+        <p><strong>Commande :</strong>
+            <span th:text="'#' + ${commandeId}"></span></p>
+        <p><strong>Articles :</strong>
+            <span th:text="${nbArticles}"></span> article(s)</p>
+        <div class="montant"
+             th:text="${montant} + ' TND'">0.00 TND</div>
+    </div>
+
+    <p style="text-align:center; font-size:18px;">
+        Souhaitez-vous payer en <strong>espèces à la remise</strong> ?
+    </p>
+
+    <div class="buttons">
+        <a th:href="${lienEspeces}" class="btn-especes">
+            ✅ Oui, je paie en espèces
+        </a>
+        <br>
+        <a th:href="${lienRefus}" class="btn-refus">
+            ❌ Non, annuler ma commande
+        </a>
+    </div>
+
+    <div class="warning">
+        ⚠️ Sans réponse dans <strong>48 heures</strong>,
+        votre commande sera automatiquement annulée.
+    </div>
+
+    <p style="text-align:center; color:#888; font-size:13px;">
+        TinySpring Garderie — Ne pas répondre à cet email
+    </p>
+
+</div>
+</body>
+</html>

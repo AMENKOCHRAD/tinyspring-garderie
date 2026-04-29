@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 export type UserRole = 'PARENT' | 'ANIMATRICE';
+=======
+export type UserRole = 'PARENT' | 'ANIMATRICE' | 'ADMIN';
+>>>>>>> origin/gestion_boutique
 
 export interface LoginRequest {
   email: string;
@@ -7,6 +11,7 @@ export interface LoginRequest {
 }
 
 export interface AuthUser {
+<<<<<<< HEAD
   id: string;
   nom: string;
   email: string;
@@ -16,10 +21,28 @@ export interface AuthUser {
   tokenType: string;
   expiresIn: number;
   isAuthenticated: true;
+=======
+  userId: number;
+  nom: string;
+  email: string;
+  role: string;
+  token: string;
+  initiales: string;
+}
+
+export interface LoginResponse {
+  message: string;
+  userId: number;
+  nom: string;
+  email: string;
+  role: string;
+  token: string;
+>>>>>>> origin/gestion_boutique
 }
 
 export interface LoginApiResponse {
   message: string;
+<<<<<<< HEAD
   id: number | string;
   nom: string;
   email: string;
@@ -35,3 +58,13 @@ export interface LoginApiResponse {
   expiresIn: number;
 }
 >>>>>>> origin/gestion-evenements
+=======
+  userId?: number;
+  id?: number | string;
+  nom: string;
+  email: string;
+  role: string;
+  token?: string;
+  accessToken?: string;
+}
+>>>>>>> origin/gestion_boutique

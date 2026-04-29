@@ -1,0 +1,13 @@
+<div class="ts-container workspace-page">
+  <section class="table-card payment-state payment-state--cancel">
+    <div class="payment-state__icon">✕</div>
+    <h1>Paiement annule</h1>
+    <p class="muted">Votre commande a ete annulee.</p>
+    <p class="muted" *ngIf="commandeId()">Commande concernee: #{{ commandeId() }}</p>
+
+    <div class="payment-state__actions">
+      <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Retourner a la boutique</a>
+      <a routerLink="/parent/boutique/cart" class="ts-button ts-button--primary">Reessayer</a>
+    </div>
+  </section>
+</div>

@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
 import { RouterModule } from '@angular/router';
 
 // project import
@@ -15,11 +18,14 @@ import { RouterModule } from '@angular/router';
   selector: 'app-dash-analytics',
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   standalone: true,
 =======
 >>>>>>> origin/gestion-transports
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
   imports: [SharedModule, RouterModule],
   templateUrl: './dash-analytics.component.html',
   styleUrls: ['./dash-analytics.component.scss']
@@ -101,7 +107,7 @@ export class DashAnalyticsComponent {
     { background: 'bg-gradient-orange', icon: 'icon-calendar', title: 'Événements & Menus', route: '/events' },
     { background: 'bg-gradient-teal', icon: 'icon-message-circle', title: 'Messagerie interne', route: 'javascript:' },
     { background: 'bg-gradient-pink', icon: 'icon-book', title: 'RH & Formations', route: 'javascript:' },
-    { background: 'bg-gradient-yellow', icon: 'icon-shopping-cart', title: 'Boutique en ligne', route: 'javascript:' },
+    { background: 'bg-gradient-yellow', icon: 'icon-shopping-cart', title: 'Boutique en ligne', route: '/admin/boutique/produits' },
     { background: 'bg-gradient-dark', icon: 'icon-navigation', title: 'Gestion de transport', route: 'javascript:' }
 >>>>>>> origin/gestion-evenements
   ];

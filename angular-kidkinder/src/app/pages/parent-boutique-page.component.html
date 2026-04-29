@@ -1,0 +1,194 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card boutique-hero">
+    <div>
+      <span class="section-chip">Boutique parent</span>
+      <h1>Une boutique plus fluide pour les familles</h1>
+      <p class="muted">
+        Recherchez rapidement, filtrez par categorie et ajoutez vos produits en un clic avec un panier toujours visible.
+      </p>
+    </div>
+
+    <div class="boutique-hero__meta">
+      <div class="hero-pill">
+        <strong>{{ produits().length }}</strong>
+        <span>produit(s) visible(s)</span>
+      </div>
+      <a routerLink="/parent/boutique/cart" class="ts-button ts-button--primary">
+        🛒 Voir le panier ({{ cartCount() }})
+      </a>
+    </div>
+  </section>
+
+  <section class="table-card catalogue-toolbar">
+    <div class="search-shell">
+      <span class="search-shell__icon">⌕</span>
+      <input
+        type="search"
+        name="searchTerm"
+        placeholder="Rechercher un produit par nom"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="onSearchChange($event)"
+        (keyup.enter)="onSearchSubmit()" />
+      <button *ngIf="searchTerm()" type="button" class="search-shell__clear" (click)="clearSearch()">×</button>
+    </div>
+
+    <div class="chip-row category-chip-row">
+      <button
+        type="button"
+        class="category-chip"
+        [class.category-chip--active]="selectedCategorieId() === null"
+        (click)="selectCategorie(null)">
+        Toutes
+      </button>
+      <button
+        type="button"
+        class="category-chip"
+        *ngFor="let categorie of categories()"
+        [class.category-chip--active]="selectedCategorieId() === categorie.id"
+        (click)="selectCategorie(categorie.id)">
+        {{ categorie.nom }}
+      </button>
+    </div>
+
+    <div class="catalogue-toolbar__footer">
+      <p class="muted">{{ totalProduits() }} produit(s) trouve(s)</p>
+      <button
+        *ngIf="searchTerm() || selectedCategorieId() !== null"
+        type="button"
+        class="ts-button ts-button--ghost"
+        (click)="clearFilters()">
+        Reinitialiser les filtres
+      </button>
+    </div>
+
+    <p class="muted" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+  </section>
+
+  <div #catalogueResultsTop class="catalogue-results-anchor" aria-hidden="true"></div>
+
+  <section *ngIf="isLoading(); else loadedState" class="product-grid">
+    <article class="product-card product-card--skeleton" *ngFor="let _ of skeletonCards">
+      <div class="skeleton skeleton--image"></div>
+      <div class="skeleton-row">
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip skeleton--chip-short"></span>
+      </div>
+      <div class="skeleton skeleton--title"></div>
+      <div class="skeleton skeleton--text"></div>
+      <div class="skeleton skeleton--text skeleton--text-short"></div>
+      <div class="skeleton-row skeleton-row--bottom">
+        <span class="skeleton skeleton--price"></span>
+        <span class="skeleton skeleton--button"></span>
+      </div>
+    </article>
+  </section>
+
+  <ng-template #loadedState>
+    <ng-container *ngIf="produits().length; else emptyProducts">
+      <section class="product-grid" [class.product-grid--refresh]="isGridRefreshing()">
+        <article
+          class="product-card"
+          *ngFor="let produit of produits()"
+          (mouseenter)="onProduitMouseEnter(produit.id)"
+          (mouseleave)="onProduitMouseLeave(produit.id)">
+          <a
+            class="product-card-media-link"
+            [routerLink]="['/parent/boutique/produits', produit.id]"
+            (click)="onDetailClick(produit.id)">
+            <div class="product-card-image" #productImageHost>
+              <img
+                *ngIf="hasImage(produit.imageUrl); else productFallback"
+                [src]="getImageUrl(produit.imageUrl)"
+                [alt]="produit.nom"
+                class="product-card-image__img" />
+              <ng-template #productFallback>
+                <div class="product-card__image product-card-image__fallback">{{ produit.nom.charAt(0) }}</div>
+              </ng-template>
+
+              <span class="product-card-badge product-card-badge--category">{{ produit.categorieNom }}</span>
+              <span *ngIf="produit.stock === 0" class="product-card-badge product-card-badge--danger">Rupture</span>
+              <span *ngIf="isLowStock(produit.stock)" class="product-card-badge product-card-badge--warning">Faible stock</span>
+            </div>
+          </a>
+
+          <div class="product-card-body">
+            <a
+              class="product-card-title-link"
+              [routerLink]="['/parent/boutique/produits', produit.id]"
+              (click)="onDetailClick(produit.id)">
+              <h3 class="product-card-title">{{ produit.nom }}</h3>
+            </a>
+            <p class="muted product-card-description">{{ produit.description }}</p>
+            <a
+              class="product-card-detail-link"
+              [routerLink]="['/parent/boutique/produits', produit.id]"
+              (click)="onDetailClick(produit.id)">
+              Voir detail
+            </a>
+
+            <div class="product-card-footer">
+              <div class="product-card-price-row">
+                <strong class="product-card-price">{{ produit.prix | number: '1.2-2' }} TND</strong>
+                <span class="product-card-stock">○ {{ produit.stock }} en stock</span>
+              </div>
+
+              <button
+                type="button"
+                class="btn-add-to-cart"
+                [class.added]="isAdded(produit.id)"
+                [disabled]="produit.stock === 0"
+                (click)="addToCart(produit, productImageHost)">
+                <span *ngIf="!isAdded(produit.id)">🛒 Ajouter au panier</span>
+                <span *ngIf="isAdded(produit.id)">✓ Ajoute !</span>
+              </button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <nav *ngIf="totalPages() > 1" class="catalogue-pagination" aria-label="Pagination des produits">
+        <button
+          type="button"
+          class="catalogue-pagination__button"
+          [disabled]="isFirstPage()"
+          (click)="goToPreviousPage()">
+          Precedent
+        </button>
+
+        <div class="catalogue-pagination__pages">
+          <button
+            type="button"
+            class="catalogue-pagination__page"
+            *ngFor="let page of visiblePages()"
+            [class.catalogue-pagination__page--active]="page === currentPage()"
+            [attr.aria-current]="page === currentPage() ? 'page' : null"
+            (click)="goToPage(page)">
+            {{ page + 1 }}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="catalogue-pagination__button"
+          [disabled]="isLastPage()"
+          (click)="goToNextPage()">
+          Suivant
+        </button>
+      </nav>
+    </ng-container>
+  </ng-template>
+</div>
+
+<ng-template #emptyProducts>
+  <section class="table-card empty-state empty-state--catalogue">
+    <svg viewBox="0 0 200 140" class="empty-state__illustration" aria-hidden="true">
+      <circle cx="82" cy="58" r="28"></circle>
+      <line x1="101" y1="79" x2="132" y2="110"></line>
+      <line x1="65" y1="41" x2="99" y2="75"></line>
+      <line x1="99" y1="41" x2="65" y2="75"></line>
+    </svg>
+    <h3>Aucun produit trouve pour votre recherche</h3>
+    <p class="muted">Essayez un autre mot-cle ou retirez un filtre pour retrouver tout le catalogue.</p>
+    <button type="button" class="ts-button ts-button--primary" (click)="clearFilters()">Reinitialiser les filtres</button>
+  </section>
+</ng-template>

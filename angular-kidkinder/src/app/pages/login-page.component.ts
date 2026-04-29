@@ -1,9 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+<<<<<<< HEAD
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../shared/auth.service';
 import { AuthUser, UserRole } from '../shared/auth.models';
+=======
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../shared/auth.service';
+import { UserRole } from '../shared/auth.models';
+>>>>>>> origin/gestion_boutique
 
 @Component({
   selector: 'app-login-page',
@@ -15,7 +21,10 @@ import { AuthUser, UserRole } from '../shared/auth.models';
 export class LoginPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+<<<<<<< HEAD
   private readonly router = inject(Router);
+=======
+>>>>>>> origin/gestion_boutique
 
   protected readonly selectedRole = signal<UserRole>('PARENT');
   protected readonly showPassword = signal(false);
@@ -77,8 +86,20 @@ export class LoginPageComponent implements OnInit {
         selectedRole: this.selectedRole()
       })
       .subscribe({
+<<<<<<< HEAD
         next: (user: AuthUser) => {
           this.isSubmitting.set(false);
+=======
+        next: () => {
+          this.isSubmitting.set(false);
+          const user = this.authService.getCurrentUser();
+
+          if (!user) {
+            this.errorMessage.set('Connexion reussie, mais la session utilisateur est introuvable.');
+            return;
+          }
+
+>>>>>>> origin/gestion_boutique
           void this.authService.redirectAfterLogin(user);
         },
         error: (error: Error) => {

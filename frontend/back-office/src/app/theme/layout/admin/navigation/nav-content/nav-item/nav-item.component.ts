@@ -6,6 +6,8 @@ import { RouterModule } from '@angular/router';
 import { NavigationItem } from '../../navigation';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { LayoutStateService } from 'src/app/theme/shared/service/layout-state.service';
+import { NotificationService } from 'src/app/services/notification.service';
+import { PredictionService } from 'src/app/services/boutique/prediction.service';
 
 @Component({
   selector: 'app-nav-item',
@@ -17,6 +19,10 @@ export class NavItemComponent {
   // public props
   item = input<NavigationItem>();
   private layoutState = inject(LayoutStateService);
+  private notifService = inject(NotificationService);
+  private predictionService = inject(PredictionService);
+  unreadCount = this.notifService.unreadCount;
+  predictionAlertCount = this.predictionService.alertCount;
 
   // public method
   closeOtherMenu(event: MouseEvent) {

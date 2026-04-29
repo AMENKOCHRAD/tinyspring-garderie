@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../shared/auth.service';
@@ -35,11 +36,24 @@ import {
   ParentNotificationService
 } from '../menus/parent-notification.service';
 >>>>>>> origin/gestion-evenements
+=======
+import { Component, DestroyRef, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../shared/auth.service';
+import { UserRole } from '../shared/auth.models';
+import { ToastOutletComponent } from './toast-outlet.component';
+import { CartService } from '../shared/cart.service';
+import { WorkspaceNavGroup, workspaceNavByRole } from '../shared/tinyspring-data';
+>>>>>>> origin/gestion_boutique
 
 @Component({
   selector: 'app-workspace-shell',
   standalone: true,
+<<<<<<< HEAD
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+=======
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, ToastOutletComponent],
+>>>>>>> origin/gestion_boutique
   templateUrl: './workspace-shell.component.html',
   styleUrl: './workspace-shell.component.css'
 })
@@ -48,7 +62,12 @@ export class WorkspaceShellComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
 <<<<<<< HEAD
+<<<<<<< HEAD
   private readonly notificationsService = inject(NotificationsService);
+=======
+  private readonly cartService = inject(CartService);
+  private readonly destroyRef = inject(DestroyRef);
+>>>>>>> origin/gestion_boutique
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly isScrolled = signal(false);
@@ -58,6 +77,7 @@ export class WorkspaceShellComponent {
   protected readonly navGroups = computed(() => workspaceNavByRole[this.role()]);
   protected readonly activeGroup = computed(() => this.getActiveGroup(this.navGroups(), this.currentPage()));
   protected readonly subnavItems = computed(() => this.activeGroup()?.children ?? []);
+<<<<<<< HEAD
   protected readonly notificationCount = computed(() =>
     this.role() === 'PARENT' ? this.notificationsService.parentUnreadObservationsCount() : 0
   );
@@ -65,12 +85,48 @@ export class WorkspaceShellComponent {
 
   public constructor() {
     this.notificationsService.start();
+=======
+  protected readonly cartItemCount = this.cartService.itemCount;
+  protected readonly notificationCount = computed(() => (this.role() === 'PARENT' ? 3 : 5));
+  protected readonly roleLabel = computed(() => (this.role() === 'PARENT' ? 'Espace parent' : 'Espace animateur'));
+  protected readonly cartBadgePulse = signal(false);
+  protected readonly cartIconBounce = signal(false);
+
+  public constructor() {
+>>>>>>> origin/gestion_boutique
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.menuOpen.set(false);
         this.currentPage.set(this.getPageFromUrl(event.urlAfterRedirects));
       }
     });
+<<<<<<< HEAD
+=======
+
+    let previousMutation = this.cartService.mutationTick();
+    effect(() => {
+      const currentMutation = this.cartService.mutationTick();
+
+      if (currentMutation !== previousMutation) {
+        previousMutation = currentMutation;
+        this.cartBadgePulse.set(true);
+        const timeoutId = window.setTimeout(() => this.cartBadgePulse.set(false), 450);
+        this.destroyRef.onDestroy(() => window.clearTimeout(timeoutId));
+      }
+    });
+
+    let previousArrival = this.cartService.arrivalTick();
+    effect(() => {
+      const currentArrival = this.cartService.arrivalTick();
+
+      if (currentArrival !== previousArrival) {
+        previousArrival = currentArrival;
+        this.cartIconBounce.set(true);
+        const timeoutId = window.setTimeout(() => this.cartIconBounce.set(false), 220);
+        this.destroyRef.onDestroy(() => window.clearTimeout(timeoutId));
+      }
+    });
+>>>>>>> origin/gestion_boutique
   }
 
   @HostListener('window:scroll')
@@ -87,12 +143,15 @@ export class WorkspaceShellComponent {
     this.authService.logout();
   }
 
+<<<<<<< HEAD
   protected openNotifications(): void {
     if (this.role() === 'PARENT') {
       void this.router.navigate(['/parent/changements']);
     }
   }
 
+=======
+>>>>>>> origin/gestion_boutique
   protected isGroupActive(group: WorkspaceNavGroup): boolean {
     return this.activeGroup()?.key === group.key;
   }
@@ -112,6 +171,7 @@ export class WorkspaceShellComponent {
     });
   }
 }
+<<<<<<< HEAD
 =======
   private readonly destroyRef = inject(DestroyRef);
   private readonly notificationService = inject(ParentNotificationService);
@@ -328,3 +388,5 @@ protected closeNavDropdown(): void {
   }
 }
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique

@@ -1,9 +1,13 @@
 <div class="ts-container workspace-page">
 <<<<<<< HEAD
+<<<<<<< HEAD
   <section class="page-header-card">
 =======
   <section *ngIf="page() !== 'activites' && page() !== 'menus'" class="page-header-card">
 >>>>>>> origin/gestion-evenements
+=======
+  <section class="page-header-card">
+>>>>>>> origin/gestion_boutique
     <div>
       <span class="section-chip">{{ pageMeta().chip }}</span>
       <h1>{{ pageTitle() }}</h1>
@@ -23,9 +27,12 @@
           <span class="stat-card__label">Mes enfants</span>
         </article>
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
         <article class="stat-card tone-blush">
           <div class="stat-card__top">
             <span class="icon-circle tone-blush">A</span>
@@ -34,9 +41,12 @@
           <span class="stat-card__label">Activites a venir</span>
         </article>
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
         <article class="stat-card tone-lime">
           <div class="stat-card__top">
             <span class="icon-circle tone-lime">M</span>
@@ -45,9 +55,12 @@
           <span class="stat-card__label">Messages non lus</span>
         </article>
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
         <article class="stat-card tone-mint">
           <div class="stat-card__top">
             <span class="icon-circle tone-mint">S</span>
@@ -60,6 +73,7 @@
 
     <section *ngSwitchCase="'enfants'" class="workspace-page">
       <section id="profils" class="profile-cards">
+<<<<<<< HEAD
 <<<<<<< HEAD
         <article class="profile-card" *ngFor="let enfant of enfants">
           <div class="inline-meta">
@@ -288,12 +302,18 @@
           </button>
         </div>
 =======
+=======
+>>>>>>> origin/gestion_boutique
         <article class="profile-card">
           <div class="inline-meta">
             <span class="profile-avatar">L</span>
             <div>
               <h3>Lina Ben Salah</h3>
+<<<<<<< HEAD
               <p class="muted">4 ans &bull; Groupe Papillons</p>
+=======
+              <p class="muted">4 ans • Groupe Papillons</p>
+>>>>>>> origin/gestion_boutique
             </div>
           </div>
           <div class="badge-row">
@@ -306,14 +326,21 @@
             <span class="profile-avatar">A</span>
             <div>
               <h3>Adam Ben Salah</h3>
+<<<<<<< HEAD
               <p class="muted">2 ans &bull; Groupe Tournesols</p>
+=======
+              <p class="muted">2 ans • Groupe Tournesols</p>
+>>>>>>> origin/gestion_boutique
             </div>
           </div>
           <div class="badge-row">
             <span class="tag tag--lime">Pas d allergie severe</span>
           </div>
         </article>
+<<<<<<< HEAD
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
       </section>
 
       <section id="documents" class="table-card">
@@ -332,6 +359,7 @@
 
       <section id="ajouter-enfant" class="table-card">
         <h3>Ajouter un enfant</h3>
+<<<<<<< HEAD
 <<<<<<< HEAD
 
         <div *ngIf="errorMessage" class="alert alert-danger">
@@ -434,6 +462,8 @@
           {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
         </button>
 =======
+=======
+>>>>>>> origin/gestion_boutique
         <div class="form-grid form-grid--two">
           <div>
             <label>Prenom et nom</label>
@@ -453,11 +483,15 @@
           </div>
         </div>
         <button type="button" class="ts-button ts-button--primary">Enregistrer</button>
+<<<<<<< HEAD
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
       </section>
     </section>
 
     <section *ngSwitchCase="'sante'" class="workspace-page">
+<<<<<<< HEAD
 <<<<<<< HEAD
       <section class="stats-grid">
         <article class="stat-card tone-mint">
@@ -1078,12 +1112,18 @@
               <option [ngValue]="0">Tous</option>
               <option *ngFor="let e of enfants" [ngValue]="e.id">{{ e.prenom }} {{ e.nom }}</option>
 =======
+=======
+>>>>>>> origin/gestion_boutique
       <section id="allergies" class="table-card">
         <h3>Allergies</h3>
         <div class="stack-list">
           <article class="stack-item">
             <strong>Lina Ben Salah</strong>
+<<<<<<< HEAD
             <p class="muted">Arachides &bull; Pollen</p>
+=======
+            <p class="muted">Arachides • Pollen</p>
+>>>>>>> origin/gestion_boutique
           </article>
           <article class="stack-item">
             <strong>Adam Ben Salah</strong>
@@ -1097,7 +1137,11 @@
         <div class="stack-list">
           <article class="stack-item">
             <strong>Sirop anti-allergique</strong>
+<<<<<<< HEAD
             <p class="muted">Lina &bull; 5 ml &bull; 12h00</p>
+=======
+            <p class="muted">Lina • 5 ml • 12h00</p>
+>>>>>>> origin/gestion_boutique
           </article>
         </div>
       </section>
@@ -1120,11 +1164,15 @@
             <select>
               <option>Lina Ben Salah</option>
               <option>Adam Ben Salah</option>
+<<<<<<< HEAD
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
             </select>
           </div>
           <div>
             <label>Type</label>
+<<<<<<< HEAD
 <<<<<<< HEAD
             <select [(ngModel)]="changementsType" name="chgType">
               <option value="">Tous</option>
@@ -1186,6 +1234,16 @@
         </section>
       </section>
       -->
+=======
+            <select>
+              <option>Allergie</option>
+              <option>Traitement</option>
+              <option>Incident</option>
+            </select>
+          </div>
+        </div>
+      </section>
+>>>>>>> origin/gestion_boutique
     </section>
 
     <section *ngSwitchCase="'activites'" class="workspace-page">
@@ -1274,6 +1332,7 @@
           <div class="calendar-day">7</div>
         </div>
       </section>
+<<<<<<< HEAD
 =======
             <select>
               <option>Allergie</option>
@@ -1292,6 +1351,8 @@
     <section *ngSwitchCase="'menus'" class="workspace-page">
       <app-parent-menus></app-parent-menus>
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
     </section>
 
     <section *ngSwitchCase="'messages'" class="workspace-page">
@@ -1340,11 +1401,15 @@
         <article class="trip-card">
           <strong>Lina Ben Salah</strong>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/gestion_boutique
           <p class="muted">Lac 1 vers TinySpring • 07h30 • En attente</p>
         </article>
         <article class="trip-card">
           <strong>Adam Ben Salah</strong>
           <p class="muted">Ennasr vers TinySpring • 08h00 • Confirme</p>
+<<<<<<< HEAD
 =======
           <p class="muted">Lac 1 vers TinySpring &bull; 07h30 &bull; En attente</p>
         </article>
@@ -1352,6 +1417,8 @@
           <strong>Adam Ben Salah</strong>
           <p class="muted">Ennasr vers TinySpring &bull; 08h00 &bull; Confirme</p>
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
         </article>
       </section>
 
@@ -1429,7 +1496,11 @@
     </section>
   </ng-container>
 <<<<<<< HEAD
+<<<<<<< HEAD
 </div>
 =======
 </div>
 >>>>>>> origin/gestion-evenements
+=======
+</div>
+>>>>>>> origin/gestion_boutique

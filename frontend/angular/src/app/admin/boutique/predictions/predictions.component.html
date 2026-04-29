@@ -1,0 +1,205 @@
+<div class="b-page">
+  @if (errorMsg) {
+    <div class="b-alert b-alert--danger">
+      <span>{{ errorMsg }}</span>
+      <button class="b-alert__close" (click)="errorMsg = ''">x</button>
+    </div>
+  }
+
+  @if (successMsg) {
+    <div class="b-alert b-alert--success">
+      <span>{{ successMsg }}</span>
+      <button class="b-alert__close" (click)="successMsg = ''">x</button>
+    </div>
+  }
+
+  <div class="b-header">
+    <div class="b-header__copy">
+      <div class="b-header__topline">
+        <h4 class="b-page-title">Predictions ML - Gestion des stocks</h4>
+        @if (alertesCount > 0) {
+          <span class="b-live-badge">{{ alertesCount }} alertes rupture</span>
+        }
+      </div>
+      <div class="b-header__meta">
+        <span>Derniere mise a jour :</span>
+        <strong>{{ lastUpdated ? (lastUpdated | date:'dd/MM/yyyy HH:mm') : 'Aucune donnee' }}</strong>
+      </div>
+    </div>
+
+    <button class="b-btn b-btn--primary" (click)="recalculerMaintenant()" [disabled]="recalculating">
+      @if (recalculating) {
+        <span class="b-btn__spinner"></span>
+      }
+      <span>{{ recalculating ? 'Recalcul en cours...' : 'Recalculer maintenant' }}</span>
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="b-loading">
+      <div class="b-spinner"></div>
+      <span>Chargement des predictions...</span>
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="b-cards">
+      <div class="b-card b-card--gray">
+        <span class="b-card__label">Total produits analyses</span>
+        <strong class="b-card__value">{{ predictions.length }}</strong>
+      </div>
+      <div class="b-card b-card--red">
+        <span class="b-card__label">Alertes rupture</span>
+        <strong class="b-card__value">{{ alertesCount }}</strong>
+      </div>
+      <div class="b-card b-card--green">
+        <span class="b-card__label">Stock suffisant</span>
+        <strong class="b-card__value">{{ stockOkCount }}</strong>
+      </div>
+    </div>
+
+    <div class="b-filters">
+      <button class="b-filter-btn" [ngClass]="getFilterButtonClass('all')" (click)="setFilter('all')">Tous</button>
+      <button class="b-filter-btn" [ngClass]="getFilterButtonClass('alerts')" (click)="setFilter('alerts')">Alertes</button>
+      <button class="b-filter-btn" [ngClass]="getFilterButtonClass('ok')" (click)="setFilter('ok')">Stock OK</button>
+    </div>
+
+    <div class="b-table-card">
+      <div class="table-responsive">
+        <table class="b-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Stock actuel</th>
+              <th>Prevu 4 sem.</th>
+              <th>Couverture</th>
+              <th>Confiance</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (prediction of filteredPredictions; track trackPrediction($index, prediction)) {
+              <tr>
+                <td>
+                  <div class="b-product-cell">
+                    <strong>{{ prediction.produitNom }}</strong>
+                    <span class="b-product-cell__meta">Produit #{{ prediction.produitId }}</span>
+                  </div>
+                </td>
+                <td>{{ prediction.stockActuel }}</td>
+                <td>{{ prediction.totalPrevu4Semaines }}</td>
+                <td>
+                  <div class="b-progress-wrap">
+                    <div class="b-progress">
+                      <div class="b-progress__fill" [ngClass]="getCoverageBarClass(prediction)" [style.width.%]="getCoverageDisplayWidth(prediction)"></div>
+                    </div>
+                    <span class="b-progress-wrap__label">{{ getCoverageLabel(prediction) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="b-progress-wrap">
+                    <div class="b-progress b-progress--thin">
+                      <div class="b-progress__fill" [ngClass]="getConfianceBarClass(prediction.confianceMoyenne)" [style.width.%]="prediction.confianceMoyenne"></div>
+                    </div>
+                    <span class="b-progress-wrap__label">{{ getConfianceBadgeLabel(prediction.confianceMoyenne) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="b-badge" [ngClass]="getStatusBadgeClass(prediction)">
+                    {{ getStatusLabel(prediction) }}
+                  </span>
+                </td>
+                <td>
+                  <button class="b-icon-btn" (click)="openDetail(prediction)" title="Voir le detail">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7">
+                  <div class="b-empty">
+                    <strong>Aucune prediction disponible</strong>
+                    <span>Le service ML n a retourne aucun produit pour le moment.</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<ng-template #detailModal let-modal>
+  <div class="b-modal-header">
+    <div class="b-modal-header__copy">
+      <div class="b-modal-title">{{ selectedPrediction?.produitNom }}</div>
+      @if (selectedPrediction) {
+        <span class="b-badge" [ngClass]="getStatusBadgeClass(selectedPrediction)">
+          {{ getStatusLabel(selectedPrediction) }}
+        </span>
+      }
+    </div>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="b-modal-body">
+    @if (selectedPrediction) {
+      <div class="b-summary-cards">
+        <div class="b-summary-card">
+          <span>Stock actuel</span>
+          <strong>{{ selectedPrediction.stockActuel }}</strong>
+        </div>
+        <div class="b-summary-card">
+          <span>Prevu 4 sem.</span>
+          <strong>{{ selectedPrediction.totalPrevu4Semaines }}</strong>
+        </div>
+        <div class="b-summary-card">
+          <span>Couverture</span>
+          <strong>{{ getCoverageLabel(selectedPrediction) }}</strong>
+        </div>
+      </div>
+
+      <div class="b-timeline">
+        @for (semaine of selectedPrediction.semaines; track trackWeek($index, semaine)) {
+          <div class="b-week-card">
+            <div class="b-week-card__header">
+              <span class="b-week-card__title">Semaine {{ semaine.semaine }}</span>
+              <span class="b-week-card__range">{{ formatRange(semaine) }}</span>
+            </div>
+            <div class="b-week-card__body">
+              <div class="b-week-card__qty">{{ semaine.quantite_prevue }}</div>
+              <div class="b-week-card__label">Quantite prevue</div>
+              <div class="b-progress b-progress--thin">
+                <div class="b-progress__fill" [ngClass]="getConfianceBarClass(semaine.confiance)" [style.width.%]="semaine.confiance"></div>
+              </div>
+              <span class="b-confidence-badge">{{ getConfianceBadgeLabel(semaine.confiance) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="b-stock-balance">
+        <div class="b-stock-balance__header">
+          <span>Stock actuel : {{ selectedPrediction.stockActuel }}</span>
+          <span>Besoin 4 sem. : {{ selectedPrediction.totalPrevu4Semaines }}</span>
+        </div>
+        <div class="b-progress b-progress--stock">
+          <div class="b-progress__fill b-progress__fill--red" [style.width.%]="getNeedBarWidth(selectedPrediction)"></div>
+        </div>
+        <div class="b-stock-balance__footer">{{ getRemainingStockLabel(selectedPrediction) }}</div>
+      </div>
+    }
+  </div>
+
+  <div class="b-modal-footer">
+    <button type="button" class="b-btn b-btn--outline" (click)="modal.dismiss()">Fermer</button>
+  </div>
+</ng-template>

@@ -1,0 +1,123 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">Panier</span>
+      <h1>Votre panier boutique</h1>
+      <p class="muted">Ajustez les quantites, ajoutez votre adresse et passez au paiement Stripe en quelques secondes.</p>
+    </div>
+    <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Retour au catalogue</a>
+  </section>
+
+  <section class="cart-layout">
+    <article class="table-card">
+      <div class="section-row">
+        <h3>Articles dans le panier</h3>
+        <span class="muted">{{ itemCount() }} article(s)</span>
+      </div>
+
+      <div class="stack-list" *ngIf="items().length; else emptyCart">
+        <article class="cart-line" *ngFor="let item of items()" [class.cart-line--removing]="isRemoving(item.produit.id)">
+          <img
+            *ngIf="hasImage(item.produit.imageUrl); else fallbackImage"
+            [src]="getImageUrl(item.produit.imageUrl)"
+            [alt]="item.produit.nom"
+            class="cart-line__image" />
+          <ng-template #fallbackImage>
+            <div class="product-card__image cart-line__placeholder">{{ item.produit.nom.charAt(0) }}</div>
+          </ng-template>
+
+          <div class="cart-line__content">
+            <div class="cart-line__summary">
+              <div>
+                <strong>{{ item.produit.nom }}</strong>
+                <p class="muted cart-line__description">{{ item.produit.description }}</p>
+              </div>
+              <strong class="cart-line__price">{{ item.produit.prix | number: '1.2-2' }} TND</strong>
+            </div>
+
+            <div class="cart-line__actions">
+              <div class="quantity-control">
+                <button type="button" class="quantity-button" (click)="decreaseQty(item)">−</button>
+                <span class="quantity-chip">{{ item.quantite }}</span>
+                <button type="button" class="quantity-button" (click)="increaseQty(item)">+</button>
+              </div>
+
+              <strong class="cart-line__subtotal">{{ item.produit.prix * item.quantite | number: '1.2-2' }} TND</strong>
+
+              <button type="button" class="remove-button" (click)="remove(item.produit.id)" aria-label="Supprimer l article">
+                🗑
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </article>
+
+    <aside class="table-card cart-summary">
+      <div class="cart-summary__sticky">
+        <h3>Recapitulatif</h3>
+
+        <div class="summary-box">
+          <div class="summary-row">
+            <span>Sous-total</span>
+            <strong>{{ itemCount() }} article(s)</strong>
+          </div>
+          <div class="summary-row">
+            <span>Livraison</span>
+            <strong class="summary-row__free">Gratuite</strong>
+          </div>
+          <div class="summary-separator"></div>
+          <div class="summary-row summary-row--total">
+            <span>Total</span>
+            <strong>{{ totalPrice() | number: '1.2-2' }} TND</strong>
+          </div>
+        </div>
+
+        <div class="floating-field" [class.floating-field--filled]="(adresse.length || 0) > 0">
+          <textarea
+            id="adresseLivraison"
+            name="adresseLivraison"
+            rows="5"
+            [(ngModel)]="adresse"
+            placeholder=" "></textarea>
+          <label for="adresseLivraison">Adresse de livraison</label>
+          <span class="floating-field__counter">{{ adresse.length || 0 }} caracteres</span>
+        </div>
+
+        <p class="muted">Adresse obligatoire, minimum 10 caracteres.</p>
+        <div
+          *ngIf="errorMessage"
+          style="color: red; padding: 8px; margin: 8px 0; background: #fff0f0; border-radius: 6px;">
+          {{ errorMessage }}
+        </div>
+
+        <button type="button" class="ts-button ts-button--ghost cart-clear" [disabled]="itemCount() === 0" (click)="clearCart()">
+          Vider le panier
+        </button>
+
+        <button
+          type="button"
+          class="cart-submit"
+          [disabled]="!adresse || adresse.length < 10 || itemCount() === 0 || loading"
+          (click)="checkout()">
+          <span *ngIf="!loading">Passer au paiement →</span>
+          <span *ngIf="loading" class="cart-submit__loading">
+            <span class="spinner"></span>
+            Envoi en cours...
+          </span>
+        </button>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<ng-template #emptyCart>
+  <div class="empty-state cart-empty-state">
+    <div class="cart-empty-state__icon">🛒</div>
+    <div>
+      <h3>Votre panier est vide</h3>
+      <p class="muted">Ajoutez quelques produits depuis le catalogue pour preparer votre prochaine commande.</p>
+    </div>
+    <a routerLink="/parent/boutique" class="ts-button ts-button--primary">Ajouter des produits</a>
+  </div>
+</ng-template>

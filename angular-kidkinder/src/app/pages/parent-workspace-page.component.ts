@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -14,15 +15,21 @@ import { ParentActivitiesComponent } from '../events/parent-activities.component
 import { ParentMenusComponent } from '../menus/parent-menus.component';
 import { AuthService } from '../shared/auth.service';
 >>>>>>> origin/gestion-evenements
+=======
+import { AuthService } from '../shared/auth.service';
+>>>>>>> origin/gestion_boutique
 
 type ParentPageKey =
   | 'tableau-de-bord'
   | 'enfants'
   | 'sante'
 <<<<<<< HEAD
+<<<<<<< HEAD
   | 'changements'
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
   | 'activites'
   | 'menus'
   | 'messages'
@@ -35,6 +42,7 @@ interface PageMeta {
   description: string;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 interface ConditionSanitaireFront {
   id: number;
@@ -95,6 +103,8 @@ interface AllergieCategory {
 
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
 const pageMetaMap: Record<ParentPageKey, PageMeta> = {
   'tableau-de-bord': {
     chip: 'Espace parent',
@@ -112,6 +122,7 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
     description: 'Centralisez allergies, traitements, incidents et informations a ajouter.'
   },
 <<<<<<< HEAD
+<<<<<<< HEAD
   changements: {
     chip: 'Changements',
     title: 'Changements & observations',
@@ -119,6 +130,8 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
   },
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
   activites: {
     chip: 'Activites',
     title: 'Calendrier et evenements',
@@ -150,10 +163,14 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
   selector: 'app-parent-workspace-page',
   standalone: true,
 <<<<<<< HEAD
+<<<<<<< HEAD
   imports: [CommonModule, FormsModule, ParentChangementsComponent, TunisiaAddressPickerComponent],
 =======
   imports: [CommonModule, ParentActivitiesComponent, ParentMenusComponent],
 >>>>>>> origin/gestion-evenements
+=======
+  imports: [CommonModule],
+>>>>>>> origin/gestion_boutique
   templateUrl: './parent-workspace-page.component.html',
   styleUrl: './parent-workspace-page.component.css'
 })
@@ -161,11 +178,14 @@ export class ParentWorkspacePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
 <<<<<<< HEAD
+<<<<<<< HEAD
   private readonly enfantService = inject(EnfantService);
 
   protected readonly todayIso = this.getLocalTodayIso();
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
 
   protected readonly page = signal<ParentPageKey>('tableau-de-bord');
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', {
@@ -177,6 +197,7 @@ export class ParentWorkspacePageComponent {
 
   protected readonly pageMeta = computed(() => pageMetaMap[this.page()]);
   protected readonly pageTitle = computed(() => {
+<<<<<<< HEAD
 <<<<<<< HEAD
     const firstName = this.authService.getCurrentUser()?.nom?.split(' ')[0] ?? 'Parent';
     return this.pageMeta().title.replace('{{name}}', firstName);
@@ -371,15 +392,21 @@ getHealthPages(): number[] {
   }
 
 =======
+=======
+>>>>>>> origin/gestion_boutique
     const firstName = this.authService.getCurrentUser()?.nom.split(' ')[0] ?? 'Parent';
     return this.pageMeta().title.replace('{{name}}', firstName);
   });
 
+<<<<<<< HEAD
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
   public constructor() {
     this.route.data.subscribe((data) => {
       this.page.set(data['page'] as ParentPageKey);
     });
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     this.chargerEnfants();
@@ -1682,5 +1709,7 @@ this.chargerTraitementsPourToutesLesConditions();
     return a < b;
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
   }
 }

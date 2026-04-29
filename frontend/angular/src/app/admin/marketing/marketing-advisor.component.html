@@ -1,0 +1,324 @@
+<div class="m-page">
+  @if (errorMsg) {
+    <div class="m-alert m-alert--danger">
+      <span>{{ errorMsg }}</span>
+      <button class="m-alert__close" (click)="errorMsg = ''">x</button>
+    </div>
+  }
+
+  @if (successMsg) {
+    <div class="m-alert m-alert--success">
+      <span>{{ successMsg }}</span>
+      <button class="m-alert__close" (click)="successMsg = ''">x</button>
+    </div>
+  }
+
+  <div class="m-layout">
+    <div class="m-main">
+      <section class="m-hero">
+        <div class="m-hero__copy">
+          <div class="m-hero__eyebrow">
+            <span class="m-hero__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M12 7v4"></path>
+                <line x1="8" y1="16" x2="8" y2="16"></line>
+                <line x1="16" y1="16" x2="16" y2="16"></line>
+              </svg>
+            </span>
+            <span>Assistant marketing intelligent</span>
+          </div>
+
+          <h2 class="m-title">Assistant Marketing IA</h2>
+          <p class="m-subtitle">
+            Llama 3.2 - Analyse et optimise automatiquement vos produits sous-performants
+          </p>
+
+          <div class="m-hero__actions">
+            <button type="button" class="m-btn m-btn--primary" (click)="onAnalyseClick()" [disabled]="loading">
+              @if (loading) {
+                <span class="m-btn__spinner"></span>
+              }
+              <span>{{ loading ? 'Analyse IA en cours...' : 'Lancer l\'analyse IA' }}</span>
+            </button>
+            <div class="m-warning">
+              L'analyse prend 3-5 minutes...
+            </div>
+          </div>
+        </div>
+      </section>
+
+      @if (loading) {
+        <section class="m-loading-card">
+          <div class="m-loading-card__header">
+            <strong>{{ messageProgress }}</strong>
+            <span>{{ progressValue }}%</span>
+          </div>
+          <div class="m-progress">
+            <div class="m-progress__fill" [style.width.%]="progressValue"></div>
+          </div>
+          <p class="m-loading-card__hint">
+            L'IA inspecte les stocks, ventes recentes, descriptions et leviers de conversion.
+          </p>
+        </section>
+      }
+
+      @if (!loading && analyses.length === 0) {
+        <section class="m-empty-state">
+          <strong>Aucune analyse disponible</strong>
+          <span>Lancez une analyse IA pour faire remonter les produits les plus urgents.</span>
+        </section>
+      }
+
+      @if (analyses.length > 0) {
+        <section class="m-cards">
+          @for (analysis of analyses; track trackAnalysis($index, analysis)) {
+            <article class="m-product-card">
+              <div class="m-product-card__header">
+                <span class="m-urgency-badge" [ngClass]="getUrgencyClass(analysis.score_urgence)">
+                  {{ getUrgencyLabel(analysis.score_urgence) }} - Score {{ analysis.score_urgence }}/10
+                </span>
+
+                @if (analysis.refreshing) {
+                  <span class="m-refresh-pill">
+                    <span class="m-refresh-pill__spinner"></span>
+                    Mise a jour...
+                  </span>
+                }
+              </div>
+
+              <div class="m-product-card__body">
+                <div class="m-product-meta">
+                  <h3>{{ analysis.produit_nom }}</h3>
+                  <div class="m-product-meta__stats">
+                    <span>Stock: {{ analysis.stock_actuel }}</span>
+                    <span>Ventes ce mois: {{ analysis.ventes_recentes }}</span>
+                  </div>
+                </div>
+
+                <div class="m-section">
+                  <span class="m-section__label">Diagnostic</span>
+                  <pre class="m-diagnostic">{{ formatDiagnostic(analysis.diagnostic) }}</pre>
+                </div>
+
+                <div class="m-section">
+                  <span class="m-section__label">Solutions proposees</span>
+
+                  <div class="m-solutions">
+                    @for (solution of analysis.solutions; track trackSolution($index, solution)) {
+                      <label class="m-solution" [class.m-solution--disabled]="!solution.automatisable">
+                        <input
+                          type="checkbox"
+                          [checked]="isSelected(analysis, solution.type)"
+                          [disabled]="!solution.automatisable"
+                          (change)="toggleSolutionSelection(analysis, solution, $any($event.target).checked)"
+                        />
+
+                        <span class="m-impact-badge" [ngClass]="getImpactClass(solution.impact_estime)">
+                          {{ solution.impact_estime }}
+                        </span>
+
+                        <span class="m-solution__type">{{ solution.type }}</span>
+                        <span class="m-solution__title">{{ solution.titre }}</span>
+                      </label>
+                    } @empty {
+                      <div class="m-empty-inline">Aucune action proposee.</div>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="m-product-card__footer">
+                <button class="m-btn m-btn--outline" (click)="openDetails(analysis)">
+                  Voir details
+                </button>
+
+                <button
+                  class="m-btn m-btn--accent"
+                  (click)="prepareAutomation(analysis)"
+                  [disabled]="getSelectedCount(analysis) === 0 || automating"
+                >
+                  &#10024; Automatiser ({{ getSelectedCount(analysis) }})
+                </button>
+              </div>
+            </article>
+          }
+        </section>
+      }
+    </div>
+
+    <aside class="m-sidebar">
+      <div class="m-summary-card">
+        <h4>Resume global</h4>
+
+        <div class="m-summary-list">
+          <div class="m-summary-item">
+            <span>Produits analyses</span>
+            <strong>{{ analyses.length }}</strong>
+          </div>
+
+          <div class="m-summary-item">
+            <span>Actions suggerees total</span>
+            <strong>{{ totalSuggestedActions }}</strong>
+          </div>
+
+          <div class="m-summary-item">
+            <span>Score urgence moyen</span>
+            <strong>{{ averageUrgencyScore }}</strong>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+@if (toastMessage) {
+  <div class="m-toast">
+    <span>&#9989; {{ toastMessage }}</span>
+  </div>
+}
+
+<ng-template #detailModal let-modal>
+  <div class="m-modal-header">
+    <div>
+      <div class="m-modal-title">{{ selectedAnalysis?.produit_nom }}</div>
+      @if (selectedAnalysis) {
+        <span class="m-urgency-badge" [ngClass]="getUrgencyClass(selectedAnalysis.score_urgence)">
+          {{ getUrgencyLabel(selectedAnalysis.score_urgence) }}
+        </span>
+      }
+    </div>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="m-modal-body">
+    @if (selectedAnalysis) {
+      <ul
+        ngbNav
+        #nav="ngbNav"
+        [(activeId)]="activeTabId"
+        (navChange)="onDetailTabChange($event)"
+        class="m-tabs"
+      >
+        <li [ngbNavItem]="'description'">
+          <button ngbNavLink>Description</button>
+          <ng-template ngbNavContent>
+            <div class="m-detail-grid">
+              <div class="m-detail-panel m-detail-panel--before">
+                <div class="m-detail-panel__title">Avant</div>
+                <p>{{ selectedAnalysis.catalogueProduit?.description || 'Description actuelle indisponible.' }}</p>
+              </div>
+
+              <div class="m-detail-panel m-detail-panel--after">
+                <div class="m-detail-panel__title">Apres</div>
+                <p>{{ selectedAnalysis.nouvelle_description || 'Aucune nouvelle description suggeree.' }}</p>
+              </div>
+            </div>
+
+            <div class="m-tab-actions">
+              <button class="m-btn m-btn--outline" (click)="copyDescription()">Copier</button>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="'tags'">
+          <button ngbNavLink>Tags</button>
+          <ng-template ngbNavContent>
+            <div class="m-tags">
+              @for (tag of selectedAnalysis.tags_suggeres; track trackTag($index, tag)) {
+                <span class="m-tag">{{ tag }}</span>
+              } @empty {
+                <span class="m-empty-inline">Aucun tag suggere.</span>
+              }
+            </div>
+
+            <div class="m-tab-actions">
+              <button class="m-btn m-btn--accent" (click)="selectTagsAction()">Appliquer tous</button>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="'promotion'">
+          <button ngbNavLink>Promotion</button>
+          <ng-template ngbNavContent>
+            <div class="m-promo-card">
+              <strong>Reduction recommandee : -{{ selectedAnalysis.promotion_recommandee || 0 }}%</strong>
+              <div class="m-promo-card__prices">
+                <span>Prix actuel : {{ (selectedAnalysis.catalogueProduit?.prix ?? 0) | number:'1.2-2' }}€</span>
+                <span>
+                  Nouveau prix :
+                  @if (getPriceAfterPromotion(selectedAnalysis); as newPrice) {
+                    {{ newPrice | number:'1.2-2' }}€
+                  } @else {
+                    Non calcule
+                  }
+                </span>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="'email'">
+          <button ngbNavLink>Email</button>
+          <ng-template ngbNavContent>
+            <div class="m-email-card">
+              <div class="m-email-card__field">
+                <span>Objet</span>
+                <strong>{{ selectedAnalysis.message_email?.objet || 'Objet indisponible' }}</strong>
+              </div>
+              <div class="m-email-card__field">
+                <span>Corps</span>
+                <p>{{ selectedAnalysis.message_email?.corps || 'Message indisponible' }}</p>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+      </ul>
+
+      <div [ngbNavOutlet]="nav" class="mt-3"></div>
+    }
+  </div>
+
+  <div class="m-modal-footer">
+    <button type="button" class="m-btn m-btn--outline" (click)="modal.dismiss()">Fermer</button>
+  </div>
+</ng-template>
+
+<ng-template #confirmModal let-modal>
+  <div class="m-confirm-header">
+    <div class="m-modal-title">Confirmation automatisation</div>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="m-confirm-body">
+    @if (analysisPendingAutomation) {
+      <p>
+        Vous allez appliquer {{ getSelectedCount(analysisPendingAutomation) }} action(s) sur
+        <strong>{{ analysisPendingAutomation.produit_nom }}</strong> :
+      </p>
+
+      <div class="m-confirm-list">
+        @for (solution of getSelectedSolutions(analysisPendingAutomation); track trackSolution($index, solution)) {
+          <div class="m-confirm-item">
+            <span class="m-impact-badge" [ngClass]="getImpactClass(solution.impact_estime)">
+              {{ solution.type }}
+            </span>
+            <span>{{ solution.titre }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="m-confirm-footer">
+    <button type="button" class="m-btn m-btn--outline" (click)="modal.dismiss()">Annuler</button>
+    <button type="button" class="m-btn m-btn--primary" (click)="confirmAutomation(modal)" [disabled]="automating">
+      @if (automating) {
+        <span class="m-btn__spinner"></span>
+      }
+      <span>{{ automating ? 'Application...' : 'Confirmer' }}</span>
+    </button>
+  </div>
+</ng-template>

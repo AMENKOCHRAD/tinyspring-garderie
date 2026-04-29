@@ -1,0 +1,131 @@
+:host {
+  display: block;
+}
+
+.order-card,
+.order-card__top,
+.order-card__middle,
+.order-card__meta,
+.order-card__thumbs,
+.empty-state {
+  display: flex;
+  gap: 16px;
+}
+
+.order-card {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 24px;
+  border-radius: 24px;
+  background: rgba(245, 251, 250, 0.95);
+}
+
+.order-card__top,
+.order-card__middle,
+.order-card__meta {
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.order-card__thumbs {
+  align-items: center;
+}
+
+.order-thumb {
+  width: 40px;
+  height: 40px;
+  margin-left: -10px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  background: rgba(193, 222, 218, 0.2);
+}
+
+.order-thumb:first-child {
+  margin-left: 0;
+}
+
+.order-thumb--fallback,
+.order-thumb--count {
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.order-thumb--count {
+  background: rgba(42, 157, 143, 0.12);
+}
+
+.order-card__amount {
+  color: #2a9d8f;
+  font-size: 1.06rem;
+}
+
+.status-badge--pending {
+  background: rgba(107, 114, 128, 0.14);
+  color: #4b5563;
+}
+
+.empty-state {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.order-card--skeleton {
+  display: grid;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(193, 222, 218, 0.28);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: shimmer 1.3s infinite;
+}
+
+.skeleton--title {
+  height: 22px;
+  width: 42%;
+}
+
+.skeleton--text {
+  height: 16px;
+  width: 74%;
+}
+
+.skeleton--thumbs {
+  height: 40px;
+  width: 160px;
+}
+
+.skeleton--button {
+  height: 44px;
+  width: 160px;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 820px) {
+  .order-card__top,
+  .order-card__middle,
+  .order-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

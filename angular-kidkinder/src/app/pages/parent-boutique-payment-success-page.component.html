@@ -1,0 +1,42 @@
+<div class="ts-container workspace-page">
+  <section class="table-card payment-state">
+    <ng-container *ngIf="statut() === 'loading'">
+      <div class="payment-state__spinner" aria-hidden="true"></div>
+      <h1>Verification du paiement en cours...</h1>
+      <p class="muted">Nous attendons la confirmation du serveur avant de valider votre commande.</p>
+    </ng-container>
+
+    <ng-container *ngIf="statut() === 'confirmed'">
+      <div class="payment-state__icon payment-state__icon--confirmed">&#10003;</div>
+      <h1>Paiement confirm&eacute; !</h1>
+      <p class="muted">Votre commande a &eacute;t&eacute; enregistr&eacute;e avec succ&egrave;s.</p>
+      <p class="muted">Redirection automatique dans 5 secondes...</p>
+
+      <div class="payment-state__actions">
+        <a routerLink="/parent/boutique/orders" class="ts-button ts-button--primary">Voir mes commandes</a>
+        <a routerLink="/parent/boutique" class="ts-button ts-button--ghost">Continuer mes achats</a>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="statut() === 'pending'">
+      <div class="payment-state__icon payment-state__icon--pending">&#8987;</div>
+      <h1>Paiement en cours de traitement</h1>
+      <p class="muted">Votre paiement est en cours de v&eacute;rification.</p>
+      <p class="muted">Vous recevrez une confirmation par email.</p>
+
+      <div class="payment-state__actions">
+        <a routerLink="/parent/boutique/orders" class="ts-button ts-button--primary">Voir mes commandes</a>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="statut() === 'error'">
+      <div class="payment-state__icon payment-state__icon--error">&#10005;</div>
+      <h1>Impossible de v&eacute;rifier le paiement</h1>
+      <p class="muted">Une erreur est survenue lors de la v&eacute;rification.</p>
+
+      <div class="payment-state__actions">
+        <a routerLink="/parent/boutique" class="ts-button ts-button--primary">Retour a la boutique</a>
+      </div>
+    </ng-container>
+  </section>
+</div>

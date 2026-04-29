@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -14,6 +15,9 @@ import { AnimatriceSanteAlertesComponent } from '../components/animatrice-sante-
 =======
 import { AuthService } from '../shared/auth.service';
 >>>>>>> origin/gestion-evenements
+=======
+import { AuthService } from '../shared/auth.service';
+>>>>>>> origin/gestion_boutique
 
 type AnimatorPageKey =
   | 'tableau-de-bord'
@@ -72,6 +76,7 @@ const pageMetaMap: Record<AnimatorPageKey, PageMeta> = {
   selector: 'app-animator-workspace-page',
   standalone: true,
 <<<<<<< HEAD
+<<<<<<< HEAD
   imports: [
     CommonModule,
     FormsModule,
@@ -82,12 +87,16 @@ const pageMetaMap: Record<AnimatorPageKey, PageMeta> = {
 =======
   imports: [CommonModule],
 >>>>>>> origin/gestion-evenements
+=======
+  imports: [CommonModule],
+>>>>>>> origin/gestion_boutique
   templateUrl: './animator-workspace-page.component.html',
   styleUrl: './animator-workspace-page.component.css'
 })
 export class AnimatorWorkspacePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+<<<<<<< HEAD
 <<<<<<< HEAD
   private readonly enfantService = inject(EnfantService);
   private readonly notificationsService = inject(NotificationsService);
@@ -98,6 +107,8 @@ export class AnimatorWorkspacePageComponent {
   });
 =======
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique
 
   protected readonly page = signal<AnimatorPageKey>('tableau-de-bord');
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', {
@@ -112,6 +123,7 @@ export class AnimatorWorkspacePageComponent {
     return this.pageMeta().title.replace('{{name}}', firstName);
   });
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   errorMessage = '';
   successMessage = '';
@@ -1037,10 +1049,15 @@ interface PlanningEvent {
 
 
 =======
+=======
+>>>>>>> origin/gestion_boutique
   public constructor() {
     this.route.data.subscribe((data) => {
       this.page.set(data['page'] as AnimatorPageKey);
     });
   }
 }
+<<<<<<< HEAD
 >>>>>>> origin/gestion-evenements
+=======
+>>>>>>> origin/gestion_boutique

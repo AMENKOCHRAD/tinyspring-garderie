@@ -106,11 +106,15 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
       children: [
         { label: 'Enfants', route: '/parent/enfants' },
 <<<<<<< HEAD
+<<<<<<< HEAD
         { label: 'Sante', route: '/parent/sante' },
         { label: 'Changements', route: '/parent/changements' }
 =======
         { label: 'Sante', route: '/parent/sante' }
 >>>>>>> origin/gestion-evenements
+=======
+        { label: 'Sante', route: '/parent/sante' }
+>>>>>>> origin/gestion_boutique
       ]
     },
     {
@@ -124,7 +128,20 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
     },
     { key: 'messages', label: 'Messages', route: '/parent/messages' },
     { key: 'trajets', label: 'Trajets', route: '/parent/trajets' },
+<<<<<<< HEAD
     { key: 'boutique', label: 'Boutique', route: '/parent/boutique' }
+=======
+    {
+      key: 'boutique',
+      label: 'Boutique',
+      route: '/parent/boutique',
+      children: [
+        { label: 'Catalogue', route: '/parent/boutique' },
+        { label: 'Panier', route: '/parent/boutique/cart' },
+        { label: 'Commandes', route: '/parent/boutique/orders' }
+      ]
+    }
+>>>>>>> origin/gestion_boutique
   ],
   ANIMATRICE: [
     { key: 'dashboard', label: 'Tableau de bord', route: '/animateur/tableau-de-bord' },
@@ -141,5 +158,10 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
         { label: 'Planning', route: '/animateur/planning' }
       ]
     }
+<<<<<<< HEAD
   ]
+=======
+  ],
+  ADMIN: []
+>>>>>>> origin/gestion_boutique
 };
