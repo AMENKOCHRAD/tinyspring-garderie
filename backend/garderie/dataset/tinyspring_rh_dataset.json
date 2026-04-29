@@ -1,0 +1,73 @@
+[ {
+  "instruction" : "Montre-moi le tableau de bord RH",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=3 actives=2 inactives=1\nAbsences: total=5 approuvées=2 refusées=1 enAttente=2",
+  "output" : "\uD83D\uDCCA TABLEAU DE BORD RH — TINYSPRING GARDERIE\n\n\uD83D\uDC65 ANIMATRICES\nTotal : 3\nActives : 2\nInactives : 1\n\n\uD83D\uDCCB ABSENCES\nTotal : 5\nApprouvées : 2\nRefusées : 1\nEn attente : 2\n\n⚠️ URGENCES\n• 2 demande(s) en attente\n• 1 animatrice(s) inactive(s)\n"
+}, {
+  "instruction" : "Donne-moi un résumé de la situation RH",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=3 actives=2 inactives=1\nAbsences: total=5 approuvées=2 refusées=1 enAttente=2",
+  "output" : "\uD83D\uDCCA RH TINYSPRING GARDERIE\n\n\uD83D\uDC65 3 animatrices (2 actives)\n\uD83D\uDCCB 5 demandes d'absences au total\n⏳ 2 en attente de traitement\n\n⚠️ ACTION REQUISE : 2 demande(s) en attente !\n✅ Taux d'approbation : 40%"
+}, {
+  "instruction" : "Y a-t-il des urgences RH à traiter ?",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=3 actives=2 inactives=1\nAbsences: total=5 approuvées=2 refusées=1 enAttente=2",
+  "output" : "⚠️ URGENCES\n• 2 demande(s) en attente\n• 1 animatrice(s) inactive(s)\n"
+}, {
+  "instruction" : "Donne-moi la liste de toutes les animatrices",
+  "input" : "Animatrices TinySpring :\n• Sara Ben Ali | ACTIVE\n",
+  "output" : "\uD83D\uDCCB LISTE DES ANIMATRICES\n\n• Sara Ben Ali — ACTIVE — premiers secours\n"
+}, {
+  "instruction" : "Quel est l'état des animatrices actives et inactives ?",
+  "input" : "Animatrices TinySpring :\n• Sara Ben Ali | ACTIVE\n",
+  "output" : "ÉTAT DES ANIMATRICES\n\nTotal : 3\nActives : 2\nInactives : 1\n\nTaux d'activité : 66%"
+}, {
+  "instruction" : "Quel est le bilan de Sara Ben Ali ?",
+  "input" : "Animatrice : Sara Ben Ali | Statut : ACTIVE | Absences : 1",
+  "output" : "\uD83D\uDCCB BILAN ANIMATRICE — SARA BEN ALI\n\nNom : Sara Ben Ali\nStatut : ACTIVE\nSpécialité : premiers secours\nTotal demandes : 1\nJours utilisés : 5"
+}, {
+  "instruction" : "Génère le rapport mensuel des absences",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCC5 RAPPORT MENSUEL — APRIL 2026\n\nAbsences ce mois : 1\nApprouvées : 2\nRefusées : 1\nEn attente : 2\n\nPAR TYPE D'ABSENCE\nCongés annuels : 2\nCongés maladie : 1\nCongés maternité : 1\nAbsences : 1"
+}, {
+  "instruction" : "Liste toutes les demandes en attente",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "⏳ DEMANDES EN ATTENTE\n\n✅ Aucune demande en attente — Excellent !\n"
+}, {
+  "instruction" : "Analyse les absences par type",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "PAR TYPE D'ABSENCE\nCongés annuels : 2\nCongés maladie : 1\nCongés maternité : 1\nAbsences : 1"
+}, {
+  "instruction" : "Combien de absence ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "ANALYSE ABSENCE\n\nDemandes totales : 0\nApprouvées : 0\nRefusées : 0\nTotal jours accordés : 0"
+}, {
+  "instruction" : "Combien de conge annuel ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "ANALYSE CONGE ANNUEL\n\nDemandes totales : 1\nApprouvées : 1\nRefusées : 0\nTotal jours accordés : 5"
+}, {
+  "instruction" : "Combien de conge maladie ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "ANALYSE CONGE MALADIE\n\nDemandes totales : 0\nApprouvées : 0\nRefusées : 0\nTotal jours accordés : 0"
+}, {
+  "instruction" : "Combien de conge maternite ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 1\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "ANALYSE CONGE MATERNITE\n\nDemandes totales : 0\nApprouvées : 0\nRefusées : 0\nTotal jours accordés : 0"
+}, {
+  "instruction" : "Quelles animatrices ont dépassé leur quota ?",
+  "input" : "Quotas TinySpring : Congé annuel 30j, Maladie 15j, Maternité 90j, Absence 10j",
+  "output" : "✅ Aucun dépassement de quota.\n"
+}, {
+  "instruction" : "Comment fonctionne le moteur de règles ?",
+  "input" : "Quotas TinySpring : Congé annuel 30j, Maladie 15j, Maternité 90j, Absence 10j",
+  "output" : "MOTEUR DE RÈGLES — FONCTIONNEMENT\n\n1. DÉLAI DE PRÉVENANCE\n2. QUOTA ANNUEL\n3. CHEVAUCHEMENT\n4. EFFECTIF MINIMUM\n\nToutes OK → AUTO-APPROUVÉ | Règle échoue → AUTO-REFUSÉ | Admin → TRANSMIS ADMIN"
+}, {
+  "instruction" : "Génère un bilan RH complet",
+  "input" : "TinySpring — Animatrices: 3 | Absences: 5 | EnAttente: 2",
+  "output" : "\uD83D\uDCCA BILAN RH COMPLET — TINYSPRING GARDERIE\n\nEFFECTIF\nTotal : 3\nActives : 2\n\nABSENCES\nTotal : 5\nApprouvées : 2\nRefusées : 1\nEn attente : 2\n\nRECOMMANDATIONS\n⚠️ Traiter 2 demande(s)\n✅ Maintenir l'effectif minimum"
+}, {
+  "instruction" : "Génère le rapport mensuel de APRIL",
+  "input" : "TinySpring — Animatrices: 3 | Absences: 5 | EnAttente: 2",
+  "output" : "\uD83D\uDCC5 RAPPORT MENSUEL — APRIL 2026\n\nAbsences ce mois : 1\nApprouvées : 2\nRefusées : 1\nEn attente : 2\n\nPAR TYPE D'ABSENCE\nCongés annuels : 2\nCongés maladie : 1\nCongés maternité : 1\nAbsences : 1"
+}, {
+  "instruction" : "Donne-moi des recommandations pour améliorer la gestion RH",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=3 actives=2 inactives=1\nAbsences: total=5 approuvées=2 refusées=1 enAttente=2",
+  "output" : "RECOMMANDATIONS RH\n\n⚠️ Traiter 2 demande(s) en attente\n✅ Activer l'auto-approbation pour réduire la charge admin\n✅ Maintenir un effectif minimum de 2 par groupe"
+} ]
