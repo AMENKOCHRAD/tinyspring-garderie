@@ -4,10 +4,6 @@ import com.tinyspring.garderie.security.CustomUserDetailsService;
 import com.tinyspring.garderie.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,15 +36,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider(userDetailsService);
         auth.setPasswordEncoder(passwordEncoder);
         return auth;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
     }
 
     @Bean
@@ -72,19 +63,11 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-<<<<<<< HEAD
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/traitements/**").hasAnyRole("PARENT", "ADMIN")
                         .requestMatchers("/api/parent/**").hasAnyRole("PARENT", "ADMIN")
-=======
-                        .requestMatchers("/api/auth/login", "/api/auth/test").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/transport/**").hasRole("ADMIN")
-                        .requestMatchers("/api/demandes/**", "/api/trajets/**", "/api/parent/enfants/**").hasRole("PARENT")
-                        .requestMatchers("/api/parent/**").hasRole("PARENT")
->>>>>>> origin/gestion-transports
                         .requestMatchers("/api/animatrice/**").hasRole("ANIMATRICE")
                         .requestMatchers("/api/enfants/**").hasAnyRole("ADMIN", "ANIMATRICE", "PARENT")
                         .requestMatchers(HttpMethod.GET, "/api/conditions/**").hasAnyRole("ADMIN", "PARENT", "ANIMATRICE")
@@ -103,12 +86,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/traitements/**").hasAnyRole("ADMIN", "PARENT", "ANIMATRICE")
                         .anyRequest().authenticated()
                 )
-<<<<<<< HEAD
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(AbstractHttpConfigurer::disable);
-=======
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
->>>>>>> origin/gestion-transports
 
         return http.build();
     }
@@ -116,14 +95,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-<<<<<<< HEAD
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*"
         ));
-=======
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
->>>>>>> origin/gestion-transports
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Authorization",

@@ -1,6 +1,5 @@
 package com.tinyspring.garderie.dto;
 
-<<<<<<< HEAD
 public class AuthResponse {
 
     private String message;
@@ -96,16 +95,4 @@ public class AuthResponse {
     public void setExpiresIn(long expiresIn) {
         this.expiresIn = expiresIn;
     }
-=======
-public record AuthResponse(
-        String message,
-        Long id,
-        String nom,
-        String email,
-        String role,
-        String accessToken,
-        String tokenType,
-        long expiresIn
-) {
->>>>>>> origin/gestion-transports
 }
