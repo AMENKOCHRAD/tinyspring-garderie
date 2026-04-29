@@ -28,7 +28,7 @@ public class DataInitializer {
             Role animatriceRole = roleRepository.findByName(RoleName.ANIMATRICE)
                     .orElseGet(() -> roleRepository.save(new Role(RoleName.ANIMATRICE)));
 
-            if (userRepository.findByEmail("admin@garderie.com").isEmpty()) {
+            if (userRepository.findByEmailIgnoreCase("admin@garderie.com").isEmpty()) {
                 userRepository.save(new User(
                         "Admin Principal",
                         "admin@garderie.com",
@@ -38,7 +38,7 @@ public class DataInitializer {
                 ));
             }
 
-            if (userRepository.findByEmail("parent@garderie.com").isEmpty()) {
+            if (userRepository.findByEmailIgnoreCase("parent@garderie.com").isEmpty()) {
                 userRepository.save(new User(
                         "Parent Test",
                         "parent@garderie.com",
@@ -48,7 +48,7 @@ public class DataInitializer {
                 ));
             }
 
-            if (userRepository.findByEmail("animatrice@garderie.com").isEmpty()) {
+            if (userRepository.findByEmailIgnoreCase("animatrice@garderie.com").isEmpty()) {
                 userRepository.save(new User(
                         "Animatrice Test",
                         "animatrice@garderie.com",

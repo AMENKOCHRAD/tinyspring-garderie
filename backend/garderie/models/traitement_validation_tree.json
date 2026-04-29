@@ -1,0 +1,77 @@
+{
+  "sampleCount": 800,
+  "root": {
+    "leaf": false,
+    "featureIndex": 0,
+    "threshold": 0.5,
+    "count": 800,
+    "positives": 558,
+    "left": {
+      "leaf": true,
+      "featureIndex": -1,
+      "threshold": 0.0,
+      "count": 63,
+      "positives": 0,
+      "left": null,
+      "right": null
+    },
+    "right": {
+      "leaf": false,
+      "featureIndex": 2,
+      "threshold": 0.5,
+      "count": 737,
+      "positives": 558,
+      "left": {
+        "leaf": true,
+        "featureIndex": -1,
+        "threshold": 0.0,
+        "count": 13,
+        "positives": 0,
+        "left": null,
+        "right": null
+      },
+      "right": {
+        "leaf": false,
+        "featureIndex": 6,
+        "threshold": 3.5,
+        "count": 724,
+        "positives": 558,
+        "left": {
+          "leaf": false,
+          "featureIndex": 1,
+          "threshold": 28.5,
+          "count": 672,
+          "positives": 541,
+          "left": {
+            "leaf": true,
+            "featureIndex": -1,
+            "threshold": 0.0,
+            "count": 645,
+            "positives": 536,
+            "left": null,
+            "right": null
+          },
+          "right": {
+            "leaf": true,
+            "featureIndex": -1,
+            "threshold": 0.0,
+            "count": 27,
+            "positives": 5,
+            "left": null,
+            "right": null
+          }
+        },
+        "right": {
+          "leaf": true,
+          "featureIndex": -1,
+          "threshold": 0.0,
+          "count": 52,
+          "positives": 17,
+          "left": null,
+          "right": null
+        }
+      }
+    }
+  }
+}
+

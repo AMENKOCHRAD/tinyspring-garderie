@@ -1,0 +1,95 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1">Liste des enfants</h2>
+      <div class="text-muted">Classés par niveaux (âge)</div>
+    </div>
+    <button class="btn btn-outline-primary" type="button" (click)="loadEnfants()" [disabled]="isLoading">
+      {{ isLoading ? 'Chargement...' : 'Rafraîchir' }}
+    </button>
+  </div>
+
+  <div class="mt-3">
+    <div class="btn-group flex-wrap" role="group" aria-label="Niveau">
+      <button
+        type="button"
+        class="btn"
+        [class.btn-primary]="selectedNiveau === 'ALL'"
+        [class.btn-outline-primary]="selectedNiveau !== 'ALL'"
+        (click)="setNiveauFilter('ALL')"
+      >
+        Tous <span class="badge text-bg-light ms-1">{{ enfants.length }}</span>
+      </button>
+
+      <button
+        *ngFor="let g of niveauGroups"
+        type="button"
+        class="btn"
+        [class.btn-primary]="selectedNiveau === g.key"
+        [class.btn-outline-primary]="selectedNiveau !== g.key"
+        (click)="setNiveauFilter(g.key)"
+        [title]="g.ageRangeLabel"
+      >
+        {{ g.label }} <span class="badge text-bg-light ms-1">{{ g.count }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-3" *ngIf="isLoading">Chargement...</div>
+  <div class="mt-3" *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <table class="table table-bordered table-striped mt-3" *ngIf="!isLoading && !error">
+    <thead>
+      <tr>
+        <th>Photo</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Niveau</th>
+        <th>Date naissance</th>
+        <th>Parent</th>
+        <th>Contact</th>
+        <th>Email parent</th>
+        <th>Allergies</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let enfant of enfantsFiltres">
+        <td>
+          <img
+            *ngIf="enfant.photo && enfant.photo.trim()"
+            class="child-avatar"
+            [src]="enfant.photo"
+            alt="Photo enfant"
+          />
+          <span *ngIf="!enfant.photo || !enfant.photo.trim()" class="child-avatar child-avatar--placeholder">
+            {{ enfant.prenom?.[0] }}{{ enfant.nom?.[0] }}
+          </span>
+        </td>
+        <td>{{ enfant.nom }}</td>
+        <td>{{ enfant.prenom }}</td>
+        <td>
+          <span class="badge text-bg-info text-dark">{{ getNiveauLabel(enfant) }}</span>
+        </td>
+        <td>{{ enfant.dateNaissance }}</td>
+        <td>{{ enfant.parent.nom }}</td>
+        <td>{{ enfant.contactUrgence }}</td>
+        <td>{{ enfant.parent.email }}</td>
+        <td>{{ enfant.allergies || 'Aucune' }}</td>
+        <td class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-info btn-sm text-white" [routerLink]="['/gestion-enfants/detail', enfant.id]">Détails</a>
+
+          <a class="btn btn-warning btn-sm" [routerLink]="['/gestion-enfants/modifier', enfant.id]">Modifier</a>
+
+          <button type="button" class="btn btn-secondary btn-sm" (click)="archiverEnfant(enfant.id)">
+            Archiver
+          </button>
+        </td>
+      </tr>
+
+      <tr *ngIf="enfantsFiltres.length === 0">
+        <td colspan="10" class="text-center text-muted py-4">Aucun enfant dans ce niveau.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

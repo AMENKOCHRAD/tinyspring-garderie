@@ -1,0 +1,167 @@
+<div class="container mt-4">
+
+  <!-- HEADER -->
+  <div class="mb-4">
+    <h2>Historique des validations des traitements</h2>
+
+    <p class="text-muted">
+      Suivi complet des décisions (Règles / ML / Admin) + accès au détail du traitement
+    </p>
+  </div>
+
+  <div class="row">
+
+    <!-- HISTORIQUE -->
+    <div class="col-lg-7">
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <b>Historique des validations</b>
+            <div class="text-muted small">Règles / ML / décisions admin (dernier 200)</div>
+          </div>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              style="max-width: 220px"
+              placeholder="Nom enfant..."
+              [(ngModel)]="eventSearchName"
+              (input)="filtrerEvenements()"
+            />
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              style="max-width: 170px"
+              [(ngModel)]="eventSearchDate"
+              (change)="filtrerEvenements()"
+            />
+            <button class="btn btn-sm btn-outline-secondary" (click)="chargerEvenementsRecents()">
+              Rafraîchir
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div *ngIf="eventsLoading" class="p-3 text-muted">Chargement...</div>
+          <div *ngIf="eventsError" class="p-3 alert alert-warning m-3">{{ eventsError }}</div>
+
+          <div *ngIf="!eventsLoading && !eventsError && recentEventsFiltres.length === 0" class="p-3 text-muted">
+            Aucun événement pour le moment.
+          </div>
+
+          <div *ngIf="recentEventsFiltres.length" class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Enfant</th>
+                  <th>Traitement</th>
+                  <th>Décision</th>
+                  <th>Source</th>
+                  <th>Confiance</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ev of recentEventsFiltres" class="clickable-row" (click)="consulter(ev.traitementId)">
+                  <td class="text-nowrap">{{ ev.creeLe | date:'short' }}</td>
+                  <td class="text-nowrap">{{ ev.nomEnfant }} {{ ev.prenomEnfant }}</td>
+                  <td>{{ ev.nomTraitement }}</td>
+                  <td class="text-nowrap">{{ ev.decision }}</td>
+                  <td class="text-nowrap">{{ ev.source }}</td>
+                  <td class="text-nowrap">
+                    <span *ngIf="ev.confiance != null">{{ ev.confiance | number:'1.0-2' }}</span>
+                    <span *ngIf="ev.confiance == null" class="text-muted">—</span>
+                  </td>
+                  <td class="text-nowrap">{{ ev.statutTraitement }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="col-lg-5" *ngIf="traitementSelectionne">
+
+      <div class="card details-card">
+
+        <div class="card-header d-flex justify-content-between">
+          <h5>Détails</h5>
+          <button class="btn btn-sm btn-outline-secondary"
+                  (click)="fermerDetails()">X</button>
+        </div>
+
+        <div class="card-body">
+
+          <p><b>Enfant:</b> {{ traitementSelectionne.nomEnfant }}</p>
+          <p><b>Parent:</b> {{ traitementSelectionne.nomParent }}</p>
+
+          <hr>
+
+          <p><b>Condition:</b> {{ traitementSelectionne.nomCondition }}</p>
+          <p><b>Type:</b> {{ traitementSelectionne.typeCondition }}</p>
+
+          <hr>
+
+          <p><b>Traitement:</b> {{ traitementSelectionne.nomTraitement }}</p>
+          <p>{{ traitementSelectionne.description }}</p>
+
+          <p *ngIf="traitementSelectionne.heuresPrises?.length">
+            ⏰ {{ traitementSelectionne.heuresPrises.join(', ') }}
+          </p>
+
+          <p *ngIf="traitementSelectionne.statut">
+            <b>Statut:</b> {{ traitementSelectionne.statut }}
+          </p>
+
+          <p *ngIf="traitementSelectionne.autoValidationNote">
+            <b>Note auto-validation:</b> {{ traitementSelectionne.autoValidationNote }}
+          </p>
+
+          <hr>
+
+          <h6>Historique (Règles / ML / Admin)</h6>
+
+          <div *ngIf="historyLoading" class="text-muted">
+            Chargement de l’historique...
+          </div>
+
+          <div *ngIf="historyError" class="alert alert-warning py-1">
+            {{ historyError }}
+          </div>
+
+          <div *ngIf="!historyLoading && !historyError && validationHistory.length === 0" class="text-muted">
+            Aucun événement enregistré.
+          </div>
+
+          <div *ngIf="validationHistory.length" class="list-group list-group-flush validation-history">
+            <div class="list-group-item" *ngFor="let ev of validationHistory">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                  <div class="fw-semibold">
+                    {{ ev.decision }}
+                    <span *ngIf="ev.source" class="badge bg-secondary ms-2">{{ ev.source }}</span>
+                  </div>
+                  <div class="text-muted small">
+                    {{ ev.creeLe | date:'short' }}
+                    <span *ngIf="ev.creeParEmail"> • {{ ev.creeParEmail }}</span>
+                    <span *ngIf="ev.confiance != null"> • confiance: {{ ev.confiance | number:'1.0-2' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="ev.note" class="mt-1">
+                <span class="text-muted small">Note:</span> {{ ev.note }}
+              </div>
+
+              <pre *ngIf="ev.facteurs" class="mt-2 mb-0 facteurs-pre">{{ ev.facteurs | json }}</pre>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -34,12 +34,18 @@ export class SignInComponent {
     minLength(schemaPath.password, 8, { message: 'Password must be at least 8 characters' });
   });
 
+  // Vérifie si le formulaire est soumis et si le champ a des erreurs
+  submittedAndInvalid(field: any): boolean {
+    return this.submitted() && field.errors().length > 0;
+  }
+
   onSubmit(event: Event) {
+    event.preventDefault();
     this.submitted.set(true);
     this.error.set('');
-    event.preventDefault();
 
-    if (this.loginForm.email().invalid() || this.loginForm.password().invalid()) {
+    // Vérifie si le formulaire est invalide
+    if (this.loginForm.email().errors().length > 0 || this.loginForm.password().errors().length > 0) {
       this.cd.detectChanges();
       return;
     }
@@ -50,11 +56,10 @@ export class SignInComponent {
       next: (response) => {
         this.authService.saveUser(response);
 
+        // Redirection selon le rôle
         if (response.role === 'ADMIN') {
           this.router.navigate(['/analytics']);
-        } else if (response.role === 'PARENT') {
-          this.router.navigate(['/sample-page']);
-        } else if (response.role === 'ANIMATRICE') {
+        } else if (response.role === 'PARENT' || response.role === 'ANIMATRICE') {
           this.router.navigate(['/sample-page']);
         } else {
           this.error.set('Rôle non reconnu');
@@ -63,22 +68,22 @@ export class SignInComponent {
         this.cd.detectChanges();
       },
       error: (err) => {
-  console.log('ERREUR COMPLETE = ', err);
-  console.log('status = ', err.status);
-  console.log('error body = ', err.error);
+        console.log('ERREUR COMPLETE = ', err);
+        console.log('status = ', err.status);
+        console.log('error body = ', err.error);
 
-  if (err.status === 0) {
-    this.error.set('Problème CORS ou backend inaccessible');
-  } else if (err.status === 401) {
-    this.error.set('Mot de passe incorrect');
-  } else if (err.status === 404) {
-    this.error.set('Utilisateur introuvable');
-  } else {
-    this.error.set('Erreur serveur : ' + err.status);
-  }
+        if (err.status === 0) {
+          this.error.set('Problème CORS ou backend inaccessible');
+        } else if (err.status === 401) {
+          this.error.set('Mot de passe incorrect');
+        } else if (err.status === 404) {
+          this.error.set('Utilisateur introuvable');
+        } else {
+          this.error.set('Erreur serveur : ' + err.status);
+        }
 
-  this.cd.detectChanges();
-}
+        this.cd.detectChanges();
+      }
     });
   }
 

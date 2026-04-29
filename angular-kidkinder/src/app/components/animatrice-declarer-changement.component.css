@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+.stepper {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+
+.stepper div {
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+  padding: 10px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  font-weight: 700;
+  color: #64748b;
+}
+
+.stepper div.active {
+  background: #d9f7ec;
+  border-color: #9ee6d0;
+  color: #064e3b;
+}

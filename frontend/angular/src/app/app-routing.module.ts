@@ -1,10 +1,18 @@
-// Angular Import
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-// project import
+// Layouts
 import { AdminComponent } from './theme/layout/admin/admin.component';
 import { GuestComponent } from './theme/layout/guest/guest.component';
+
+// Pages
+import { DashboardProfilsEnfants } from './enfant/dashboard-profils-enfants/dashboard-profils-enfants';
+import { GestionEnfantsComponent } from './enfant/gestion-enfants/gestion-enfants';
+import { EtatSanitaireComponent } from './enfant/etat-sanitaire/etat-sanitaire';
+import { ValidationTraitementsComponent } from './enfant/validation-traitements/validation-traitements';
+import { DetailEnfantComponent } from './enfant/detail-enfant/detail-enfant';
+import { ModifierEnfantComponent } from './enfant/modifier-enfant/modifier-enfant';
+import { StatistiquesEnfantsComponent } from './enfant/statistiques-enfants/statistiques-enfants';
 
 const routes: Routes = [
   {
@@ -13,7 +21,7 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: '/analytics',
+        redirectTo: 'analytics',
         pathMatch: 'full'
       },
       {
@@ -22,6 +30,41 @@ const routes: Routes = [
           import('./demo/dashboard/dash-analytics.component').then(
             (c) => c.DashAnalyticsComponent
           )
+      },
+      {
+        path: 'gestion-enfants',
+        component: GestionEnfantsComponent,
+        children: [
+          {
+            path: '',
+            redirectTo: 'liste',
+            pathMatch: 'full'
+          },
+          {
+  path: 'detail/:id',
+  component: DetailEnfantComponent
+},
+{
+  path: 'modifier/:id',
+  component: ModifierEnfantComponent
+},
+           {
+      path: 'validation-traitements',
+      component: ValidationTraitementsComponent
+    },
+          {
+            path: 'liste',
+            component: DashboardProfilsEnfants
+          },
+          {
+            path: 'etat-sanitaire',
+            component: EtatSanitaireComponent
+          },
+          {
+            path: 'statistiques',
+            component: StatistiquesEnfantsComponent
+          }
+        ]
       },
       {
         path: 'component',
@@ -73,13 +116,6 @@ const routes: Routes = [
       },
       {
         path: 'login',
-        loadComponent: () =>
-          import('./demo/pages/authentication/sign-in/sign-in.component').then(
-            (c) => c.SignInComponent
-          )
-      },
-      {
-        path: 'sign-in',
         loadComponent: () =>
           import('./demo/pages/authentication/sign-in/sign-in.component').then(
             (c) => c.SignInComponent

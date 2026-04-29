@@ -1,0 +1,30 @@
+<section class="address-picker">
+  <div class="address-picker__top">
+    <div>
+      <label>Adresse (optionnel)</label>
+      <input
+        [ngModel]="address"
+        (ngModelChange)="onAddressInput($event)"
+        name="adresse"
+        placeholder="Ex: Rue, quartier, ville..."
+      />
+      <p class="muted" style="margin:6px 0 0;">
+        Tu peux écrire l'adresse, ou cliquer sur la carte pour la choisir.
+      </p>
+    </div>
+    <div class="address-picker__opts">
+      <label class="opt-row">
+        <input type="checkbox" [(ngModel)]="autoFillAddress" name="autoFillAddress" />
+        Remplir automatiquement depuis la carte
+      </label>
+      <button type="button" class="ts-button ts-button--ghost" (click)="clearLocation()">Effacer position</button>
+    </div>
+  </div>
+
+  <div class="address-picker__meta muted" *ngIf="lat != null && lng != null">
+    Position : {{ lat.toFixed(5) }}, {{ lng.toFixed(5) }}
+  </div>
+
+  <div #mapEl class="address-picker__map"></div>
+</section>
+

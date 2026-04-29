@@ -1,0 +1,231 @@
+:host {
+  display: block;
+}
+.alert {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.alert-danger {
+  background: #ffe4ea;
+  color: #b4234d;
+  border-color: #f8b4c4;
+}
+
+.alert-success {
+  background: #e8f9ee;
+  color: #1f7a3d;
+  border-color: #b7ebc6;
+}
+
+/* Santé (conditions + traitements) */
+.health-children-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.health-child-card {
+  border: 1px solid #e7e7ee;
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.health-child-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inline-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #f2f4f7;
+  color: #101828;
+  font-weight: 800;
+}
+
+.profile-avatar-image {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.profile-avatar--large,
+.profile-avatar-image--large {
+  width: 72px;
+  height: 72px;
+}
+
+.health-conditions-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.health-condition-card {
+  border: 1px solid #e7e7ee;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fbfbfd;
+}
+
+.health-condition-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.health-condition-card h4 {
+  margin: 0;
+}
+
+.health-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.health-traitements {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e1e1ea;
+}
+
+.health-traitements h5 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.health-traitements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.traitement-mini-card {
+  border: 1px solid #e7e7ee;
+  border-radius: 12px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.traitement-mini-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.traitement-mini-card__actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.health-observations {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e1e1ea;
+}
+
+.health-observations h5 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.health-observations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.observation-mini-card {
+  border: 1px solid #e7e7ee;
+  border-radius: 12px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.observation-mini-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Pagination (Santé) */
+.health-pagination {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pagination-number {
+  min-width: 42px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #ffffff;
+  color: #101828;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease, border-color 0.15s ease;
+}
+
+.pagination-number:hover {
+  background: #f4f7ff;
+  border-color: rgba(79, 70, 229, 0.35);
+}
+
+.pagination-number:active {
+  transform: translateY(1px);
+}
+
+.pagination-number.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-color: rgba(79, 70, 229, 0.65);
+  color: #ffffff;
+}
+
+.pagination-number:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.25);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .health-children-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .health-conditions-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,41 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Gestion des enfants</h2>
+
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <a
+      class="btn btn-primary"
+      [routerLink]="['liste']"
+      routerLinkActive="active"
+    >
+      Liste des enfants
+    </a>
+
+    <a
+      class="btn btn-success"
+      [routerLink]="['etat-sanitaire']"
+      routerLinkActive="active"
+    >
+      État sanitaire
+    </a>
+
+    <a
+      class="btn btn-warning text-dark"
+      [routerLink]="['validation-traitements']"
+      routerLinkActive="active"
+    >
+      Validation des traitements
+    </a>
+
+    <a
+      class="btn btn-outline-primary"
+      [routerLink]="['statistiques']"
+      routerLinkActive="active"
+    >
+      Statistiques
+    </a>
+  </div>
+
+  <div class="card p-3">
+    <router-outlet></router-outlet>
+  </div>
+</div>

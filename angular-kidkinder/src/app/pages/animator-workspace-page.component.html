@@ -1,0 +1,606 @@
+﻿<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">{{ pageMeta().chip }}</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p class="muted">{{ pageMeta().description }}</p>
+    </div>
+    <div class="page-header-meta">{{ todayLabel }}</div>
+  </section>
+
+  <ng-container [ngSwitch]="page()">
+    <section *ngSwitchCase="'tableau-de-bord'" class="workspace-page">
+      <div class="stats-grid">
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">G</span>
+            <span class="stat-card__value">18</span>
+          </div>
+          <span class="stat-card__label">Enfants suivis</span>
+        </article>
+        <article class="stat-card tone-blush">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-blush">A</span>
+            <span class="stat-card__value">5</span>
+          </div>
+          <span class="stat-card__label">Activites du jour</span>
+        </article>
+        <article class="stat-card tone-lime">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-lime">S</span>
+            <span class="stat-card__value">3</span>
+          </div>
+          <span class="stat-card__label">Alertes sante</span>
+        </article>
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">M</span>
+            <span class="stat-card__value">4</span>
+          </div>
+          <span class="stat-card__label">Messages non lus</span>
+        </article>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'groupes'" class="workspace-page">
+      <section id="mes-classes" class="profile-cards">
+        <article class="profile-card">
+          <h3>Groupe Papillons</h3>
+          <p class="muted">{{ getGroupCount('Papillons') }} enfant(s) â€¢ 3 a 4 ans</p>
+        </article>
+        <article class="profile-card">
+          <h3>Groupe Tournesols</h3>
+          <p class="muted">{{ getGroupCount('Tournesols') }} enfant(s) â€¢ 2 a 3 ans</p>
+        </article>
+      </section>
+
+      <section id="liste-enfants" class="table-card">
+        <h3>Liste des enfants</h3>
+        <div class="stack-list">
+          <article class="stack-item" *ngFor="let enfant of enfants">
+            <strong>{{ enfant.prenom }} {{ enfant.nom }}</strong>
+            <p class="muted">
+              {{ getGroupeLabel(enfant) }} &bull;
+              {{ enfant.allergies?.trim() ? ('Allergie : ' + enfant.allergies) : 'Aucun signalement majeur' }}
+            </p>
+          </article>
+          <p class="muted" *ngIf="enfants.length === 0">Aucun enfant.</p>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'sante'" class="workspace-page">
+      <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+      <section class="table-card" *ngIf="needsReauth" style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
+          <div>
+            <strong>Session expiree</strong>
+            <p class="muted" style="margin:6px 0 0;">Reconnectez-vous pour continuer (votre brouillon reste enregistre).</p>
+          </div>
+          <button type="button" class="ts-button ts-button--primary" (click)="goToLogin()">Reconnexion</button>
+        </div>
+      </section>
+
+      <section class="stack-list" *ngIf="notificationMessages.length > 0">
+        <article class="soft-panel soft-panel--lime" *ngFor="let msg of notificationMessages">
+          <strong>Notification</strong>
+          <p class="muted">{{ msg }}</p>
+        </article>
+      </section>
+
+      <section class="table-card animator-search" *ngIf="!isLoadingSante">
+        <label>Recherche</label>
+        <input
+          [(ngModel)]="searchTerm"
+          name="searchTerm"
+          placeholder="Enfant, condition, traitement..."
+          (input)="resetSantePage(); resetIncidentsPage()"
+        />
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="ts-button" (click)="requestBrowserNotifications()">
+            Activer notifications navigateur
+          </button>
+          <button type="button" class="ts-button" (click)="chargerSante()">Rafraichir</button>
+        </div>
+      </section>
+
+      <section class="table-card" *ngIf="!isLoadingSante">
+        <h3>Statistiques</h3>
+        <div class="stats-grid" style="margin-top:12px;">
+          <article class="stat-card tone-mint">
+            <div class="stat-card__top">
+              <span class="icon-circle tone-mint">E</span>
+              <span class="stat-card__value">{{ statsEnfantsCount }}</span>
+            </div>
+            <span class="stat-card__label">Enfants suivis</span>
+          </article>
+
+          <article class="stat-card tone-lime">
+            <div class="stat-card__top">
+              <span class="icon-circle tone-lime">T</span>
+              <span class="stat-card__value">{{ statsTraitementsActifsCount }}</span>
+            </div>
+            <span class="stat-card__label">Traitements actifs (aujourd'hui)</span>
+          </article>
+
+          <article class="stat-card tone-blush">
+            <div class="stat-card__top">
+              <span class="icon-circle tone-blush">D</span>
+              <span class="stat-card__value">{{ statsDosesTodayTotal }}</span>
+            </div>
+            <span class="stat-card__label">Doses planifiees (aujourd'hui)</span>
+          </article>
+
+          <article class="stat-card tone-mint">
+            <div class="stat-card__top">
+              <span class="icon-circle tone-mint">R</span>
+              <span class="stat-card__value">{{ statsDosesTodayRemaining }}</span>
+            </div>
+            <span class="stat-card__label">Doses restantes</span>
+          </article>
+
+          <article class="stat-card tone-blush">
+            <div class="stat-card__top">
+              <span class="icon-circle tone-blush">!</span>
+              <span class="stat-card__value">{{ statsDosesLate }}</span>
+            </div>
+            <span class="stat-card__label">Doses en retard</span>
+          </article>
+
+          <article class="stat-card tone-lime">
+            <div class="stat-card__top">
+              <span class="icon-circle tone-lime">I</span>
+              <span class="stat-card__value">{{ statsIncidentsRecentCount }}</span>
+            </div>
+            <span class="stat-card__label">Incidents (50 derniers)</span>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="table-card" *ngIf="isLoadingSante">
+        <p class="muted">Chargement des donnees de sante...</p>
+      </section>
+
+    
+
+      <section class="table-card" style="margin-top:16px;" *ngIf="!isLoadingSante">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+          <div>
+            <h3>Calendrier des prises</h3>
+            <p class="muted">Vue semaine : chaque jour affiche toutes les prises (heure + enfant + traitement).</p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="ts-button" (click)="goPlanningPrevWeek()">Semaine precedente</button>
+            <button type="button" class="ts-button" (click)="goPlanningToday()">Cette semaine</button>
+            <button type="button" class="ts-button" (click)="goPlanningNextWeek()">Semaine suivante</button>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--two" style="margin-top:12px;">
+          <div>
+            <label>Debut de semaine</label>
+            <input type="date" [(ngModel)]="planningFromIso" name="planFrom" (change)="onPlanningStartChanged()" />
+          </div>
+          <div>
+            <label>Fin</label>
+            <input type="date" [(ngModel)]="planningToIso" name="planTo" disabled />
+          </div>
+        </div>
+
+        <div class="planning-days-tabs" *ngIf="planningDates.length">
+  <button
+    type="button"
+    class="planning-day-tab"
+    *ngFor="let d of planningDates"
+    [class.active]="d === selectedPlanningDate"
+    (click)="selectPlanningDate(d)"
+  >
+    <strong>{{ formatPlanningDayLabel(d) }}</strong>
+    <span>{{ d }}</span>
+    <small>{{ (planningEventsByDate[d] || []).length }} prise(s)</small>
+  </button>
+</div>
+
+<section class="planning-selected-day" *ngIf="planningDates.length">
+  <h4>Prises du {{ selectedPlanningDate }}</h4>
+
+  <div class="stack-list">
+    <article
+      class="planning-event-line"
+      *ngFor="let ev of selectedPlanningEventsPagines"
+      [class.planning-event-line--done]="ev.dejaDonne"
+    >
+      <div>
+        <strong>{{ ev.heure }} - {{ ev.enfant.prenom }} {{ ev.enfant.nom }}</strong>
+        <p class="muted">
+          {{ ev.traitement.nomTraitement }} • {{ ev.condition.nomCondition }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="ts-button ts-button--primary"
+        (click)="marquerDonne(ev.traitement.id, ev.enfant.id, ev.heure, selectedPlanningDate)"
+        [disabled]="ev.dejaDonne || isSavingPrise || isFutureDate(selectedPlanningDate)"
+      >
+        {{ ev.dejaDonne ? 'OK' : 'Marquer donné' }}
+      </button>
+    </article>
+
+    <p class="muted" *ngIf="selectedPlanningEvents.length === 0">
+      Aucune prise prévue pour ce jour.
+    </p>
+  </div>
+    <div class="health-pagination" *ngIf="totalPlanningEventPages > 1">
+    <button
+      type="button"
+      class="ts-button"
+      (click)="previousPlanningEventPage()"
+      [disabled]="planningEventPage === 1"
+    >
+      Précédent
+    </button>
+
+    <button
+      type="button"
+      class="pagination-number"
+      *ngFor="let pageNumber of getPlanningEventPages()"
+      [class.active]="pageNumber === planningEventPage"
+      (click)="goToPlanningEventPage(pageNumber)"
+    >
+      {{ pageNumber }}
+    </button>
+
+    <button
+      type="button"
+      class="ts-button"
+      (click)="nextPlanningEventPage()"
+      [disabled]="planningEventPage === totalPlanningEventPages"
+    >
+      Suivant
+    </button>
+  </div>
+</section>
+
+      </section>
+
+      <div class="two-column-grid" *ngIf="!isLoadingSante">
+        <section id="allergies" class="table-card">
+          <h3>Allergies du groupe</h3>
+          <div class="stack-list">
+            <article class="stack-item" *ngFor="let enfant of enfants" [hidden]="!enfant.allergies">
+              <strong>{{ enfant.prenom }} {{ enfant.nom }}</strong>
+              <p class="muted">{{ enfant.allergies }}</p>
+            </article>
+            <p class="muted" *ngIf="!hasAllergiesRenseignees()">
+              Aucune allergie renseignee.
+            </p>
+          </div>
+        </section>
+
+        <section id="incidents" class="table-card">
+          <h3>Incidents recents</h3>
+
+          <div class="stack-list">
+            <article class="stack-item" *ngFor="let obs of filteredObservationsRecentesPagines">
+              <strong>
+                {{ obs.enfantPrenom }} {{ obs.enfantNom }} &bull;
+                {{ labelObservationType(obs.type) }}
+              </strong>
+
+              <p class="muted">{{ obs.titre }} &bull; {{ obs.creeLe }}</p>
+              <p class="muted">{{ obs.description }}</p>
+            </article>
+
+            <p class="muted" *ngIf="filteredObservationsRecentes.length === 0 && !searchTerm.trim()">
+              Aucun incident declare.
+            </p>
+
+            <p class="muted" *ngIf="filteredObservationsRecentes.length === 0 && searchTerm.trim()">
+              Aucun incident ne correspond a votre recherche.
+            </p>
+          </div>
+
+          <div class="health-pagination" *ngIf="totalIncidentsPages > 1">
+            <button
+              type="button"
+              class="ts-button"
+              (click)="previousIncidentsPage()"
+              [disabled]="incidentsPage === 1"
+            >
+              Précédent
+            </button>
+
+            <button
+              type="button"
+              class="pagination-number"
+              *ngFor="let pageNumber of getIncidentsPages()"
+              [class.active]="pageNumber === incidentsPage"
+              (click)="goToIncidentsPage(pageNumber)"
+            >
+              {{ pageNumber }}
+            </button>
+
+            <button
+              type="button"
+              class="ts-button"
+              (click)="nextIncidentsPage()"
+              [disabled]="incidentsPage === totalIncidentsPages"
+            >
+              Suivant
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <section class="table-card" style="margin-top:16px;" *ngIf="!isLoadingSante">
+        <h3>Conditions sanitaires & traitements</h3>
+
+        <div class="stack-list" *ngIf="enfantsAvecSante.length > 0">
+          <article class="stack-item" *ngFor="let row of filteredEnfantsAvecSantePagines">
+            <strong>{{ row.enfant.prenom }} {{ row.enfant.nom }}</strong>
+
+            <p class="muted" *ngIf="row.conditions.length === 0">
+              Aucune condition sanitaire.
+            </p>
+
+            <div class="health-conditions-grid" *ngIf="row.conditions.length > 0">
+              <article class="health-condition-card" *ngFor="let condition of row.conditions">
+                <div class="health-condition-card__top">
+                  <div>
+                    <h4>{{ condition.nomCondition }}</h4>
+                    <p class="muted">
+                      {{ condition.type === 'MALADIE_CHRONIQUE' ? 'Maladie chronique' : 'Maladie temporaire' }}
+                    </p>
+                  </div>
+                </div>
+
+                <p class="muted">
+                  {{ condition.description || 'Sans description' }}
+                </p>
+
+                <div class="health-traitements" *ngIf="condition.traitements && condition.traitements.length > 0">
+                  <h5>Traitements</h5>
+
+                  <div class="health-traitements-grid">
+                    <article class="traitement-mini-card" *ngFor="let traitement of condition.traitements">
+                      <div class="traitement-mini-card__top">
+                        <strong>{{ traitement.nomTraitement }}</strong>
+                        <span class="tag tag--mint">{{ traitement.statut }}</span>
+                      </div>
+
+                      <p class="muted">
+                        {{ traitement.heuresPrises?.length || 0 }} fois/jour
+                      </p>
+
+                      <p class="muted">
+                        Heures:
+                        {{ traitement.heuresPrises?.length ? traitement.heuresPrises.join(', ') : '-' }}
+                      </p>
+                    </article>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </article>
+        </div>
+
+        <p class="muted" *ngIf="enfantsAvecSante.length === 0">
+          Aucun enfant a afficher.
+        </p>
+
+        <p class="muted" *ngIf="enfantsAvecSante.length > 0 && filteredEnfantsAvecSante.length === 0">
+          Aucun enfant ne correspond a votre recherche.
+        </p>
+
+        <div class="health-pagination" *ngIf="totalSantePages > 1">
+          <button
+            type="button"
+            class="ts-button"
+            (click)="previousSantePage()"
+            [disabled]="santePage === 1"
+          >
+            Précédent
+          </button>
+
+          <button
+            type="button"
+            class="pagination-number"
+            *ngFor="let pageNumber of getSantePages()"
+            [class.active]="pageNumber === santePage"
+            (click)="goToSantePage(pageNumber)"
+          >
+            {{ pageNumber }}
+          </button>
+
+          <button
+            type="button"
+            class="ts-button"
+            (click)="nextSantePage()"
+            [disabled]="santePage === totalSantePages"
+          >
+            Suivant
+          </button>
+        </div>
+      </section>
+
+      <app-animatrice-declarer-changement
+        *ngIf="!isLoadingSante"
+        [enfants]="enfants"
+        (error)="onObservationError($event)"
+        (success)="onObservationSuccess($event)"
+        (needsReauth)="onObservationNeedsReauth($event)"
+        (sent)="onObservationSent()"
+      ></app-animatrice-declarer-changement>
+
+      <app-traitement-history *ngIf="!isLoadingSante"></app-traitement-history>
+    </section>
+
+    <section *ngSwitchCase="'activites'" class="workspace-page">
+      <section id="programme" class="table-card">
+        <h3>Programme hebdomadaire</h3>
+        <div class="week-grid">
+          <div></div>
+          <div class="week-grid__header">Lun</div>
+          <div class="week-grid__header">Mar</div>
+          <div class="week-grid__header">Mer</div>
+          <div class="week-grid__header">Jeu</div>
+          <div class="week-grid__header">Ven</div>
+
+          <div class="menu-grid__row-label">Matin</div>
+          <div class="week-cell">Lecture sensorielle</div>
+          <div class="week-cell">Motricite</div>
+          <div class="week-cell">Peinture</div>
+          <div class="week-cell">Musique</div>
+          <div class="week-cell">Jeux cooperatifs</div>
+
+          <div class="menu-grid__row-label">Apres-midi</div>
+          <div class="week-cell">Repos</div>
+          <div class="week-cell">Sortie jardin</div>
+          <div class="week-cell">Parcours moteur</div>
+          <div class="week-cell">Gouter festif</div>
+          <div class="week-cell">Bilan</div>
+        </div>
+      </section>
+
+      <div class="two-column-grid">
+        <section id="evenements" class="table-card">
+          <h3>Evenements</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Fete du printemps</strong>
+              <p class="muted">Participation des groupes Papillons et Tournesols.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="menus" class="table-card">
+          <h3>Menus</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Jeudi</strong>
+              <p class="muted">Semoule, dinde, petits pois</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'messages'" class="workspace-page">
+      <section id="conversations" class="conversation-layout">
+        <aside class="chat-sidebar">
+          <article class="message-preview message-preview--active">
+            <strong>Sonia Ben Salah</strong>
+            <p class="muted">Question sur le dejeuner</p>
+          </article>
+          <article class="message-preview">
+            <strong>Yassine Gharbi</strong>
+            <p class="muted">Absence vendredi</p>
+          </article>
+        </aside>
+
+        <section class="chat-panel">
+          <h3>Conversation parent</h3>
+          <div class="chat-thread">
+            <article class="bubble bubble--other">
+              Bonjour, pouvez-vous confirmer si Lina a bien dejeuner ?
+            </article>
+            <article class="bubble bubble--self">
+              Oui, tout s est tres bien passe aujourd hui.
+            </article>
+          </div>
+          <div class="chat-composer">
+            <input placeholder="Repondre au parent..." />
+            <button type="button" class="ts-button ts-button--primary">Envoyer</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="nouveau-message" class="table-card">
+        <h3>Nouveau message</h3>
+        <div class="form-grid">
+          <div>
+            <label>Message</label>
+            <textarea placeholder="Preparer un message a destination d un parent."></textarea>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'formations'" class="workspace-page">
+      <section id="mes-formations" class="table-card">
+        <h3>Mes formations</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Communication bienveillante</strong>
+            <p class="muted">En cours jusqu au 18 avril</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="catalogue" class="table-card">
+        <h3>Catalogue</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Ateliers sensoriels</strong>
+            <p class="muted">Disponible au catalogue</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="certificats" class="table-card">
+        <h3>Certificats</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Certificat premiers secours</strong>
+            <p class="muted">Obtenu le 14 janvier 2026</p>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'planning'" class="workspace-page">
+      <section id="calendrier" class="calendar-card">
+        <h3>Planning mensuel</h3>
+        <div class="calendar-grid">
+          <div class="calendar-day calendar-day--selected">1</div>
+          <div class="calendar-day">2</div>
+          <div class="calendar-day">3</div>
+          <div class="calendar-day">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day">6</div>
+          <div class="calendar-day">7</div>
+        </div>
+      </section>
+
+      <section id="absences" class="table-card">
+        <h3>Absences</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>18 au 19 avril</strong>
+            <p class="muted">Conge en attente de validation</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="demander-conge" class="table-card">
+        <h3>Demander un conge</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Type</label>
+            <select>
+              <option>Conge paye</option>
+              <option>Absence exceptionnelle</option>
+            </select>
+          </div>
+          <div>
+            <label>Periode</label>
+            <input type="date" />
+          </div>
+        </div>
+      </section>
+    </section>
+  </ng-container>
+</div>

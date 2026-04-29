@@ -1,0 +1,44 @@
+<footer id="contact" class="site-footer">
+  <div class="ts-container site-footer__grid">
+    <div>
+      <a routerLink="/" class="brand brand--footer">
+        <span class="brand__mark">TS</span>
+        <span>TinySpring</span>
+      </a>
+      <p class="site-footer__text">
+        Une plateforme claire et douce pour relier les familles et l equipe pedagogique.
+      </p>
+    </div>
+
+    <div>
+      <h3>Navigation</h3>
+      <a
+        *ngFor="let item of navItems"
+        [routerLink]="['/']"
+        [fragment]="item.fragment"
+        class="site-footer__link">
+        {{ item.label }}
+      </a>
+    </div>
+
+    <div>
+      <h3>Services</h3>
+      <span class="site-footer__link">Enfants et sante</span>
+      <span class="site-footer__link">Activites et menus</span>
+      <span class="site-footer__link">Messages et trajets</span>
+      <span class="site-footer__link">Boutique</span>
+    </div>
+
+    <div>
+      <h3>Contact</h3>
+      <span class="site-footer__link">contact&#64;tinyspring.local</span>
+      <span class="site-footer__link">+216 70 000 000</span>
+      <span class="site-footer__link">Tunis, Tunisie</span>
+      <a routerLink="/connexion" class="site-footer__pill">Acceder a mon espace</a>
+    </div>
+  </div>
+
+  <div class="ts-container site-footer__bottom">
+    © 2025 TinySpring. Tous droits reserves.
+  </div>
+</footer>
