@@ -5,7 +5,7 @@ import com.tinyspring.garderie.dto.Events.DailyMenuResponse;
 import com.tinyspring.garderie.entity.events.DailyMenu;
 import com.tinyspring.garderie.entity.events.WeeklyMenu;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
-import com.tinyspring.garderie.mappeer.DailyMenuMapper;
+import com.tinyspring.garderie.mapper.DailyMenuMapper;
 import com.tinyspring.garderie.repository.events.DailyMenuRepository;
 import com.tinyspring.garderie.repository.events.WeeklyMenuRepository;
 import lombok.RequiredArgsConstructor;

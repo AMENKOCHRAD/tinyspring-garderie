@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.mappeer;
+package com.tinyspring.garderie.mapper;
 
 import com.tinyspring.garderie.dto.Events.DishRequest;
 import com.tinyspring.garderie.dto.Events.DishResponse;

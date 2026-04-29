@@ -61,4 +61,5 @@ class DailyMenuRestControllerTest {
 
         verify(dailyMenuService).delete(1L);
     }
+
 }

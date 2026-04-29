@@ -2,9 +2,7 @@ package com.tinyspring.garderie.controller.events;
 
 import com.tinyspring.garderie.dto.Events.*;
 import com.tinyspring.garderie.entity.events.Event;
-import com.tinyspring.garderie.entity.events.EventRating;
-import com.tinyspring.garderie.entity.events.RegistrationStatus;
-import com.tinyspring.garderie.mappeer.EventMapper;
+import com.tinyspring.garderie.mapper.EventMapper;
 import com.tinyspring.garderie.repository.events.EventRatingRepository;
 import com.tinyspring.garderie.repository.events.EventRegistrationRepository;
 import com.tinyspring.garderie.service.events.EventRecommendationService;
@@ -43,9 +41,6 @@ class EventRestControllerTest {
 
         when(eventService.create(request)).thenReturn(event);
         when(eventMapper.toResponse(event)).thenReturn(response);
-        when(eventRegistrationRepository.countByEventIdAndStatusIn(anyLong(), anySet())).thenReturn(0L);
-        when(eventRegistrationRepository.countByEventIdAndStatus(anyLong(), any())).thenReturn(0L);
-        when(eventRatingRepository.findByEventId(anyLong())).thenReturn(List.of());
 
         ResponseEntity<EventResponse> result = controller.create(request);
 
@@ -72,9 +67,6 @@ class EventRestControllerTest {
 
         when(eventService.getPublished()).thenReturn(List.of(event));
         when(eventMapper.toResponse(event)).thenReturn(response);
-        when(eventRegistrationRepository.countByEventIdAndStatusIn(anyLong(), anySet())).thenReturn(0L);
-        when(eventRegistrationRepository.countByEventIdAndStatus(anyLong(), any())).thenReturn(0L);
-        when(eventRatingRepository.findByEventId(anyLong())).thenReturn(List.of());
 
         ResponseEntity<List<EventResponse>> result = controller.getPublished();
 
@@ -91,9 +83,6 @@ class EventRestControllerTest {
 
         when(eventService.getById(1L)).thenReturn(event);
         when(eventMapper.toResponse(event)).thenReturn(response);
-        when(eventRegistrationRepository.countByEventIdAndStatusIn(anyLong(), anySet())).thenReturn(0L);
-        when(eventRegistrationRepository.countByEventIdAndStatus(anyLong(), any())).thenReturn(0L);
-        when(eventRatingRepository.findByEventId(anyLong())).thenReturn(List.of());
 
         ResponseEntity<EventResponse> result = controller.getById(1L);
 
@@ -118,9 +107,6 @@ class EventRestControllerTest {
 
         when(eventService.publish(1L)).thenReturn(event);
         when(eventMapper.toResponse(event)).thenReturn(response);
-        when(eventRegistrationRepository.countByEventIdAndStatusIn(anyLong(), anySet())).thenReturn(0L);
-        when(eventRegistrationRepository.countByEventIdAndStatus(anyLong(), any())).thenReturn(0L);
-        when(eventRatingRepository.findByEventId(anyLong())).thenReturn(List.of());
 
         ResponseEntity<EventResponse> result = controller.publish(1L);
 

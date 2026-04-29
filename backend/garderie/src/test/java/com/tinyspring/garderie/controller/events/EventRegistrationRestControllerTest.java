@@ -3,7 +3,7 @@ package com.tinyspring.garderie.controller.events;
 import com.tinyspring.garderie.dto.Events.EventRegistrationRequest;
 import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
 import com.tinyspring.garderie.entity.events.EventRegistration;
-import com.tinyspring.garderie.mappeer.EventRegistrationMapper;
+import com.tinyspring.garderie.mapper.EventRegistrationMapper;
 import com.tinyspring.garderie.service.events.EventRegistrationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

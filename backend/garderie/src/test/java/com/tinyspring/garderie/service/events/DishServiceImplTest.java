@@ -5,7 +5,7 @@ import com.tinyspring.garderie.dto.Events.DishResponse;
 import com.tinyspring.garderie.entity.events.DailyMenu;
 import com.tinyspring.garderie.entity.events.Dish;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
-import com.tinyspring.garderie.mappeer.DishMapper;
+import com.tinyspring.garderie.mapper.DishMapper;
 import com.tinyspring.garderie.repository.events.DailyMenuRepository;
 import com.tinyspring.garderie.repository.events.DishRepository;
 import org.junit.jupiter.api.Test;

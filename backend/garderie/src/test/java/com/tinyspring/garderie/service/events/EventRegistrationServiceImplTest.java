@@ -293,4 +293,22 @@ class EventRegistrationServiceImplTest {
         assertThrows(InvalidStatusTransitionException.class,
                 () -> service.markAbsent(100L));
     }
+    @Test
+    void cancel_shouldThrow_whenRegistrationNotFound() {
+        when(eventRegistrationRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.cancel(1L));
+
+        verify(eventRegistrationRepository, never()).save(any());
+    }
+    @Test
+    void markAttended_shouldThrow_whenRegistrationNotFound() {
+        when(eventRegistrationRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.markAttended(1L));
+
+        verify(eventRepository, never()).findById(anyLong());
+    }
 }

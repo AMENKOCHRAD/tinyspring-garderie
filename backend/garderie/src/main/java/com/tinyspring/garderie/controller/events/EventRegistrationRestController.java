@@ -2,7 +2,7 @@ package com.tinyspring.garderie.controller.events;
 
 import com.tinyspring.garderie.dto.Events.EventRegistrationRequest;
 import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
-import com.tinyspring.garderie.mappeer.EventRegistrationMapper;
+import com.tinyspring.garderie.mapper.EventRegistrationMapper;
 import com.tinyspring.garderie.service.events.EventRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

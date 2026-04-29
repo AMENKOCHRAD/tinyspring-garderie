@@ -61,4 +61,5 @@ class DishRestControllerTest {
 
         verify(dishService).delete(1L);
     }
+
 }

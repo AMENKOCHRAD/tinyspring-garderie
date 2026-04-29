@@ -10,9 +10,9 @@ import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.entity.events.*;
 import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
-import com.tinyspring.garderie.mappeer.EventMapper;
-import com.tinyspring.garderie.mappeer.EventRegistrationMapper;
-import com.tinyspring.garderie.mappeer.WeeklyMenuMapper;
+import com.tinyspring.garderie.mapper.EventMapper;
+import com.tinyspring.garderie.mapper.EventRegistrationMapper;
+import com.tinyspring.garderie.mapper.WeeklyMenuMapper;
 import com.tinyspring.garderie.repository.Children.ChildRepository;
 import com.tinyspring.garderie.repository.Classes.ClasseRepository;
 import com.tinyspring.garderie.repository.UserRepository;
@@ -473,6 +473,23 @@ class ParentPortalServiceImplTest {
         List<?> result = service.getEvents(1L);
 
         assertNotNull(result);
+    }
+
+    @Test
+    void getEvents_shouldThrow_whenUserIsNotParent() {
+        Role role = new Role();
+        role.setName(RoleName.ADMIN);
+
+        User user = new User();
+        user.setId(1L);
+        user.setRole(role);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertThrows(InvalidStatusTransitionException.class,
+                () -> service.getEvents(1L));
+
+        verify(childRepository, never()).findByParentIdOrderByFirstNameAscLastNameAsc(anyLong());
     }
 
     @Test

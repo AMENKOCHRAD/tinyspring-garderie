@@ -8,7 +8,7 @@ import com.tinyspring.garderie.entity.events.EventRating;
 import com.tinyspring.garderie.entity.events.EventStatus;
 import com.tinyspring.garderie.exception.Events.InvalidStatusTransitionException;
 import com.tinyspring.garderie.exception.Events.ResourceNotFoundException;
-import com.tinyspring.garderie.mappeer.EventMapper;
+import com.tinyspring.garderie.mapper.EventMapper;
 import com.tinyspring.garderie.repository.Children.ChildRepository;
 import com.tinyspring.garderie.repository.Classes.ClasseRepository;
 import com.tinyspring.garderie.repository.events.EventRatingRepository;

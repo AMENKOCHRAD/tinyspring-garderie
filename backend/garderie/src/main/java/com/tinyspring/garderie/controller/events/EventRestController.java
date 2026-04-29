@@ -4,7 +4,7 @@ import com.tinyspring.garderie.dto.Events.*;
 import com.tinyspring.garderie.entity.events.Event;
 import com.tinyspring.garderie.entity.events.EventRating;
 import com.tinyspring.garderie.entity.events.RegistrationStatus;
-import com.tinyspring.garderie.mappeer.EventMapper;
+import com.tinyspring.garderie.mapper.EventMapper;
 import com.tinyspring.garderie.repository.events.EventRegistrationRepository;
 import com.tinyspring.garderie.service.events.EventRecommendationService;
 import com.tinyspring.garderie.service.events.EventService;

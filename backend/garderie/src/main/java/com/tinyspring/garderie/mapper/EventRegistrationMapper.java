@@ -1,4 +1,4 @@
-package com.tinyspring.garderie.mappeer;
+package com.tinyspring.garderie.mapper;
 
 import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
 import com.tinyspring.garderie.entity.events.EventRegistration;
