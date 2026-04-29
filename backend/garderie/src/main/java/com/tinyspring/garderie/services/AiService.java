@@ -86,6 +86,7 @@ public class AiService {
         } catch (Exception e) {
             e.printStackTrace();
             return Map.of("error", e.getMessage());
+        }
     }
 
     // --- 2. Decision Tree (Recommandation de Salle - basé sur room_dataset.csv) ---
