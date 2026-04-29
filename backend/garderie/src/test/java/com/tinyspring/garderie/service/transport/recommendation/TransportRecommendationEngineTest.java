@@ -6,6 +6,7 @@ import com.tinyspring.garderie.entity.RoleName;
 import com.tinyspring.garderie.entity.User;
 import com.tinyspring.garderie.entity.transport.DemandeTransport;
 import com.tinyspring.garderie.entity.transport.Enfant;
+import com.tinyspring.garderie.entity.transport.AffectationTransport;
 import com.tinyspring.garderie.entity.transport.SensTrajetDemandeTransport;
 import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 import com.tinyspring.garderie.entity.transport.Trajet;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransportRecommendationEngineTest {
@@ -110,6 +112,113 @@ class TransportRecommendationEngineTest {
         assertTrue(decision.affectationAutomatiquePossible());
         assertEquals(15L, decision.recommendationCandidate().trajet().getId());
         assertEquals("DISTANCE_GPS", decision.modeEvaluation());
+    }
+
+    @Test
+    void shouldReturnReasonWhenNoCandidateTrajetExists() {
+        TransportRecommendationEngine engine = new TransportRecommendationEngine(defaultProperties());
+        DemandeTransport demande = buildDemande(6L, 106L, "Ariana", 36.85, 10.2);
+
+        TransportRecommendationEngine.DemandeRecommendationDecision decision = engine.recommendDemande(
+                demande,
+                List.of(),
+                List.of(demande),
+                List.of()
+        );
+
+        assertFalse(decision.affectationAutomatiquePossible());
+        assertNull(decision.recommendationCandidate());
+        assertEquals("Aucun trajet disponible avec de la capacite", decision.motifRefus());
+        assertEquals("AUCUN_TRAJET", decision.modeEvaluation());
+    }
+
+    @Test
+    void shouldReturnNoMatchWhenTextSimilarityIsZero() {
+        TransportRecommendationEngine engine = new TransportRecommendationEngine(defaultProperties());
+        DemandeTransport demande = buildTextOnlyDemande(7L, 107L, "Bizerte Nord");
+        Trajet trajet = buildTextOnlyTrajet(17L, "Sousse Sud");
+
+        TransportRecommendationEngine.DemandeRecommendationDecision decision = engine.recommendDemande(
+                demande,
+                List.of(trajet),
+                List.of(demande),
+                List.of()
+        );
+
+        assertFalse(decision.affectationAutomatiquePossible());
+        assertNull(decision.recommendationCandidate());
+        assertEquals("AUCUNE_CORRESPONDANCE", decision.modeEvaluation());
+    }
+
+    @Test
+    void shouldUseAcceptedAffectationCoveragePointsToRecommendTrajet() {
+        TransportRecommendationEngine engine = new TransportRecommendationEngine(defaultProperties());
+        DemandeTransport existing = buildDemande(8L, 108L, "Zone Couverte", 36.9000, 10.1000);
+        existing.setStatut(StatutDemandeTransport.ACCEPTEE);
+
+        DemandeTransport incoming = buildDemande(9L, 109L, "Zone Couverte", 36.9002, 10.1003);
+        Trajet trajet = buildTextOnlyTrajet(18L, "Zone loin");
+
+        AffectationTransport affectation = new AffectationTransport(existing.getEnfant(), trajet.getTransport(), trajet, "Zone Couverte");
+        setId(affectation, 700L);
+
+        TransportRecommendationEngine.DemandeRecommendationDecision decision = engine.recommendDemande(
+                incoming,
+                List.of(trajet),
+                List.of(existing, incoming),
+                List.of(affectation)
+        );
+
+        assertTrue(decision.affectationAutomatiquePossible());
+        assertEquals(18L, decision.recommendationCandidate().trajet().getId());
+        assertEquals("DISTANCE_GPS", decision.modeEvaluation());
+    }
+
+    @Test
+    void shouldSuggestNewRouteFromGeoCluster() {
+        TransportRecommendationEngine engine = new TransportRecommendationEngine(defaultProperties());
+        List<TransportRecommendationEngine.DemandeRecommendationDecision> decisions = List.of(
+                rejectedDecision(buildDemande(10L, 110L, "Lac 1", 36.84, 10.27), 3.2),
+                rejectedDecision(buildDemande(11L, 111L, "Lac 1", 36.841, 10.271), 3.4),
+                rejectedDecision(buildDemande(12L, 112L, "Lac 1", 36.842, 10.272), 3.1)
+        );
+
+        List<TransportRecommendationEngine.NouveauTrajetSuggestion> suggestions = engine.buildNewRouteSuggestions(decisions);
+
+        assertEquals(1, suggestions.size());
+        assertEquals(3, suggestions.get(0).demandes().size());
+        assertEquals("Lac 1", suggestions.get(0).zoneCentrale());
+    }
+
+    @Test
+    void shouldSuggestNewRouteFromTextClusterWithoutCoordinates() {
+        TransportRecommendationEngine engine = new TransportRecommendationEngine(defaultProperties());
+        DemandeTransport demande1 = buildTextOnlyDemande(13L, 113L, "Kalaat El Andalous");
+        DemandeTransport demande2 = buildTextOnlyDemande(14L, 114L, "Kalaat El Andalous");
+
+        List<TransportRecommendationEngine.NouveauTrajetSuggestion> suggestions = engine.buildNewRouteSuggestions(List.of(
+                rejectedDecision(demande1, null),
+                rejectedDecision(demande2, null)
+        ));
+
+        assertEquals(1, suggestions.size());
+        assertEquals("Kalaat El Andalous", suggestions.get(0).zoneCentrale());
+        assertEquals(2, suggestions.get(0).demandes().size());
+        assertNull(suggestions.get(0).latitudeCentre());
+    }
+
+    @Test
+    void shouldIgnoreClustersBelowMinimumThreshold() {
+        TransportRecommendationProperties properties = defaultProperties();
+        properties.setNombreMinimalDemandesPourNouveauTrajet(3);
+        TransportRecommendationEngine engine = new TransportRecommendationEngine(properties);
+
+        List<TransportRecommendationEngine.NouveauTrajetSuggestion> suggestions = engine.buildNewRouteSuggestions(List.of(
+                rejectedDecision(buildTextOnlyDemande(15L, 115L, "Marsa"), null),
+                rejectedDecision(buildTextOnlyDemande(16L, 116L, "Marsa"), null)
+        ));
+
+        assertTrue(suggestions.isEmpty());
     }
 
     private TransportRecommendationProperties defaultProperties() {
@@ -224,6 +333,24 @@ class TransportRecommendationEngineTest {
         trajet.setLongitudeDestination(longitude);
         setId(trajet, id);
         return trajet;
+    }
+
+    private TransportRecommendationEngine.DemandeRecommendationDecision rejectedDecision(DemandeTransport demande, Double distance) {
+        return new TransportRecommendationEngine.DemandeRecommendationDecision(
+                demande,
+                new TransportRecommendationEngine.ZonePoint(
+                        demande.getPointRamassage(),
+                        demande.getLatitudeMaison(),
+                        demande.getLongitudeMaison(),
+                        "COORDONNEES_DEMANDE"
+                ),
+                null,
+                false,
+                0,
+                distance,
+                "Aucun trajet adequat",
+                "AUCUNE_CORRESPONDANCE"
+        );
     }
 
     private void setId(Object target, Long id) {
