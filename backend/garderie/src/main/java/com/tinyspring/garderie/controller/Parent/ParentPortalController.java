@@ -2,7 +2,7 @@ package com.tinyspring.garderie.controller.Parent;
 
 import com.tinyspring.garderie.dto.Events.*;
 import com.tinyspring.garderie.dto.Parent.ParentChildResponse;
-import com.tinyspring.garderie.service.Parent.ParentPortalService;
+import com.tinyspring.garderie.service.parent.ParentPortalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

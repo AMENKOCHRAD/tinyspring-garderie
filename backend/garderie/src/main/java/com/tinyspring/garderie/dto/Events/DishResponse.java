@@ -1,6 +1,6 @@
 package com.tinyspring.garderie.dto.Events;
 
-import com.tinyspring.garderie.entity.Events.MealType;
+import com.tinyspring.garderie.entity.events.MealType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

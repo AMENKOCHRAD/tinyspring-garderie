@@ -1,7 +1,7 @@
 package com.tinyspring.garderie.dto.Events;
 
-import com.tinyspring.garderie.entity.Events.EventStatus;
-import com.tinyspring.garderie.entity.Events.EventType;
+import com.tinyspring.garderie.entity.events.EventStatus;
+import com.tinyspring.garderie.entity.events.EventType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

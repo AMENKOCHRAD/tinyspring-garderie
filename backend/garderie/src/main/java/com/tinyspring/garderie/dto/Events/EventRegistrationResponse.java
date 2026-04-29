@@ -1,6 +1,6 @@
 package com.tinyspring.garderie.dto.Events;
 
-import com.tinyspring.garderie.entity.Events.RegistrationStatus;
+import com.tinyspring.garderie.entity.events.RegistrationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

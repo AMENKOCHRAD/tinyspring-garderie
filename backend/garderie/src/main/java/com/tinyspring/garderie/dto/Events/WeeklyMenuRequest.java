@@ -1,6 +1,6 @@
 package com.tinyspring.garderie.dto.Events;
 
-import com.tinyspring.garderie.entity.Events.MenuStatus;
+import com.tinyspring.garderie.entity.events.MenuStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

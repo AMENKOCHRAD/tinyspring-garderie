@@ -2,7 +2,7 @@ package com.tinyspring.garderie.mappeer;
 
 import com.tinyspring.garderie.dto.Events.WeeklyMenuRequest;
 import com.tinyspring.garderie.dto.Events.WeeklyMenuResponse;
-import com.tinyspring.garderie.entity.Events.WeeklyMenu;
+import com.tinyspring.garderie.entity.events.WeeklyMenu;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

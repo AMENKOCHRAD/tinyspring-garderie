@@ -2,7 +2,7 @@ package com.tinyspring.garderie.mappeer;
 
 import com.tinyspring.garderie.dto.Events.DishRequest;
 import com.tinyspring.garderie.dto.Events.DishResponse;
-import com.tinyspring.garderie.entity.Events.Dish;
+import com.tinyspring.garderie.entity.events.Dish;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

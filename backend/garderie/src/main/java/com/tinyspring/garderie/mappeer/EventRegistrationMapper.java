@@ -1,7 +1,7 @@
 package com.tinyspring.garderie.mappeer;
 
 import com.tinyspring.garderie.dto.Events.EventRegistrationResponse;
-import com.tinyspring.garderie.entity.Events.EventRegistration;
+import com.tinyspring.garderie.entity.events.EventRegistration;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
