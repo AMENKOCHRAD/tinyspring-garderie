@@ -1,0 +1,171 @@
+package com.tinyspring.garderie.entity;
+
+import com.tinyspring.garderie.entity.enums.DecisionRecommendation;
+import com.tinyspring.garderie.entity.enums.ReclamationCategory;
+import com.tinyspring.garderie.entity.enums.ReclamationPriority;
+import com.tinyspring.garderie.entity.enums.ReclamationStatus;
+import com.tinyspring.garderie.entity.enums.SmartPriorityLevel;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "reclamation")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Reclamation {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    private ReclamationStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private ReclamationPriority priority;
+
+    @Enumerated(EnumType.STRING)
+    private ReclamationCategory category;
+
+    @Enumerated(EnumType.STRING)
+    private ReclamationCategory predictedCategory;
+
+    private Double classificationConfidence;
+
+    private Boolean autoClassified;
+
+    @Column(columnDefinition = "TEXT")
+    private String adminComment;
+
+    private String imageName;
+    private String imagePath;
+
+    private String attachmentName;
+    private String attachmentPath;
+    private String attachmentType;
+
+    @Column(name = "predicted_priority")
+    @Enumerated(EnumType.STRING)
+    private ReclamationPriority predictedPriority;
+
+    @Column(name = "priority_confidence")
+    private Double priorityConfidence;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decision_recommendation")
+    private DecisionRecommendation decisionRecommendation;
+
+    @Column(name = "decision_confidence")
+    private Double decisionConfidence;
+
+    private Boolean recurring;
+
+    private Integer recurrenceCount;
+
+    @Column(columnDefinition = "TEXT")
+    private String recurrenceReason;
+
+    @Column(name = "smart_priority_score")
+    private Integer smartPriorityScore;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "smart_priority_level")
+    private SmartPriorityLevel smartPriorityLevel;
+
+    @Column(name = "smart_priority_reason", columnDefinition = "TEXT")
+    private String smartPriorityReason;
+
+    // ─────────────────────────────────────────────
+    // Escalade automatique intelligente
+    // ─────────────────────────────────────────────
+
+    @Column(name = "auto_escalated")
+    private Boolean autoEscalated;
+
+    @Column(name = "escalated_at")
+    private LocalDateTime escalatedAt;
+
+    @Column(name = "escalation_reason", columnDefinition = "TEXT")
+    private String escalationReason;
+
+    @Column(name = "recommended_service")
+    private String recommendedService;
+
+    @Column(name = "recommended_delay")
+    private String recommendedDelay;
+
+    @Column(name = "recommended_action", columnDefinition = "TEXT")
+    private String recommendedAction;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_id", nullable = false)
+    private User parent;
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_admin_id")
+    private User assignedAdmin;
+
+    @OneToOne
+    @JoinColumn(name = "conversation_id", unique = true)
+    private Conversation conversation;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+
+        if (this.status == null) {
+            this.status = ReclamationStatus.OPEN;
+        }
+
+        if (this.priority == null) {
+            this.priority = ReclamationPriority.MEDIUM;
+        }
+
+        if (this.category == null) {
+            this.category = ReclamationCategory.AUTRE;
+        }
+
+        if (this.autoClassified == null) {
+            this.autoClassified = false;
+        }
+
+        if (this.recurring == null) {
+            this.recurring = false;
+        }
+
+        if (this.recurrenceCount == null) {
+            this.recurrenceCount = 0;
+        }
+
+        if (this.smartPriorityScore == null) {
+            this.smartPriorityScore = 0;
+        }
+
+        if (this.smartPriorityLevel == null) {
+            this.smartPriorityLevel = SmartPriorityLevel.LOW;
+        }
+
+        if (this.autoEscalated == null) {
+            this.autoEscalated = false;
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}
