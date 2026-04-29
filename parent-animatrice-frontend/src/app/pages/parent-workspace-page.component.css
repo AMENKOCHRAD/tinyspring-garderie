@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+.route-map-block {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+}
+
+.route-preview-card {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(193, 222, 218, 0.16);
+  border: 1px solid rgba(193, 222, 218, 0.7);
+}

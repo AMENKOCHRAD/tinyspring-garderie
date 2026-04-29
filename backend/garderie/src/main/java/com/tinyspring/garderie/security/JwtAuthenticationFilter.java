@@ -42,7 +42,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (Exception exception) {
+<<<<<<< HEAD
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+=======
+            filterChain.doFilter(request, response);
+>>>>>>> origin/gestion-transports
             return;
         }
 
@@ -57,9 +61,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+<<<<<<< HEAD
             } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
+=======
+>>>>>>> origin/gestion-transports
             }
         }
 

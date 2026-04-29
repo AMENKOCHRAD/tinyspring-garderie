@@ -21,7 +21,11 @@ const routes: Routes = [
     children: [
       {
         path: '',
+<<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
         redirectTo: 'analytics',
+=======
+        redirectTo: '/login',
+>>>>>>> origin/gestion-transports:frontend/angular/src/app/app-routing.module.ts
         pathMatch: 'full'
       },
       {
@@ -32,6 +36,7 @@ const routes: Routes = [
           )
       },
       {
+<<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
         path: 'gestion-enfants',
         component: GestionEnfantsComponent,
         children: [
@@ -65,6 +70,13 @@ const routes: Routes = [
             component: StatistiquesEnfantsComponent
           }
         ]
+=======
+        path: 'transport',
+        loadComponent: () =>
+          import('./demo/transport/transport-dashboard/transport-dashboard.component').then(
+            (c) => c.TransportDashboardComponent
+          )
+>>>>>>> origin/gestion-transports:frontend/angular/src/app/app-routing.module.ts
       },
       {
         path: 'component',

@@ -1,0 +1,460 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">{{ pageMeta().chip }}</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p class="muted">{{ pageMeta().description }}</p>
+    </div>
+    <div class="page-header-meta">{{ todayLabel }}</div>
+  </section>
+
+  <ng-container [ngSwitch]="page()">
+    <section *ngSwitchCase="'tableau-de-bord'" class="workspace-page">
+      <div class="stats-grid">
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">E</span>
+            <span class="stat-card__value">{{ children().length }}</span>
+          </div>
+          <span class="stat-card__label">Mes enfants</span>
+        </article>
+        <article class="stat-card tone-blush">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-blush">T</span>
+            <span class="stat-card__value">{{ pendingDemandesCount() }}</span>
+          </div>
+          <span class="stat-card__label">Demandes en attente</span>
+        </article>
+        <article class="stat-card tone-lime">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-lime">C</span>
+            <span class="stat-card__value">{{ acceptedDemandesCount() }}</span>
+          </div>
+          <span class="stat-card__label">Demandes confirmees</span>
+        </article>
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">R</span>
+            <span class="stat-card__value">{{ childrenWithTransportCount() }}</span>
+          </div>
+          <span class="stat-card__label">Enfants avec trajet</span>
+        </article>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'enfants'" class="workspace-page">
+      <section id="profils" class="profile-cards">
+        <article *ngFor="let child of children()" class="profile-card">
+          <div class="inline-meta">
+            <span class="profile-avatar">{{ childInitials(child.nomComplet) }}</span>
+            <div>
+              <h3>{{ child.nomComplet }}</h3>
+              <p class="muted">Profil rattache a votre compte parent.</p>
+            </div>
+          </div>
+          <div class="badge-row">
+            <span class="tag tag--mint">Compte actif</span>
+          </div>
+        </article>
+        <article *ngIf="!children().length" class="profile-card">
+          <div>
+            <h3>Aucun enfant trouve</h3>
+            <p class="muted">Les profils enfants apparaitront ici apres chargement des donnees.</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="documents" class="table-card">
+        <h3>Documents</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Carnet de vaccination</strong>
+            <p class="muted">Mis a jour le 02 avril 2026</p>
+          </article>
+          <article class="stack-item">
+            <strong>Autorisation de sortie</strong>
+            <p class="muted">Valide pour le trimestre en cours</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="ajouter-enfant" class="table-card">
+        <h3>Ajouter un enfant</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Prenom et nom</label>
+            <input placeholder="Nom complet de l enfant" />
+          </div>
+          <div>
+            <label>Date de naissance</label>
+            <input type="date" />
+          </div>
+          <div>
+            <label>Contact d urgence</label>
+            <input placeholder="+216 ..." />
+          </div>
+          <div>
+            <label>Notes</label>
+            <input placeholder="Remarques utiles" />
+          </div>
+        </div>
+        <button type="button" class="ts-button ts-button--primary">Enregistrer</button>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'sante'" class="workspace-page">
+      <section id="allergies" class="table-card">
+        <h3>Allergies</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Lina Ben Salah</strong>
+            <p class="muted">Arachides • Pollen</p>
+          </article>
+          <article class="stack-item">
+            <strong>Adam Ben Salah</strong>
+            <p class="muted">Aucune allergie severe signalee</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="traitements" class="table-card">
+        <h3>Traitements</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Sirop anti-allergique</strong>
+            <p class="muted">Lina • 5 ml • 12h00</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="incidents" class="table-card">
+        <h3>Incidents</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Observation legere apres la recreation</strong>
+            <p class="muted">Suivi effectue et transmission faite aux parents.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="ajouter" class="table-card">
+        <h3>Ajouter une information sante</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Enfant</label>
+            <select>
+              <option>Lina Ben Salah</option>
+              <option>Adam Ben Salah</option>
+            </select>
+          </div>
+          <div>
+            <label>Type</label>
+            <select>
+              <option>Allergie</option>
+              <option>Traitement</option>
+              <option>Incident</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'activites'" class="workspace-page">
+      <section id="calendrier" class="calendar-card">
+        <h3>Calendrier des activites</h3>
+        <div class="calendar-grid">
+          <div class="calendar-day">1</div>
+          <div class="calendar-day">2</div>
+          <div class="calendar-day calendar-day--selected">3</div>
+          <div class="calendar-day">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day">6</div>
+          <div class="calendar-day">7</div>
+        </div>
+      </section>
+
+      <div class="two-column-grid">
+        <section id="evenements" class="table-card">
+          <h3>Evenements</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <span class="tag tag--mint">Sortie</span>
+              <strong>Visite du jardin botanique</strong>
+              <p class="muted">Mardi a 10h00 avec autorisation parentale.</p>
+            </article>
+            <article class="stack-item">
+              <span class="tag tag--blush">Fete</span>
+              <strong>Gouter du printemps</strong>
+              <p class="muted">Jeudi a 15h30 pour tous les groupes.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="autorisations" class="table-card">
+          <h3>Autorisations</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Jardin botanique</strong>
+              <p class="muted">Lina • En attente de validation</p>
+            </article>
+            <article class="stack-item">
+              <strong>Gouter du printemps</strong>
+              <p class="muted">Adam • Validation deja envoyee</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'menus'" class="workspace-page">
+      <section id="menus" class="table-card">
+        <h3>Menus de la semaine</h3>
+        <div class="menu-grid">
+          <div></div>
+          <div class="menu-grid__header">Lun</div>
+          <div class="menu-grid__header">Mar</div>
+          <div class="menu-grid__header">Mer</div>
+          <div class="menu-grid__header">Jeu</div>
+          <div class="menu-grid__header">Ven</div>
+
+          <div class="menu-grid__row-label">Dejeuner</div>
+          <div class="menu-cell">Poulet et carottes</div>
+          <div class="menu-cell">Pates et legumes</div>
+          <div class="menu-cell">Riz et lentilles</div>
+          <div class="menu-cell">Semoule et dinde</div>
+          <div class="menu-cell">Gratin doux</div>
+
+          <div class="menu-grid__row-label">Gouter</div>
+          <div class="menu-cell">Pomme</div>
+          <div class="menu-cell">Yaourt</div>
+          <div class="menu-cell">Gateau maison</div>
+          <div class="menu-cell">Compote</div>
+          <div class="menu-cell">Fruit de saison</div>
+        </div>
+      </section>
+
+      <section id="mensuel" class="calendar-card">
+        <h3>Calendrier mensuel</h3>
+        <div class="calendar-grid">
+          <div class="calendar-day">1</div>
+          <div class="calendar-day">2</div>
+          <div class="calendar-day calendar-day--selected">3</div>
+          <div class="calendar-day">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day">6</div>
+          <div class="calendar-day">7</div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'messages'" class="workspace-page">
+      <section id="conversations" class="conversation-layout">
+        <aside class="chat-sidebar">
+          <article class="message-preview message-preview--active">
+            <strong>Equipe Papillons</strong>
+            <p class="muted">Retour sur la journee</p>
+          </article>
+          <article class="message-preview">
+            <strong>Direction</strong>
+            <p class="muted">Information generale</p>
+          </article>
+        </aside>
+
+        <section class="chat-panel">
+          <h3>Conversation active</h3>
+          <div class="chat-thread">
+            <article class="bubble bubble--other">
+              Bonjour, Lina a bien participe a l atelier nature ce matin.
+            </article>
+            <article class="bubble bubble--self">
+              Merci beaucoup pour le retour.
+            </article>
+          </div>
+          <div class="chat-composer">
+            <input placeholder="Ecrire un message..." />
+            <button type="button" class="ts-button ts-button--primary">Envoyer</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="nouveau-message" class="table-card">
+        <h3>Nouveau message</h3>
+        <div class="form-grid">
+          <div>
+            <label>Message</label>
+            <textarea placeholder="Decrivez votre demande."></textarea>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'trajets'" class="workspace-page">
+      <section id="mes-trajets" class="stack-list">
+        <article *ngFor="let demande of demandes()" class="trip-card">
+          <strong>{{ demande.enfantNomComplet }}</strong>
+          <p class="muted">
+            {{ demande.pointDepart }} vers {{ demande.destination }}
+            <span *ngIf="demande.heureDepart">• {{ demande.heureDepart }}</span>
+          </p>
+          <p class="muted">Souhaite: {{ demande.dateSouhaitee }} a {{ demande.heureSouhaitee }}</p>
+          <div class="badge-row">
+            <span [class]="getStatusClass(demande.statut)">{{ formatStatus(demande.statut) }}</span>
+            <span class="tag tag--mint">{{ getSensLabel(demande.sensTrajet) }}</span>
+            <span class="tag" [ngClass]="getAiStatusClass(demande)">{{ getAiStatusLabel(demande) }}</span>
+            <button type="button" class="ts-button ts-button--ghost" (click)="edit(demande)">Modifier</button>
+            <button type="button" class="ts-button ts-button--ghost" (click)="remove(demande.id)">Supprimer</button>
+          </div>
+          <div *ngIf="demande.revisionRequestMessage" class="stack-item">
+            <strong>Revision demandee</strong>
+            <p class="muted">{{ demande.revisionRequestMessage }}</p>
+          </div>
+          <div *ngIf="demande.aiAnalysisAvailable || demande.aiAnalysisError" class="stack-item">
+            <strong>Analyse IA transport</strong>
+            <p class="muted">
+              {{ getAiAnalysisLabel(demande) }}
+              <span *ngIf="demande.anomalyLevel">â€¢ Niveau: {{ demande.anomalyLevel }}</span>
+              <span *ngIf="demande.anomalyScore !== null">â€¢ Score: {{ formatAnomalyScore(demande.anomalyScore) }}</span>
+            </p>
+            <p *ngIf="demande.anomalyReasons.length" class="muted">Raisons: {{ demande.anomalyReasons.join(' | ') }}</p>
+            <p *ngIf="demande.aiAnalysisError" class="muted">Erreur IA: {{ demande.aiAnalysisError }}</p>
+          </div>
+        </article>
+        <article *ngIf="!demandes().length" class="trip-card">
+          <strong>Aucune demande enregistree</strong>
+          <p class="muted">Ajoutez votre premier besoin de transport via le formulaire ci-dessous.</p>
+        </article>
+      </section>
+
+      <section id="ajouter-trajet" class="table-card">
+        <h3>{{ editingId() ? 'Modifier une demande' : 'Ajouter un trajet' }}</h3>
+        <p class="muted">Choisissez le sens du trajet puis cliquez sur la carte pour positionner precisement la maison de l enfant.</p>
+        <div *ngIf="message()" class="stack-item">
+          <strong>{{ hasError() ? 'Erreur' : 'Information' }}</strong>
+          <p class="muted">{{ message() }}</p>
+        </div>
+        <div *ngIf="selectedChildHasActiveRequest()" class="stack-item">
+          <strong>Demande deja active</strong>
+          <p class="muted">Cet enfant possede deja une demande en attente, en revision parent ou acceptee.</p>
+        </div>
+        <div class="stack-item">
+          <strong>Adresse exacte de la garderie</strong>
+          <p class="muted">{{ adresseGarderie() }}</p>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid form-grid--two">
+          <div>
+            <label>Enfant</label>
+            <select formControlName="enfantId">
+              <option [ngValue]="0">Choisir un enfant</option>
+              <option *ngFor="let child of children()" [ngValue]="child.id">{{ child.nomComplet }}</option>
+            </select>
+            <p *ngIf="isFieldInvalid('enfantId')" class="muted">Selection obligatoire.</p>
+          </div>
+          <div>
+            <label>Sens du trajet</label>
+            <select formControlName="sensTrajet">
+              <option value="MAISON_VERS_GARDERIE">Maison -> Garderie</option>
+              <option value="GARDERIE_VERS_MAISON">Garderie -> Maison</option>
+            </select>
+          </div>
+
+          <div class="route-preview-card">
+            <strong>Depart automatique</strong>
+            <p class="muted">{{ getDepartLabel() }}</p>
+          </div>
+          <div class="route-preview-card">
+            <strong>Arrivee automatique</strong>
+            <p class="muted">{{ getArriveeLabel() }}</p>
+          </div>
+
+          <div class="route-map-block">
+            <label>Maison de l enfant</label>
+            <app-location-map-picker
+              [latitude]="form.controls.latitudeMaison.value || null"
+              [longitude]="form.controls.longitudeMaison.value || null"
+              [selectedAddress]="adresseMaisonSelectionnee()"
+              (locationSelected)="onLocationSelected($event)"
+            />
+            <p *ngIf="isFieldInvalid('adresseMaison')" class="muted">Choisissez un emplacement reel sur la carte.</p>
+          </div>
+
+          <div class="route-preview-card">
+            <strong>Adresse maison selectionnee</strong>
+            <p class="muted">{{ adresseMaisonSelectionnee() || 'Aucune adresse selectionnee pour le moment.' }}</p>
+          </div>
+
+          <div>
+            <label>Date souhaitee</label>
+            <input type="date" formControlName="dateSouhaitee" [min]="tomorrowDate" />
+            <p *ngIf="isFieldInvalid('dateSouhaitee')" class="muted">La date souhaitee est obligatoire.</p>
+          </div>
+
+          <div>
+            <label>Heure souhaitee</label>
+            <input type="time" formControlName="heureSouhaitee" />
+            <p *ngIf="isFieldInvalid('heureSouhaitee')" class="muted">L heure souhaitee est obligatoire.</p>
+          </div>
+
+          <div class="badge-row">
+            <button
+              type="submit"
+              class="ts-button ts-button--primary"
+              [disabled]="form.invalid || selectedChildHasActiveRequest()"
+            >
+              {{ editingId() ? 'Mettre a jour' : 'Envoyer la demande' }}
+            </button>
+            <button *ngIf="editingId()" type="button" class="ts-button ts-button--ghost" (click)="resetForm()">
+              Annuler
+            </button>
+          </div>
+        </form>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'boutique'" class="workspace-page">
+      <section id="catalogue" class="product-grid">
+        <article class="product-card">
+          <div class="product-card__image">Sac</div>
+          <h3>Sac TinySpring</h3>
+          <p class="muted">49 TND</p>
+        </article>
+        <article class="product-card">
+          <div class="product-card__image">Kit</div>
+          <h3>Kit creatif</h3>
+          <p class="muted">28 TND</p>
+        </article>
+        <article class="product-card">
+          <div class="product-card__image">Tablier</div>
+          <h3>Tablier activite</h3>
+          <p class="muted">32 TND</p>
+        </article>
+      </section>
+
+      <section id="panier" class="two-column-grid">
+        <article class="ts-card">
+          <h3>Panier</h3>
+          <div class="stack-list">
+            <article class="cart-item">
+              <strong>Sac TinySpring</strong>
+              <p class="muted">49 TND</p>
+            </article>
+          </div>
+        </article>
+
+        <article class="summary-card">
+          <h3>Total</h3>
+          <p class="stat-card__value">49 TND</p>
+        </article>
+      </section>
+
+      <section id="commandes" class="table-card">
+        <h3>Commandes</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>#TS-1203</strong>
+            <p class="muted">Livree le 04 avril 2026</p>
+          </article>
+        </div>
+      </section>
+    </section>
+  </ng-container>
+</div>

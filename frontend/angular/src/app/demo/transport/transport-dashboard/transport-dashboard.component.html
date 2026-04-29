@@ -1,0 +1,678 @@
+<div class="row">
+  @for (card of demandeStatsCards; track card.label) {
+    <div class="col-md-6 col-xl-4">
+      <app-card [hidHeader]="true" [cardClass]="card.cardClass + ' order-card demand-summary-card'">
+        <div class="demand-summary-content">
+          <div>
+            <h6 class="text-white">{{ card.label }}</h6>
+            <h2 class="text-white m-b-0">{{ card.total }}</h2>
+          </div>
+          <i class="{{ card.icon }} text-white demand-summary-icon"></i>
+        </div>
+      </app-card>
+    </div>
+  }
+</div>
+
+<div class="row">
+  <div class="col-xl-12">
+    <app-card cardTitle="Gestion de transport">
+      @if (messages.error) {
+        <div class="alert alert-danger">{{ messages.error }}</div>
+      }
+
+      @if (messages.success) {
+        <div class="alert alert-success">{{ messages.success }}</div>
+      }
+
+      <ul ngbNav #nav="ngbNav" [(activeId)]="activeTabId" class="nav-tabs">
+        <li [ngbNavItem]="1">
+          <button ngbNavLink>Transports</button>
+          <ng-template ngbNavContent>
+            <div class="row tab-section">
+              <div class="col-lg-4">
+                <form [formGroup]="transportForm" (ngSubmit)="submitTransport()" class="simple-form">
+                  <h5>{{ editingTransportId ? 'Modifier transport' : 'Ajouter transport' }}</h5>
+
+                  <label>Nom</label>
+                  <input class="form-control" formControlName="nom" type="text" maxlength="60" />
+                  @if (hasTransportError('nom', 'required')) {
+                    <small class="text-danger">Le nom est obligatoire.</small>
+                  }
+                  @if (hasTransportError('nom', 'trimmedRequired')) {
+                    <small class="text-danger">Le nom ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTransportError('nom', 'edgeSpaces')) {
+                    <small class="text-danger">Le nom ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTransportError('nom', 'minlength')) {
+                    <small class="text-danger">Le nom doit contenir au moins 3 caracteres.</small>
+                  }
+                  @if (hasTransportError('nom', 'maxlength')) {
+                    <small class="text-danger">Le nom ne doit pas depasser 60 caracteres.</small>
+                  }
+                  @if (hasTransportError('nom', 'pattern')) {
+                    <small class="text-danger">Le nom contient des caracteres non autorises.</small>
+                  }
+
+                  <label>Matricule</label>
+                  <input class="form-control" formControlName="matricule" type="text" maxlength="20" />
+                  @if (hasTransportError('matricule', 'required')) {
+                    <small class="text-danger">Le matricule est obligatoire.</small>
+                  }
+                  @if (hasTransportError('matricule', 'trimmedRequired')) {
+                    <small class="text-danger">Le matricule ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTransportError('matricule', 'edgeSpaces')) {
+                    <small class="text-danger">Le matricule ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTransportError('matricule', 'minlength')) {
+                    <small class="text-danger">Le matricule doit contenir au moins 4 caracteres.</small>
+                  }
+                  @if (hasTransportError('matricule', 'maxlength')) {
+                    <small class="text-danger">Le matricule ne doit pas depasser 20 caracteres.</small>
+                  }
+                  @if (hasTransportError('matricule', 'pattern')) {
+                    <small class="text-danger">Le matricule doit contenir uniquement lettres, chiffres ou tirets.</small>
+                  }
+
+                  <label>Capacite</label>
+                  <input class="form-control" formControlName="capacite" type="number" min="1" max="100" />
+                  @if (hasTransportError('capacite', 'required')) {
+                    <small class="text-danger">La capacite est obligatoire.</small>
+                  }
+                  @if (hasTransportError('capacite', 'min')) {
+                    <small class="text-danger">La capacite minimale est 1.</small>
+                  }
+                  @if (hasTransportError('capacite', 'max')) {
+                    <small class="text-danger">La capacite maximale autorisee est 100.</small>
+                  }
+
+                  <div class="form-actions">
+                    <button class="btn btn-primary" type="submit" [disabled]="loading.transports">
+                      {{ editingTransportId ? 'Mettre a jour' : 'Ajouter' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" (click)="resetTransportForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="col-lg-8">
+                @if (loading.transports) {
+                  <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+                } @else {
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Nom</th>
+                          <th>Matricule</th>
+                          <th>Capacite</th>
+                          <th>Taux</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (transport of transports; track transport.id) {
+                          <tr>
+                            <td>{{ transport.nom }}</td>
+                            <td>{{ transport.matricule }}</td>
+                            <td>{{ transport.capacite }}</td>
+                            <td>{{ transport.tauxRemplissage | number: '1.0-0' }}%</td>
+                            <td class="actions-cell">
+                              <button class="btn btn-sm btn-info" type="button" (click)="editTransport(transport)">Modifier</button>
+                              <button class="btn btn-sm btn-danger" type="button" (click)="deleteTransport(transport.id)">Supprimer</button>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="5" class="text-center">Aucun transport disponible.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="2">
+          <button ngbNavLink>Trajets</button>
+          <ng-template ngbNavContent>
+            <div class="row tab-section">
+              <div class="col-lg-4">
+                <form [formGroup]="trajetForm" (ngSubmit)="submitTrajet()" class="simple-form">
+                  <h5>{{ editingTrajetId ? 'Modifier trajet' : 'Ajouter trajet' }}</h5>
+
+                  <div class="route-preview-card">
+                    <strong>Adresse exacte de la garderie</strong>
+                    <p class="mb-0 text-muted">{{ adresseGarderieFixe }}</p>
+                  </div>
+
+                  <label>Sens du trajet</label>
+                  <select class="form-select" formControlName="sensTrajet" (change)="onTrajetSenseChanged()">
+                    <option value="MAISON_VERS_GARDERIE">Autre point -> Garderie</option>
+                    <option value="GARDERIE_VERS_MAISON">Garderie -> Autre point</option>
+                  </select>
+
+                  <div class="route-preview-card">
+                    <strong>Depart automatique</strong>
+                    <p class="mb-0 text-muted">{{ getTrajetDepartLabel() }}</p>
+                  </div>
+
+                  <div class="route-preview-card">
+                    <strong>Arrivee automatique</strong>
+                    <p class="mb-0 text-muted">{{ getTrajetArriveeLabel() }}</p>
+                  </div>
+
+                  <label>Zone desservie (optionnel)</label>
+                  <input class="form-control" formControlName="zoneDesservie" type="text" maxlength="120" />
+                  @if (hasTrajetError('zoneDesservie', 'maxlength')) {
+                    <small class="text-danger">La zone desservie ne doit pas depasser 120 caracteres.</small>
+                  }
+
+                  <div class="map-field-block">
+                    <div class="map-field-header">
+                      <label class="mb-0">{{ getTrajetOtherPointTitle() }}</label>
+                      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="clearTrajetOtherLocation()">
+                        Effacer
+                      </button>
+                    </div>
+                    <app-location-map-picker
+                      [latitude]="trajetAutrePointLatitude"
+                      [longitude]="trajetAutrePointLongitude"
+                      [selectedAddress]="trajetForm.controls.autrePoint.value || ''"
+                      helperText="Cliquez sur la carte pour choisir l'autre adresse du trajet. L'adresse de la garderie sera appliquee automatiquement de l'autre cote."
+                      resultLabel="Autre point detecte"
+                      (locationSelected)="onTrajetOtherLocationSelected($event)"
+                    />
+                    <div class="map-coordinates" *ngIf="trajetAutrePointLatitude !== null && trajetAutrePointLongitude !== null">
+                      Coordonnees enregistrees :
+                      {{ trajetAutrePointLatitude | number: '1.4-4' }},
+                      {{ trajetAutrePointLongitude | number: '1.4-4' }}
+                    </div>
+                    <div class="route-preview-card">
+                      <strong>{{ getTrajetOtherPointTitle() }}</strong>
+                      <p class="mb-0 text-muted">{{ getTrajetOtherPointLabel() }}</p>
+                    </div>
+                  </div>
+                  @if (hasTrajetError('autrePoint')) {
+                    <small class="text-danger">L autre point du trajet est obligatoire.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'trimmedRequired')) {
+                    <small class="text-danger">L autre point ne peut pas contenir uniquement des espaces.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'edgeSpaces')) {
+                    <small class="text-danger">L autre point ne doit pas commencer ou finir par un espace.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'minlength')) {
+                    <small class="text-danger">L autre point doit contenir au moins 3 caracteres.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'maxlength')) {
+                    <small class="text-danger">L autre point ne doit pas depasser 200 caracteres.</small>
+                  }
+                  @if (hasTrajetError('autrePoint', 'pattern')) {
+                    <small class="text-danger">L autre point contient des caracteres non autorises.</small>
+                  }
+
+                  <label>Date du trajet</label>
+                  <input class="form-control" formControlName="dateTrajet" type="date" [min]="tomorrowDate" />
+                  @if (hasTrajetError('dateTrajet')) {
+                    <small class="text-danger">La date du trajet est obligatoire.</small>
+                  }
+
+                  <label>Heure de depart</label>
+                  <input class="form-control" formControlName="heureDepart" type="time" />
+                  @if (hasTrajetError('heureDepart')) {
+                    <small class="text-danger">L heure de depart est obligatoire.</small>
+                  }
+
+                  <label>Transport</label>
+                  <select class="form-select" formControlName="transportId">
+                    <option [ngValue]="null">Selectionner un transport</option>
+                    @for (transport of transports; track transport.id) {
+                      <option [ngValue]="transport.id">{{ transport.nom }} ({{ transport.matricule }})</option>
+                    }
+                  </select>
+                  @if (hasTrajetError('transportId')) {
+                    <small class="text-danger">Le transport est obligatoire.</small>
+                  }
+
+                  <div class="form-actions">
+                    <button class="btn btn-primary" type="submit" [disabled]="loading.trajets">
+                      {{ editingTrajetId ? 'Mettre a jour' : 'Ajouter' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" (click)="resetTrajetForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="col-lg-8">
+                @if (loading.trajets) {
+                  <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+                } @else {
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Point de depart</th>
+                          <th>Destination</th>
+                          <th>Zone desservie</th>
+                          <th>Date</th>
+                          <th>Heure</th>
+                          <th>Transport</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (trajet of trajets; track trajet.id) {
+                          <tr>
+                            <td>{{ trajet.pointDepart }}</td>
+                            <td>{{ trajet.destination }}</td>
+                            <td>{{ trajet.zoneDesservie || '-' }}</td>
+                            <td>{{ trajet.dateTrajet }}</td>
+                            <td>{{ trajet.heureDepart }}</td>
+                            <td>{{ trajet.transportNom }}</td>
+                            <td class="actions-cell">
+                              <button class="btn btn-sm btn-info" type="button" (click)="editTrajet(trajet)">Modifier</button>
+                              <button class="btn btn-sm btn-danger" type="button" (click)="deleteTrajet(trajet.id)">Supprimer</button>
+                            </td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="7" class="text-center">Aucun trajet disponible.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </li>
+        <li [ngbNavItem]="3">
+          <button ngbNavLink>Demandes</button>
+          <ng-template ngbNavContent>
+            <div class="demandes-toolbar">
+              <div class="demandes-toolbar__meta">
+                <div class="demandes-toolbar__headline">
+                  <h5 class="mb-1">Suivi en direct des demandes</h5>
+                  <p class="mb-0 text-muted">
+                    {{ demandes.length }} demandes, {{ pendingDemandesCount }} en attente, {{ suspiciousDemandesCount }} suspectes
+                    <span *ngIf="unavailableAiDemandesCount">, {{ unavailableAiDemandesCount }} sans IA</span>
+                  </p>
+                </div>
+                <small class="text-muted" *ngIf="lastRefreshAt">
+                  Derniere synchronisation: {{ lastRefreshAt | date: 'HH:mm:ss' }}
+                </small>
+              </div>
+
+              <div class="demand-summary-grid">
+                <div class="demand-summary-chip">
+                  <span class="demand-summary-chip__value">{{ filteredDemandes.length }}</span>
+                  <span class="demand-summary-chip__label">Apres filtres</span>
+                </div>
+                <div class="demand-summary-chip">
+                  <span class="demand-summary-chip__value">{{ activeDemandesFiltersCount }}</span>
+                  <span class="demand-summary-chip__label">Filtres actifs</span>
+                </div>
+                <div class="demand-summary-chip">
+                  <span class="demand-summary-chip__value">{{ totalDemandesPages }}</span>
+                  <span class="demand-summary-chip__label">Pages</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-bar filter-bar--demandes">
+              <div class="filter-bar__search">
+                <label>Recherche globale</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="demandeSearchTerm"
+                  (ngModelChange)="onDemandesFiltersChanged()"
+                  placeholder="Enfant, parent, adresse, statut..."
+                />
+              </div>
+              <div>
+                <label>Statut</label>
+                <select class="form-select" [(ngModel)]="filtreStatut" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option value="TOUS">Tous les statuts</option>
+                  <option value="EN_ATTENTE">En attente</option>
+                  <option value="ACCEPTEE">Acceptees</option>
+                  <option value="REVISION_PARENT_DEMANDEE">Revisions</option>
+                  <option value="REFUSEE">Refusees</option>
+                </select>
+              </div>
+              <div>
+                <label>Date</label>
+                <input class="form-control" type="date" [(ngModel)]="filtreDate" (ngModelChange)="onDemandesFiltersChanged()" />
+              </div>
+              <div>
+                <label>Trajet</label>
+                <select class="form-select" [(ngModel)]="filtreTrajetId" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option [ngValue]="null">Tous les trajets</option>
+                  @for (trajet of trajets; track trajet.id) {
+                    <option [ngValue]="trajet.id">{{ trajet.pointDepart }} -> {{ trajet.destination }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label>Transport</label>
+                <select class="form-select" [(ngModel)]="filtreTransportId" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option [ngValue]="null">Tous les transports</option>
+                  @for (transport of transports; track transport.id) {
+                    <option [ngValue]="transport.id">{{ transport.nom }} ({{ transport.matricule }})</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label>Analyse IA</label>
+                <select class="form-select" [(ngModel)]="filtreSuspect" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option value="TOUS">Tous les niveaux</option>
+                  <option value="SUSPECTES">Demandes suspectes</option>
+                  <option value="NON_SUSPECTES">Demandes normales</option>
+                  <option value="IA_INDISPONIBLE">IA indisponible</option>
+                </select>
+              </div>
+              <div>
+                <label>Heure</label>
+                <input class="form-control" type="time" [(ngModel)]="filtreHeure" (ngModelChange)="onDemandesFiltersChanged()" />
+              </div>
+              <div>
+                <label>Lignes par page</label>
+                <select class="form-select" [(ngModel)]="demandesPageSize" (ngModelChange)="onDemandesPageSizeChanged()">
+                  @for (size of pageSizeOptions; track size) {
+                    <option [ngValue]="size">{{ size }}</option>
+                  }
+                </select>
+              </div>
+              <div class="filter-bar__actions">
+                <label>&nbsp;</label>
+                <button class="btn btn-outline-secondary w-100" type="button" (click)="resetDemandesFilters()">
+                  Reinitialiser
+                </button>
+              </div>
+            </div>
+
+            @if (loading.demandes) {
+              <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <div class="demandes-table-meta">
+                <span>
+                  Affichage {{ visibleDemandesStart }}-{{ visibleDemandesEnd }} sur {{ filteredDemandes.length }}
+                  demande<span *ngIf="filteredDemandes.length > 1">s</span>
+                </span>
+                <span *ngIf="activeDemandesFiltersCount">
+                  {{ activeDemandesFiltersCount }} filtre<span *ngIf="activeDemandesFiltersCount > 1">s</span> actif<span *ngIf="activeDemandesFiltersCount > 1">s</span>
+                </span>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover demandes-table">
+                  <thead>
+                    <tr>
+                      <th>Enfant</th>
+                      <th>Parent</th>
+                      <th>Trajet</th>
+                      <th>Date</th>
+                      <th>Heure</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (demande of paginatedDemandes; track demande.id) {
+                      <tr>
+                        <td>
+                          <div class="demandes-table__primary">{{ demande.enfantNomComplet }}</div>
+                          <small class="text-muted">#{{ demande.id }}</small>
+                        </td>
+                        <td>
+                          <div class="demandes-table__primary">{{ demande.parentNom }}</div>
+                        </td>
+                        <td>
+                          <div>{{ demande.pointDepart }} -> {{ demande.destination }}</div>
+                          <small class="text-muted" *ngIf="demande.dateSouhaitee || demande.heureSouhaitee">
+                            Souhaite: {{ demande.dateSouhaitee || '-' }} {{ demande.heureSouhaitee || '' }}
+                          </small>
+                        </td>
+                        <td>{{ demande.dateTrajet || demande.dateSouhaitee || '-' }}</td>
+                        <td>{{ demande.heureDepart || demande.heureSouhaitee || '-' }}</td>
+                        <td>
+                          <span class="badge transport-badge" [ngClass]="getStatutBadgeClass(demande.statut)">
+                            {{ formatStatutLabel(demande.statut) }}
+                          </span>
+                          <div class="anomaly-summary mt-2">
+                            <span class="badge transport-badge" [ngClass]="getAnomalyBadgeClass(demande)">
+                              {{ formatAiStatus(demande) }}
+                            </span>
+                            <small class="d-block text-info" *ngIf="demande.revisionRequestMessage">
+                              {{ demande.revisionRequestMessage }}
+                            </small>
+                            <small class="d-block text-muted" *ngIf="demande.anomalyLevel || demande.anomalyScore !== null">
+                              Niveau: {{ demande.anomalyLevel || 'UNKNOWN' }} | Score: {{ formatAnomalyScore(demande.anomalyScore) }}
+                            </small>
+                            <small class="d-block text-muted" *ngIf="demande.anomalyReasons?.length">
+                              {{ demande.anomalyReasons?.join(' | ') }}
+                            </small>
+                            <small class="d-block text-danger" *ngIf="demande.aiAnalysisError">
+                              {{ demande.aiAnalysisError }}
+                            </small>
+                          </div>
+                        </td>
+                        <td>
+                          @if (demande.statut === 'EN_ATTENTE') {
+                            <div class="demand-actions">
+                              <small class="text-muted d-block mb-2">Le systeme choisira automatiquement le trajet admin le plus adequat et non sature.</small>
+                              <div class="actions-cell">
+                        <button class="btn btn-sm btn-success" type="button" [disabled]="actionDemandeId === demande.id" (click)="accepterDemande(demande)">
+                          {{ demande.suspicious ? 'Demander revision' : 'Accepter' }}
+                        </button>
+                                <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="refuserDemande(demande)">
+                                  Refuser
+                                </button>
+                                <button class="btn btn-sm btn-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="supprimerDemande(demande)">
+                                  Supprimer
+                                </button>
+                              </div>
+                            </div>
+                          } @else {
+                            <div class="actions-cell">
+                              <button class="btn btn-sm btn-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="supprimerDemande(demande)">
+                                Supprimer
+                              </button>
+                            </div>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="7" class="text-center">Aucune demande pour ce filtre.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination-bar" *ngIf="filteredDemandes.length">
+                <button class="btn btn-sm btn-outline-secondary" type="button" [disabled]="currentDemandesPage === 1" (click)="goToDemandesPage(currentDemandesPage - 1)">
+                  Precedent
+                </button>
+                <div class="pagination-bar__pages">
+                  @for (page of demandesPageNumbers; track page) {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      [ngClass]="page === currentDemandesPage ? 'btn-primary' : 'btn-outline-secondary'"
+                      (click)="goToDemandesPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                </div>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  [disabled]="currentDemandesPage === totalDemandesPages"
+                  (click)="goToDemandesPage(currentDemandesPage + 1)"
+                >
+                  Suivant
+                </button>
+              </div>
+            }
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="4">
+          <button ngbNavLink>Affectations</button>
+          <ng-template ngbNavContent>
+            @if (loading.affectations) {
+              <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Enfant</th>
+                      <th>Transport</th>
+                      <th>Trajet</th>
+                      <th>Date</th>
+                      <th>Heure</th>
+                      <th>Point de ramassage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (affectation of affectations; track affectation.id) {
+                      <tr>
+                        <td>{{ affectation.enfantNomComplet }}</td>
+                        <td>{{ affectation.transportNom }} ({{ affectation.matriculeTransport }})</td>
+                        <td>{{ affectation.pointDepart }} -> {{ affectation.destination }}</td>
+                        <td>{{ affectation.dateTrajet }}</td>
+                        <td>{{ affectation.heureDepart }}</td>
+                        <td>{{ affectation.pointRamassage }}</td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="6" class="text-center">Aucune affectation disponible.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="5">
+          <button ngbNavLink>Suggestions</button>
+          <ng-template ngbNavContent>
+            @if (loading.recommandations) {
+              <div class="loading-state"><div class="spinner-border text-primary"></div></div>
+            } @else {
+              <div class="recommendation-panel ai-insight-card" *ngIf="predictionDemande">
+                <h5>Prediction de la demande</h5>
+                <div class="ai-meta">
+                  <div>
+                    <strong>{{ predictionDemande.predictedDemandCount ?? '-' }}</strong>
+                    <span>Demandes prevues</span>
+                  </div>
+                  <div>
+                    <strong>{{ predictionDemande.demandLevel }}</strong>
+                    <span>Niveau</span>
+                  </div>
+                  <div>
+                    <strong>{{ predictionDemande.targetDate }}</strong>
+                    <span>Date cible</span>
+                  </div>
+                  <div>
+                    <strong>{{ predictionDemande.hour }}:00</strong>
+                    <span>Heure analysee</span>
+                  </div>
+                </div>
+                <p class="mb-1 text-muted">{{ predictionDemande.message }}</p>
+                <small [ngClass]="predictionDemande.aiAvailable ? 'text-success' : 'text-danger'">
+                  {{ predictionDemande.aiAvailable ? 'Prediction IA disponible' : 'Prediction IA indisponible' }}
+                  <span *ngIf="predictionDemande.modelVersion">| Modele: {{ predictionDemande.modelVersion }}</span>
+                </small>
+              </div>
+
+              <div class="recommendation-layout">
+                <div class="recommendation-panel">
+                  <h5>Recommandations d'affectation</h5>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Enfant</th>
+                          <th>Zone analysee</th>
+                          <th>Trajet recommande</th>
+                          <th>Score</th>
+                          <th>Distance</th>
+                          <th>Decision</th>
+                          <th>Motif</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (item of recommandationsAffectation; track item.demandeId) {
+                          <tr>
+                            <td>{{ item.enfantNomComplet }}</td>
+                            <td>{{ item.zoneRecherchee }}</td>
+                            <td>
+                              @if (item.trajetRecommandeId) {
+                                <div>{{ item.trajetRecommandePointDepart }} -> {{ item.trajetRecommandeDestination }}</div>
+                                <small class="text-muted">{{ item.transportRecommandeNom || '-' }} | {{ item.trajetRecommandeDate }} {{ item.trajetRecommandeHeure }}</small>
+                              } @else {
+                                <span>-</span>
+                              }
+                            </td>
+                            <td>{{ item.scorePertinence }}/100</td>
+                            <td>{{ formatRecommendationDistance(item.distanceEstimeeKm) }}</td>
+                            <td>
+                              <span class="badge transport-badge" [ngClass]="item.affectationAutomatiquePossible ? 'badge-light-success' : 'badge-light-warning'">
+                                {{ formatRecommendationStatus(item) }}
+                              </span>
+                            </td>
+                            <td>{{ item.motifRefus || 'Compatible avec les seuils configures' }}</td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="7" class="text-center">Aucune demande en attente de recommandation.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="recommendation-panel">
+                  <h5>Suggestions de nouveaux trajets</h5>
+                  <div class="route-suggestion-list">
+                    @for (item of recommandationsNouveauxTrajets; track item.zoneCentrale + item.nombreDemandes) {
+                      <div class="route-suggestion-card">
+                        <div class="route-suggestion-header">
+                          <strong>{{ item.zoneCentrale }}</strong>
+                          <span class="badge badge-light-warning">{{ item.nombreDemandes }} demandes</span>
+                        </div>
+                        <p class="mb-2">{{ item.recommandation }}</p>
+                        <p class="mb-2 text-muted">
+                          Centre estime :
+                          {{ item.latitudeCentre ?? '-' }},
+                          {{ item.longitudeCentre ?? '-' }}
+                          | Ecart moyen au trajet le plus proche :
+                          {{ formatRecommendationDistance(item.distanceMoyenneAuTrajetLePlusProcheKm) }}
+                        </p>
+                        <ul class="recommendation-demand-list">
+                          @for (demande of item.demandes; track demande.demandeId) {
+                            <li>{{ demande.enfantNomComplet }} - {{ demande.zoneRecherchee }}</li>
+                          }
+                        </ul>
+                      </div>
+                    } @empty {
+                      <div class="alert alert-light mb-0">Aucun regroupement de demandes ne justifie la creation d'un nouveau trajet pour l'instant.</div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </ng-template>
+        </li>
+      </ul>
+
+      <div [ngbNavOutlet]="nav" class="mt-4"></div>
+    </app-card>
+  </div>
+</div>

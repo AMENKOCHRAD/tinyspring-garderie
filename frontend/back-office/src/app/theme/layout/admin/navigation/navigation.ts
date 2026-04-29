@@ -41,7 +41,7 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'logout',
-        title: 'Déconnexion',
+        title: 'Deconnexion',
         type: 'item',
         url: '/login',
         icon: 'feather icon-log-out'
@@ -122,7 +122,7 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'evenements',
-        title: 'Événements & Menus',
+        title: 'Evenements & Menus',
         type: 'item',
         url: '/evenements-menus',
         classes: 'nav-item',

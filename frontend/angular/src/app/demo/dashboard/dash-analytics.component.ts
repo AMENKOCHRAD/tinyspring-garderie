@@ -1,16 +1,26 @@
 import { Component } from '@angular/core';
+<<<<<<< HEAD
+=======
+import { RouterModule } from '@angular/router';
+
+// project import
+>>>>>>> origin/gestion-transports
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dash-analytics',
+<<<<<<< HEAD
   standalone: true,
+=======
+>>>>>>> origin/gestion-transports
   imports: [SharedModule, RouterModule],
   templateUrl: './dash-analytics.component.html',
   styleUrls: ['./dash-analytics.component.scss']
 })
 export class DashAnalyticsComponent {
   cards = [
+<<<<<<< HEAD
     
   {
     background: 'bg-gradient-green',
@@ -67,5 +77,15 @@ export class DashAnalyticsComponent {
       title: 'Gestion de transport',
       route: null
     }
+=======
+    { background: 'bg-gradient-blue', icon: 'icon-users', title: 'Gestion des utilisateurs', route: '/gestion-utilisateurs' },
+    { background: 'bg-gradient-green', icon: 'icon-user', title: 'Gestion des enfants', route: '/gestion-enfants' },
+    { background: 'bg-gradient-purple', icon: 'icon-box', title: 'Classes & Groupes', route: '/classes-groupes' },
+    { background: 'bg-gradient-orange', icon: 'icon-calendar', title: 'Evenements & Menus', route: '/evenements-menus' },
+    { background: 'bg-gradient-teal', icon: 'icon-message-circle', title: 'Messagerie interne', route: '/messagerie' },
+    { background: 'bg-gradient-pink', icon: 'icon-book', title: 'RH & Formations', route: '/rh-formations' },
+    { background: 'bg-gradient-yellow', icon: 'icon-shopping-cart', title: 'Boutique en ligne', route: '/boutique' },
+    { background: 'bg-gradient-dark', icon: 'icon-navigation', title: 'Gestion de transport', route: '/transport' }
+>>>>>>> origin/gestion-transports
   ];
 }
