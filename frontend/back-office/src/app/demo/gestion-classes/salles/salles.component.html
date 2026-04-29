@@ -1,0 +1,119 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Gestion des Salles</h5>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="saveSalle()" #salleForm="ngForm">
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            <strong>⚠️ Erreur :</strong> {{ errorMessage }}
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Nom de la salle <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="nom" [(ngModel)]="currentSalle.nom"
+                     required minlength="2" maxlength="50" #nomCtrl="ngModel"
+                     [ngClass]="{'is-invalid': nomCtrl.invalid && nomCtrl.touched, 'is-valid': nomCtrl.valid && nomCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['required'] && nomCtrl.touched">Le nom est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['minlength'] && nomCtrl.touched">Minimum 2 caractères.</div>
+              <div class="invalid-feedback" *ngIf="nomCtrl.errors?.['maxlength'] && nomCtrl.touched">Maximum 50 caractères.</div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Surface (m²) <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="surface" [(ngModel)]="currentSalle.surface"
+                     required min="1" max="500" #surfaceCtrl="ngModel"
+                     [ngClass]="{'is-invalid': surfaceCtrl.invalid && surfaceCtrl.touched, 'is-valid': surfaceCtrl.valid && surfaceCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="surfaceCtrl.errors?.['required'] && surfaceCtrl.touched">La surface est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="surfaceCtrl.errors?.['min'] && surfaceCtrl.touched">La surface doit être d'au moins 1 m².</div>
+              <div class="invalid-feedback" *ngIf="surfaceCtrl.errors?.['max'] && surfaceCtrl.touched">La surface ne peut dépasser 500 m².</div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Type <span class="text-danger">*</span></label>
+              <select class="form-control" name="type" [(ngModel)]="currentSalle.type"
+                      required #typeCtrl="ngModel"
+                      [ngClass]="{'is-invalid': typeCtrl.invalid && typeCtrl.touched, 'is-valid': typeCtrl.valid && typeCtrl.touched}">
+                <option value="">-- Sélectionner un type --</option>
+                <option value="Dortoir">Dortoir</option>
+                <option value="Salle de jeu">Salle de jeu</option>
+                <option value="Cantine">Cantine</option>
+                <option value="Salle de classe">Salle de classe</option>
+                <option value="Salle polyvalente">Salle polyvalente</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="typeCtrl.invalid && typeCtrl.touched">Veuillez sélectionner un type de salle.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Équipements</label>
+              <input type="text" class="form-control" name="equipements" [(ngModel)]="currentSalle.equipements"
+                     maxlength="200" #equipCtrl="ngModel" placeholder="Ex: Tapis, Projecteur, Cuisine..."
+                     [ngClass]="{'is-invalid': equipCtrl.invalid && equipCtrl.touched, 'is-valid': equipCtrl.valid && equipCtrl.touched && currentSalle.equipements}" />
+              <div class="invalid-feedback" *ngIf="equipCtrl.errors?.['maxlength'] && equipCtrl.touched">Maximum 200 caractères.</div>
+              <small class="form-text text-muted">Optionnel — séparez les équipements par des virgules.</small>
+            </div>
+            <div class="col-md-3 mb-3 d-flex align-items-center pt-3">
+              <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="checkClim" name="climatise" [(ngModel)]="currentSalle.climatise" />
+                <label class="form-check-label" for="checkClim">Climatisée</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3 d-flex align-items-center pt-3">
+              <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="checkDisp" name="disponible" [(ngModel)]="currentSalle.disponible" />
+                <label class="form-check-label" for="checkDisp">En service</label>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="salleForm.invalid">
+            <i class="feather icon-save me-1"></i>{{ isEditMode ? 'Modifier' : 'Ajouter' }}
+          </button>
+          <button type="button" class="btn btn-secondary ms-2" *ngIf="isEditMode" (click)="resetForm()">Annuler</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 mt-4">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des Salles</h5>
+        <button class="btn btn-sm btn-outline-secondary" (click)="loadSalles()">🔄 Rafraîchir</button>
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Surface</th>
+              <th>Type</th>
+              <th>Clim</th>
+              <th>Status</th>
+              <th>Équipements</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of salles">
+              <td>{{ s.id }}</td>
+              <td>{{ s.nom }}</td>
+              <td>{{ s.surface }} m²</td>
+              <td>{{ s.type }}</td>
+              <td><span class="badge" [ngClass]="s.climatise ? 'bg-success' : 'bg-secondary'">{{ s.climatise ? 'Oui' : 'Non' }}</span></td>
+              <td><span class="badge" [ngClass]="s.disponible ? 'bg-primary' : 'bg-danger'">{{ s.disponible ? 'Dispo' : 'Fermée' }}</span></td>
+              <td>{{ s.equipements || '-' }}</td>
+              <td>
+                <button class="btn btn-sm btn-info me-2" (click)="editSalle(s)">Modifier</button>
+                <button class="btn btn-sm btn-danger" (click)="deleteSalle(s.id)">Supprimer</button>
+              </td>
+            </tr>
+            <tr *ngIf="salles.length === 0">
+              <td colspan="8" class="text-center">Aucune salle trouvée.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

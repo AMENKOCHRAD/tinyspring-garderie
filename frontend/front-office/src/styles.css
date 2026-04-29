@@ -1,0 +1,26 @@
+@import url('./assets/kidkinder/style.css');
+@import url('./assets/kidkinder/lib/flaticon/font/flaticon.css');
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+}
+
+.navbar-collapse.show {
+  display: block !important;
+}
+
+.nav-item.nav-link {
+  cursor: pointer;
+}
+
+.page-header {
+  min-height: 300px;
+}
+
+.hero-illustration {
+  max-width: 560px;
+}

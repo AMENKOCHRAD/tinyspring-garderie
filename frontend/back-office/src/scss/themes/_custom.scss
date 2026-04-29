@@ -1,0 +1,416 @@
+.btn-page .btn {
+  margin-right: 8px;
+}
+
+.tab-card {
+  .nav-tabs {
+    margin-bottom: 1rem;
+  }
+
+  .nav-pills {
+    margin-bottom: 1rem;
+
+    .nav-item {
+      text-align: center;
+    }
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.table {
+  td,
+  th {
+    font-family: $theme-font-family;
+  }
+}
+
+.pcoded-header {
+  .search-bar {
+    display: block;
+  }
+}
+
+.h-list-body .chat-messages .chat-menu-reply > div p,
+.pcoded-header.header-blue a.h-back-user-list {
+  color: $theme-font-color;
+}
+
+.header-chat .h-list-footer .input-group .form-control {
+  height: auto;
+}
+
+.pcoded-navbar.menu-light {
+  .pcoded-inner-navbar > app-nav-group > app-nav-collapse > li.active > a,
+  .pcoded-inner-navbar > app-nav-group > app-nav-collapse > li.pcoded-trigger > a,
+  .pcoded-inner-navbar > app-nav-group > app-nav-collapse > li:hover > a,
+  .pcoded-inner-navbar > app-nav-group > app-nav-item > li.active > a,
+  .pcoded-inner-navbar > app-nav-group > app-nav-item > li.pcoded-trigger > a,
+  .pcoded-inner-navbar > app-nav-group > app-nav-item > li:hover > a {
+    background: rgba(202, 202, 202, 0.3);
+
+    &:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: $primary-color;
+    }
+  }
+}
+
+.flex {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+.fixed-button.active {
+  bottom: 50px;
+  opacity: 1;
+}
+
+.fixed-button {
+  position: fixed;
+  bottom: -50px;
+  right: 30px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  z-index: 9;
+  -webkit-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+.page-item .page-link {
+  border-radius: 0px;
+}
+
+#customerChart .apexcharts-tooltip {
+  color: #000000;
+}
+
+#customerChart .apexcharts-tooltip .apexcharts-tooltip-series-group.active {
+  background: #ffffff !important;
+}
+
+// ======================================================================
+// ============== GESTION CLASSES - UX ENHANCEMENTS =====================
+// ======================================================================
+
+// ------- Animations keyframes -------
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+// ------- Cards -------
+.card {
+  animation: fadeInUp 0.4s ease-out;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #f8f9ff 0%, #f1f3ff 100%);
+    border-bottom: 2px solid rgba(78, 115, 223, 0.1);
+    padding: 1rem 1.5rem;
+
+    h5 {
+      font-weight: 600;
+      color: #2c3e50;
+      letter-spacing: 0.3px;
+    }
+  }
+}
+
+// ------- Tables -------
+.table {
+  thead {
+    th {
+      background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%) !important;
+      color: white !important;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.8px;
+      padding: 0.85rem 1rem;
+      border: none;
+
+      &:first-child {
+        border-radius: 8px 0 0 0;
+      }
+      &:last-child {
+        border-radius: 0 8px 0 0;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      animation: fadeIn 0.3s ease-out;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background: linear-gradient(90deg, rgba(78, 115, 223, 0.06) 0%, rgba(111, 66, 193, 0.04) 100%) !important;
+        transform: scale(1.005);
+        box-shadow: 0 2px 8px rgba(78, 115, 223, 0.1);
+      }
+
+      td {
+        vertical-align: middle;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+    }
+  }
+}
+
+// ------- Badges -------
+.badge {
+  font-weight: 500;
+  padding: 0.4em 0.75em;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  &.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+  }
+  &.bg-danger {
+    background: linear-gradient(135deg, #dc3545, #e74c3c) !important;
+  }
+  &.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+    color: #fff !important;
+  }
+  &.bg-info {
+    background: linear-gradient(135deg, #17a2b8, #4e73df) !important;
+  }
+  &.bg-primary {
+    background: linear-gradient(135deg, #4e73df, #6f42c1) !important;
+  }
+  &.bg-secondary {
+    background: linear-gradient(135deg, #858796, #6c757d) !important;
+  }
+}
+
+// ------- Buttons -------
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  }
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #4e73df, #6f42c1);
+    border: none;
+    &:hover {
+      background: linear-gradient(135deg, #3a5bc7, #5a35a8);
+    }
+  }
+
+  &.btn-info {
+    background: linear-gradient(135deg, #36b9cc, #4e73df);
+    border: none;
+    color: white;
+    &:hover {
+      background: linear-gradient(135deg, #2fa5b6, #3a5bc7);
+      color: white;
+    }
+  }
+
+  &.btn-danger {
+    background: linear-gradient(135deg, #e74a3b, #be2617);
+    border: none;
+    &:hover {
+      background: linear-gradient(135deg, #d63125, #a51f12);
+    }
+  }
+
+  &.btn-sm {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.82rem;
+    border-radius: 6px;
+  }
+}
+
+// ------- Form controls -------
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 2px solid #e2e6ea;
+  padding: 0.55rem 0.9rem;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+
+  &:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+    transform: scale(1.01);
+  }
+
+  &.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+  }
+
+  &.is-invalid {
+    border-color: #dc3545;
+    animation: shake 0.4s ease;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+  }
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 0.4rem;
+}
+
+.form-check-input {
+  width: 1.15em;
+  height: 1.15em;
+  transition: all 0.2s ease;
+
+  &:checked {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    box-shadow: 0 0 0 2px rgba(78, 115, 223, 0.25);
+  }
+}
+
+.form-switch .form-check-input {
+  width: 2.5em;
+  height: 1.3em;
+  border-radius: 1em;
+}
+
+// ------- Alerts (error banners) -------
+.alert-danger {
+  animation: slideInLeft 0.4s ease-out;
+  border-radius: 10px;
+  border-left: 5px solid #dc3545;
+  background: linear-gradient(90deg, #fff5f5, #ffffff);
+  color: #721c24;
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(220, 53, 69, 0.1);
+}
+
+// ------- Invalid feedback -------
+.invalid-feedback {
+  font-size: 0.8rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+// ------- Refresh button -------
+.btn-outline-secondary {
+  border-radius: 20px;
+  font-size: 0.82rem;
+  padding: 0.3rem 1rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #4e73df, #6f42c1);
+    color: white;
+    border-color: transparent;
+    transform: rotate(15deg) scale(1.05);
+  }
+}
+
+// ------- Staggered table row animation -------
+.table tbody tr {
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.05}s;
+      animation-name: fadeInUp;
+      animation-duration: 0.35s;
+      animation-fill-mode: both;
+    }
+  }
+}
+
+// ------- Form row animation -------
+form .row {
+  animation: fadeInUp 0.35s ease-out;
+
+  &:nth-child(2) { animation-delay: 0.1s; }
+  &:nth-child(3) { animation-delay: 0.2s; }
+}
+
+// ------- Text danger in tables -------
+td.text-danger {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+// ------- Scrollbar -------
+.table-responsive {
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #4e73df, #6f42c1);
+    border-radius: 3px;
+  }
+}
+

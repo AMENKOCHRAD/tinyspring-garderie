@@ -1,0 +1,161 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Gestion des Affectations (Enfants → Groupes)</h5>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="saveAffectation()" #affectationForm="ngForm">
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            <strong>⚠️ Erreur :</strong> {{ errorMessage }}
+          </div>
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="form-label">ID Enfant <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="enfantId" [(ngModel)]="currentAffectation.enfantId"
+                     required min="1" #enfCtrl="ngModel"
+                     [ngClass]="{'is-invalid': enfCtrl.invalid && enfCtrl.touched, 'is-valid': enfCtrl.valid && enfCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="enfCtrl.errors?.['required'] && enfCtrl.touched">L'ID de l'enfant est obligatoire.</div>
+              <div class="invalid-feedback" *ngIf="enfCtrl.errors?.['min'] && enfCtrl.touched">L'ID doit être supérieur à 0.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label w-100 d-flex justify-content-between align-items-center">
+                <span>Groupe d'accueil <span class="text-danger">*</span></span>
+                <button type="button" class="btn btn-sm btn-link text-primary p-0 text-decoration-none font-weight-bold" (click)="showWizard = !showWizard">
+                  ✨ IA Assistant
+                </button>
+              </label>
+              <select class="form-control" name="groupeId" [(ngModel)]="selectedGroupeId"
+                      required #grpCtrl="ngModel"
+                      [ngClass]="{'is-invalid': grpCtrl.invalid && grpCtrl.touched, 'is-valid': grpCtrl.valid && grpCtrl.touched}">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let g of groupes" [value]="g.id">{{ g.nom }} ({{ g.classe?.nom }})</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="grpCtrl.invalid && grpCtrl.touched">Veuillez sélectionner un groupe.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Date Début <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="dateDebut" [(ngModel)]="currentAffectation.dateDebut"
+                     required #dbCtrl="ngModel"
+                     [ngClass]="{'is-invalid': dbCtrl.invalid && dbCtrl.touched, 'is-valid': dbCtrl.valid && dbCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="dbCtrl.invalid && dbCtrl.touched">La date de début est obligatoire.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Date Fin <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="dateFin" [(ngModel)]="currentAffectation.dateFin"
+                     required #dfCtrl="ngModel"
+                     [ngClass]="{'is-invalid': dfCtrl.invalid && dfCtrl.touched, 'is-valid': dfCtrl.valid && dfCtrl.touched}" />
+              <div class="invalid-feedback" *ngIf="dfCtrl.invalid && dfCtrl.touched">La date de fin est obligatoire.</div>
+            </div>
+          </div>
+
+          <!-- Assistant IA UI -->
+          <div class="row bg-light rounded p-3 mb-3 mx-0 border" style="border-left: 4px solid #17a2b8 !important;" *ngIf="showWizard">
+             <div class="col-12 mb-2 d-flex justify-content-between align-items-center">
+                <h6 class="text-info m-0">✨ Moteur d'affectation intelligente</h6>
+                <button type="button" class="btn-close" (click)="showWizard = false"></button>
+             </div>
+             <div class="col-md-3">
+                <label class="small text-muted mb-1">Age de l'enfant</label>
+                <input type="number" class="form-control form-control-sm" [(ngModel)]="iaAge" name="iaAge" placeholder="Ex: 4">
+             </div>
+             <div class="col-md-3">
+                <label class="small text-muted mb-1">Langue</label>
+                <select class="form-control form-control-sm" [(ngModel)]="iaLangue" name="iaLangue">
+                  <option value="Français">Français</option>
+                  <option value="Anglais">Anglais</option>
+                  <option value="Arabe">Arabe</option>
+                </select>
+             </div>
+             <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-info btn-sm w-100" (click)="getSuggestions()">
+                   <span *ngIf="!isSuggesting">Rechercher</span>
+                   <span *ngIf="isSuggesting"><span class="spinner-border spinner-border-sm"></span> Calcule...</span>
+                </button>
+             </div>
+             <div class="col-12 mt-3" *ngIf="suggestions.length > 0">
+                <div class="d-flex flex-wrap" style="gap: 10px;">
+                   <div *ngFor="let s of suggestions" class="card shadow-sm mb-0" style="cursor: pointer; width: 200px" (click)="selectSuggestion(s.groupe.id)" [ngStyle]="{'border': s.matchPercentage >= 70 ? '2px solid #28a745' : '1px solid #ccc'}">
+                     <div class="card-body p-2 d-flex align-items-center">
+                        <div class="rounded-circle text-white d-flex align-items-center justify-content-center me-2 font-weight-bold" 
+                             [ngClass]="s.matchPercentage >= 70 ? 'bg-success' : 'bg-warning'" style="width: 35px; height: 35px; font-size: 0.8rem">
+                           {{ s.matchPercentage }}%
+                        </div>
+                        <div style="line-height: 1.1; overflow: hidden;">
+                           <strong class="d-block text-truncate text-dark" style="font-size: 0.9rem">{{ s.groupe.nom }}</strong>
+                           <small class="text-secondary">{{ s.availableSeats }} places</small>
+                        </div>
+                     </div>
+                   </div>
+                </div>
+                <small class="text-muted mt-2 d-block"><em>Cliquez sur une classe pour l'affecter instantanément.</em></small>
+             </div>
+             <div class="col-12 mt-2" *ngIf="suggestions.length === 0 && hasSearched && !isSuggesting">
+                <div class="text-danger small">Aucune classe optimale trouvée. Veuillez vérifier manuellement.</div>
+             </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Statut <span class="text-danger">*</span></label>
+              <select class="form-control" name="statut" [(ngModel)]="currentAffectation.statut"
+                      required #statCtrl="ngModel"
+                      [ngClass]="{'is-invalid': statCtrl.invalid && statCtrl.touched, 'is-valid': statCtrl.valid && statCtrl.touched}">
+                <option value="">-- Sélectionner --</option>
+                <option value="ACTIF">🟢 Actif</option>
+                <option value="SUSPENDU">🟠 Suspendu</option>
+                <option value="TERMINE">🔴 Terminé</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="statCtrl.invalid && statCtrl.touched">Veuillez sélectionner un statut.</div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="affectationForm.invalid">
+            <i class="feather icon-save me-1"></i>{{ isEditMode ? 'Modifier' : 'Affecter' }}
+          </button>
+          <button type="button" class="btn btn-secondary ms-2" *ngIf="isEditMode" (click)="resetForm()">Annuler</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 mt-4">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Registre des Affectations</h5>
+        <button class="btn btn-sm btn-outline-secondary" (click)="loadAffectations()">🔄 Rafraîchir</button>
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID Enfant</th>
+              <th>Groupe</th>
+              <th>Période</th>
+              <th>Statut</th>
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of affectations">
+              <td><strong>#{{ a.enfantId }}</strong></td>
+              <td>{{ a.groupe?.nom || '?' }}</td>
+              <td>Du {{ a.dateDebut }} au {{ a.dateFin }}</td>
+              <td>
+                <span class="badge"
+                      [ngClass]="{'bg-success': a.statut === 'ACTIF', 'bg-warning': a.statut === 'SUSPENDU', 'bg-danger': a.statut === 'TERMINE'}">
+                  {{ a.statut }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-info me-2" (click)="editAffectation(a)">Modif.</button>
+                <button class="btn btn-sm btn-danger" (click)="deleteAffectation(a.id)">Suppr.</button>
+              </td>
+            </tr>
+            <tr *ngIf="affectations.length === 0">
+              <td colspan="5" class="text-center">Aucune affectation existante.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
