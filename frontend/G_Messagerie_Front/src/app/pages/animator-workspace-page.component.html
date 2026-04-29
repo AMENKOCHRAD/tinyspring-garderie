@@ -1,0 +1,288 @@
+<div class="ts-container workspace-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">{{ pageMeta().chip }}</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p class="muted">{{ pageMeta().description }}</p>
+    </div>
+    <div class="page-header-meta">{{ todayLabel }}</div>
+  </section>
+
+  <ng-container [ngSwitch]="page()">
+    <section *ngSwitchCase="'tableau-de-bord'" class="workspace-page">
+      <div class="stats-grid">
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">G</span>
+            <span class="stat-card__value">18</span>
+          </div>
+          <span class="stat-card__label">Enfants suivis</span>
+        </article>
+        <article class="stat-card tone-blush">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-blush">A</span>
+            <span class="stat-card__value">5</span>
+          </div>
+          <span class="stat-card__label">Activites du jour</span>
+        </article>
+        <article class="stat-card tone-lime">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-lime">S</span>
+            <span class="stat-card__value">3</span>
+          </div>
+          <span class="stat-card__label">Alertes sante</span>
+        </article>
+        <article class="stat-card tone-mint">
+          <div class="stat-card__top">
+            <span class="icon-circle tone-mint">M</span>
+            <span class="stat-card__value">4</span>
+          </div>
+          <span class="stat-card__label">Messages non lus</span>
+        </article>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'groupes'" class="workspace-page">
+      <section id="mes-classes" class="profile-cards">
+        <article class="profile-card">
+          <h3>Groupe Papillons</h3>
+          <p class="muted">12/15 enfants • 3 a 4 ans</p>
+        </article>
+        <article class="profile-card">
+          <h3>Groupe Tournesols</h3>
+          <p class="muted">10/12 enfants • 2 a 3 ans</p>
+        </article>
+      </section>
+
+      <section id="liste-enfants" class="table-card">
+        <h3>Liste des enfants</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Lina Ben Salah</strong>
+            <p class="muted">Papillons • Allergie : arachides</p>
+          </article>
+          <article class="stack-item">
+            <strong>Sami Gharbi</strong>
+            <p class="muted">Papillons • Aucun signalement majeur</p>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'sante'" class="workspace-page">
+      <section id="alertes" class="stack-list">
+        <article class="soft-panel soft-panel--blush">
+          <strong>Lina</strong>
+          <p class="muted">Sirop anti-allergique • 12h00 • suivi prioritaire.</p>
+        </article>
+      </section>
+
+      <div class="two-column-grid">
+        <section id="allergies" class="table-card">
+          <h3>Allergies du groupe</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Lina Ben Salah</strong>
+              <p class="muted">Arachides • gravite forte</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="incidents" class="table-card">
+          <h3>Incidents recents</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>09 avril</strong>
+              <p class="muted">Chute legere, observation puis transmission aux parents.</p>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <section id="declarer" class="table-card">
+        <h3>Declarer un incident</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Enfant</label>
+            <select>
+              <option>Lina Ben Salah</option>
+              <option>Sami Gharbi</option>
+            </select>
+          </div>
+          <div>
+            <label>Type</label>
+            <select>
+              <option>Chute</option>
+              <option>Fievre</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'activites'" class="workspace-page">
+      <section id="programme" class="table-card">
+        <h3>Programme hebdomadaire</h3>
+        <div class="week-grid">
+          <div></div>
+          <div class="week-grid__header">Lun</div>
+          <div class="week-grid__header">Mar</div>
+          <div class="week-grid__header">Mer</div>
+          <div class="week-grid__header">Jeu</div>
+          <div class="week-grid__header">Ven</div>
+
+          <div class="menu-grid__row-label">Matin</div>
+          <div class="week-cell">Lecture sensorielle</div>
+          <div class="week-cell">Motricite</div>
+          <div class="week-cell">Peinture</div>
+          <div class="week-cell">Musique</div>
+          <div class="week-cell">Jeux cooperatifs</div>
+
+          <div class="menu-grid__row-label">Apres-midi</div>
+          <div class="week-cell">Repos</div>
+          <div class="week-cell">Sortie jardin</div>
+          <div class="week-cell">Parcours moteur</div>
+          <div class="week-cell">Gouter festif</div>
+          <div class="week-cell">Bilan</div>
+        </div>
+      </section>
+
+      <div class="two-column-grid">
+        <section id="evenements" class="table-card">
+          <h3>Evenements</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Fete du printemps</strong>
+              <p class="muted">Participation des groupes Papillons et Tournesols.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="menus" class="table-card">
+          <h3>Menus</h3>
+          <div class="stack-list">
+            <article class="stack-item">
+              <strong>Jeudi</strong>
+              <p class="muted">Semoule, dinde, petits pois</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'messages'" class="workspace-page">
+      <section id="conversations" class="conversation-layout">
+        <aside class="chat-sidebar">
+          <article class="message-preview message-preview--active">
+            <strong>Sonia Ben Salah</strong>
+            <p class="muted">Question sur le dejeuner</p>
+          </article>
+          <article class="message-preview">
+            <strong>Yassine Gharbi</strong>
+            <p class="muted">Absence vendredi</p>
+          </article>
+        </aside>
+
+        <section class="chat-panel">
+          <h3>Conversation parent</h3>
+          <div class="chat-thread">
+            <article class="bubble bubble--other">
+              Bonjour, pouvez-vous confirmer si Lina a bien dejeuner ?
+            </article>
+            <article class="bubble bubble--self">
+              Oui, tout s est tres bien passe aujourd hui.
+            </article>
+          </div>
+          <div class="chat-composer">
+            <input placeholder="Repondre au parent..." />
+            <button type="button" class="ts-button ts-button--primary">Envoyer</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="nouveau-message" class="table-card">
+        <h3>Nouveau message</h3>
+        <div class="form-grid">
+          <div>
+            <label>Message</label>
+            <textarea placeholder="Preparer un message a destination d un parent."></textarea>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'formations'" class="workspace-page">
+      <section id="mes-formations" class="table-card">
+        <h3>Mes formations</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Communication bienveillante</strong>
+            <p class="muted">En cours jusqu au 18 avril</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="catalogue" class="table-card">
+        <h3>Catalogue</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Ateliers sensoriels</strong>
+            <p class="muted">Disponible au catalogue</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="certificats" class="table-card">
+        <h3>Certificats</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Certificat premiers secours</strong>
+            <p class="muted">Obtenu le 14 janvier 2026</p>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'planning'" class="workspace-page">
+      <section id="calendrier" class="calendar-card">
+        <h3>Planning mensuel</h3>
+        <div class="calendar-grid">
+          <div class="calendar-day calendar-day--selected">1</div>
+          <div class="calendar-day">2</div>
+          <div class="calendar-day">3</div>
+          <div class="calendar-day">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day">6</div>
+          <div class="calendar-day">7</div>
+        </div>
+      </section>
+
+      <section id="absences" class="table-card">
+        <h3>Absences</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>18 au 19 avril</strong>
+            <p class="muted">Conge en attente de validation</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="demander-conge" class="table-card">
+        <h3>Demander un conge</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Type</label>
+            <select>
+              <option>Conge paye</option>
+              <option>Absence exceptionnelle</option>
+            </select>
+          </div>
+          <div>
+            <label>Periode</label>
+            <input type="date" />
+          </div>
+        </div>
+      </section>
+    </section>
+  </ng-container>
+</div>

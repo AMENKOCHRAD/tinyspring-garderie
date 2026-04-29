@@ -1,0 +1,410 @@
+<div class="ts-container workspace-page reclamations-page">
+  <section class="page-header-card">
+    <div>
+      <span class="section-chip">{{ roleLabel() }}</span>
+      <h1>Mes reclamations</h1>
+      <p class="muted">Creation, suivi du statut, pieces jointes, priorisation intelligente et reponse administrative.</p>
+    </div>
+    <button type="button" class="ts-button ts-button--ghost" (click)="loadReclamations()">Actualiser</button>
+  </section>
+
+  <section class="stats-grid">
+    <article class="stat-card tone-mint">
+      <div class="stat-card__top"><span class="icon-circle tone-mint">T</span><span class="stat-card__value">{{ totalCount() }}</span></div>
+      <span class="stat-card__label">Total</span>
+    </article>
+    <article class="stat-card tone-blush">
+      <div class="stat-card__top"><span class="icon-circle tone-blush">O</span><span class="stat-card__value">{{ openCount() }}</span></div>
+      <span class="stat-card__label">Ouvertes</span>
+    </article>
+    <article class="stat-card tone-lime">
+      <div class="stat-card__top"><span class="icon-circle tone-lime">E</span><span class="stat-card__value">{{ inProgressCount() }}</span></div>
+      <span class="stat-card__label">En traitement</span>
+    </article>
+    <article class="stat-card tone-mint">
+      <div class="stat-card__top"><span class="icon-circle tone-mint">R</span><span class="stat-card__value">{{ answeredCount() }}</span></div>
+      <span class="stat-card__label">Avec reponse</span>
+    </article>
+  </section>
+
+  <div class="alert-box alert-box--success" *ngIf="successMessage()">{{ successMessage() }}</div>
+  <div class="alert-box alert-box--warning" *ngIf="moderationMessage()">{{ moderationMessage() }}</div>
+  <div class="alert-box alert-box--danger" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+
+  <section class="workflow-board">
+    <button
+      type="button"
+      class="workflow-chip"
+      *ngFor="let item of workflowItems"
+      [class.workflow-chip--active]="workflowFilter() === item.key"
+      (click)="setWorkflowFilter(item.key)">
+      <span>{{ item.label }}</span>
+      <strong>{{ workflowCount(item.key) }}</strong>
+      <small>{{ item.description }}</small>
+    </button>
+  </section>
+
+  <section class="two-column-grid reclamation-layout">
+    <article class="table-card" *ngIf="canUseReclamations(); else unavailableRole">
+      <div class="section-title-inline">
+        <div>
+          <h3>Nouvelle reclamation</h3>
+          <p class="muted">Laissez la categorie et la priorite en automatique si vous voulez utiliser la classification backend.</p>
+        </div>
+      </div>
+
+      <form class="form-grid" [formGroup]="form" (ngSubmit)="submitReclamation()">
+        <div>
+          <label for="title">Titre</label>
+          <input id="title" formControlName="title" placeholder="Ex. Retard du transport" />
+        </div>
+
+        <div>
+          <label for="description">Description</label>
+          <textarea id="description" formControlName="description" placeholder="Expliquez clairement la situation."></textarea>
+        </div>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label for="category">Categorie</label>
+            <select id="category" formControlName="category">
+              <option value="">Automatique</option>
+              <option *ngFor="let category of categories" [value]="category">{{ categoryLabel(category) }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="priority">Priorite</label>
+            <select id="priority" formControlName="priority">
+              <option value="">Automatique</option>
+              <option *ngFor="let priority of priorities" [value]="priority">{{ priorityLabel(priority) }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--two">
+          <div>
+            <label for="image">Image</label>
+            <input id="image" type="file" accept="image/*" (change)="onImageSelected($event)" />
+            <p class="muted file-hint" *ngIf="imageFile()">{{ imageFile()?.name }}</p>
+          </div>
+
+          <div>
+            <label for="attachment">Piece jointe</label>
+            <input id="attachment" type="file" (change)="onAttachmentSelected($event)" />
+            <p class="muted file-hint" *ngIf="attachmentFile()">{{ attachmentFile()?.name }}</p>
+          </div>
+        </div>
+
+        <section class="assistant-card" *ngIf="creationAssistant() as assistant">
+          <div class="assistant-head">
+            <div>
+              <span class="section-chip">Assistant automatique</span>
+              <h4>{{ assistant.summary }}</h4>
+              <p class="muted assistant-live">
+                Analyse instantanee depuis le titre et la description.
+                <span *ngIf="assistant.detectedSignals.length">
+                  Signaux detectes: {{ assistant.detectedSignals.join(', ') }}.
+                </span>
+              </p>
+            </div>
+            <div class="quality-ring">
+              <strong>{{ assistant.qualityScore }}%</strong>
+              <span>qualite</span>
+            </div>
+          </div>
+
+          <div class="assistant-suggestions">
+            <div>
+              <span class="field-label">Titre propose</span>
+              <strong>{{ assistant.suggestedTitle }}</strong>
+            </div>
+            <div>
+              <span class="field-label">Categorie suggeree</span>
+              <strong>{{ categoryLabel(assistant.suggestedCategory) }}</strong>
+              <small>{{ assistant.confidence }}% confiance</small>
+            </div>
+            <div>
+              <span class="field-label">Urgence parent</span>
+              <strong>{{ assistant.urgencyLabel }}</strong>
+            </div>
+            <div>
+              <span class="field-label">Priorite proposee</span>
+              <strong>{{ priorityLabel(assistant.suggestedPriority) }}</strong>
+            </div>
+          </div>
+
+          <div class="assistant-description-preview">
+            <span class="field-label">Description proposee si le champ est vide</span>
+            <p>{{ assistant.suggestedDescription }}</p>
+          </div>
+
+          <div class="assistant-apply-row">
+            <button
+              type="button"
+              class="mini-button mini-button--primary"
+              [disabled]="!assistant.hasEnoughText || assistant.suggestionApplied"
+              (click)="applyAssistantSuggestion()">
+              {{ assistant.suggestionApplied ? 'Suggestion appliquee' : 'Appliquer la suggestion' }}
+            </button>
+            <span class="muted">{{ assistant.nextQuestion }}</span>
+          </div>
+
+          <div class="assistant-columns">
+            <div>
+              <strong>Points forts</strong>
+              <ul>
+                <li *ngFor="let item of assistant.strengths">{{ item }}</li>
+                <li *ngIf="!assistant.strengths.length">Ajoutez quelques details pour demarrer l'analyse.</li>
+              </ul>
+            </div>
+
+            <div>
+              <strong>A completer</strong>
+              <ul>
+                <li *ngFor="let item of assistant.missingItems">{{ item }}</li>
+                <li *ngIf="!assistant.missingItems.length">Votre demande est suffisamment complete.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="assistant-warning" *ngIf="assistant.recommendedAttachments.length">
+            Piece recommandee: {{ assistant.recommendedAttachments.join(', ') }}
+          </div>
+
+          <button
+            type="button"
+            class="assistant-duplicate"
+            *ngIf="assistant.duplicate as duplicate"
+            (click)="selectReclamation(duplicate)">
+            Reclamation similaire ouverte detectee: #{{ duplicate.id }} - {{ duplicate.title }}
+          </button>
+        </section>
+
+        <button type="submit" class="ts-button ts-button--primary" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Envoi...' : 'Envoyer la reclamation' }}
+        </button>
+      </form>
+    </article>
+
+    <ng-template #unavailableRole>
+      <article class="table-card">
+        <h3>Espace reclamations</h3>
+        <p class="muted">Le backend actuel reserve ces donnees au parent et a l'administration.</p>
+      </article>
+    </ng-template>
+
+    <article class="table-card">
+      <div class="section-title-inline">
+        <div>
+          <h3>Recherche & pilotage</h3>
+          <p class="muted">{{ filteredReclamations().length }} resultat(s) sur {{ reclamations().length }}</p>
+        </div>
+        <button type="button" class="mini-button" (click)="clearFilters()">Reset</button>
+      </div>
+
+      <div class="form-grid filter-grid">
+        <input [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)" placeholder="Titre ou description..." />
+        <select [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event)">
+          <option value="">Toutes categories</option>
+          <option *ngFor="let category of categories" [value]="category">{{ categoryLabel(category) }}</option>
+        </select>
+        <select [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event)">
+          <option value="">Tous statuts</option>
+          <option *ngFor="let status of statuses" [value]="status">{{ statusLabel(status) }}</option>
+        </select>
+        <select [ngModel]="filterPriority()" (ngModelChange)="filterPriority.set($event)">
+          <option value="">Toutes priorites</option>
+          <option *ngFor="let priority of priorities" [value]="priority">{{ priorityLabel(priority) }}</option>
+        </select>
+      </div>
+    </article>
+  </section>
+
+  <section class="table-card">
+    <div class="section-title-inline">
+      <div>
+        <h3>Liste des reclamations</h3>
+        <p class="muted">Les informations intelligentes viennent du meme backend que le dashboard admin.</p>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="isLoading()">Chargement des reclamations...</div>
+
+    <div class="reclamation-card-grid" *ngIf="!isLoading() && filteredReclamations().length; else noReclamations">
+      <article
+        class="parent-rec-card"
+        *ngFor="let reclamation of filteredReclamations()"
+        [class.parent-rec-card--active]="selectedReclamation()?.id === reclamation.id"
+        (click)="selectReclamation(reclamation)">
+        <div class="rec-card-top">
+          <span class="status-badge" [ngClass]="statusClass(reclamation.status)">{{ statusLabel(reclamation.status) }}</span>
+          <span class="workflow-badge" [ngClass]="workflowClass(reclamation)">{{ workflowLabel(reclamation) }}</span>
+          <span class="follow-up-badge" [ngClass]="followUpClass(reclamation)">{{ followUpInsight(reclamation).label }}</span>
+          <span class="tag tag--mint">#{{ reclamation.id }}</span>
+        </div>
+
+        <h3>{{ reclamation.title }}</h3>
+        <p class="muted rec-description">{{ reclamation.description }}</p>
+
+        <div class="chip-row">
+          <span class="tag tag--blush">{{ categoryLabel(reclamation.category) }}</span>
+          <span class="tag tag--lime">{{ priorityLabel(reclamation.priority) }}</span>
+          <span class="status-badge" [ngClass]="smartClass(reclamation.smartPriorityLevel)">
+            {{ reclamation.smartPriorityLevel || 'LOW' }} - {{ reclamation.smartPriorityScore || 0 }}/100
+          </span>
+        </div>
+
+        <div class="parent-response">
+          <strong>Reponse administration</strong>
+          <p>{{ reclamation.adminComment || 'Pas encore de reponse administrative.' }}</p>
+        </div>
+
+        <div class="workflow-advice">
+          {{ workflowAdvice(reclamation) }}
+        </div>
+
+        <div class="follow-up-card" *ngIf="canPrepareFollowUp(reclamation)">
+          <strong>{{ followUpInsight(reclamation).label }}</strong>
+          <p>{{ followUpInsight(reclamation).reason }}</p>
+          <textarea readonly>{{ followUpInsight(reclamation).message }}</textarea>
+          <div class="rec-actions">
+            <button
+              type="button"
+              class="mini-button mini-button--primary"
+              [disabled]="isSendingFollowUp(reclamation)"
+              (click)="$event.stopPropagation(); prepareFollowUp(reclamation)">
+              {{ isSendingFollowUp(reclamation) ? 'Envoi...' : 'Envoyer la relance' }}
+            </button>
+            <span class="muted" *ngIf="followUpPreparedLabel(reclamation)">{{ followUpPreparedLabel(reclamation) }}</span>
+          </div>
+        </div>
+
+        <div class="rec-actions">
+          <button type="button" class="mini-button mini-button--primary" (click)="$event.stopPropagation(); startEdit(reclamation)">Modifier</button>
+          <button type="button" class="mini-button mini-button--secondary" (click)="$event.stopPropagation(); deleteReclamation(reclamation)">Supprimer</button>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #noReclamations>
+      <div class="empty-state" *ngIf="!isLoading()">Aucune reclamation a afficher.</div>
+    </ng-template>
+  </section>
+
+  <section class="table-card editor-card" *ngIf="editingReclamation() as editing">
+    <div class="section-title-inline">
+      <div>
+        <h3>Modifier la reclamation #{{ editing.id }}</h3>
+        <p class="muted">Les changements seront soumis aux memes regles backend que le dashboard.</p>
+      </div>
+      <button type="button" class="mini-button" (click)="cancelEdit()">Fermer</button>
+    </div>
+
+    <form class="form-grid" [formGroup]="editForm" (ngSubmit)="updateReclamation()">
+      <div>
+        <label>Titre</label>
+        <input formControlName="title" />
+      </div>
+      <div>
+        <label>Description</label>
+        <textarea formControlName="description"></textarea>
+      </div>
+      <div class="form-grid form-grid--two">
+        <div>
+          <label>Categorie</label>
+          <select formControlName="category">
+            <option value="">Automatique</option>
+            <option *ngFor="let category of categories" [value]="category">{{ categoryLabel(category) }}</option>
+          </select>
+        </div>
+        <div>
+          <label>Priorite</label>
+          <select formControlName="priority">
+            <option value="">Automatique</option>
+            <option *ngFor="let priority of priorities" [value]="priority">{{ priorityLabel(priority) }}</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="ts-button ts-button--primary" [disabled]="isUpdating()">
+        {{ isUpdating() ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="table-card" *ngIf="selectedReclamation() as selected">
+    <div class="detail-header">
+      <div>
+        <span class="status-badge" [ngClass]="statusClass(selected.status)">{{ statusLabel(selected.status) }}</span>
+        <h3>{{ selected.title }}</h3>
+      </div>
+      <span class="tag tag--mint">{{ slaLabel(selected) }}</span>
+    </div>
+
+    <div class="reclamation-detail-grid">
+      <article>
+        <span class="field-label">Description</span>
+        <p>{{ selected.description }}</p>
+      </article>
+
+      <article>
+        <span class="field-label">Reponse administration</span>
+        <p>{{ selected.adminComment || 'Aucune reponse pour le moment.' }}</p>
+      </article>
+
+      <article>
+        <span class="field-label">Classification automatique</span>
+        <p>
+          Categorie predite: {{ categoryLabel(selected.predictedCategory) }}
+          <br />
+          Confiance: {{ confidencePercent(selected.classificationConfidence) }}
+        </p>
+      </article>
+
+      <article>
+        <span class="field-label">Priorite intelligente</span>
+        <p>
+          {{ selected.smartPriorityLevel || 'LOW' }} - {{ selected.smartPriorityScore || 0 }}/100
+          <br />
+          {{ selected.smartPriorityReason || 'Aucune explication disponible.' }}
+        </p>
+      </article>
+
+      <article>
+        <span class="field-label">Decision ML</span>
+        <p>{{ decisionLabel(selected.decisionRecommendation) }} - {{ confidencePercent(selected.decisionConfidence) }}</p>
+      </article>
+
+      <article>
+        <span class="field-label">Recurrence / escalade</span>
+        <p>
+          {{ selected.recurring ? 'Reclamation recurrente' : 'Pas de recurrence detectee' }}
+          <br />
+          {{ selected.autoEscalated ? 'Escalade automatique active' : 'Pas d escalade automatique' }}
+        </p>
+      </article>
+    </div>
+
+    <div class="attachments-grid">
+      <a class="attachment-card" *ngIf="selected.imageName" [href]="fileUrl(selected.imagePath)" target="_blank" rel="noopener">
+        <strong>Image</strong>
+        <span>{{ selected.imageName }}</span>
+      </a>
+
+      <div class="attachment-card" *ngIf="selected.attachmentName">
+        <strong>{{ attachmentIcon(selected.attachmentName, selected.attachmentType) }} Piece jointe</strong>
+        <span>{{ selected.attachmentName }}</span>
+        <div class="attachment-actions">
+          <button type="button" class="mini-button" (click)="openAttachment(selected.attachmentPath)">Ouvrir</button>
+          <button type="button" class="mini-button mini-button--primary" (click)="downloadAttachment(selected.attachmentPath, selected.attachmentName)">
+            Telecharger
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state empty-state--inline" *ngIf="!selected.imageName && !selected.attachmentName">
+        Aucune piece jointe.
+      </div>
+    </div>
+  </section>
+</div>
