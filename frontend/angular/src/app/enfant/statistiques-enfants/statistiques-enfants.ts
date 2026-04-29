@@ -1,10 +1,20 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { EnfantService, Enfant } from '../enfant';
 import { EtatSanitaireService } from 'src/app/services/etat-sanitaire';
-import { ValidationTraitementsService } from 'src/app/services/validation-traitements';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import type {
+  ApexChart,
+  ApexDataLabels,
+  ApexLegend,
+  ApexNonAxisChartSeries,
+  ApexPlotOptions,
+  ApexResponsive,
+  ApexStroke,
+  ApexTheme
+} from 'ng-apexcharts';
 
 interface ConditionSanitaire {
   id?: number;
@@ -15,20 +25,19 @@ interface ConditionSanitaire {
 interface Traitement {
   id?: number;
   nomTraitement?: string;
-  statut?: string;
 }
 
 @Component({
   selector: 'app-statistiques-enfants',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './statistiques-enfants.html',
   styleUrls: ['./statistiques-enfants.scss']
 })
 export class StatistiquesEnfantsComponent implements OnInit {
   private readonly enfantService = inject(EnfantService);
   private readonly etatSanitaireService = inject(EtatSanitaireService);
-  private readonly validationService = inject(ValidationTraitementsService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   isLoading = false;
   error = '';
@@ -41,14 +50,55 @@ export class StatistiquesEnfantsComponent implements OnInit {
   conditionsTemporaires = 0;
   conditionsAutres = 0;
 
-  traitementsValides = 0;
-  traitementsEnAttente = 0;
-  traitementsRefuses = 0;
-  traitementsActifs = 0;
-  traitementsAnnules = 0;
-  traitementsAutres = 0;
-
   allergiesTop: Array<{ allergie: string; count: number }> = [];
+
+  niveauGroups: Array<{
+    key: 'CRECHE' | 'PRESCOLAIRE' | 'PREPARATOIRE' | 'HORS_NIVEAU';
+    label: string;
+    ageRangeLabel: string;
+    enfants: Enfant[];
+  }> = [
+    { key: 'CRECHE', label: 'Crèche', ageRangeLabel: '0 à 3 ans', enfants: [] },
+    { key: 'PRESCOLAIRE', label: 'Préscolaire', ageRangeLabel: '3 à 5 ans', enfants: [] },
+    { key: 'PREPARATOIRE', label: 'Préparatoire', ageRangeLabel: '5 à 6 ans', enfants: [] },
+    { key: 'HORS_NIVEAU', label: 'Hors niveau', ageRangeLabel: 'Autre', enfants: [] }
+  ];
+
+  niveauChart: {
+    series: ApexNonAxisChartSeries;
+    chart: ApexChart;
+    labels: string[];
+    legend: ApexLegend;
+    dataLabels: ApexDataLabels;
+    plotOptions: ApexPlotOptions;
+    stroke: ApexStroke;
+    theme: ApexTheme;
+    responsive: ApexResponsive[];
+  } | null = null;
+
+  conditionChart: {
+    series: ApexNonAxisChartSeries;
+    chart: ApexChart;
+    labels: string[];
+    legend: ApexLegend;
+    dataLabels: ApexDataLabels;
+    plotOptions: ApexPlotOptions;
+    stroke: ApexStroke;
+    theme: ApexTheme;
+    responsive: ApexResponsive[];
+  } | null = null;
+
+  allergiesChart: {
+    series: ApexNonAxisChartSeries;
+    chart: ApexChart;
+    labels: string[];
+    legend: ApexLegend;
+    dataLabels: ApexDataLabels;
+    plotOptions: ApexPlotOptions;
+    stroke: ApexStroke;
+    theme: ApexTheme;
+    responsive: ApexResponsive[];
+  } | null = null;
 
   ngOnInit(): void {
     this.chargerStats();
@@ -58,20 +108,24 @@ export class StatistiquesEnfantsComponent implements OnInit {
     this.isLoading = true;
     this.error = '';
 
-    forkJoin({
-      enfants: this.enfantService.getAllEnfants().pipe(catchError(() => of([] as Enfant[]))),
-      enAttente: this.validationService.getTraitementsEnAttente().pipe(catchError(() => of([] as any[])))
-    }).subscribe({
-      next: ({ enfants, enAttente }) => {
-        const enfantsList = enfants ?? [];
-        this.totalEnfants = enfantsList.length;
-        this.traitementsEnAttente = (enAttente ?? []).length;
+    this.enfantService
+      .getAllEnfants()
+      .pipe(catchError(() => of([] as Enfant[])))
+      .subscribe({
+        next: (enfants) => {
+          const enfantsList = enfants ?? [];
+          this.totalEnfants = enfantsList.length;
 
-        this.allergiesTop = this.computeAllergiesTop(enfantsList);
+          this.niveauGroups = this.computeNiveauGroups(enfantsList);
+          this.niveauChart = this.buildNiveauChart(this.niveauGroups);
 
-        if (!enfantsList.length) {
-          this.resetHealthCountsKeepChildren();
-          this.isLoading = false;
+          this.allergiesTop = this.computeAllergiesTop(enfantsList);
+          this.allergiesChart = this.buildAllergiesChart(this.allergiesTop);
+
+          if (!enfantsList.length) {
+            this.resetHealthCountsKeepChildren();
+            this.isLoading = false;
+            this.cdr.detectChanges();
           return;
         }
 
@@ -103,22 +157,24 @@ export class StatistiquesEnfantsComponent implements OnInit {
             this.totalTraitements = allTraitements.length;
 
             this.computeConditionStats(allConditions);
-            this.computeTraitementStats(allTraitements);
+            this.conditionChart = this.buildConditionsChart(this.conditionsChroniques, this.conditionsTemporaires, this.conditionsAutres);
 
             // Si on a déjà un compteur en attente via endpoint dédié, on garde le max
-            this.traitementsEnAttente = Math.max(this.traitementsEnAttente, this.countByStatut(allTraitements, 'EN_ATTENTE_VALIDATION'));
 
             this.isLoading = false;
+            this.cdr.detectChanges();
           },
           error: () => {
             this.error = 'Erreur lors du chargement des statistiques sanitaires';
             this.isLoading = false;
+            this.cdr.detectChanges();
           }
         });
       },
       error: () => {
         this.error = 'Erreur lors du chargement des statistiques';
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -129,11 +185,9 @@ export class StatistiquesEnfantsComponent implements OnInit {
     this.conditionsChroniques = 0;
     this.conditionsTemporaires = 0;
     this.conditionsAutres = 0;
-    this.traitementsValides = 0;
-    this.traitementsRefuses = 0;
-    this.traitementsActifs = 0;
-    this.traitementsAnnules = 0;
-    this.traitementsAutres = 0;
+    this.conditionChart = this.buildConditionsChart(0, 0, 0);
+    this.allergiesChart = this.buildAllergiesChart([]);
+    this.niveauChart = this.buildNiveauChart(this.niveauGroups);
   }
 
   private toArray<T>(data: any): T[] {
@@ -191,26 +245,48 @@ export class StatistiquesEnfantsComponent implements OnInit {
     this.conditionsAutres = autres;
   }
 
-  private computeTraitementStats(traitements: Traitement[]): void {
-    this.traitementsValides = this.countByStatut(traitements, 'VALIDE');
-    this.traitementsRefuses = this.countByStatut(traitements, 'REFUSE');
-    this.traitementsActifs = this.countByStatut(traitements, 'ACTIF');
-    this.traitementsAnnules = this.countByStatut(traitements, 'ANNULE');
-
-    const known = new Set(['VALIDE', 'REFUSE', 'ACTIF', 'ANNULE', 'EN_ATTENTE_VALIDATION']);
-    let autres = 0;
-    for (const t of traitements ?? []) {
-      const s = (t?.statut ?? '').toString().toUpperCase();
-      if (!s || !known.has(s)) {
-        autres++;
-      }
-    }
-    this.traitementsAutres = autres;
+  private buildConditionsChart(chroniques: number, temporaires: number, autres: number) {
+    return this.buildDonutChart([chroniques, temporaires, autres], ['Chroniques', 'Temporaires', 'Autres'], 'Aucune condition');
   }
 
-  private countByStatut(traitements: Traitement[], statut: string): number {
-    const target = (statut ?? '').toUpperCase();
-    return (traitements ?? []).filter((t) => (t?.statut ?? '').toString().toUpperCase() === target).length;
+  private buildAllergiesChart(allergies: Array<{ allergie: string; count: number }>) {
+    const top = (allergies ?? []).slice(0, 6);
+    const series = top.map((x) => Number(x.count) || 0);
+    const labels = top.map((x) => x.allergie);
+    return this.buildDonutChart(series, labels, 'Aucune allergie');
+  }
+
+  private buildDonutChart(series: number[], labels: string[], emptyLabel: string) {
+    const cleanSeries = (series ?? []).map((n) => (Number.isFinite(Number(n)) ? Number(n) : 0));
+    const hasAny = cleanSeries.some((n) => n > 0);
+
+    const finalSeries: ApexNonAxisChartSeries = hasAny ? cleanSeries : [1];
+    const finalLabels = hasAny ? labels : [emptyLabel];
+
+    const chart: ApexChart = { type: 'donut', height: 260, toolbar: { show: false } };
+    const legend: ApexLegend = { position: 'bottom' };
+    const dataLabels: ApexDataLabels = { enabled: true };
+    const plotOptions: ApexPlotOptions = { pie: { donut: { size: '62%' } } };
+    const stroke: ApexStroke = { width: 2 };
+    const theme: ApexTheme = { mode: 'light' };
+    const responsive: ApexResponsive[] = [
+      {
+        breakpoint: 992,
+        options: { chart: { height: 240 }, legend: { position: 'bottom' } }
+      }
+    ];
+
+    return {
+      series: finalSeries,
+      labels: finalLabels,
+      chart,
+      legend,
+      dataLabels,
+      plotOptions,
+      stroke,
+      theme,
+      responsive
+    };
   }
 
   private titleCase(value: string): string {
@@ -218,5 +294,67 @@ export class StatistiquesEnfantsComponent implements OnInit {
     if (!s) return '';
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
-}
 
+  private buildNiveauChart(groups: Array<{ label: string; enfants: Enfant[] }>) {
+    const series = (groups ?? []).map((g) => (g?.enfants?.length ?? 0));
+    const labels = (groups ?? []).map((g) => g.label);
+    return this.buildDonutChart(series, labels, 'Aucun enfant');
+  }
+
+  private computeNiveauGroups(enfants: Enfant[]) {
+    const groups: Array<{
+      key: 'CRECHE' | 'PRESCOLAIRE' | 'PREPARATOIRE' | 'HORS_NIVEAU';
+      label: string;
+      ageRangeLabel: string;
+      enfants: Enfant[];
+    }> = [
+      { key: 'CRECHE', label: 'Crèche', ageRangeLabel: '0 à 3 ans', enfants: [] },
+      { key: 'PRESCOLAIRE', label: 'Préscolaire', ageRangeLabel: '3 à 5 ans', enfants: [] },
+      { key: 'PREPARATOIRE', label: 'Préparatoire', ageRangeLabel: '5 à 6 ans', enfants: [] },
+      { key: 'HORS_NIVEAU', label: 'Hors niveau', ageRangeLabel: 'Autre', enfants: [] }
+    ];
+
+    for (const enfant of enfants ?? []) {
+      const age = this.computeAgeYears(enfant?.dateNaissance);
+      const key =
+        age === null
+          ? 'HORS_NIVEAU'
+          : age < 3
+            ? 'CRECHE'
+            : age < 5
+              ? 'PRESCOLAIRE'
+              : age < 6
+                ? 'PREPARATOIRE'
+                : 'HORS_NIVEAU';
+
+      const g = groups.find((x) => x.key === key);
+      if (g) g.enfants.push(enfant);
+    }
+
+    // tri par prénom/nom pour lisibilité
+    for (const g of groups) {
+      g.enfants.sort((a, b) => {
+        const ap = `${a?.prenom ?? ''} ${a?.nom ?? ''}`.trim();
+        const bp = `${b?.prenom ?? ''} ${b?.nom ?? ''}`.trim();
+        return ap.localeCompare(bp);
+      });
+    }
+
+    return groups;
+  }
+
+  private computeAgeYears(dateNaissance: string | null | undefined): number | null {
+    const raw = (dateNaissance ?? '').toString().trim();
+    if (!raw) return null;
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return null;
+
+    const now = new Date();
+    let years = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) {
+      years--;
+    }
+    return Math.max(0, years);
+  }
+}

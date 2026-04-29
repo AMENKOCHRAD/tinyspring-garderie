@@ -26,6 +26,13 @@ public class Enfant {
 
     private String contactUrgence;
 
+    @Column(length = 255)
+    private String adresse;
+
+    private Double adresseLat;
+
+    private Double adresseLng;
+
     @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String photo;
@@ -64,6 +71,12 @@ public class Enfant {
     public void setAllergies(String allergies) { this.allergies = allergies; }
     public String getContactUrgence() { return contactUrgence; }
     public void setContactUrgence(String contactUrgence) { this.contactUrgence = contactUrgence; }
+    public String getAdresse() { return adresse; }
+    public void setAdresse(String adresse) { this.adresse = adresse; }
+    public Double getAdresseLat() { return adresseLat; }
+    public void setAdresseLat(Double adresseLat) { this.adresseLat = adresseLat; }
+    public Double getAdresseLng() { return adresseLng; }
+    public void setAdresseLng(Double adresseLng) { this.adresseLng = adresseLng; }
     public String getPhoto() { return photo; }
     public void setPhoto(String photo) { this.photo = photo; }
     public User getParent() { return parent; }

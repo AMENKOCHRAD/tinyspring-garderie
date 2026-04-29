@@ -121,5 +121,50 @@ export class ParentChangementsComponent {
       return true;
     });
   }
+  changementsPage = 1;
+changementsPageSize = 2; // mets 5 après test
+
+get filteredChangementsPagines(): ObservationFront[] {
+  const start = (this.changementsPage - 1) * this.changementsPageSize;
+  const end = start + this.changementsPageSize;
+
+  return this.filteredChangements.slice(start, end);
+}
+
+get totalChangementsPages(): number {
+  return Math.ceil(this.filteredChangements.length / this.changementsPageSize);
+}
+
+goToChangementsPage(page: number): void {
+  if (page < 1 || page > this.totalChangementsPages) {
+    return;
+  }
+
+  this.changementsPage = page;
+}
+
+nextChangementsPage(): void {
+  this.goToChangementsPage(this.changementsPage + 1);
+}
+
+previousChangementsPage(): void {
+  this.goToChangementsPage(this.changementsPage - 1);
+}
+
+getChangementsPages(): number[] {
+  return Array.from(
+    { length: this.totalChangementsPages },
+    (_, i) => i + 1
+  );
+}
+
+resetChangementsPage(): void {
+  this.changementsPage = 1;
+}
+
+onOnlyUnreadChange(): void {
+  this.resetChangementsPage();
+  this.chargerChangements();
+}
 }
 

@@ -13,6 +13,7 @@ public class ObservationCreateDto {
     private String lieu;
     private String symptomes;
     private String actionsEffectuees;
+    private Boolean forceCreate;
 
     public ObservationType getType() {
         return type;
@@ -84,5 +85,13 @@ public class ObservationCreateDto {
 
     public void setActionsEffectuees(String actionsEffectuees) {
         this.actionsEffectuees = actionsEffectuees;
+    }
+
+    public Boolean getForceCreate() {
+        return forceCreate;
+    }
+
+    public void setForceCreate(Boolean forceCreate) {
+        this.forceCreate = forceCreate;
     }
 }

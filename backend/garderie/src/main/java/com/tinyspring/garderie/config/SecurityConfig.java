@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/parent/traitements/**").hasAnyRole("PARENT", "ADMIN")
                         .requestMatchers("/api/parent/**").hasAnyRole("PARENT", "ADMIN")
@@ -76,6 +77,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/traitements/en-attente-validation").hasRole("ADMIN")
                         .requestMatchers("/api/traitements/details/**").hasRole("ADMIN")
                         .requestMatchers("/api/traitements/valider/**").hasRole("ADMIN")
+                        .requestMatchers("/api/traitements/refuser/**").hasRole("ADMIN")
+                        .requestMatchers("/api/traitements/*/validation-history").hasRole("ADMIN")
+                        .requestMatchers("/api/traitements/validation-events").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/traitements/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/traitements/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/traitements/condition/**").hasAnyRole("ADMIN", "PARENT")

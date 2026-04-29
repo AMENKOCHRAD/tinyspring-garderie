@@ -60,17 +60,13 @@
             </span>
             <div>
               <h3>{{ enfant.nom }} {{ enfant.prenom }}</h3>
-              <p class="muted">{{ getAge(enfant.dateNaissance) }} ans</p>
             </div>
           </div>
 
           <div class="badge-row">
-            <span class="tag tag--blush" *ngIf="enfant.allergies && enfant.allergies.trim()">
-              {{ enfant.allergies }}
-            </span>
-            <span class="tag tag--lime" *ngIf="!enfant.allergies || !enfant.allergies.trim()">
-              Aucune
-            </span>
+            <p class="tag tag--blush">
+  {{ getAge(enfant.dateNaissance) }} ans
+</p>
           </div>
 
           <div class="mt-2">
@@ -141,6 +137,11 @@
           </article>
 
           <article class="stack-item">
+            <strong>Adresse</strong>
+            <p class="muted">{{ selectedEnfant.adresse || 'Non renseignee' }}</p>
+          </article>
+
+          <article class="stack-item">
             <strong>Allergies</strong>
             <p class="muted">{{ selectedEnfant.allergies || 'Aucune' }}</p>
           </article>
@@ -204,7 +205,21 @@
 
           <div>
             <label>Allergies</label>
-            <input [(ngModel)]="editEnfantForm.allergies" name="editAllergies" />
+            <select multiple [(ngModel)]="editEnfantAllergiesSelection" name="editAllergiesSelection">
+              <ng-container *ngFor="let cat of allergiesCatalog">
+                <optgroup [label]="cat.title">
+                  <option *ngFor="let opt of cat.options" [value]="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </optgroup>
+              </ng-container>
+            </select>
+            <textarea
+              style="margin-top:8px;"
+              [(ngModel)]="editEnfantAllergiesAutres"
+              name="editAllergiesAutres"
+              placeholder="Autres allergies (séparées par virgule)"
+            ></textarea>
           </div>
 
           <div>
@@ -237,6 +252,14 @@
               <button type="button" class="ts-button" (click)="clearEditEnfantPhoto(editPhotoInput)">Retirer la photo</button>
             </div>
             <p class="muted" style="margin-top:6px;">Formats images (PNG/JPG). Taille max 2 Mo.</p>
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <app-tunisia-address-picker
+              [(address)]="editEnfantForm.adresse"
+              [(lat)]="editEnfantForm.adresseLat"
+              [(lng)]="editEnfantForm.adresseLng"
+            />
           </div>
         </div>
 
@@ -305,11 +328,21 @@
 
           <div>
             <label>Allergies</label>
-            <input
-              [(ngModel)]="nouvelEnfant.allergies"
-              name="allergies"
-              placeholder="Ex: arachides"
-            />
+            <select multiple [(ngModel)]="nouvelEnfantAllergiesSelection" name="allergiesSelection">
+              <ng-container *ngFor="let cat of allergiesCatalog">
+                <optgroup [label]="cat.title">
+                  <option *ngFor="let opt of cat.options" [value]="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </optgroup>
+              </ng-container>
+            </select>
+            <textarea
+              style="margin-top:8px;"
+              [(ngModel)]="nouvelEnfantAllergiesAutres"
+              name="allergiesAutres"
+              placeholder="Autres allergies (séparées par virgule)"
+            ></textarea>
           </div>
 
           <div>
@@ -339,6 +372,14 @@
               <button type="button" class="ts-button" (click)="clearNouvelEnfantPhoto(photoInput)">Retirer la photo</button>
             </div>
             <p class="muted" style="margin-top:6px;">Formats images (PNG/JPG). Taille max 2 Mo.</p>
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <app-tunisia-address-picker
+              [(address)]="nouvelEnfant.adresse"
+              [(lat)]="nouvelEnfant.adresseLat"
+              [(lng)]="nouvelEnfant.adresseLng"
+            />
           </div>
         </div>
 
@@ -426,6 +467,7 @@
               [(ngModel)]="nouvelleCondition.dateDebut"
               name="conditionDateDebut"
               type="date"
+              [min]="todayIso"
             />
           </div>
 
@@ -435,6 +477,7 @@
               [(ngModel)]="nouvelleCondition.dateFin"
               name="conditionDateFin"
               type="date"
+              [min]="nouvelleCondition.dateDebut || todayIso"
             />
           </div>
 
@@ -459,7 +502,7 @@
       </section>
 
       <section class="health-children-grid" *ngIf="enfantsAvecSante.length > 0; else noHealthData">
-        <article class="health-child-card" *ngFor="let item of enfantsAvecSante">
+       <article class="health-child-card" *ngFor="let item of enfantsAvecSantePagines">
           <div class="health-child-card__header">
             <div class="inline-meta">
               <span class="profile-avatar">{{ getInitial(item.enfant.prenom, item.enfant.nom) }}</span>
@@ -593,26 +636,29 @@
             <p class="muted">Aucune condition sanitaire pour cet enfant.</p>
           </ng-template>
 
-          <div class="health-observations" *ngIf="observationsParEnfant[item.enfant.id] && observationsParEnfant[item.enfant.id].length">
-            <h5>Changements declares par l'equipe</h5>
-            <div class="health-observations-grid">
-              <article class="observation-mini-card" *ngFor="let obs of observationsParEnfant[item.enfant.id] | slice:0:4">
-                <div class="observation-mini-card__top">
-                  <strong>{{ obs.titre }}</strong>
-                  <span class="tag" [ngClass]="obs.type === 'SANTE' ? 'tag--mint' : 'tag--blush'">
-                    {{ obs.type }}
-                  </span>
-                </div>
-                <p class="muted">{{ obs.description }}</p>
-                <p class="muted">
-                  {{ obs.creeLe ? obs.creeLe.replace('T', ' ') : '' }}
-                  <span *ngIf="obs.creeParNom"> â€¢ {{ obs.creeParNom }}</span>
-                </p>
-              </article>
-            </div>
-          </div>
+          
         </article>
       </section>
+
+      <div class="health-pagination" *ngIf="totalHealthPages > 1">
+        <button type="button" class="ts-button" (click)="previousHealthPage()" [disabled]="healthPage === 1">
+          Précédent
+        </button>
+
+        <button
+          type="button"
+          class="pagination-number"
+          *ngFor="let pageNumber of getHealthPages()"
+          [class.active]="pageNumber === healthPage"
+          (click)="goToHealthPage(pageNumber)"
+        >
+          {{ pageNumber }}
+        </button>
+
+        <button type="button" class="ts-button" (click)="nextHealthPage()" [disabled]="healthPage === totalHealthPages">
+          Suivant
+        </button>
+      </div>
 
       <ng-template #noHealthData>
         <section class="table-card">
@@ -765,6 +811,7 @@
               [(ngModel)]="nouveauTraitement.dateDebut"
               name="traitementDateDebut"
               type="date"
+              [min]="todayIso"
             />
           </div>
 
@@ -774,22 +821,54 @@
               [(ngModel)]="nouveauTraitement.dateFin"
               name="traitementDateFin"
               type="date"
+              [min]="nouveauTraitement.dateDebut || todayIso"
             />
           </div>
 
           <div>
             <label>Heure 1</label>
-            <input [(ngModel)]="nouveauTraitement.heure1" name="heure1" type="time" />
+            <select [(ngModel)]="nouveauTraitement.heure1" name="heure1">
+              <option value="">Selectionner</option>
+              <option *ngFor="let h of traitementHeuresDisponibles" [value]="h">{{ h }}</option>
+            </select>
           </div>
 
-          <div>
+          <div *ngIf="nouveauTraitementHeuresCount >= 2">
             <label>Heure 2</label>
-            <input [(ngModel)]="nouveauTraitement.heure2" name="heure2" type="time" />
+            <select [(ngModel)]="nouveauTraitement.heure2" name="heure2">
+              <option value="">Selectionner</option>
+              <option *ngFor="let h of traitementHeuresDisponibles" [value]="h">{{ h }}</option>
+            </select>
           </div>
 
-          <div>
+          <div *ngIf="nouveauTraitementHeuresCount >= 3">
             <label>Heure 3</label>
-            <input [(ngModel)]="nouveauTraitement.heure3" name="heure3" type="time" />
+            <select [(ngModel)]="nouveauTraitement.heure3" name="heure3">
+              <option value="">Selectionner</option>
+              <option *ngFor="let h of traitementHeuresDisponibles" [value]="h">{{ h }}</option>
+            </select>
+          </div>
+
+          <div style="grid-column: 1 / -1; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button
+              type="button"
+              class="ts-button"
+              (click)="ajouterHeureNouveauTraitement()"
+              [disabled]="nouveauTraitementHeuresCount >= 3"
+            >
+              Ajouter une heure
+            </button>
+
+            <button
+              type="button"
+              class="ts-button"
+              (click)="retirerDerniereHeureNouveauTraitement()"
+              [disabled]="nouveauTraitementHeuresCount <= 1"
+            >
+              Retirer la derniere heure
+            </button>
+
+            <span class="muted">({{ nouveauTraitementHeuresCount }} / 3)</span>
           </div>
 
           <div>
@@ -849,17 +928,48 @@
 
           <div>
             <label>Heure 1</label>
-            <input [(ngModel)]="editTraitementForm.heure1" name="editHeure1" type="time" />
+            <select [(ngModel)]="editTraitementForm.heure1" name="editHeure1">
+              <option value="">Selectionner</option>
+              <option *ngFor="let h of traitementHeuresDisponibles" [value]="h">{{ h }}</option>
+            </select>
           </div>
 
-          <div>
+          <div *ngIf="editTraitementHeuresCount >= 2">
             <label>Heure 2</label>
-            <input [(ngModel)]="editTraitementForm.heure2" name="editHeure2" type="time" />
+            <select [(ngModel)]="editTraitementForm.heure2" name="editHeure2">
+              <option value="">Selectionner</option>
+              <option *ngFor="let h of traitementHeuresDisponibles" [value]="h">{{ h }}</option>
+            </select>
           </div>
 
-          <div>
+          <div *ngIf="editTraitementHeuresCount >= 3">
             <label>Heure 3</label>
-            <input [(ngModel)]="editTraitementForm.heure3" name="editHeure3" type="time" />
+            <select [(ngModel)]="editTraitementForm.heure3" name="editHeure3">
+              <option value="">Selectionner</option>
+              <option *ngFor="let h of traitementHeuresDisponibles" [value]="h">{{ h }}</option>
+            </select>
+          </div>
+
+          <div style="grid-column: 1 / -1; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button
+              type="button"
+              class="ts-button"
+              (click)="ajouterHeureEditTraitement()"
+              [disabled]="editTraitementHeuresCount >= 3"
+            >
+              Ajouter une heure
+            </button>
+
+            <button
+              type="button"
+              class="ts-button"
+              (click)="retirerDerniereHeureEditTraitement()"
+              [disabled]="editTraitementHeuresCount <= 1"
+            >
+              Retirer la derniere heure
+            </button>
+
+            <span class="muted">({{ editTraitementHeuresCount }} / 3)</span>
           </div>
 
           <div>

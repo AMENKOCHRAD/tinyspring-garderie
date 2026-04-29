@@ -7,6 +7,7 @@ import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../shared/auth.service';
 import { Enfant, EnfantDTO, EnfantService } from '../services/enfant.service';
 import { ParentChangementsComponent } from '../components/parent-changements.component';
+import { TunisiaAddressPickerComponent } from '../components/tunisia-address-picker.component';
 
 type ParentPageKey =
   | 'tableau-de-bord'
@@ -72,6 +73,16 @@ interface ObservationFront {
   actionsEffectuees?: string | null;
 }
 
+interface AllergieOption {
+  label: string;
+  value: string;
+}
+
+interface AllergieCategory {
+  title: string;
+  options: AllergieOption[];
+}
+
 const pageMetaMap: Record<ParentPageKey, PageMeta> = {
   'tableau-de-bord': {
     chip: 'Espace parent',
@@ -123,7 +134,7 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
 @Component({
   selector: 'app-parent-workspace-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ParentChangementsComponent],
+  imports: [CommonModule, FormsModule, ParentChangementsComponent, TunisiaAddressPickerComponent],
   templateUrl: './parent-workspace-page.component.html',
   styleUrl: './parent-workspace-page.component.css'
 })
@@ -131,6 +142,8 @@ export class ParentWorkspacePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
   private readonly enfantService = inject(EnfantService);
+
+  protected readonly todayIso = this.getLocalTodayIso();
 
   protected readonly page = signal<ParentPageKey>('tableau-de-bord');
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', {
@@ -147,9 +160,83 @@ export class ParentWorkspacePageComponent {
   });
 
   readonly groupesSanguins: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  readonly traitementHeuresDisponibles: string[] = this.buildHeuresTraitementDisponibles();
+  readonly allergiesCatalog: AllergieCategory[] = [
+    {
+      title: 'Allergies alimentaires',
+      options: [
+        { label: '🥜 Arachides', value: 'Arachides' },
+        { label: '🥛 Lait', value: 'Lait' },
+        { label: '🥚 Œufs', value: 'Œufs' },
+        { label: '🐟 Poisson', value: 'Poisson' },
+        { label: '🍤 Fruits de mer', value: 'Fruits de mer' },
+        { label: '🌾 Gluten (blé)', value: 'Gluten (blé)' },
+        { label: '🍓 Fruits', value: 'Fruits' }
+      ]
+    },
+    {
+      title: 'Allergies respiratoires',
+      options: [
+        { label: '🌸 Pollen', value: 'Pollen' },
+        { label: '🐱 Poils d’animaux', value: 'Poils d’animaux' },
+        { label: '🏠 Acariens (poussière)', value: 'Acariens (poussière)' }
+      ]
+    },
+    {
+      title: 'Allergies cutanées (peau)',
+      options: [
+        { label: '🧼 Produits cosmétiques', value: 'Produits cosmétiques' },
+        { label: '🧴 Savons / shampoings', value: 'Savons / shampoings' },
+        { label: '👕 Tissus (laine)', value: 'Tissus (laine)' },
+        { label: '💍 Nickel (bijoux)', value: 'Nickel (bijoux)' },
+        { label: '🌿 Plantes (ortie…)', value: 'Plantes (ortie…)' }
+      ]
+    },
+    {
+      title: 'Allergies aux insectes',
+      options: [
+        { label: '🐝 Abeilles', value: 'Abeilles' },
+        { label: '🐜 Fourmis', value: 'Fourmis' },
+        { label: '🦟 Moustiques', value: 'Moustiques' },
+        { label: '🐝 Guêpes', value: 'Guêpes' }
+      ]
+    }
+  ];
 
   enfants: Enfant[] = [];
   enfantsAvecSante: EnfantAvecSante[] = [];
+  healthPage = 1;
+healthPageSize = 2;
+
+get enfantsAvecSantePagines(): EnfantAvecSante[] {
+  const start = (this.healthPage - 1) * this.healthPageSize;
+  const end = start + this.healthPageSize;
+  return this.enfantsAvecSante.slice(start, end);
+}
+
+get totalHealthPages(): number {
+  return Math.ceil(this.enfantsAvecSante.length / this.healthPageSize);
+}
+
+goToHealthPage(page: number): void {
+  if (page < 1 || page > this.totalHealthPages) {
+    return;
+  }
+
+  this.healthPage = page;
+}
+
+nextHealthPage(): void {
+  this.goToHealthPage(this.healthPage + 1);
+}
+
+previousHealthPage(): void {
+  this.goToHealthPage(this.healthPage - 1);
+}
+
+getHealthPages(): number[] {
+  return Array.from({ length: this.totalHealthPages }, (_, i) => i + 1);
+}
   observationsParEnfant: Record<number, ObservationFront[]> = {};
   selectedEnfant: Enfant | null = null;
 
@@ -169,8 +256,13 @@ export class ParentWorkspacePageComponent {
     allergies: '',
     groupeSanguin: '',
     notes: '',
-    photoDataUrl: ''
+    photoDataUrl: '',
+    adresse: '',
+    adresseLat: null as number | null,
+    adresseLng: null as number | null
   };
+  nouvelEnfantAllergiesSelection: string[] = [];
+  nouvelEnfantAllergiesAutres = '';
 
   editEnfantForm = {
     id: 0,
@@ -180,8 +272,13 @@ export class ParentWorkspacePageComponent {
     contactUrgence: '',
     allergies: '',
     groupeSanguin: '',
-    photo: ''
+    photo: '',
+    adresse: '',
+    adresseLat: null as number | null,
+    adresseLng: null as number | null
   };
+  editEnfantAllergiesSelection: string[] = [];
+  editEnfantAllergiesAutres = '';
 
   conditionsSanitaires: ConditionSanitaireFront[] = [];
   conditionSelectionnee: ConditionSanitaireFront | null = null;
@@ -228,6 +325,7 @@ export class ParentWorkspacePageComponent {
     heure2: '',
     heure3: ''
   };
+  nouveauTraitementHeuresCount = 1;
 
   editTraitementForm = {
     id: 0,
@@ -241,6 +339,7 @@ export class ParentWorkspacePageComponent {
     heure2: '',
     heure3: ''
   };
+  editTraitementHeuresCount = 1;
 
   onOrdonnanceSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -254,6 +353,53 @@ export class ParentWorkspacePageComponent {
     });
 
     this.chargerEnfants();
+  }
+
+  private buildHeuresTraitementDisponibles(): string[] {
+    // 07:30 -> 18:30 inclus, pas de 30 minutes
+    const result: string[] = [];
+    const startMinutes = 7 * 60 + 30;
+    const endMinutes = 18 * 60 + 30;
+
+    for (let m = startMinutes; m <= endMinutes; m += 30) {
+      const hh = String(Math.floor(m / 60)).padStart(2, '0');
+      const mm = String(m % 60).padStart(2, '0');
+      result.push(`${hh}:${mm}`);
+    }
+
+    return result;
+  }
+
+  private parseAllergies(raw: string | null | undefined): { selected: string[]; autres: string } {
+    const input = (raw || '').trim();
+    if (!input) {
+      return { selected: [], autres: '' };
+    }
+
+    const tokens = input
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => !!t);
+
+    const known = new Set(this.allergiesCatalog.flatMap((c) => c.options.map((o) => o.value)));
+    const selected = tokens.filter((t) => known.has(t));
+    const autres = tokens.filter((t) => !known.has(t)).join(', ');
+
+    return { selected, autres };
+  }
+
+  private buildAllergiesString(selected: string[], autres: string): string {
+    const cleanSelected = Array.from(
+      new Set((selected || []).map((s) => (s || '').trim()).filter(Boolean))
+    );
+
+    const autresParts = (autres || '')
+      .split(/[,\\n]/g)
+      .map((t) => t.trim())
+      .filter((t) => !!t);
+
+    const all = [...cleanSelected, ...autresParts];
+    return all.join(', ');
   }
 
   chargerEnfants(): void {
@@ -298,7 +444,10 @@ export class ParentWorkspacePageComponent {
     const nom = this.nouvelEnfant.nom.trim();
     const dateNaissance = this.nouvelEnfant.dateNaissance;
     const contactUrgence = this.nouvelEnfant.contactUrgence.trim();
-    const allergies = this.nouvelEnfant.allergies.trim();
+    const allergies = this.buildAllergiesString(
+      this.nouvelEnfantAllergiesSelection,
+      this.nouvelEnfantAllergiesAutres
+    );
     const groupeSanguin = this.nouvelEnfant.groupeSanguin.trim();
 
     if (!prenom) {
@@ -356,6 +505,9 @@ export class ParentWorkspacePageComponent {
       allergies,
       groupeSanguin,
       photo: this.nouvelEnfant.photoDataUrl || '',
+      adresse: (this.nouvelEnfant.adresse || '').trim(),
+      adresseLat: this.nouvelEnfant.adresseLat,
+      adresseLng: this.nouvelEnfant.adresseLng,
       parentId
     };
 
@@ -416,12 +568,21 @@ export class ParentWorkspacePageComponent {
       contactUrgence: this.selectedEnfant.contactUrgence || '',
       allergies: this.selectedEnfant.allergies || '',
       groupeSanguin: this.selectedEnfant.groupeSanguin || '',
-      photo: this.selectedEnfant.photo || ''
+      photo: this.selectedEnfant.photo || '',
+      adresse: this.selectedEnfant.adresse || '',
+      adresseLat: this.selectedEnfant.adresseLat ?? null,
+      adresseLng: this.selectedEnfant.adresseLng ?? null
     };
+
+    const parsed = this.parseAllergies(this.editEnfantForm.allergies);
+    this.editEnfantAllergiesSelection = parsed.selected;
+    this.editEnfantAllergiesAutres = parsed.autres;
   }
 
   annulerModification(): void {
     this.isEditingEnfant = false;
+    this.editEnfantAllergiesSelection = [];
+    this.editEnfantAllergiesAutres = '';
   }
 
   fermerProfil(): void {
@@ -444,7 +605,10 @@ export class ParentWorkspacePageComponent {
     const nom = this.editEnfantForm.nom.trim();
     const dateNaissance = this.editEnfantForm.dateNaissance;
     const contactUrgence = this.editEnfantForm.contactUrgence.trim();
-    const allergies = this.editEnfantForm.allergies.trim();
+    const allergies = this.buildAllergiesString(
+      this.editEnfantAllergiesSelection,
+      this.editEnfantAllergiesAutres
+    );
     const groupeSanguin = this.editEnfantForm.groupeSanguin.trim();
     const photo = this.editEnfantForm.photo.trim();
 
@@ -503,6 +667,9 @@ export class ParentWorkspacePageComponent {
       allergies,
       groupeSanguin,
       photo,
+      adresse: (this.editEnfantForm.adresse || '').trim(),
+      adresseLat: this.editEnfantForm.adresseLat,
+      adresseLng: this.editEnfantForm.adresseLng,
       parentId
     };
 
@@ -562,13 +729,15 @@ export class ParentWorkspacePageComponent {
         this.conditionsSanitaires = resultats.flat() as ConditionSanitaireFront[];
 
         this.enfantsAvecSante = this.enfants.map((enfant) => ({
-          enfant,
-          conditions: this.conditionsSanitaires.filter(
-            (condition) => condition.enfant?.id === enfant.id
-          )
-        }));
+  enfant,
+  conditions: this.conditionsSanitaires.filter(
+    (condition) => condition.enfant?.id === enfant.id
+  )
+}));
 
-        this.chargerTraitementsPourToutesLesConditions();
+this.healthPage = 1;
+
+this.chargerTraitementsPourToutesLesConditions();
       },
       error: (err) => {
         console.error(err);
@@ -689,11 +858,21 @@ export class ParentWorkspacePageComponent {
       return;
     }
 
+    if (this.isDateBefore(this.nouvelleCondition.dateDebut, this.todayIso)) {
+      this.errorMessage = 'La date de debut ne peut pas etre dans le passe.';
+      return;
+    }
+
     if (
       this.nouvelleCondition.type === 'MALADIE_TEMPORAIRE' &&
       !this.nouvelleCondition.dateFin
     ) {
       this.errorMessage = 'La date de fin est obligatoire pour une maladie temporaire.';
+      return;
+    }
+
+    if (this.nouvelleCondition.dateFin && this.isDateBefore(this.nouvelleCondition.dateFin, this.nouvelleCondition.dateDebut)) {
+      this.errorMessage = 'La date de fin doit etre apres la date de debut.';
       return;
     }
 
@@ -940,6 +1119,16 @@ export class ParentWorkspacePageComponent {
       return;
     }
 
+    if (this.isDateBefore(this.nouveauTraitement.dateDebut, this.todayIso)) {
+      this.errorMessage = 'La date de debut ne peut pas etre dans le passe.';
+      return;
+    }
+
+    if (this.nouveauTraitement.dateFin && this.isDateBefore(this.nouveauTraitement.dateFin, this.nouveauTraitement.dateDebut)) {
+      this.errorMessage = 'La date de fin doit etre apres la date de debut.';
+      return;
+    }
+
     const heuresPrises = [
       this.nouveauTraitement.heure1,
       this.nouveauTraitement.heure2,
@@ -966,8 +1155,15 @@ export class ParentWorkspacePageComponent {
     this.isSavingTraitement = true;
 
     this.enfantService.ajouterTraitementAvecOrdonnance(this.conditionSelectionnee.id, formData).subscribe({
-      next: () => {
-        this.successMessage = 'Traitement ajoute avec succes et envoye pour validation.';
+      next: (created) => {
+        const statut = String((created as any)?.statut ?? '');
+        if (statut === 'VALIDE') {
+          this.successMessage = 'Traitement valide automatiquement.';
+        } else if (statut === 'REFUSE') {
+          this.errorMessage = 'Traitement refuse automatiquement. Verifiez les informations et l ordonnance.';
+        } else {
+          this.successMessage = 'Traitement ajoute avec succes et envoye pour validation.';
+        }
         this.resetTraitementForm();
         this.isSavingTraitement = false;
         this.showTraitementForm = false;
@@ -975,7 +1171,10 @@ export class ParentWorkspacePageComponent {
       },
       error: (err) => {
         console.error(err);
-        this.errorMessage = "Erreur lors de l'ajout du traitement.";
+        const status = err?.status != null ? ` (HTTP ${err.status})` : '';
+        this.extractHttpErrorDetails(err, (details) => {
+          this.errorMessage = `Erreur lors de l'ajout du traitement${status}. ${details}`.trim();
+        });
         this.isSavingTraitement = false;
       }
     });
@@ -1033,11 +1232,15 @@ export class ParentWorkspacePageComponent {
       heure2: heures[1] ?? '',
       heure3: heures[2] ?? ''
     };
+
+    const nb = (heures ?? []).filter((h) => !!h).length;
+    this.editTraitementHeuresCount = Math.min(3, Math.max(1, nb));
   }
 
   annulerModificationTraitement(): void {
     this.isEditingTraitement = false;
     this.isUpdatingTraitement = false;
+    this.editTraitementHeuresCount = 1;
     this.editTraitementForm = {
       id: 0,
       conditionId: 0,
@@ -1050,6 +1253,46 @@ export class ParentWorkspacePageComponent {
       heure2: '',
       heure3: ''
     };
+  }
+
+  ajouterHeureNouveauTraitement(): void {
+    if (this.nouveauTraitementHeuresCount < 3) {
+      this.nouveauTraitementHeuresCount += 1;
+    }
+  }
+
+  retirerDerniereHeureNouveauTraitement(): void {
+    if (this.nouveauTraitementHeuresCount <= 1) {
+      return;
+    }
+
+    if (this.nouveauTraitementHeuresCount === 3) {
+      this.nouveauTraitement.heure3 = '';
+    } else if (this.nouveauTraitementHeuresCount === 2) {
+      this.nouveauTraitement.heure2 = '';
+    }
+
+    this.nouveauTraitementHeuresCount -= 1;
+  }
+
+  ajouterHeureEditTraitement(): void {
+    if (this.editTraitementHeuresCount < 3) {
+      this.editTraitementHeuresCount += 1;
+    }
+  }
+
+  retirerDerniereHeureEditTraitement(): void {
+    if (this.editTraitementHeuresCount <= 1) {
+      return;
+    }
+
+    if (this.editTraitementHeuresCount === 3) {
+      this.editTraitementForm.heure3 = '';
+    } else if (this.editTraitementHeuresCount === 2) {
+      this.editTraitementForm.heure2 = '';
+    }
+
+    this.editTraitementHeuresCount -= 1;
   }
 
   enregistrerModificationTraitement(): void {
@@ -1247,8 +1490,13 @@ export class ParentWorkspacePageComponent {
       allergies: '',
       groupeSanguin: '',
       notes: '',
-      photoDataUrl: ''
+      photoDataUrl: '',
+      adresse: '',
+      adresseLat: null,
+      adresseLng: null
     };
+    this.nouvelEnfantAllergiesSelection = [];
+    this.nouvelEnfantAllergiesAutres = '';
   }
 
   onNouvelEnfantPhotoSelected(event: Event): void {
@@ -1363,6 +1611,15 @@ export class ParentWorkspacePageComponent {
       heure2: '',
       heure3: ''
     };
+    this.nouveauTraitementHeuresCount = 1;
+  }
+
+  private getLocalTodayIso(): string {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   private extractHttpErrorDetails(err: any, cb: (details: string) => void): void {
@@ -1386,5 +1643,12 @@ export class ParentWorkspacePageComponent {
     }
 
     cb(typeof raw === 'string' ? raw : fallback);
+  }
+
+  private isDateBefore(aIso: string, bIso: string): boolean {
+    const a = (aIso || '').trim();
+    const b = (bIso || '').trim();
+    if (!a || !b) return false;
+    return a < b;
   }
 }

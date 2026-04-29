@@ -1,9 +1,11 @@
 package com.tinyspring.garderie.controller;
 
 import com.tinyspring.garderie.dto.TraitementCreateDto;
+import com.tinyspring.garderie.dto.TraitementValidationEventDto;
 import com.tinyspring.garderie.dto.TraitementValidationDto;
 import com.tinyspring.garderie.entity.Traitement;
 import com.tinyspring.garderie.service.TraitementService;
+import com.tinyspring.garderie.service.TraitementValidationHistoryService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,9 +24,12 @@ import java.util.List;
 public class TraitementController {
 
     private final TraitementService traitementService;
+    private final TraitementValidationHistoryService validationHistoryService;
 
-    public TraitementController(TraitementService traitementService) {
+    public TraitementController(TraitementService traitementService,
+                                TraitementValidationHistoryService validationHistoryService) {
         this.traitementService = traitementService;
+        this.validationHistoryService = validationHistoryService;
     }
 
     @PostMapping("/condition/{conditionId}")
@@ -76,6 +81,25 @@ public class TraitementController {
     @PutMapping("/valider/{traitementId}")
     public ResponseEntity<Traitement> valider(@PathVariable Long traitementId) {
         return ResponseEntity.ok(traitementService.validerTraitement(traitementId));
+    }
+
+    @PutMapping("/refuser/{traitementId}")
+    public ResponseEntity<Traitement> refuser(@PathVariable Long traitementId,
+                                              @RequestParam(value = "note", required = false) String note,
+                                              Authentication authentication) {
+        String email = authentication != null ? authentication.getName() : null;
+        return ResponseEntity.ok(traitementService.refuserTraitementAdmin(traitementId, email, note));
+    }
+
+    @GetMapping("/{traitementId}/validation-history")
+    public ResponseEntity<List<TraitementValidationEventDto>> history(@PathVariable Long traitementId) {
+        return ResponseEntity.ok(validationHistoryService.getHistory(traitementId));
+    }
+
+    @GetMapping("/validation-events")
+    public ResponseEntity<List<TraitementValidationEventDto>> latestEvents(
+            @RequestParam(value = "limit", required = false, defaultValue = "200") int limit) {
+        return ResponseEntity.ok(validationHistoryService.getLatest(limit));
     }
 
     @GetMapping("/{traitementId}/ordonnance")

@@ -6,6 +6,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { AuthService } from '../shared/auth.service';
 import { Enfant, EnfantService } from '../services/enfant.service';
+import { NotificationsService } from '../services/notifications.service';
 import { TraitementHistoryComponent } from '../components/traitement-history.component';
 import { AnimatriceDeclarerChangementComponent } from '../components/animatrice-declarer-changement.component';
 import { AnimatriceSanteAlertesComponent } from '../components/animatrice-sante-alertes.component';
@@ -80,7 +81,7 @@ export class AnimatorWorkspacePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
   private readonly enfantService = inject(EnfantService);
-  private reminderIntervalId: any = null;
+  private readonly notificationsService = inject(NotificationsService);
   private readonly dayLabelFormatter = new Intl.DateTimeFormat('fr-FR', {
     weekday: 'short',
     day: '2-digit',
@@ -117,17 +118,90 @@ export class AnimatorWorkspacePageComponent {
   observationsRecentes: ObservationFront[] = [];
   searchTerm = '';
 
-  notificationMessages: string[] = [];
-  private readonly notifiedDoseKeys = new Set<string>();
+  incidentsPage = 1;
+  incidentsPageSize = 2;
+
+  get filteredObservationsRecentesPagines(): ObservationFront[] {
+    const start = (this.incidentsPage - 1) * this.incidentsPageSize;
+    const end = start + this.incidentsPageSize;
+
+    return this.filteredObservationsRecentes.slice(start, end);
+  }
+
+  get totalIncidentsPages(): number {
+    return Math.ceil(this.filteredObservationsRecentes.length / this.incidentsPageSize);
+  }
+
+  goToIncidentsPage(page: number): void {
+    if (page < 1 || page > this.totalIncidentsPages) {
+      return;
+    }
+
+    this.incidentsPage = page;
+  }
+
+  nextIncidentsPage(): void {
+    this.goToIncidentsPage(this.incidentsPage + 1);
+  }
+
+  previousIncidentsPage(): void {
+    this.goToIncidentsPage(this.incidentsPage - 1);
+  }
+
+  getIncidentsPages(): number[] {
+    return Array.from({ length: this.totalIncidentsPages }, (_, i) => i + 1);
+  }
+
+  resetIncidentsPage(): void {
+    this.incidentsPage = 1;
+  }
+
+
+  santePage = 1;
+  santePageSize = 2;
+
+  get filteredEnfantsAvecSantePagines(): Array<{ enfant: Enfant; conditions: ConditionSanitaireFront[]; prisesClefs: Set<string> }> {
+    const start = (this.santePage - 1) * this.santePageSize;
+    const end = start + this.santePageSize;
+    return this.filteredEnfantsAvecSante.slice(start, end);
+  }
+
+  get totalSantePages(): number {
+    return Math.ceil(this.filteredEnfantsAvecSante.length / this.santePageSize);
+  }
+
+  goToSantePage(page: number): void {
+    if (page < 1 || page > this.totalSantePages) {
+      return;
+    }
+    this.santePage = page;
+  }
+
+  nextSantePage(): void {
+    this.goToSantePage(this.santePage + 1);
+  }
+
+  previousSantePage(): void {
+    this.goToSantePage(this.santePage - 1);
+  }
+
+  getSantePages(): number[] {
+    return Array.from({ length: this.totalSantePages }, (_, i) => i + 1);
+  }
+
+  resetSantePage(): void {
+    this.santePage = 1;
+  }
+
+  get notificationMessages(): string[] {
+    return this.notificationsService.animatriceReminderMessages();
+  }
 
   public constructor() {
     this.route.data.subscribe((data) => {
       this.page.set(data['page'] as AnimatorPageKey);
       if (this.page() === 'sante') {
         this.chargerSante();
-        this.startReminderLoop();
-      } else {
-        this.stopReminderLoop();
       }
 
       if (this.page() === 'groupes') {
@@ -201,6 +275,7 @@ export class AnimatorWorkspacePageComponent {
         const enfantsActifs = (enfants ?? []).filter((e) => !e.archive);
         this.enfants = enfantsActifs;
         this.observationsRecentes = (observations ?? []) as ObservationFront[];
+        this.incidentsPage = 1;
 
         if (enfantsActifs.length === 0) {
           this.enfantsAvecSante = [];
@@ -250,6 +325,7 @@ export class AnimatorWorkspacePageComponent {
         forkJoin(requetes).subscribe({
           next: (rows) => {
             this.enfantsAvecSante = rows;
+            this.santePage = 1;
             this.alertesDuJour = this.buildAlertesDuJour(todayIso);
             this.rebuildPlanning();
             this.isLoadingSante = false;
@@ -294,6 +370,7 @@ export class AnimatorWorkspacePageComponent {
     this.planningFromIso = start;
     this.planningToIso = this.addDaysIso(start, 6);
     this.rebuildPlanning();
+    this.selectedPlanningDate = this.getTodayIso();
   }
 
   goPlanningPrevWeek(): void {
@@ -301,6 +378,7 @@ export class AnimatorWorkspacePageComponent {
     this.planningFromIso = this.startOfWeekIso(start);
     this.planningToIso = this.addDaysIso(this.planningFromIso, 6);
     this.rebuildPlanning();
+    this.selectedPlanningDate = this.planningFromIso;
   }
 
   goPlanningNextWeek(): void {
@@ -308,6 +386,7 @@ export class AnimatorWorkspacePageComponent {
     this.planningFromIso = this.startOfWeekIso(start);
     this.planningToIso = this.addDaysIso(this.planningFromIso, 6);
     this.rebuildPlanning();
+    this.selectedPlanningDate = this.planningFromIso;
   }
 
   onPlanningStartChanged(): void {
@@ -537,24 +616,9 @@ export class AnimatorWorkspacePageComponent {
       .subscribe({
         next: (data) => {
           this.observationsRecentes = (data ?? []) as ObservationFront[];
+          this.incidentsPage = 1;
         }
       });
-  }
-
-  private startReminderLoop(): void {
-    if (this.reminderIntervalId) {
-      return;
-    }
-
-    this.checkDueNotifications();
-    this.reminderIntervalId = setInterval(() => this.checkDueNotifications(), 60_000);
-  }
-
-  private stopReminderLoop(): void {
-    if (this.reminderIntervalId) {
-      clearInterval(this.reminderIntervalId);
-      this.reminderIntervalId = null;
-    }
   }
 
   requestBrowserNotifications(): void {
@@ -564,39 +628,6 @@ export class AnimatorWorkspacePageComponent {
     }
 
     void Notification.requestPermission();
-  }
-
-  private checkDueNotifications(): void {
-    if (this.isLoadingSante) {
-      return;
-    }
-
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const time = `${hh}:${mm}`;
-    const todayIso = this.getTodayIso();
-
-    const due = (this.alertesDuJour ?? []).filter((a) => !a.dejaDonne && a.heure === time);
-    for (const alerte of due) {
-      const key = this.keyPrise(alerte.traitement.id, todayIso, alerte.heure);
-      if (this.notifiedDoseKeys.has(key)) {
-        continue;
-      }
-      this.notifiedDoseKeys.add(key);
-
-      const msg = `Rappel ${alerte.heure}: ${alerte.enfant.prenom} ${alerte.enfant.nom} - ${alerte.traitement.nomTraitement}`;
-      this.notificationMessages = [msg, ...this.notificationMessages].slice(0, 3);
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          // eslint-disable-next-line no-new
-          new Notification('Rappel traitement', { body: msg });
-        } catch {
-          // ignore
-        }
-      }
-    }
   }
 
   marquerDonne(traitementId: number, enfantId: number, heurePrevue: string, dateIso?: string): void {
@@ -613,6 +644,12 @@ export class AnimatorWorkspacePageComponent {
     const targetDate = dateIso || this.getTodayIso();
     if (this.isFutureDate(targetDate)) {
       this.errorMessage = 'Impossible d enregistrer une prise dans le futur.';
+      return;
+    }
+
+    const restriction = this.checkWeekendDoseRestrictions(targetDate, heurePrevue);
+    if (restriction) {
+      this.errorMessage = restriction;
       return;
     }
 
@@ -666,6 +703,33 @@ export class AnimatorWorkspacePageComponent {
         this.isSavingPrise = false;
       }
     });
+  }
+
+  private checkWeekendDoseRestrictions(dateIso: string, heure: string): string | null {
+    // Dimanche: interdit
+    // Samedi: autorisé uniquement jusqu'à 12:30 (inclus)
+    try {
+      const d = new Date(`${dateIso}T00:00:00`);
+      const dow = d.getDay(); // 0=Sunday, 6=Saturday
+      if (dow === 0) {
+        return 'Aucune prise ne peut etre enregistree le dimanche.';
+      }
+      if (dow === 6) {
+        const parts = String(heure || '').split(':');
+        if (parts.length >= 2) {
+          const hh = Number(parts[0]);
+          const mm = Number(parts[1]);
+          if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
+            if (hh > 12 || (hh === 12 && mm > 30)) {
+              return "Le samedi, les prises sont autorisees uniquement jusqu'a 12:30.";
+            }
+          }
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return null;
   }
 
   private telechargerJustificatifPrise(priseId: number): void {
@@ -855,6 +919,48 @@ export class AnimatorWorkspacePageComponent {
   get statsIncidentsRecentCount(): number {
     return (this.observationsRecentes ?? []).filter((o) => (o.type ?? '') === 'INCIDENT').length;
   }
+  selectedPlanningDate = this.getTodayIso();
+
+get selectedPlanningEvents(): PlanningEvent[] {
+  return this.planningEventsByDate[this.selectedPlanningDate] || [];
+}
+selectPlanningDate(dateIso: string): void {
+  this.selectedPlanningDate = dateIso;
+  this.planningEventPage = 1;
+}
+planningEventPage = 1;
+planningEventPageSize = 5;
+
+get selectedPlanningEventsPagines(): PlanningEvent[] {
+  const start = (this.planningEventPage - 1) * this.planningEventPageSize;
+  const end = start + this.planningEventPageSize;
+
+  return this.selectedPlanningEvents.slice(start, end);
+}
+
+get totalPlanningEventPages(): number {
+  return Math.ceil(this.selectedPlanningEvents.length / this.planningEventPageSize);
+}
+
+goToPlanningEventPage(page: number): void {
+  if (page < 1 || page > this.totalPlanningEventPages) {
+    return;
+  }
+
+  this.planningEventPage = page;
+}
+
+nextPlanningEventPage(): void {
+  this.goToPlanningEventPage(this.planningEventPage + 1);
+}
+
+previousPlanningEventPage(): void {
+  this.goToPlanningEventPage(this.planningEventPage - 1);
+}
+
+getPlanningEventPages(): number[] {
+  return Array.from({ length: this.totalPlanningEventPages }, (_, i) => i + 1);
+}
 }
 
 interface ConditionSanitaireFront {
@@ -916,3 +1022,5 @@ interface PlanningEvent {
   condition: ConditionSanitaireFront;
   traitement: TraitementFront;
 }
+
+

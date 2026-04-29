@@ -205,3 +205,91 @@
     grid-template-columns: 1fr;
   }
 }
+.health-pagination {
+  margin-top: 18px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pagination-number {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pagination-number.active {
+  background: #9ee6d0;
+  color: #064e3b;
+  border-color: #9ee6d0;
+}
+
+.health-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.planning-days-tabs {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.planning-day-tab {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.planning-day-tab span,
+.planning-day-tab small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.planning-day-tab.active {
+  background: #d9f7ec;
+  border-color: #9ee6d0;
+  color: #064e3b;
+}
+
+.planning-selected-day {
+  margin-top: 16px;
+}
+
+.planning-event-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.planning-event-line--done {
+  opacity: 0.65;
+}
+
+@media (max-width: 900px) {
+  .planning-days-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .planning-event-line {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { EnfantService, Enfant } from '../enfant';
@@ -17,21 +17,33 @@ export class DetailEnfantComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private enfantService: EnfantService
+    private enfantService: EnfantService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
 
+    if (!id || Number.isNaN(id)) {
+      this.error = 'ID enfant invalide.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.error = '';
+    this.enfant = undefined;
+
     this.enfantService.getEnfantById(id).subscribe({
       next: (data) => {
         this.enfant = data;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
         this.error = 'Erreur lors du chargement des détails';
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

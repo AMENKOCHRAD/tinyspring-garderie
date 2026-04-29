@@ -10,6 +10,9 @@ export interface EnfantDTO {
   groupeSanguin?: string;
   allergies?: string;
   contactUrgence?: string;
+  adresse?: string;
+  adresseLat?: number | null;
+  adresseLng?: number | null;
   photo?: string;
   parentId: number;
 }
@@ -28,6 +31,9 @@ export interface Enfant {
   groupeSanguin?: string;
   allergies?: string;
   contactUrgence?: string;
+  adresse?: string;
+  adresseLat?: number | null;
+  adresseLng?: number | null;
   photo?: string;
   archive?: boolean;
   parent?: ParentDTO;
@@ -191,7 +197,7 @@ export class EnfantService {
     return this.http.post<any>(
       `/api/traitements/condition/${conditionId}/avec-ordonnance`,
       formData,
-      this.getAuthHeaders()
+      this.getAuthHeadersStrict()
     );
   }
 

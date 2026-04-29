@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -56,6 +56,7 @@ interface EnfantEtatSanitaire {
 })
 export class EtatSanitaireComponent implements OnInit {
   private etatSanitaireService = inject(EtatSanitaireService);
+  private cdr = inject(ChangeDetectorRef);
 
   enfantsAvecEtat: EnfantEtatSanitaire[] = [];
   isLoading = false;
@@ -80,7 +81,7 @@ export class EtatSanitaireComponent implements OnInit {
   }
 
   chargerEtatSanitaire(): void {
-    this.isLoading = false;
+    this.isLoading = true;
     this.error = '';
 
     this.etatSanitaireService.getAllEnfants().subscribe({
@@ -88,6 +89,7 @@ export class EtatSanitaireComponent implements OnInit {
         if (!enfants || enfants.length === 0) {
           this.enfantsAvecEtat = [];
           this.isLoading = false;
+          this.cdr.detectChanges();
           return;
         }
 
@@ -127,16 +129,19 @@ export class EtatSanitaireComponent implements OnInit {
             });
 
             this.isLoading = false;
+            this.cdr.detectChanges();
           },
           error: () => {
             this.error = 'Erreur lors du chargement des données sanitaires';
             this.isLoading = false;
+            this.cdr.detectChanges();
           }
         });
       },
       error: () => {
         this.error = 'Erreur lors du chargement des enfants';
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

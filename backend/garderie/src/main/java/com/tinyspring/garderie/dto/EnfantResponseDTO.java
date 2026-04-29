@@ -8,6 +8,9 @@ public class EnfantResponseDTO {
     public String groupeSanguin;
     public String allergies;
     public String contactUrgence;
+    public String adresse;
+    public Double adresseLat;
+    public Double adresseLng;
     public String photo;
     public ParentDTO parent;
 

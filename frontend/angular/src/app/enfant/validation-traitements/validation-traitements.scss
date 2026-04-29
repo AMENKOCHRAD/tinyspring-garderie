@@ -10,3 +10,21 @@
 input.form-control {
   border-radius: 10px;
 }
+
+.validation-history {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.facteurs-pre {
+  white-space: pre-wrap;
+  background: #f8f9fa;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+}
+
+.clickable-row {
+  cursor: pointer;
+}

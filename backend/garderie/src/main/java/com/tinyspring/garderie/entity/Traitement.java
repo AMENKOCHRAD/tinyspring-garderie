@@ -33,7 +33,11 @@ public class Traitement {
     private List<String> heuresPrises; // liste d'heures pour prises quotidiennes
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
     private StatutTraitement statut = StatutTraitement.EN_ATTENTE_VALIDATION;
+
+    @Column(length = 500)
+    private String autoValidationNote;
 
     // Relation avec ConditionSanitaire
     @ManyToOne
@@ -106,6 +110,14 @@ public class Traitement {
 
     public void setStatut(StatutTraitement statut) {
         this.statut = statut;
+    }
+
+    public String getAutoValidationNote() {
+        return autoValidationNote;
+    }
+
+    public void setAutoValidationNote(String autoValidationNote) {
+        this.autoValidationNote = autoValidationNote;
     }
 
     public ConditionSanitaire getConditionSanitaire() {

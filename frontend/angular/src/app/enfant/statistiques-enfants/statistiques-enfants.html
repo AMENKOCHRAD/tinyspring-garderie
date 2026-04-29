@@ -2,10 +2,10 @@
   <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
     <div>
       <h2 class="mb-1">Statistiques enfants</h2>
-      <p class="text-muted mb-0">AperÃ§u des allergies, conditions sanitaires et statuts des traitements.</p>
+      <p class="text-muted mb-0">Aperçu des allergies, conditions sanitaires et traitements.</p>
     </div>
     <button class="btn btn-outline-primary" type="button" (click)="chargerStats()" [disabled]="isLoading">
-      {{ isLoading ? 'Chargement...' : 'RafraÃ®chir' }}
+      {{ isLoading ? 'Chargement...' : 'Rafraîchir' }}
     </button>
   </div>
 
@@ -33,60 +33,123 @@
       <div class="card stat-card">
         <div class="card-body">
           <div class="stat-value">{{ totalTraitements }}</div>
-          <div class="stat-label">Traitements (tous statuts)</div>
+          <div class="stat-label">Traitements</div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="row g-3 mt-1" *ngIf="!isLoading && !error">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header fw-semibold">Niveaux (cercle + liste)</div>
+        <div class="card-body">
+          <div class="row g-3 align-items-start">
+            <div class="col-12 col-lg-5">
+              <apx-chart
+                *ngIf="niveauChart"
+                [series]="niveauChart.series"
+                [chart]="niveauChart.chart"
+                [labels]="niveauChart.labels"
+                [legend]="niveauChart.legend"
+                [dataLabels]="niveauChart.dataLabels"
+                [plotOptions]="niveauChart.plotOptions"
+                [stroke]="niveauChart.stroke"
+                [theme]="niveauChart.theme"
+                [responsive]="niveauChart.responsive"
+              ></apx-chart>
+            </div>
+
+            <div class="col-12 col-lg-7">
+              <div class="row g-2">
+                <div class="col-12 col-md-6" *ngFor="let g of niveauGroups">
+                  <div class="border rounded p-2 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="fw-semibold">{{ g.label }}</div>
+                      <span class="badge text-bg-primary">{{ g.enfants.length }}</span>
+                    </div>
+                    <div class="text-muted small">{{ g.ageRangeLabel }}</div>
+
+                    <div class="mt-2 small" *ngIf="g.enfants.length === 0">
+                      <span class="text-muted">Aucun enfant.</span>
+                    </div>
+
+                    <ul class="mt-2 mb-0 small" *ngIf="g.enfants.length > 0">
+                      <li *ngFor="let e of g.enfants">
+                        {{ e.prenom }} {{ e.nom }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <small class="text-muted d-block mt-2">
+                Classification basée sur l'âge calculé à partir de la date de naissance.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="col-12 col-lg-6">
       <div class="card">
-        <div class="card-header fw-semibold">Allergies frÃ©quentes</div>
+        <div class="card-header fw-semibold">Allergies (cercle)</div>
         <div class="card-body">
-          <div *ngIf="allergiesTop.length === 0" class="text-muted">Aucune allergie renseignÃ©e.</div>
-          <div class="d-flex flex-wrap gap-2" *ngIf="allergiesTop.length > 0">
+          <apx-chart
+            *ngIf="allergiesChart"
+            [series]="allergiesChart.series"
+            [chart]="allergiesChart.chart"
+            [labels]="allergiesChart.labels"
+            [legend]="allergiesChart.legend"
+            [dataLabels]="allergiesChart.dataLabels"
+            [plotOptions]="allergiesChart.plotOptions"
+            [stroke]="allergiesChart.stroke"
+            [theme]="allergiesChart.theme"
+            [responsive]="allergiesChart.responsive"
+          ></apx-chart>
+
+          <div class="mt-2" *ngIf="allergiesTop.length === 0">
+            <div class="text-muted">Aucune allergie renseignée.</div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-2" *ngIf="allergiesTop.length > 0">
             <span class="badge text-bg-secondary" *ngFor="let a of allergiesTop">
               {{ a.allergie }} <span class="opacity-75">({{ a.count }})</span>
             </span>
           </div>
-          <small class="text-muted d-block mt-2">Comptage basÃ© sur le champ allergies des profils enfant.</small>
+
+          <small class="text-muted d-block mt-2">Comptage basé sur le champ allergies des profils enfant.</small>
         </div>
       </div>
     </div>
 
     <div class="col-12 col-lg-6">
       <div class="card">
-        <div class="card-header fw-semibold">Conditions sanitaires (types)</div>
+        <div class="card-header fw-semibold">Conditions sanitaires (cercle)</div>
         <div class="card-body">
-          <div class="d-flex flex-wrap gap-2">
+          <apx-chart
+            *ngIf="conditionChart"
+            [series]="conditionChart.series"
+            [chart]="conditionChart.chart"
+            [labels]="conditionChart.labels"
+            [legend]="conditionChart.legend"
+            [dataLabels]="conditionChart.dataLabels"
+            [plotOptions]="conditionChart.plotOptions"
+            [stroke]="conditionChart.stroke"
+            [theme]="conditionChart.theme"
+            [responsive]="conditionChart.responsive"
+          ></apx-chart>
+
+          <div class="d-flex flex-wrap gap-2 mt-2">
             <span class="badge text-bg-danger">Chroniques: {{ conditionsChroniques }}</span>
             <span class="badge text-bg-warning text-dark">Temporaires: {{ conditionsTemporaires }}</span>
             <span class="badge text-bg-secondary">Autres: {{ conditionsAutres }}</span>
           </div>
-          <small class="text-muted d-block mt-2">BasÃ© sur le champ type des conditions.</small>
-        </div>
-      </div>
-    </div>
 
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header fw-semibold">Traitements (statuts)</div>
-        <div class="card-body">
-          <div class="d-flex flex-wrap gap-2">
-            <span class="badge text-bg-primary">En attente: {{ traitementsEnAttente }}</span>
-            <span class="badge text-bg-success">ValidÃ©s: {{ traitementsValides }}</span>
-            <span class="badge text-bg-info text-dark">Actifs: {{ traitementsActifs }}</span>
-            <span class="badge text-bg-danger">RefusÃ©s: {{ traitementsRefuses }}</span>
-            <span class="badge text-bg-secondary">AnnulÃ©s: {{ traitementsAnnules }}</span>
-            <span class="badge text-bg-dark">Autres: {{ traitementsAutres }}</span>
-          </div>
-          <small class="text-muted d-block mt-2">
-            "En attente" provient aussi de l'endpoint de validation; les autres compteurs proviennent des traitements par enfant.
-          </small>
+          <small class="text-muted d-block mt-2">Basé sur le champ type des conditions.</small>
         </div>
       </div>
     </div>
   </div>
 </div>
-

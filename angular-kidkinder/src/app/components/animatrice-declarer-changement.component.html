@@ -1,12 +1,19 @@
 <section id="declarer" class="table-card" style="margin-top:16px;">
-  <h3>Declarer un changement (envoye aux parents)</h3>
-  <p class="muted">Choisissez un enfant, un type, puis laissez l'IA proposer une description et des hypotheses.</p>
+  <h3>Déclarer un changement (envoyé aux parents)</h3>
+  <p class="muted">Remplissez le formulaire en 3 étapes.</p>
 
-  <div class="form-grid form-grid--two">
+  <div class="stepper">
+    <div [class.active]="currentStep === 1">1. Enfant & type</div>
+    <div [class.active]="currentStep === 2">2. Détails</div>
+    <div [class.active]="currentStep === 3">3. Confirmation</div>
+  </div>
+
+  <!-- ÉTAPE 1 -->
+  <div class="form-grid form-grid--two" *ngIf="currentStep === 1">
     <div>
       <label>Enfant</label>
       <select [(ngModel)]="observationForm.enfantId" name="obsEnfant" (ngModelChange)="onObservationInputChanged()">
-        <option [ngValue]="0" disabled>Selectionnez...</option>
+        <option [ngValue]="0" disabled>Sélectionnez...</option>
         <option *ngFor="let enfant of enfants" [ngValue]="enfant.id">
           {{ enfant.prenom }} {{ enfant.nom }}
         </option>
@@ -16,25 +23,34 @@
     <div>
       <label>Type</label>
       <select [(ngModel)]="observationForm.type" name="obsType" (ngModelChange)="onObservationInputChanged()">
-        <option [ngValue]="'SANTE'">Sante</option>
+        <option [ngValue]="'SANTE'">Santé</option>
         <option [ngValue]="'SOMMEIL'">Sommeil</option>
         <option [ngValue]="'ALIMENTATION'">Alimentation</option>
         <option [ngValue]="'COMPORTEMENT'">Comportement</option>
         <option [ngValue]="'HUMEUR'">Humeur</option>
-        <option [ngValue]="'HYGIENE'">Hygiene</option>
-        <option [ngValue]="'JOUET'">Jouets</option>
-        <option [ngValue]="'ACTIVITE'">Activites</option>
+        <option [ngValue]="'HYGIENE'">Hygiène</option>
+        <option [ngValue]="'JOUET'">Jouet</option>
+        <option [ngValue]="'ACTIVITE'">Activités</option>
         <option [ngValue]="'INCIDENT'">Incident</option>
         <option [ngValue]="'AUTRE'">Autre</option>
       </select>
     </div>
 
+    <div style="grid-column:1/-1; display:flex; justify-content:flex-end;">
+      <button type="button" class="ts-button ts-button--primary" (click)="nextStep()">
+        Suivant
+      </button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 2 -->
+  <div class="form-grid form-grid--two" *ngIf="currentStep === 2">
     <div style="grid-column: 1 / -1;">
       <label>Titre</label>
       <input
         [(ngModel)]="observationForm.titre"
         name="obsTitre"
-        placeholder="Ex: Difficulte a dormir / Refus repas / Dispute jouet..."
+        placeholder="Ex: Difficulté à dormir / Refus repas / Dispute jouet..."
         (ngModelChange)="onObservationInputChanged()"
       />
     </div>
@@ -44,13 +60,13 @@
       <select [(ngModel)]="observationForm.urgence" name="obsUrgence" (ngModelChange)="onObservationInputChanged()">
         <option [ngValue]="'FAIBLE'">Faible</option>
         <option [ngValue]="'MOYENNE'">Moyenne</option>
-        <option [ngValue]="'ELEVEE'">Elevee</option>
+        <option [ngValue]="'ELEVEE'">Élevée</option>
         <option [ngValue]="'CRITIQUE'">Critique</option>
       </select>
     </div>
 
     <div>
-      <label>Temperature (Â°C)</label>
+      <label>Température (°C)</label>
       <input
         type="number"
         step="0.1"
@@ -62,7 +78,7 @@
     </div>
 
     <div style="grid-column: 1 / -1;">
-      <label>Lieu (optionnel)</label>
+      <label>Lieu</label>
       <input
         [(ngModel)]="observationForm.lieu"
         name="obsLieu"
@@ -72,11 +88,11 @@
     </div>
 
     <div style="grid-column: 1 / -1;">
-      <label>Ce que vous avez observe</label>
+      <label>Ce que vous avez observé</label>
       <textarea
         [(ngModel)]="observationForm.symptomes"
         name="obsSymptomes"
-        placeholder="Symptomes / comportement / situation..."
+        placeholder="Symptômes / comportement / situation..."
         (ngModelChange)="onObservationInputChanged()"
       ></textarea>
     </div>
@@ -86,92 +102,75 @@
       <textarea
         [(ngModel)]="observationForm.contexte"
         name="obsContexte"
-        placeholder="Ce qui s'est passe avant / pendant"
+        placeholder="Ce qui s'est passé avant / pendant"
         (ngModelChange)="onObservationInputChanged()"
       ></textarea>
     </div>
 
     <div style="grid-column: 1 / -1;">
-      <label>Actions effectuees</label>
+      <label>Actions effectuées</label>
       <textarea
         [(ngModel)]="observationForm.actionsEffectuees"
         name="obsActions"
-        placeholder="Actions/soins realises"
+        placeholder="Actions/soins réalisés"
         (ngModelChange)="onObservationInputChanged()"
       ></textarea>
     </div>
 
-    <div style="grid-column: 1 / -1; display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
-      <label style="margin:0;">Description (IA)</label>
+    <div style="grid-column:1/-1; display:flex; justify-content:space-between; gap:10px;">
+      <button type="button" class="ts-button" (click)="previousStep()">Retour</button>
+      <button type="button" class="ts-button ts-button--primary" (click)="nextStep()">Suivant</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 3 -->
+  <div *ngIf="currentStep === 3">
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
+      <label style="margin:0;">Description générée par IA</label>
       <button type="button" class="ts-button" (click)="genererDescriptionIA(true)" [disabled]="isGeneratingObservation">
-        {{ isGeneratingObservation ? 'Generation...' : 'IA: generer' }}
+        {{ isGeneratingObservation ? 'Génération...' : 'IA : générer' }}
       </button>
     </div>
 
-    <div style="grid-column: 1 / -1;">
-      <textarea
-        [(ngModel)]="observationForm.description"
-        name="obsDescription"
-        placeholder="La description s'ecrit automatiquement ici (vous pouvez ajuster)."
-        (ngModelChange)="onDescriptionChanged($event)"
-      ></textarea>
+    <textarea
+      style="margin-top:10px;"
+      [(ngModel)]="observationForm.description"
+      name="obsDescription"
+      placeholder="La description s'écrit automatiquement ici."
+      (ngModelChange)="onDescriptionChanged($event)"
+    ></textarea>
+
+    <div class="soft-panel soft-panel--mint" style="margin-top:12px;">
+      <strong>Résumé avant envoi</strong>
+      <p class="muted"><strong>Enfant :</strong> {{ getNomEnfant(observationForm.enfantId) }}</p>
+      <p class="muted"><strong>Type :</strong> {{ observationForm.type }}</p>
+      <p class="muted"><strong>Titre :</strong> {{ observationForm.titre }}</p>
+      <p class="muted"><strong>Urgence :</strong> {{ observationForm.urgence }}</p>
+      <p class="muted" *ngIf="observationForm.temperature !== null">
+        <strong>Température :</strong> {{ observationForm.temperature }} °C
+      </p>
+      <p class="muted" *ngIf="observationForm.lieu">
+        <strong>Lieu :</strong> {{ observationForm.lieu }}
+      </p>
     </div>
 
-    <div style="grid-column: 1 / -1;" *ngIf="aiPreview">
-      <div class="soft-panel soft-panel--mint">
-        <strong>Apercu IA</strong>
-        <p class="muted" *ngIf="aiPreview.resume">{{ aiPreview.resume }}</p>
-        <p class="muted" *ngIf="aiPreview.messageParent">{{ aiPreview.messageParent }}</p>
-
-        <div style="margin-top:10px;" *ngIf="(aiPreview.signaux?.length || 0) > 0">
-          <strong>Signaux detectes</strong>
-          <ul style="margin:8px 0 0; padding-left:18px;">
-            <li *ngFor="let s of (aiPreview.signaux || [])" class="muted">{{ s }}</li>
-          </ul>
-        </div>
-
-        <div style="margin-top:10px;" *ngIf="(aiPreview.problemes?.length || 0) > 0">
-          <strong>Problemes possibles</strong>
-          <ul style="margin:8px 0 0; padding-left:18px;">
-            <li *ngFor="let p of (aiPreview.problemes || [])" class="muted">{{ p }}</li>
-          </ul>
-        </div>
-
-        <div style="margin-top:10px;" *ngIf="(aiPreview.contexteRecent?.length || 0) > 0">
-          <strong>Contexte recent</strong>
-          <ul style="margin:8px 0 0; padding-left:18px;">
-            <li *ngFor="let c of (aiPreview.contexteRecent || [])" class="muted">{{ c }}</li>
-          </ul>
-        </div>
-
-        <div style="margin-top:10px;" *ngIf="(aiPreview.actions?.length || 0) > 0">
-          <strong>Actions proposees</strong>
-          <ul style="margin:8px 0 0; padding-left:18px;">
-            <li *ngFor="let a of (aiPreview.actions || [])" class="muted">{{ a }}</li>
-          </ul>
-        </div>
-
-        <div style="margin-top:10px;" *ngIf="(aiPreview.points?.length || 0) > 0">
-          <strong>Points a surveiller</strong>
-          <ul style="margin:8px 0 0; padding-left:18px;">
-            <li *ngFor="let p of (aiPreview.points || [])" class="muted">{{ p }}</li>
-          </ul>
-        </div>
-
-        <div style="margin-top:10px;" *ngIf="(aiPreview.questions?.length || 0) > 0">
-          <strong>Questions aux parents</strong>
-          <ul style="margin:8px 0 0; padding-left:18px;">
-            <li *ngFor="let q of (aiPreview.questions || [])" class="muted">{{ q }}</li>
-          </ul>
-        </div>
-      </div>
+    <div style="margin-top:12px;" *ngIf="aiPreview" class="soft-panel soft-panel--mint">
+      <strong>Aperçu IA</strong>
+      <p class="muted" *ngIf="aiPreview.resume">{{ aiPreview.resume }}</p>
+      <p class="muted" *ngIf="aiPreview.messageParent">{{ aiPreview.messageParent }}</p>
     </div>
-  </div>
 
-  <div style="margin-top: 16px;">
-    <button type="button" class="ts-button ts-button--primary" (click)="declarerObservation()" [disabled]="isSavingObservation">
-      {{ isSavingObservation ? 'Envoi...' : 'Envoyer aux parents' }}
-    </button>
+    <div style="margin-top:16px; display:flex; justify-content:space-between; gap:10px;">
+      <button type="button" class="ts-button" (click)="previousStep()">Retour</button>
+
+      <button
+        type="button"
+        class="ts-button ts-button--primary"
+        (click)="declarerObservation()"
+        [disabled]="isSavingObservation"
+      >
+        {{ isSavingObservation ? 'Envoi...' : 'Envoyer aux parents' }}
+      </button>
+    </div>
   </div>
 </section>
-

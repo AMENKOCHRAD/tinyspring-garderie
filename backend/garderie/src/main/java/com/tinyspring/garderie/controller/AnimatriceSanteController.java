@@ -10,8 +10,7 @@ import com.tinyspring.garderie.entity.ObservationEnfant;
 import com.tinyspring.garderie.entity.PriseTraitement;
 import com.tinyspring.garderie.service.AnimatriceSanteService;
 import com.tinyspring.garderie.service.ObservationAiService;
-import com.tinyspring.garderie.service.RiskPredictionService;
-import com.tinyspring.garderie.dto.RiskPredictionDto;
+import com.tinyspring.garderie.service.DuplicateObservationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
@@ -30,14 +29,11 @@ public class AnimatriceSanteController {
 
     private final AnimatriceSanteService service;
     private final ObservationAiService observationAiService;
-    private final RiskPredictionService riskPredictionService;
 
     public AnimatriceSanteController(AnimatriceSanteService service,
-                                    ObservationAiService observationAiService,
-                                    RiskPredictionService riskPredictionService) {
+                                    ObservationAiService observationAiService) {
         this.service = service;
         this.observationAiService = observationAiService;
-        this.riskPredictionService = riskPredictionService;
     }
 
     @PostMapping("/traitements/{traitementId}/prises")
@@ -119,6 +115,15 @@ public class AnimatriceSanteController {
         String email = authentication != null ? authentication.getName() : null;
         try {
             return ResponseEntity.ok(mapObservation(service.creerObservation(email, enfantId, payload)));
+        } catch (DuplicateObservationException exception) {
+            String message = exception.getMessage() != null ? exception.getMessage() : "Doublon detecte.";
+            return ResponseEntity.status(409)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "message", message,
+                            "duplicateOfId", exception.getDuplicateOfId(),
+                            "score", exception.getScore()
+                    ));
         } catch (RuntimeException exception) {
             String message = exception.getMessage() != null ? exception.getMessage() : "Requete invalide.";
             return ResponseEntity.badRequest()
@@ -147,11 +152,6 @@ public class AnimatriceSanteController {
         return ResponseEntity.ok(service.listerDernieresObservations().stream()
                 .map(this::mapObservation)
                 .collect(Collectors.toList()));
-    }
-
-    @GetMapping("/enfant/{enfantId}/risque")
-    public ResponseEntity<RiskPredictionDto> predireRisque(@PathVariable Long enfantId) {
-        return ResponseEntity.ok(riskPredictionService.predirePourEnfant(enfantId));
     }
 
     private PriseTraitementDto mapPrise(PriseTraitement prise) {
