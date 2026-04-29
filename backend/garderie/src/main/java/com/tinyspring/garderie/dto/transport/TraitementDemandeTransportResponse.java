@@ -6,6 +6,7 @@ public record TraitementDemandeTransportResponse(
         Long demandeId,
         StatutDemandeTransport statut,
         Long affectationId,
-        Double tauxRemplissageTransport
+        Double tauxRemplissageTransport,
+        String message
 ) {
 }

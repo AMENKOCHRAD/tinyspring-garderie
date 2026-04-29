@@ -92,6 +92,9 @@ import { parentChildrenColumns, parentModules, parentPaymentsColumns, parentPaym
                       <span class="badge px-3 py-2" [ngClass]="getStatusClass(demande.statut)">
                         {{ formatStatus(demande.statut) }}
                       </span>
+                      <div class="small mt-2 text-warning" *ngIf="demande.revisionRequestMessage">
+                        {{ demande.revisionRequestMessage }}
+                      </div>
                       <div class="small mt-2" [class.text-danger]="demande.suspicious" [class.text-muted]="!demande.suspicious">
                         {{ getAiStatusLabel(demande) }}
                         <span *ngIf="demande.anomalyScore !== null">| Score: {{ formatAnomalyScore(demande.anomalyScore) }}</span>
@@ -228,7 +231,10 @@ export class ParentPortalPageComponent {
   protected readonly overview = computed(() => [
     { label: 'Enfants suivis', value: `${this.children().length}` },
     { label: 'Demandes transport', value: `${this.demandes().length}` },
-    { label: 'Demandes en attente', value: `${this.demandes().filter((demande) => demande.statut === 'EN_ATTENTE').length}` },
+    {
+      label: 'Demandes en attente',
+      value: `${this.demandes().filter((demande) => demande.statut === 'EN_ATTENTE' || demande.statut === 'REVISION_PARENT_DEMANDEE').length}`
+    },
     { label: 'Session', value: this.currentUserEmail() || 'Active' }
   ]);
   protected readonly childrenRows = computed(() =>
@@ -346,6 +352,8 @@ export class ParentPortalPageComponent {
     switch (status) {
       case 'ACCEPTEE':
         return 'badge-success';
+      case 'REVISION_PARENT_DEMANDEE':
+        return 'badge-info';
       case 'REFUSEE':
         return 'badge-danger';
       default:

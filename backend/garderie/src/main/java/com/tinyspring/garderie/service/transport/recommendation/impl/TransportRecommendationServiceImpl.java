@@ -18,6 +18,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -47,7 +48,12 @@ public class TransportRecommendationServiceImpl implements TransportRecommendati
         List<Trajet> candidateTrajets = findCandidateTrajets(affectations);
 
         return findDemandesAAssister(allDemandes, affectations).stream()
-                .map(demande -> recommendationEngine.recommendDemande(demande, candidateTrajets, allDemandes, affectations))
+                .map(demande -> recommendationEngine.recommendDemande(
+                        demande,
+                        filterCandidateTrajetsForDemande(candidateTrajets, demande),
+                        allDemandes,
+                        affectations
+                ))
                 .map(this::toDemandeRecommendationResponse)
                 .toList();
     }
@@ -59,7 +65,12 @@ public class TransportRecommendationServiceImpl implements TransportRecommendati
         List<Trajet> candidateTrajets = findCandidateTrajets(affectations);
 
         List<TransportRecommendationEngine.DemandeRecommendationDecision> decisions = findDemandesAAssister(allDemandes, affectations).stream()
-                .map(demande -> recommendationEngine.recommendDemande(demande, candidateTrajets, allDemandes, affectations))
+                .map(demande -> recommendationEngine.recommendDemande(
+                        demande,
+                        filterCandidateTrajetsForDemande(candidateTrajets, demande),
+                        allDemandes,
+                        affectations
+                ))
                 .toList();
 
         return recommendationEngine.buildNewRouteSuggestions(decisions).stream()
@@ -72,7 +83,12 @@ public class TransportRecommendationServiceImpl implements TransportRecommendati
         List<DemandeTransport> allDemandes = demandeTransportRepository.findAllByOrderByIdDesc();
         List<AffectationTransport> affectations = affectationTransportRepository.findAll();
         List<Trajet> candidateTrajets = findCandidateTrajets(affectations);
-        return recommendationEngine.recommendDemande(demande, candidateTrajets, allDemandes, affectations);
+        return recommendationEngine.recommendDemande(
+                demande,
+                filterCandidateTrajetsForDemande(candidateTrajets, demande),
+                allDemandes,
+                affectations
+        );
     }
 
     @Override
@@ -95,7 +111,7 @@ public class TransportRecommendationServiceImpl implements TransportRecommendati
     }
 
     private List<Trajet> findCandidateTrajets(List<AffectationTransport> affectations) {
-        return trajetRepository.findByDateTrajetGreaterThanEqualOrderByDateTrajetAscHeureDepartAsc(LocalDate.now().plusDays(1)).stream()
+        return trajetRepository.findByDateTrajetGreaterThanEqualOrderByDateTrajetAscHeureDepartAsc(LocalDate.now()).stream()
                 .filter(trajet -> countAffectationsForTrajet(affectations, trajet.getId()) < trajet.getTransport().getCapacite())
                 .toList();
     }
@@ -104,6 +120,27 @@ public class TransportRecommendationServiceImpl implements TransportRecommendati
         return affectations.stream()
                 .filter(affectation -> affectation.getTrajet().getId().equals(trajetId))
                 .count();
+    }
+
+    private List<Trajet> filterCandidateTrajetsForDemande(List<Trajet> candidateTrajets, DemandeTransport demande) {
+        LocalDate requestedDate = demande.getDateSouhaitee();
+
+        return candidateTrajets.stream()
+                .filter(trajet -> requestedDate == null || requestedDate.equals(trajet.getDateTrajet()))
+                .filter(trajet -> inferTrajetSense(trajet) == demande.getSensTrajet())
+                .sorted(Comparator.comparing(Trajet::getDateTrajet).thenComparing(Trajet::getHeureDepart))
+                .toList();
+    }
+
+    private SensTrajetDemandeTransport inferTrajetSense(Trajet trajet) {
+        return isGarderieAddress(trajet.getPointDepart())
+                ? SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
+                : SensTrajetDemandeTransport.MAISON_VERS_GARDERIE;
+    }
+
+    private boolean isGarderieAddress(String address) {
+        return address != null
+                && address.trim().equalsIgnoreCase("15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie");
     }
 
     private DemandeAffectationRecommendationResponse toDemandeRecommendationResponse(TransportRecommendationEngine.DemandeRecommendationDecision decision) {

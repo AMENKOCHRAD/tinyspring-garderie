@@ -304,6 +304,10 @@
             <button type="button" class="ts-button ts-button--ghost" (click)="edit(demande)">Modifier</button>
             <button type="button" class="ts-button ts-button--ghost" (click)="remove(demande.id)">Supprimer</button>
           </div>
+          <div *ngIf="demande.revisionRequestMessage" class="stack-item">
+            <strong>Revision demandee</strong>
+            <p class="muted">{{ demande.revisionRequestMessage }}</p>
+          </div>
           <div *ngIf="demande.aiAnalysisAvailable || demande.aiAnalysisError" class="stack-item">
             <strong>Analyse IA transport</strong>
             <p class="muted">
@@ -330,7 +334,7 @@
         </div>
         <div *ngIf="selectedChildHasActiveRequest()" class="stack-item">
           <strong>Demande deja active</strong>
-          <p class="muted">Cet enfant possede deja une demande en attente ou acceptee.</p>
+          <p class="muted">Cet enfant possede deja une demande en attente, en revision parent ou acceptee.</p>
         </div>
         <div class="stack-item">
           <strong>Adresse exacte de la garderie</strong>

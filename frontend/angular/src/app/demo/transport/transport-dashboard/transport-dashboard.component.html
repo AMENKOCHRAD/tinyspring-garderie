@@ -209,7 +209,7 @@
                     <small class="text-danger">L autre point doit contenir au moins 3 caracteres.</small>
                   }
                   @if (hasTrajetError('autrePoint', 'maxlength')) {
-                    <small class="text-danger">L autre point ne doit pas depasser 80 caracteres.</small>
+                    <small class="text-danger">L autre point ne doit pas depasser 200 caracteres.</small>
                   }
                   @if (hasTrajetError('autrePoint', 'pattern')) {
                     <small class="text-danger">L autre point contient des caracteres non autorises.</small>
@@ -289,14 +289,67 @@
             </div>
           </ng-template>
         </li>
-
         <li [ngbNavItem]="3">
           <button ngbNavLink>Demandes</button>
           <ng-template ngbNavContent>
-            <div class="filter-bar">
+            <div class="demandes-toolbar">
+              <div class="demandes-toolbar__meta">
+                <div class="demandes-toolbar__headline">
+                  <h5 class="mb-1">Suivi en direct des demandes</h5>
+                  <p class="mb-0 text-muted">
+                    {{ demandes.length }} demandes, {{ pendingDemandesCount }} en attente, {{ suspiciousDemandesCount }} suspectes
+                    <span *ngIf="unavailableAiDemandesCount">, {{ unavailableAiDemandesCount }} sans IA</span>
+                  </p>
+                </div>
+                <small class="text-muted" *ngIf="lastRefreshAt">
+                  Derniere synchronisation: {{ lastRefreshAt | date: 'HH:mm:ss' }}
+                </small>
+              </div>
+
+              <div class="demand-summary-grid">
+                <div class="demand-summary-chip">
+                  <span class="demand-summary-chip__value">{{ filteredDemandes.length }}</span>
+                  <span class="demand-summary-chip__label">Apres filtres</span>
+                </div>
+                <div class="demand-summary-chip">
+                  <span class="demand-summary-chip__value">{{ activeDemandesFiltersCount }}</span>
+                  <span class="demand-summary-chip__label">Filtres actifs</span>
+                </div>
+                <div class="demand-summary-chip">
+                  <span class="demand-summary-chip__value">{{ totalDemandesPages }}</span>
+                  <span class="demand-summary-chip__label">Pages</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-bar filter-bar--demandes">
+              <div class="filter-bar__search">
+                <label>Recherche globale</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="demandeSearchTerm"
+                  (ngModelChange)="onDemandesFiltersChanged()"
+                  placeholder="Enfant, parent, adresse, statut..."
+                />
+              </div>
               <div>
-                <label>Filtrer par trajet</label>
-                <select class="form-select" [(ngModel)]="filtreTrajetId">
+                <label>Statut</label>
+                <select class="form-select" [(ngModel)]="filtreStatut" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option value="TOUS">Tous les statuts</option>
+                  <option value="EN_ATTENTE">En attente</option>
+                  <option value="ACCEPTEE">Acceptees</option>
+                  <option value="REVISION_PARENT_DEMANDEE">Revisions</option>
+                  <option value="REFUSEE">Refusees</option>
+                </select>
+              </div>
+              <div>
+                <label>Date</label>
+                <input class="form-control" type="date" [(ngModel)]="filtreDate" (ngModelChange)="onDemandesFiltersChanged()" />
+              </div>
+              <div>
+                <label>Trajet</label>
+                <select class="form-select" [(ngModel)]="filtreTrajetId" (ngModelChange)="onDemandesFiltersChanged()">
                   <option [ngValue]="null">Tous les trajets</option>
                   @for (trajet of trajets; track trajet.id) {
                     <option [ngValue]="trajet.id">{{ trajet.pointDepart }} -> {{ trajet.destination }}</option>
@@ -304,16 +357,58 @@
                 </select>
               </div>
               <div>
-                <label>Filtrer par heure</label>
-                <input class="form-control" type="time" [(ngModel)]="filtreHeure" />
+                <label>Transport</label>
+                <select class="form-select" [(ngModel)]="filtreTransportId" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option [ngValue]="null">Tous les transports</option>
+                  @for (transport of transports; track transport.id) {
+                    <option [ngValue]="transport.id">{{ transport.nom }} ({{ transport.matricule }})</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label>Analyse IA</label>
+                <select class="form-select" [(ngModel)]="filtreSuspect" (ngModelChange)="onDemandesFiltersChanged()">
+                  <option value="TOUS">Tous les niveaux</option>
+                  <option value="SUSPECTES">Demandes suspectes</option>
+                  <option value="NON_SUSPECTES">Demandes normales</option>
+                  <option value="IA_INDISPONIBLE">IA indisponible</option>
+                </select>
+              </div>
+              <div>
+                <label>Heure</label>
+                <input class="form-control" type="time" [(ngModel)]="filtreHeure" (ngModelChange)="onDemandesFiltersChanged()" />
+              </div>
+              <div>
+                <label>Lignes par page</label>
+                <select class="form-select" [(ngModel)]="demandesPageSize" (ngModelChange)="onDemandesPageSizeChanged()">
+                  @for (size of pageSizeOptions; track size) {
+                    <option [ngValue]="size">{{ size }}</option>
+                  }
+                </select>
+              </div>
+              <div class="filter-bar__actions">
+                <label>&nbsp;</label>
+                <button class="btn btn-outline-secondary w-100" type="button" (click)="resetDemandesFilters()">
+                  Reinitialiser
+                </button>
               </div>
             </div>
 
             @if (loading.demandes) {
               <div class="loading-state"><div class="spinner-border text-primary"></div></div>
             } @else {
+              <div class="demandes-table-meta">
+                <span>
+                  Affichage {{ visibleDemandesStart }}-{{ visibleDemandesEnd }} sur {{ filteredDemandes.length }}
+                  demande<span *ngIf="filteredDemandes.length > 1">s</span>
+                </span>
+                <span *ngIf="activeDemandesFiltersCount">
+                  {{ activeDemandesFiltersCount }} filtre<span *ngIf="activeDemandesFiltersCount > 1">s</span> actif<span *ngIf="activeDemandesFiltersCount > 1">s</span>
+                </span>
+              </div>
+
               <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover demandes-table">
                   <thead>
                     <tr>
                       <th>Enfant</th>
@@ -326,10 +421,15 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (demande of filteredDemandes; track demande.id) {
+                    @for (demande of paginatedDemandes; track demande.id) {
                       <tr>
-                        <td>{{ demande.enfantNomComplet }}</td>
-                        <td>{{ demande.parentNom }}</td>
+                        <td>
+                          <div class="demandes-table__primary">{{ demande.enfantNomComplet }}</div>
+                          <small class="text-muted">#{{ demande.id }}</small>
+                        </td>
+                        <td>
+                          <div class="demandes-table__primary">{{ demande.parentNom }}</div>
+                        </td>
                         <td>
                           <div>{{ demande.pointDepart }} -> {{ demande.destination }}</div>
                           <small class="text-muted" *ngIf="demande.dateSouhaitee || demande.heureSouhaitee">
@@ -339,11 +439,16 @@
                         <td>{{ demande.dateTrajet || demande.dateSouhaitee || '-' }}</td>
                         <td>{{ demande.heureDepart || demande.heureSouhaitee || '-' }}</td>
                         <td>
-                          <span class="badge transport-badge" [ngClass]="getStatutBadgeClass(demande.statut)">{{ demande.statut }}</span>
+                          <span class="badge transport-badge" [ngClass]="getStatutBadgeClass(demande.statut)">
+                            {{ formatStatutLabel(demande.statut) }}
+                          </span>
                           <div class="anomaly-summary mt-2">
                             <span class="badge transport-badge" [ngClass]="getAnomalyBadgeClass(demande)">
                               {{ formatAiStatus(demande) }}
                             </span>
+                            <small class="d-block text-info" *ngIf="demande.revisionRequestMessage">
+                              {{ demande.revisionRequestMessage }}
+                            </small>
                             <small class="d-block text-muted" *ngIf="demande.anomalyLevel || demande.anomalyScore !== null">
                               Niveau: {{ demande.anomalyLevel || 'UNKNOWN' }} | Score: {{ formatAnomalyScore(demande.anomalyScore) }}
                             </small>
@@ -360,9 +465,9 @@
                             <div class="demand-actions">
                               <small class="text-muted d-block mb-2">Le systeme choisira automatiquement le trajet admin le plus adequat et non sature.</small>
                               <div class="actions-cell">
-                                <button class="btn btn-sm btn-success" type="button" [disabled]="actionDemandeId === demande.id" (click)="accepterDemande(demande)">
-                                  Accepter
-                                </button>
+                        <button class="btn btn-sm btn-success" type="button" [disabled]="actionDemandeId === demande.id" (click)="accepterDemande(demande)">
+                          {{ demande.suspicious ? 'Demander revision' : 'Accepter' }}
+                        </button>
                                 <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="actionDemandeId === demande.id" (click)="refuserDemande(demande)">
                                   Refuser
                                 </button>
@@ -385,6 +490,32 @@
                     }
                   </tbody>
                 </table>
+              </div>
+
+              <div class="pagination-bar" *ngIf="filteredDemandes.length">
+                <button class="btn btn-sm btn-outline-secondary" type="button" [disabled]="currentDemandesPage === 1" (click)="goToDemandesPage(currentDemandesPage - 1)">
+                  Precedent
+                </button>
+                <div class="pagination-bar__pages">
+                  @for (page of demandesPageNumbers; track page) {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      [ngClass]="page === currentDemandesPage ? 'btn-primary' : 'btn-outline-secondary'"
+                      (click)="goToDemandesPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                </div>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  [disabled]="currentDemandesPage === totalDemandesPages"
+                  (click)="goToDemandesPage(currentDemandesPage + 1)"
+                >
+                  Suivant
+                </button>
               </div>
             }
           </ng-template>

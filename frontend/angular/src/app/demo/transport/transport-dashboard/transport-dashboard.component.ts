@@ -1,7 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, interval } from 'rxjs';
+import Swal from 'sweetalert2';
 
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { AffectationService } from 'src/app/services/transport/affectation.service';
@@ -32,6 +34,19 @@ interface DemandeStatCard {
 }
 
 type TrajetSense = 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
+type DemandeFilterStatut = StatutTransport | 'TOUS';
+type DemandeFilterSuspect = 'TOUS' | 'SUSPECTES' | 'NON_SUSPECTES' | 'IA_INDISPONIBLE';
+
+interface DemandeFiltersState {
+  searchTerm: string;
+  statut: DemandeFilterStatut;
+  date: string;
+  trajetId: number | null;
+  transportId: number | null;
+  suspect: DemandeFilterSuspect;
+  heure: string;
+  pageSize: number;
+}
 
 @Component({
   selector: 'app-transport-dashboard',
@@ -40,11 +55,16 @@ type TrajetSense = 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
   styleUrls: ['./transport-dashboard.component.scss']
 })
 export class TransportDashboardComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly adminDemandeNotificationStorageKey = 'admin-transport-demandes-notifications-v1';
+  private readonly demandeFilterStorageKey = 'admin-transport-demandes-filters-v1';
+  private readonly liveRefreshIntervalMs = 10000;
   activeTabId = 1;
   readonly tomorrowDate = this.getTomorrowDate();
   readonly adresseGarderieFixe = '15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie';
   readonly garderieLatitude = 36.8065;
   readonly garderieLongitude = 10.1815;
+  readonly pageSizeOptions = [5];
   trajetAutrePointLatitude: number | null = null;
   trajetAutrePointLongitude: number | null = null;
 
@@ -73,8 +93,16 @@ export class TransportDashboardComponent implements OnInit {
   editingTrajetId: number | null = null;
   actionDemandeId: number | null = null;
 
+  demandeSearchTerm = '';
+  filtreStatut: DemandeFilterStatut = 'TOUS';
+  filtreDate = '';
   filtreTrajetId: number | null = null;
+  filtreTransportId: number | null = null;
+  filtreSuspect: DemandeFilterSuspect = 'TOUS';
   filtreHeure = '';
+  demandesPageSize = 5;
+  currentDemandesPage = 1;
+  lastRefreshAt: Date | null = null;
 
   readonly transportForm = this.fb.group({
     nom: [
@@ -111,7 +139,7 @@ export class TransportDashboardComponent implements OnInit {
         trimmedRequiredValidator(),
         noEdgeSpacesValidator(),
         Validators.minLength(3),
-        Validators.maxLength(80),
+        Validators.maxLength(200),
         Validators.pattern(/^[\p{L}0-9\s\-()',]+$/u)
       ]
     ],
@@ -122,7 +150,7 @@ export class TransportDashboardComponent implements OnInit {
         trimmedRequiredValidator(),
         noEdgeSpacesValidator(),
         Validators.minLength(3),
-        Validators.maxLength(80),
+        Validators.maxLength(200),
         Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s\-()',]+$/)
       ]
     ],
@@ -133,7 +161,7 @@ export class TransportDashboardComponent implements OnInit {
         trimmedRequiredValidator(),
         noEdgeSpacesValidator(),
         Validators.minLength(3),
-        Validators.maxLength(80),
+        Validators.maxLength(200),
         Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s\-()',]+$/)
       ]
     ],
@@ -157,7 +185,9 @@ export class TransportDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.restoreDemandeFilters();
     this.loadAllData();
+    this.startLiveRefresh();
   }
 
   get demandeStatsCards(): DemandeStatCard[] {
@@ -175,6 +205,12 @@ export class TransportDashboardComponent implements OnInit {
         cardClass: 'bg-c-green'
       },
       {
+        label: 'Revisions parent',
+        total: this.countDemandesByStatut('REVISION_PARENT_DEMANDEE'),
+        icon: 'feather icon-alert-triangle',
+        cardClass: 'bg-c-blue'
+      },
+      {
         label: 'Demandes refusees',
         total: this.countDemandesByStatut('REFUSEE'),
         icon: 'feather icon-x-circle',
@@ -185,10 +221,86 @@ export class TransportDashboardComponent implements OnInit {
 
   get filteredDemandes(): DemandeTransport[] {
     return this.demandes.filter((demande) => {
+      const searchHaystack = [
+        demande.enfantNomComplet,
+        demande.parentNom,
+        demande.pointDepart,
+        demande.destination,
+        demande.pointRamassage,
+        demande.statut,
+        demande.dateTrajet ?? '',
+        demande.dateSouhaitee ?? ''
+      ]
+        .join(' ')
+        .toLowerCase();
+      const normalizedSearchTerm = this.demandeSearchTerm.trim().toLowerCase();
+      const transport = demande.trajetId ? this.findTransportByTrajetId(demande.trajetId) : null;
+
+      const matchesSearch = normalizedSearchTerm ? searchHaystack.includes(normalizedSearchTerm) : true;
+      const matchesStatut = this.filtreStatut === 'TOUS' ? true : demande.statut === this.filtreStatut;
+      const matchesDate = this.filtreDate ? (demande.dateTrajet ?? demande.dateSouhaitee ?? '') === this.filtreDate : true;
       const matchesTrajet = this.filtreTrajetId ? demande.trajetId === this.filtreTrajetId : true;
+      const matchesTransport = this.filtreTransportId ? transport?.id === this.filtreTransportId : true;
+      const matchesSuspect =
+        this.filtreSuspect === 'TOUS'
+          ? true
+          : this.filtreSuspect === 'SUSPECTES'
+            ? !!demande.suspicious
+            : this.filtreSuspect === 'NON_SUSPECTES'
+              ? !demande.suspicious
+              : demande.aiAnalysisAvailable === false;
       const matchesHeure = this.filtreHeure ? !!demande.heureDepart && demande.heureDepart.startsWith(this.filtreHeure) : true;
-      return matchesTrajet && matchesHeure;
+
+      return matchesSearch && matchesStatut && matchesDate && matchesTrajet && matchesTransport && matchesSuspect && matchesHeure;
     });
+  }
+
+  get paginatedDemandes(): DemandeTransport[] {
+    const startIndex = (this.currentDemandesPage - 1) * this.demandesPageSize;
+    return this.filteredDemandes.slice(startIndex, startIndex + this.demandesPageSize);
+  }
+
+  get totalDemandesPages(): number {
+    return Math.max(1, Math.ceil(this.filteredDemandes.length / this.demandesPageSize));
+  }
+
+  get visibleDemandesStart(): number {
+    if (this.filteredDemandes.length === 0) {
+      return 0;
+    }
+    return (this.currentDemandesPage - 1) * this.demandesPageSize + 1;
+  }
+
+  get visibleDemandesEnd(): number {
+    return Math.min(this.currentDemandesPage * this.demandesPageSize, this.filteredDemandes.length);
+  }
+
+  get pendingDemandesCount(): number {
+    return this.countDemandesByStatut('EN_ATTENTE');
+  }
+
+  get suspiciousDemandesCount(): number {
+    return this.demandes.filter((demande) => !!demande.suspicious).length;
+  }
+
+  get unavailableAiDemandesCount(): number {
+    return this.demandes.filter((demande) => demande.aiAnalysisAvailable === false).length;
+  }
+
+  get activeDemandesFiltersCount(): number {
+    return [
+      this.demandeSearchTerm.trim(),
+      this.filtreStatut !== 'TOUS' ? this.filtreStatut : '',
+      this.filtreDate,
+      this.filtreTrajetId,
+      this.filtreTransportId,
+      this.filtreSuspect !== 'TOUS' ? this.filtreSuspect : '',
+      this.filtreHeure
+    ].filter(Boolean).length;
+  }
+
+  get demandesPageNumbers(): number[] {
+    return Array.from({ length: this.totalDemandesPages }, (_, index) => index + 1);
   }
 
   loadAllData(): void {
@@ -208,10 +320,13 @@ export class TransportDashboardComponent implements OnInit {
         this.transports = transports;
         this.trajets = trajets;
         this.demandes = demandes;
+        this.notifyAdminOnPendingDemandes(demandes);
         this.affectations = affectations;
         this.recommandationsAffectation = recommandationsAffectation;
         this.recommandationsNouveauxTrajets = recommandationsNouveauxTrajets;
         this.predictionDemande = predictionDemande;
+        this.lastRefreshAt = new Date();
+        this.ensureDemandesPaginationInBounds();
         this.setAllLoading(false);
       },
       error: (error) => {
@@ -316,8 +431,8 @@ export class TransportDashboardComponent implements OnInit {
     this.editingTrajetId = trajet.id;
     const sensTrajet = this.inferTrajetSense(trajet);
     const autrePoint = sensTrajet === 'GARDERIE_VERS_MAISON' ? trajet.destination : trajet.pointDepart;
-    const autrePointLatitude = sensTrajet === 'GARDERIE_VERS_MAISON' ? trajet.latitudeDestination : null;
-    const autrePointLongitude = sensTrajet === 'GARDERIE_VERS_MAISON' ? trajet.longitudeDestination : null;
+    const autrePointLatitude = trajet.latitudeDestination;
+    const autrePointLongitude = trajet.longitudeDestination;
 
     this.trajetAutrePointLatitude = autrePointLatitude;
     this.trajetAutrePointLongitude = autrePointLongitude;
@@ -395,13 +510,30 @@ export class TransportDashboardComponent implements OnInit {
     this.clearMessages();
 
     this.demandeService.accepterDemande(demande.id).subscribe({
-      next: () => {
-        this.messages.success = `La demande de ${demande.enfantNomComplet} a ete acceptee avec affectation automatique.`;
+      next: (response) => {
+        this.messages.success =
+          response.statut === 'REVISION_PARENT_DEMANDEE'
+            ? `Une revision a ete demandee au parent de ${demande.enfantNomComplet}.`
+            : `La demande de ${demande.enfantNomComplet} a ete acceptee avec affectation automatique.`;
+        void Swal.fire({
+          icon: response.statut === 'REVISION_PARENT_DEMANDEE' ? 'warning' : 'success',
+          title: response.statut === 'REVISION_PARENT_DEMANDEE' ? 'Revision demandee' : 'Demande acceptee',
+          text:
+            response.statut === 'REVISION_PARENT_DEMANDEE'
+              ? `Le parent de ${demande.enfantNomComplet} a ete notifie pour revoir la demande.`
+              : `${demande.enfantNomComplet} a ete affecte(e) automatiquement au transport.`,
+          timer: 2600,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
         this.actionDemandeId = null;
         this.reloadDemandes();
-        this.reloadAffectations();
-        this.reloadTransports();
-        this.reloadTrajets();
+        if (response.statut === 'ACCEPTEE') {
+          this.reloadAffectations();
+          this.reloadTransports();
+          this.reloadTrajets();
+        }
         this.reloadRecommendations();
       },
       error: (error) => {
@@ -418,6 +550,15 @@ export class TransportDashboardComponent implements OnInit {
     this.demandeService.refuserDemande(demande.id).subscribe({
       next: () => {
         this.messages.success = `La demande de ${demande.enfantNomComplet} a ete refusee.`;
+        void Swal.fire({
+          icon: 'error',
+          title: 'Demande refusee',
+          text: `Le parent de ${demande.enfantNomComplet} a ete notifie du refus.`,
+          timer: 2600,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
         this.actionDemandeId = null;
         this.reloadDemandes();
         this.reloadRecommendations();
@@ -487,14 +628,61 @@ export class TransportDashboardComponent implements OnInit {
     });
   }
 
+  onDemandesFiltersChanged(): void {
+    this.currentDemandesPage = 1;
+    this.ensureDemandesPaginationInBounds();
+    this.persistDemandeFilters();
+  }
+
+  onDemandesPageSizeChanged(): void {
+    this.currentDemandesPage = 1;
+    this.ensureDemandesPaginationInBounds();
+    this.persistDemandeFilters();
+  }
+
+  resetDemandesFilters(): void {
+    this.demandeSearchTerm = '';
+    this.filtreStatut = 'TOUS';
+    this.filtreDate = '';
+    this.filtreTrajetId = null;
+    this.filtreTransportId = null;
+    this.filtreSuspect = 'TOUS';
+    this.filtreHeure = '';
+    this.demandesPageSize = 5;
+    this.currentDemandesPage = 1;
+    this.persistDemandeFilters();
+  }
+
+  goToDemandesPage(page: number): void {
+    this.currentDemandesPage = Math.min(Math.max(page, 1), this.totalDemandesPages);
+    this.persistDemandeFilters();
+  }
+
+  formatStatutLabel(statut: StatutTransport): string {
+    switch (statut) {
+      case 'EN_ATTENTE':
+        return 'En attente';
+      case 'ACCEPTEE':
+        return 'Acceptee';
+      case 'REVISION_PARENT_DEMANDEE':
+        return 'Revision';
+      case 'REFUSEE':
+        return 'Refusee';
+      default:
+        return statut;
+    }
+  }
+
   getStatutBadgeClass(statut: StatutTransport): string {
     switch (statut) {
       case 'ACCEPTEE':
-        return 'badge-light-success';
+        return 'status-badge status-badge--accepted';
+      case 'REVISION_PARENT_DEMANDEE':
+        return 'status-badge status-badge--revision';
       case 'REFUSEE':
-        return 'badge-light-danger';
+        return 'status-badge status-badge--rejected';
       default:
-        return 'badge-light-warning';
+        return 'status-badge status-badge--pending';
     }
   }
 
@@ -543,6 +731,7 @@ export class TransportDashboardComponent implements OnInit {
     this.transportService.getTransports().subscribe({
       next: (transports) => {
         this.transports = transports;
+        this.lastRefreshAt = new Date();
         this.loading.transports = false;
       },
       error: (error) => {
@@ -557,6 +746,7 @@ export class TransportDashboardComponent implements OnInit {
     this.trajetService.getTrajets().subscribe({
       next: (trajets) => {
         this.trajets = trajets;
+        this.lastRefreshAt = new Date();
         this.loading.trajets = false;
       },
       error: (error) => {
@@ -571,6 +761,9 @@ export class TransportDashboardComponent implements OnInit {
     this.demandeService.getDemandes().subscribe({
       next: (demandes) => {
         this.demandes = demandes;
+        this.notifyAdminOnPendingDemandes(demandes);
+        this.lastRefreshAt = new Date();
+        this.ensureDemandesPaginationInBounds();
         this.loading.demandes = false;
       },
       error: (error) => {
@@ -585,6 +778,7 @@ export class TransportDashboardComponent implements OnInit {
     this.affectationService.getAffectations().subscribe({
       next: (affectations) => {
         this.affectations = affectations;
+        this.lastRefreshAt = new Date();
         this.loading.affectations = false;
       },
       error: (error) => {
@@ -605,6 +799,7 @@ export class TransportDashboardComponent implements OnInit {
         this.recommandationsAffectation = affectations;
         this.recommandationsNouveauxTrajets = nouveauxTrajets;
         this.predictionDemande = predictionDemande;
+        this.lastRefreshAt = new Date();
         this.loading.recommandations = false;
       },
       error: (error) => {
@@ -703,8 +898,8 @@ export class TransportDashboardComponent implements OnInit {
       {
         pointDepart: autrePoint,
         destination: this.adresseGarderieFixe,
-        latitudeDestination: this.garderieLatitude,
-        longitudeDestination: this.garderieLongitude
+        latitudeDestination: latitudeAutrePoint,
+        longitudeDestination: longitudeAutrePoint
       },
       { emitEvent: false }
     );
@@ -730,10 +925,181 @@ export class TransportDashboardComponent implements OnInit {
     return this.demandes.filter((demande) => demande.statut === statut).length;
   }
 
+  private startLiveRefresh(): void {
+    interval(this.liveRefreshIntervalMs)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.refreshLiveData());
+  }
+
   private getTomorrowDate(): string {
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return date.toISOString().split('T')[0];
+  }
+
+  private notifyAdminOnPendingDemandes(demandes: DemandeTransport[]): void {
+    const previousSignatures = this.readStoredDemandeSignatures();
+    const currentSignatures: Record<number, string> = {};
+    const createdDemandes: string[] = [];
+    const updatedDemandes: string[] = [];
+
+    for (const demande of demandes) {
+      const currentSignature = this.buildAdminDemandeSignature(demande);
+      currentSignatures[demande.id] = currentSignature;
+
+      if (demande.statut !== 'EN_ATTENTE') {
+        continue;
+      }
+
+      const previousSignature = previousSignatures[demande.id];
+
+      if (!previousSignature) {
+        createdDemandes.push(demande.enfantNomComplet);
+        continue;
+      }
+
+      if (previousSignature !== currentSignature) {
+        updatedDemandes.push(demande.enfantNomComplet);
+      }
+    }
+
+    this.storeDemandeSignatures(currentSignatures);
+
+    if (createdDemandes.length > 0) {
+      this.showAdminNotification(
+        'Nouvelle demande',
+        this.buildAdminDemandesMessage(createdDemandes, 'nouvelle demande en attente')
+      );
+    }
+
+    if (updatedDemandes.length > 0) {
+      this.showAdminNotification(
+        'Demande modifiee',
+        this.buildAdminDemandesMessage(updatedDemandes, 'demande modifiee a verifier')
+      );
+    }
+  }
+
+  private buildAdminDemandeSignature(demande: DemandeTransport): string {
+    return [
+      demande.statut,
+      demande.enfantNomComplet,
+      demande.dateSouhaitee ?? '',
+      demande.heureSouhaitee ?? '',
+      demande.adresseMaison ?? '',
+      demande.sensTrajet ?? ''
+    ].join('|');
+  }
+
+  private readStoredDemandeSignatures(): Record<number, string> {
+    try {
+      const rawValue = localStorage.getItem(this.adminDemandeNotificationStorageKey);
+      return rawValue ? (JSON.parse(rawValue) as Record<number, string>) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private storeDemandeSignatures(signatures: Record<number, string>): void {
+    localStorage.setItem(this.adminDemandeNotificationStorageKey, JSON.stringify(signatures));
+  }
+
+  private showAdminNotification(title: string, text: string): void {
+    void Swal.fire({
+      icon: 'info',
+      title,
+      text,
+      timer: 2800,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
+  }
+
+  private buildAdminDemandesMessage(childrenNames: string[], suffix: string): string {
+    if (childrenNames.length === 1) {
+      return `${childrenNames[0]} a une ${suffix}.`;
+    }
+
+    return `${childrenNames.length} demandes sont concernees: ${childrenNames.join(', ')}.`;
+  }
+
+  private refreshLiveData(): void {
+    forkJoin({
+      transports: this.transportService.getTransports(),
+      trajets: this.trajetService.getTrajets(),
+      demandes: this.demandeService.getDemandes(),
+      affectations: this.affectationService.getAffectations(),
+      recommandationsAffectation: this.transportRecommendationService.getAffectationRecommendations(),
+      recommandationsNouveauxTrajets: this.transportRecommendationService.getNewRouteRecommendations(),
+      predictionDemande: this.transportRecommendationService.getDemandPrediction(this.tomorrowDate, 8)
+    }).subscribe({
+      next: ({ transports, trajets, demandes, affectations, recommandationsAffectation, recommandationsNouveauxTrajets, predictionDemande }) => {
+        this.transports = transports;
+        this.trajets = trajets;
+        this.demandes = demandes;
+        this.notifyAdminOnPendingDemandes(demandes);
+        this.affectations = affectations;
+        this.recommandationsAffectation = recommandationsAffectation;
+        this.recommandationsNouveauxTrajets = recommandationsNouveauxTrajets;
+        this.predictionDemande = predictionDemande;
+        this.lastRefreshAt = new Date();
+        this.ensureDemandesPaginationInBounds();
+      }
+    });
+  }
+
+  private findTransportByTrajetId(trajetId: number | null): TransportItem | null {
+    if (!trajetId) {
+      return null;
+    }
+
+    const trajet = this.trajets.find((item) => item.id === trajetId);
+    if (!trajet?.transportId) {
+      return null;
+    }
+
+    return this.transports.find((item) => item.id === trajet.transportId) ?? null;
+  }
+
+  private ensureDemandesPaginationInBounds(): void {
+    this.currentDemandesPage = Math.min(Math.max(this.currentDemandesPage, 1), this.totalDemandesPages);
+  }
+
+  private restoreDemandeFilters(): void {
+    try {
+      const rawValue = localStorage.getItem(this.demandeFilterStorageKey);
+      if (!rawValue) {
+        return;
+      }
+
+      const savedFilters = JSON.parse(rawValue) as Partial<DemandeFiltersState>;
+      this.demandeSearchTerm = savedFilters.searchTerm ?? '';
+      this.filtreStatut = savedFilters.statut ?? 'TOUS';
+      this.filtreDate = savedFilters.date ?? '';
+      this.filtreTrajetId = savedFilters.trajetId ?? null;
+      this.filtreTransportId = savedFilters.transportId ?? null;
+      this.filtreSuspect = savedFilters.suspect ?? 'TOUS';
+      this.filtreHeure = savedFilters.heure ?? '';
+      this.demandesPageSize = 5;
+    } catch {
+      this.resetDemandesFilters();
+    }
+  }
+
+  private persistDemandeFilters(): void {
+    const state: DemandeFiltersState = {
+      searchTerm: this.demandeSearchTerm,
+      statut: this.filtreStatut,
+      date: this.filtreDate,
+      trajetId: this.filtreTrajetId,
+      transportId: this.filtreTransportId,
+      suspect: this.filtreSuspect,
+      heure: this.filtreHeure,
+      pageSize: 5
+    };
+
+    localStorage.setItem(this.demandeFilterStorageKey, JSON.stringify(state));
   }
 
   private extractErrorMessage(error: unknown, fallbackMessage: string): string {

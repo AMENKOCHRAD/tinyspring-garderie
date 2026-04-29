@@ -11,13 +11,13 @@ import java.time.LocalTime;
 public class TrajetRequest {
 
     @NotBlank(message = "Le point de depart est obligatoire")
-    @Size(min = 3, max = 80, message = "Le point de depart doit contenir entre 3 et 80 caracteres")
+    @Size(min = 3, max = 200, message = "Le point de depart doit contenir entre 3 et 200 caracteres")
     @Pattern(regexp = "^(?! ).*(?<! )$", message = "Le point de depart ne doit pas commencer ou finir par un espace")
     @Pattern(regexp = "^[A-Za-zÀ-ÿ0-9\\s\\-()',]+$", message = "Le point de depart contient des caracteres non autorises")
     private String pointDepart;
 
     @NotBlank(message = "La destination est obligatoire")
-    @Size(min = 3, max = 80, message = "La destination doit contenir entre 3 et 80 caracteres")
+    @Size(min = 3, max = 200, message = "La destination doit contenir entre 3 et 200 caracteres")
     @Pattern(regexp = "^(?! ).*(?<! )$", message = "La destination ne doit pas commencer ou finir par un espace")
     @Pattern(regexp = "^[A-Za-zÀ-ÿ0-9\\s\\-()',]+$", message = "La destination contient des caracteres non autorises")
     private String destination;

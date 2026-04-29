@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from 'src/environments/environment';
 import { DemandeTransport, TraitementDemandeTransportResponse } from './transport.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DemandeService {
-  private readonly apiUrl = 'http://localhost:8082/api/transport';
+  private readonly apiUrl = `${environment.apiBaseUrl}/transport`;
 
   constructor(private readonly http: HttpClient) {}
 

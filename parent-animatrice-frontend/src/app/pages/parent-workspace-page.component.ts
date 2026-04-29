@@ -3,6 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { interval } from 'rxjs';
+import Swal from 'sweetalert2';
 
 import { LocationMapPickerComponent, PickedLocation } from '../components/location-map-picker.component';
 import { AuthService } from '../shared/auth.service';
@@ -77,6 +79,8 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
   styleUrl: './parent-workspace-page.component.css'
 })
 export class ParentWorkspacePageComponent {
+  private readonly demandeNotificationStorageKey = 'parent-transport-demandes-notifications-v1';
+  private readonly demandePollIntervalMs = 30000;
   private readonly adresseGarderieFixe = '15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie';
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -105,7 +109,7 @@ export class ParentWorkspacePageComponent {
     return this.pageMeta().title.replace('{{name}}', firstName);
   });
   protected readonly pendingDemandesCount = computed(
-    () => this.demandes().filter((demande) => demande.statut === 'EN_ATTENTE').length
+    () => this.demandes().filter((demande) => demande.statut === 'EN_ATTENTE' || demande.statut === 'REVISION_PARENT_DEMANDEE').length
   );
   protected readonly acceptedDemandesCount = computed(
     () => this.demandes().filter((demande) => demande.statut === 'ACCEPTEE').length
@@ -130,6 +134,7 @@ export class ParentWorkspacePageComponent {
   public constructor() {
     this.loadChildren();
     this.loadDemandes();
+    this.startDemandesPolling();
 
     this.route.data.subscribe((data) => {
       this.page.set(data['page'] as ParentPageKey);
@@ -149,8 +154,15 @@ export class ParentWorkspacePageComponent {
 
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
+        const isEditing = this.editingId() !== null;
         this.hasError.set(false);
-        this.message.set(this.editingId() ? 'Demande mise a jour.' : 'Demande creee.');
+        this.message.set(isEditing ? 'Demande mise a jour.' : 'Demande creee.');
+        this.showSuccessNotification(
+          isEditing ? 'Modification envoyee' : 'Demande envoyee',
+          isEditing
+            ? 'La demande a ete mise a jour avec succes. L admin verra la modification.'
+            : 'La demande a ete enregistree avec succes. L admin sera notifie.'
+        );
         this.resetForm();
         this.loadDemandes();
       },
@@ -242,7 +254,7 @@ export class ParentWorkspacePageComponent {
     return this.demandes().some(
       (demande) =>
         demande.enfantId === enfantId &&
-        (demande.statut === 'EN_ATTENTE' || demande.statut === 'ACCEPTEE')
+        (demande.statut === 'EN_ATTENTE' || demande.statut === 'REVISION_PARENT_DEMANDEE' || demande.statut === 'ACCEPTEE')
     );
   }
 
@@ -270,6 +282,8 @@ export class ParentWorkspacePageComponent {
     switch (status) {
       case 'ACCEPTEE':
         return 'tag tag--mint';
+      case 'REVISION_PARENT_DEMANDEE':
+        return 'tag tag--lime';
       case 'REFUSEE':
         return 'tag tag--blush';
       default:
@@ -338,9 +352,9 @@ export class ParentWorkspacePageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (children) => this.children.set(children),
-        error: () => {
+        error: (error) => {
           this.hasError.set(true);
-          this.message.set('Chargement des enfants impossible.');
+          this.message.set(this.extractErrorMessage(error, 'Chargement des enfants impossible.'));
         }
       });
   }
@@ -350,22 +364,24 @@ export class ParentWorkspacePageComponent {
       .getMine()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (demandes) =>
-          this.demandes.set(
-            demandes.map((demande) =>
-              demande.aiAnalysisAvailable
-                ? demande
-                : {
-                    ...demande,
-                    anomalyLevel: null,
-                    anomalyScore: null,
-                    anomalyReasons: []
-                  }
-            )
-          ),
-        error: () => {
+        next: (demandes) => {
+          const normalizedDemandes = demandes.map((demande) =>
+            demande.aiAnalysisAvailable
+              ? demande
+              : {
+                  ...demande,
+                  anomalyLevel: null,
+                  anomalyScore: null,
+                  anomalyReasons: []
+                }
+          );
+
+          this.demandes.set(normalizedDemandes);
+          this.notifyParentOnStatusChanges(normalizedDemandes);
+        },
+        error: (error) => {
           this.hasError.set(true);
-          this.message.set('Chargement des demandes impossible.');
+          this.message.set(this.extractErrorMessage(error, 'Chargement des demandes impossible.'));
         }
       });
   }
@@ -382,5 +398,96 @@ export class ParentWorkspacePageComponent {
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return date.toISOString().split('T')[0];
+  }
+
+  private startDemandesPolling(): void {
+    interval(this.demandePollIntervalMs)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadDemandes());
+  }
+
+  private notifyParentOnStatusChanges(demandes: DemandeTransport[]): void {
+    const previousStatuses = this.readStoredDemandesStatuses();
+    const currentStatuses: Record<number, string> = {};
+    const accepted: string[] = [];
+    const refused: string[] = [];
+    const revisions: string[] = [];
+
+    for (const demande of demandes) {
+      currentStatuses[demande.id] = demande.statut;
+      const previousStatus = previousStatuses[demande.id];
+
+      if (previousStatus === demande.statut) {
+        continue;
+      }
+
+      if (demande.statut === 'ACCEPTEE') {
+        accepted.push(demande.enfantNomComplet);
+      } else if (demande.statut === 'REFUSEE') {
+        refused.push(demande.enfantNomComplet);
+      } else if (demande.statut === 'REVISION_PARENT_DEMANDEE') {
+        revisions.push(demande.enfantNomComplet);
+      }
+    }
+
+    this.storeDemandesStatuses(currentStatuses);
+
+    if (accepted.length > 0) {
+      this.showSuccessNotification(
+        accepted.length > 1 ? 'Demandes acceptees' : 'Demande acceptee',
+        this.buildChildrenMessage(accepted, 'a ete acceptee par l admin.')
+      );
+    }
+
+    if (refused.length > 0) {
+      void Swal.fire({
+        icon: 'error',
+        title: refused.length > 1 ? 'Demandes refusees' : 'Demande refusee',
+        text: this.buildChildrenMessage(refused, 'a ete refusee par l admin.'),
+        confirmButtonText: 'Compris'
+      });
+    }
+
+    if (revisions.length > 0) {
+      void Swal.fire({
+        icon: 'warning',
+        title: revisions.length > 1 ? 'Revisions demandees' : 'Revision demandee',
+        text: this.buildChildrenMessage(revisions, 'necessite une revision de votre part.'),
+        confirmButtonText: 'D accord'
+      });
+    }
+  }
+
+  private readStoredDemandesStatuses(): Record<number, string> {
+    try {
+      const rawValue = localStorage.getItem(this.demandeNotificationStorageKey);
+      return rawValue ? JSON.parse(rawValue) as Record<number, string> : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private storeDemandesStatuses(statuses: Record<number, string>): void {
+    localStorage.setItem(this.demandeNotificationStorageKey, JSON.stringify(statuses));
+  }
+
+  private showSuccessNotification(title: string, text: string): void {
+    void Swal.fire({
+      icon: 'success',
+      title,
+      text,
+      timer: 2600,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
+  }
+
+  private buildChildrenMessage(childrenNames: string[], suffix: string): string {
+    if (childrenNames.length === 1) {
+      return `${childrenNames[0]} ${suffix}`;
+    }
+
+    return `${childrenNames.length} demandes sont concernees: ${childrenNames.join(', ')}.`;
   }
 }

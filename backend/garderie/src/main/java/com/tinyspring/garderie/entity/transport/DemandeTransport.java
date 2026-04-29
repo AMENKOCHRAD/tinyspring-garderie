@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -92,6 +93,12 @@ public class DemandeTransport {
 
     @Column(name = "ai_analysis_error", length = 500)
     private String aiAnalysisError;
+
+    @Column(name = "revision_request_message", length = 1000)
+    private String revisionRequestMessage;
+
+    @Column(name = "revision_requested_at")
+    private LocalDateTime revisionRequestedAt;
 
     public DemandeTransport() {
     }
@@ -293,5 +300,21 @@ public class DemandeTransport {
 
     public void setAiAnalysisError(String aiAnalysisError) {
         this.aiAnalysisError = aiAnalysisError;
+    }
+
+    public String getRevisionRequestMessage() {
+        return revisionRequestMessage;
+    }
+
+    public void setRevisionRequestMessage(String revisionRequestMessage) {
+        this.revisionRequestMessage = revisionRequestMessage;
+    }
+
+    public LocalDateTime getRevisionRequestedAt() {
+        return revisionRequestedAt;
+    }
+
+    public void setRevisionRequestedAt(LocalDateTime revisionRequestedAt) {
+        this.revisionRequestedAt = revisionRequestedAt;
     }
 }

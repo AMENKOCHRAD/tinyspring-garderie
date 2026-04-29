@@ -16,7 +16,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "allowedCommonJsDependencies": ["bezier-easing", "mousetrap", "apexcharts"],
+            "allowedCommonJsDependencies": ["bezier-easing", "mousetrap", "apexcharts", "sweetalert2"],
             "outputPath": "dist",
             "index": "src/index.html",
             "main": "src/main.ts",

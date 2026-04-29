@@ -1,4 +1,4 @@
-export type DemandeStatus = 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+export type DemandeStatus = 'EN_ATTENTE' | 'REVISION_PARENT_DEMANDEE' | 'ACCEPTEE' | 'REFUSEE';
 export type SensTrajet = 'MAISON_VERS_GARDERIE' | 'GARDERIE_VERS_MAISON';
 
 export interface DemandeTransport {
@@ -31,6 +31,8 @@ export interface DemandeTransport {
   aiAnalysisAvailable: boolean;
   aiModelVersion: string | null;
   aiAnalysisError: string | null;
+  revisionRequestMessage: string | null;
+  revisionRequestedAt: string | null;
 }
 
 export interface DemandeTransportPayload {

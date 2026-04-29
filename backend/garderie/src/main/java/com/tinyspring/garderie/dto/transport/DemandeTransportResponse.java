@@ -4,6 +4,7 @@ import com.tinyspring.garderie.entity.transport.SensTrajetDemandeTransport;
 import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -36,6 +37,8 @@ public record DemandeTransportResponse(
         Boolean duplicateDetected,
         Boolean aiAnalysisAvailable,
         String aiModelVersion,
-        String aiAnalysisError
+        String aiAnalysisError,
+        String revisionRequestMessage,
+        LocalDateTime revisionRequestedAt
 ) {
 }

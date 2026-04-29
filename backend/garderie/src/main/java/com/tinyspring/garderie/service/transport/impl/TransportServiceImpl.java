@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +48,8 @@ public class TransportServiceImpl implements TransportService {
 
     private static final Logger logger = LoggerFactory.getLogger(TransportServiceImpl.class);
     private static final String ADRESSE_GARDERIE_EXACTE = "15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie";
+    private static final String REVISION_PARENT_MESSAGE =
+            "Votre demande de transport a ete signalee comme inhabituelle. Merci de verifier l'adresse et l'heure souhaitees, puis de mettre a jour votre demande.";
 
     private final DemandeTransportRepository demandeTransportRepository;
     private final AffectationTransportRepository affectationTransportRepository;
@@ -85,6 +88,7 @@ public class TransportServiceImpl implements TransportService {
         Enfant enfant = enfantRepository.findByIdAndParentId(request.getEnfantId(), parentId)
                 .orElseThrow(() -> new BusinessException("Cet enfant n'appartient pas au parent connecte"));
         boolean demandeActive = demandeTransportRepository.existsByEnfantIdAndStatut(enfant.getId(), StatutDemandeTransport.EN_ATTENTE)
+                || demandeTransportRepository.existsByEnfantIdAndStatut(enfant.getId(), StatutDemandeTransport.REVISION_PARENT_DEMANDEE)
                 || demandeTransportRepository.existsByEnfantIdAndStatut(enfant.getId(), StatutDemandeTransport.ACCEPTEE);
         if (demandeActive) {
             throw new BusinessException("Une demande active existe deja pour cet enfant");
@@ -121,8 +125,9 @@ public class TransportServiceImpl implements TransportService {
         if (!demande.getParent().getId().equals(parent.getId())) {
             throw new BusinessException("Le parent connecte ne peut modifier que ses propres demandes");
         }
-        if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE) {
-            throw new BusinessException("Seules les demandes en attente peuvent etre modifiees");
+        if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE
+                && demande.getStatut() != StatutDemandeTransport.REVISION_PARENT_DEMANDEE) {
+            throw new BusinessException("Seules les demandes en attente ou en revision parent peuvent etre modifiees");
         }
 
         Enfant enfant = enfantRepository.findByIdAndParentId(request.getEnfantId(), parentId)
@@ -137,6 +142,9 @@ public class TransportServiceImpl implements TransportService {
         demande.setHeureSouhaitee(resolveHeureSouhaitee(request.getSensTrajet(), request.getHeureSouhaitee()));
         demande.setPointRamassage(resolvePointRamassage(request.getSensTrajet(), request.getAdresseMaison()));
         demande.setDestinationSouhaitee(resolveDestinationSouhaitee(request.getSensTrajet(), request.getAdresseMaison()));
+        demande.setStatut(StatutDemandeTransport.EN_ATTENTE);
+        demande.setRevisionRequestMessage(null);
+        demande.setRevisionRequestedAt(null);
         applyAiAnalysis(demande, demandeId);
         logger.info("Demande de transport modifiee. demandeId={}, parentId={}", demandeId, parentId);
 
@@ -209,6 +217,23 @@ public class TransportServiceImpl implements TransportService {
         if (demande.getStatut() != StatutDemandeTransport.EN_ATTENTE) {
             throw new BusinessException("Seules les demandes en attente peuvent etre acceptees");
         }
+        if (Boolean.TRUE.equals(demande.getSuspicious())) {
+            demande.setStatut(StatutDemandeTransport.REVISION_PARENT_DEMANDEE);
+            demande.setRevisionRequestMessage(buildRevisionRequestMessage(demande));
+            demande.setRevisionRequestedAt(LocalDateTime.now());
+            demandeTransportRepository.save(demande);
+
+            logger.info("Demande suspecte basculee en revision parent. demandeId={}, parentId={}",
+                    demandeId, demande.getParent().getId());
+
+            return new TraitementDemandeTransportResponse(
+                    demande.getId(),
+                    demande.getStatut(),
+                    null,
+                    null,
+                    "Revision demandee au parent avant validation."
+            );
+        }
         if (affectationTransportRepository.existsByEnfantId(demande.getEnfant().getId())) {
             throw new BusinessException("Cet enfant est deja affecte a un transport");
         }
@@ -225,6 +250,8 @@ public class TransportServiceImpl implements TransportService {
 
         demande.setTrajet(trajet);
         demande.setStatut(StatutDemandeTransport.ACCEPTEE);
+        demande.setRevisionRequestMessage(null);
+        demande.setRevisionRequestedAt(null);
         demandeTransportRepository.save(demande);
 
         double tauxRemplissage = calculerTauxRemplissage(transport.getId());
@@ -235,7 +262,8 @@ public class TransportServiceImpl implements TransportService {
                 demande.getId(),
                 demande.getStatut(),
                 savedAffectation.getId(),
-                tauxRemplissage
+                tauxRemplissage,
+                "Demande acceptee avec affectation automatique."
         );
     }
 
@@ -254,7 +282,8 @@ public class TransportServiceImpl implements TransportService {
                 demande.getId(),
                 demande.getStatut(),
                 null,
-                null
+                null,
+                "Demande refusee."
         );
     }
 
@@ -369,8 +398,18 @@ public class TransportServiceImpl implements TransportService {
                 demande.getDuplicateDetected(),
                 demande.getAiAnalysisAvailable(),
                 demande.getAiModelVersion(),
-                demande.getAiAnalysisError()
+                demande.getAiAnalysisError(),
+                demande.getRevisionRequestMessage(),
+                demande.getRevisionRequestedAt()
         );
+    }
+
+    private String buildRevisionRequestMessage(DemandeTransport demande) {
+        List<String> reasons = splitReasons(demande.getAnomalyReasons());
+        if (reasons.isEmpty()) {
+            return REVISION_PARENT_MESSAGE;
+        }
+        return REVISION_PARENT_MESSAGE + " Motif: " + String.join(" | ", reasons);
     }
 
     private String getNomCompletEnfant(Enfant enfant) {

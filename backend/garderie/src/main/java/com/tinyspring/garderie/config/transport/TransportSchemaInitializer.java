@@ -4,12 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("mysql")
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class TransportSchemaInitializer implements ApplicationRunner {
 
@@ -71,6 +73,8 @@ public class TransportSchemaInitializer implements ApplicationRunner {
         ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN anomaly_reasons VARCHAR(2000) NULL", "anomaly_reasons");
         ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN ai_model_version VARCHAR(50) NULL", "ai_model_version");
         ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN ai_analysis_error VARCHAR(500) NULL", "ai_analysis_error");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN revision_request_message VARCHAR(1000) NULL", "revision_request_message");
+        ajouterColonneSiAbsente("ALTER TABLE demandes_transport ADD COLUMN revision_requested_at DATETIME NULL", "revision_requested_at");
         ajouterColonneTrajetSiAbsente("ALTER TABLE trajets ADD COLUMN zone_desservie VARCHAR(120) NULL", "zone_desservie");
         ajouterColonneTrajetSiAbsente("ALTER TABLE trajets ADD COLUMN latitude_destination DOUBLE NULL", "latitude_destination");
         ajouterColonneTrajetSiAbsente("ALTER TABLE trajets ADD COLUMN longitude_destination DOUBLE NULL", "longitude_destination");
@@ -91,6 +95,7 @@ public class TransportSchemaInitializer implements ApplicationRunner {
         );
 
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN sens_trajet VARCHAR(50) NOT NULL");
+        jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN statut VARCHAR(50) NOT NULL");
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN adresse_maison VARCHAR(255) NOT NULL");
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN latitude_maison DOUBLE NOT NULL");
         jdbcTemplate.execute("ALTER TABLE demandes_transport MODIFY COLUMN longitude_maison DOUBLE NOT NULL");

@@ -1,4 +1,4 @@
-export type StatutTransport = 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+export type StatutTransport = 'EN_ATTENTE' | 'REVISION_PARENT_DEMANDEE' | 'ACCEPTEE' | 'REFUSEE';
 
 export interface TransportItem {
   id: number;
@@ -69,6 +69,8 @@ export interface DemandeTransport {
   aiAnalysisAvailable?: boolean;
   aiModelVersion?: string | null;
   aiAnalysisError?: string | null;
+  revisionRequestMessage?: string | null;
+  revisionRequestedAt?: string | null;
 }
 
 export interface AdminDemandPredictionResponse {
@@ -89,6 +91,7 @@ export interface TraitementDemandeTransportResponse {
   statut: StatutTransport;
   affectationId: number | null;
   tauxRemplissageTransport: number | null;
+  message: string | null;
 }
 
 export interface AffectationTransport {

@@ -8,8 +8,10 @@ import com.tinyspring.garderie.entity.transport.StatutDemandeTransport;
 import com.tinyspring.garderie.entity.transport.Trajet;
 import org.springframework.stereotype.Component;
 
+import java.text.Normalizer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +25,10 @@ import java.util.stream.Collectors;
 
 @Component
 public class TransportRecommendationEngine {
+    private static final String GARDERIE_ADDRESS = "15 Rue des Ecoles, El Menzah 5, Ariana 2091, Tunisie";
+    private static final Set<String> IGNORED_ZONE_TOKENS = Set.of(
+            "el", "la", "le", "les", "de", "des", "du", "d", "et"
+    );
 
     private final TransportRecommendationProperties properties;
 
@@ -99,10 +105,12 @@ public class TransportRecommendationEngine {
         return trajets.stream()
                 .map(trajet -> {
                     List<ZonePoint> coveredPoints = new ArrayList<>();
+                    SensTrajetDemandeTransport trajetSense = inferTrajetSense(trajet);
 
-                    if (trajet.getLatitudeDestination() != null && trajet.getLongitudeDestination() != null) {
+                    if (trajet.getLatitudeDestination() != null
+                            && trajet.getLongitudeDestination() != null) {
                         coveredPoints.add(new ZonePoint(
-                                trajet.getZoneDesservie() != null ? trajet.getZoneDesservie() : trajet.getDestination(),
+                                resolveTrajetCoverageLabel(trajet, trajetSense),
                                 trajet.getLatitudeDestination(),
                                 trajet.getLongitudeDestination(),
                                 "COORDONNEES_TRAJET"
@@ -119,10 +127,11 @@ public class TransportRecommendationEngine {
 
                     if (coveredPoints.isEmpty()) {
                         coveredPoints.add(new ZonePoint(
-                                trajet.getZoneDesservie() != null ? trajet.getZoneDesservie() : trajet.getDestination(),
+                                resolveTrajetCoverageLabel(trajet, trajetSense),
                                 trajet.getLatitudeDestination(),
                                 trajet.getLongitudeDestination(),
-                                trajet.getLatitudeDestination() != null && trajet.getLongitudeDestination() != null
+                                trajet.getLatitudeDestination() != null
+                                        && trajet.getLongitudeDestination() != null
                                         ? "COORDONNEES_TRAJET"
                                         : "ZONE_TRAJET"
                         ));
@@ -288,6 +297,25 @@ public class TransportRecommendationEngine {
         return new ZonePoint(zone, demande.getLatitudeMaison(), demande.getLongitudeMaison(), "COORDONNEES_DEMANDE");
     }
 
+    private String resolveTrajetCoverageLabel(Trajet trajet, SensTrajetDemandeTransport trajetSense) {
+        if (trajet.getZoneDesservie() != null && !trajet.getZoneDesservie().isBlank()) {
+            return trajet.getZoneDesservie();
+        }
+        return trajetSense == SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
+                ? trajet.getDestination()
+                : trajet.getPointDepart();
+    }
+
+    private SensTrajetDemandeTransport inferTrajetSense(Trajet trajet) {
+        return isGarderieAddress(trajet.getPointDepart())
+                ? SensTrajetDemandeTransport.GARDERIE_VERS_MAISON
+                : SensTrajetDemandeTransport.MAISON_VERS_GARDERIE;
+    }
+
+    private boolean isGarderieAddress(String address) {
+        return address != null && GARDERIE_ADDRESS.equalsIgnoreCase(address.trim());
+    }
+
     private int calculateGeoScore(double distanceKm) {
         double rawScore = 100.0 - ((distanceKm / Math.max(properties.getDistanceMaxKm(), 0.1)) * 100.0);
         return (int) Math.max(0, Math.round(rawScore));
@@ -303,22 +331,46 @@ public class TransportRecommendationEngine {
             return 100;
         }
         if (normalizedLeft.contains(normalizedRight) || normalizedRight.contains(normalizedLeft)) {
-            return 75;
+            return 85;
         }
 
-        List<String> leftTokens = List.of(normalizedLeft.split("\\s+"));
-        List<String> rightTokens = List.of(normalizedRight.split("\\s+"));
-        long commonTokens = leftTokens.stream()
-                .filter(token -> token.length() > 2)
-                .filter(rightTokens::contains)
-                .distinct()
-                .count();
+        Set<String> leftTokens = tokenizeZone(normalizedLeft);
+        Set<String> rightTokens = tokenizeZone(normalizedRight);
+        if (leftTokens.isEmpty() || rightTokens.isEmpty()) {
+            return 0;
+        }
 
-        return commonTokens > 0 ? (int) Math.min(95, commonTokens * 25) : 0;
+        long commonTokens = leftTokens.stream()
+                .filter(rightTokens::contains)
+                .count();
+        if (commonTokens == 0) {
+            return 0;
+        }
+
+        double diceScore = (2.0 * commonTokens * 100.0) / (leftTokens.size() + rightTokens.size());
+        return (int) Math.min(95, Math.round(diceScore));
     }
 
     private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        if (value == null) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^\\p{Alnum}\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+        return normalized;
+    }
+
+    private Set<String> tokenizeZone(String normalizedValue) {
+        return Arrays.stream(normalizedValue.split("\\s+"))
+                .map(String::trim)
+                .filter(token -> token.length() > 2)
+                .filter(token -> !IGNORED_ZONE_TOKENS.contains(token))
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     private double haversineKm(double lat1, double lon1, double lat2, double lon2) {

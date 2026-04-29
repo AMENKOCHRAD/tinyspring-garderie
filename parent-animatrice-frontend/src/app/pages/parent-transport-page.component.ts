@@ -135,6 +135,9 @@ import { DemandeTransport, ParentChild } from '../shared/transport.models';
                         <span class="badge px-3 py-2" [ngClass]="getStatusClass(demande.statut)">
                           {{ formatStatus(demande.statut) }}
                         </span>
+                        <div class="small mt-2 text-warning" *ngIf="demande.revisionRequestMessage">
+                          {{ demande.revisionRequestMessage }}
+                        </div>
                         <div class="small mt-2" [class.text-danger]="demande.suspicious" [class.text-muted]="!demande.suspicious">
                           {{ getAiStatusLabel(demande) }}
                           <span *ngIf="demande.anomalyScore !== null">| Score: {{ formatAnomalyScore(demande.anomalyScore) }}</span>
@@ -281,7 +284,7 @@ export class ParentTransportPageComponent {
     return this.demandes().some(
       (demande) =>
         demande.enfantId === enfantId &&
-        (demande.statut === 'EN_ATTENTE' || demande.statut === 'ACCEPTEE')
+        (demande.statut === 'EN_ATTENTE' || demande.statut === 'REVISION_PARENT_DEMANDEE' || demande.statut === 'ACCEPTEE')
     );
   }
 
@@ -293,6 +296,8 @@ export class ParentTransportPageComponent {
     switch (status) {
       case 'ACCEPTEE':
         return 'badge-success';
+      case 'REVISION_PARENT_DEMANDEE':
+        return 'badge-info';
       case 'REFUSEE':
         return 'badge-danger';
       default:
