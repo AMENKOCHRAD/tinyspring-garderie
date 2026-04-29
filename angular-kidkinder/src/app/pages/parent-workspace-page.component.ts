@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+<<<<<<< HEAD
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -8,12 +9,20 @@ import { AuthService } from '../shared/auth.service';
 import { Enfant, EnfantDTO, EnfantService } from '../services/enfant.service';
 import { ParentChangementsComponent } from '../components/parent-changements.component';
 import { TunisiaAddressPickerComponent } from '../components/tunisia-address-picker.component';
+=======
+import { ParentActivitiesComponent } from '../events/parent-activities.component';
+import { ParentMenusComponent } from '../menus/parent-menus.component';
+import { AuthService } from '../shared/auth.service';
+>>>>>>> origin/gestion-evenements
 
 type ParentPageKey =
   | 'tableau-de-bord'
   | 'enfants'
   | 'sante'
+<<<<<<< HEAD
   | 'changements'
+=======
+>>>>>>> origin/gestion-evenements
   | 'activites'
   | 'menus'
   | 'messages'
@@ -26,6 +35,7 @@ interface PageMeta {
   description: string;
 }
 
+<<<<<<< HEAD
 interface ConditionSanitaireFront {
   id: number;
   nomCondition: string;
@@ -83,6 +93,8 @@ interface AllergieCategory {
   options: AllergieOption[];
 }
 
+=======
+>>>>>>> origin/gestion-evenements
 const pageMetaMap: Record<ParentPageKey, PageMeta> = {
   'tableau-de-bord': {
     chip: 'Espace parent',
@@ -99,11 +111,14 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
     title: 'Suivi sante et incidents',
     description: 'Centralisez allergies, traitements, incidents et informations a ajouter.'
   },
+<<<<<<< HEAD
   changements: {
     chip: 'Changements',
     title: 'Changements & observations',
     description: 'Consultez les changements declares par l equipe, et suivez les informations importantes.'
   },
+=======
+>>>>>>> origin/gestion-evenements
   activites: {
     chip: 'Activites',
     title: 'Calendrier et evenements',
@@ -134,16 +149,23 @@ const pageMetaMap: Record<ParentPageKey, PageMeta> = {
 @Component({
   selector: 'app-parent-workspace-page',
   standalone: true,
+<<<<<<< HEAD
   imports: [CommonModule, FormsModule, ParentChangementsComponent, TunisiaAddressPickerComponent],
+=======
+  imports: [CommonModule, ParentActivitiesComponent, ParentMenusComponent],
+>>>>>>> origin/gestion-evenements
   templateUrl: './parent-workspace-page.component.html',
   styleUrl: './parent-workspace-page.component.css'
 })
 export class ParentWorkspacePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+<<<<<<< HEAD
   private readonly enfantService = inject(EnfantService);
 
   protected readonly todayIso = this.getLocalTodayIso();
+=======
+>>>>>>> origin/gestion-evenements
 
   protected readonly page = signal<ParentPageKey>('tableau-de-bord');
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', {
@@ -155,6 +177,7 @@ export class ParentWorkspacePageComponent {
 
   protected readonly pageMeta = computed(() => pageMetaMap[this.page()]);
   protected readonly pageTitle = computed(() => {
+<<<<<<< HEAD
     const firstName = this.authService.getCurrentUser()?.nom?.split(' ')[0] ?? 'Parent';
     return this.pageMeta().title.replace('{{name}}', firstName);
   });
@@ -347,10 +370,17 @@ getHealthPages(): number[] {
     this.nouveauTraitement.ordonnancePdf = file;
   }
 
+=======
+    const firstName = this.authService.getCurrentUser()?.nom.split(' ')[0] ?? 'Parent';
+    return this.pageMeta().title.replace('{{name}}', firstName);
+  });
+
+>>>>>>> origin/gestion-evenements
   public constructor() {
     this.route.data.subscribe((data) => {
       this.page.set(data['page'] as ParentPageKey);
     });
+<<<<<<< HEAD
 
     this.chargerEnfants();
   }
@@ -1650,5 +1680,7 @@ this.chargerTraitementsPourToutesLesConditions();
     const b = (bIso || '').trim();
     if (!a || !b) return false;
     return a < b;
+=======
+>>>>>>> origin/gestion-evenements
   }
 }

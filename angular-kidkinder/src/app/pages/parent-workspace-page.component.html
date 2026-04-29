@@ -1,5 +1,9 @@
 <div class="ts-container workspace-page">
+<<<<<<< HEAD
   <section class="page-header-card">
+=======
+  <section *ngIf="page() !== 'activites' && page() !== 'menus'" class="page-header-card">
+>>>>>>> origin/gestion-evenements
     <div>
       <span class="section-chip">{{ pageMeta().chip }}</span>
       <h1>{{ pageTitle() }}</h1>
@@ -18,7 +22,10 @@
           </div>
           <span class="stat-card__label">Mes enfants</span>
         </article>
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/gestion-evenements
         <article class="stat-card tone-blush">
           <div class="stat-card__top">
             <span class="icon-circle tone-blush">A</span>
@@ -26,7 +33,10 @@
           </div>
           <span class="stat-card__label">Activites a venir</span>
         </article>
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/gestion-evenements
         <article class="stat-card tone-lime">
           <div class="stat-card__top">
             <span class="icon-circle tone-lime">M</span>
@@ -34,7 +44,10 @@
           </div>
           <span class="stat-card__label">Messages non lus</span>
         </article>
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/gestion-evenements
         <article class="stat-card tone-mint">
           <div class="stat-card__top">
             <span class="icon-circle tone-mint">S</span>
@@ -47,6 +60,7 @@
 
     <section *ngSwitchCase="'enfants'" class="workspace-page">
       <section id="profils" class="profile-cards">
+<<<<<<< HEAD
         <article class="profile-card" *ngFor="let enfant of enfants">
           <div class="inline-meta">
             <img
@@ -273,6 +287,33 @@
             {{ isUpdating ? 'Modification...' : 'Enregistrer les modifications' }}
           </button>
         </div>
+=======
+        <article class="profile-card">
+          <div class="inline-meta">
+            <span class="profile-avatar">L</span>
+            <div>
+              <h3>Lina Ben Salah</h3>
+              <p class="muted">4 ans &bull; Groupe Papillons</p>
+            </div>
+          </div>
+          <div class="badge-row">
+            <span class="tag tag--blush">Arachides</span>
+            <span class="tag tag--mint">Profil complet</span>
+          </div>
+        </article>
+        <article class="profile-card">
+          <div class="inline-meta">
+            <span class="profile-avatar">A</span>
+            <div>
+              <h3>Adam Ben Salah</h3>
+              <p class="muted">2 ans &bull; Groupe Tournesols</p>
+            </div>
+          </div>
+          <div class="badge-row">
+            <span class="tag tag--lime">Pas d allergie severe</span>
+          </div>
+        </article>
+>>>>>>> origin/gestion-evenements
       </section>
 
       <section id="documents" class="table-card">
@@ -291,6 +332,7 @@
 
       <section id="ajouter-enfant" class="table-card">
         <h3>Ajouter un enfant</h3>
+<<<<<<< HEAD
 
         <div *ngIf="errorMessage" class="alert alert-danger">
           {{ errorMessage }}
@@ -391,10 +433,32 @@
         >
           {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
         </button>
+=======
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Prenom et nom</label>
+            <input placeholder="Nom complet de l enfant" />
+          </div>
+          <div>
+            <label>Date de naissance</label>
+            <input type="date" />
+          </div>
+          <div>
+            <label>Contact d urgence</label>
+            <input placeholder="+216 ..." />
+          </div>
+          <div>
+            <label>Notes</label>
+            <input placeholder="Remarques utiles" />
+          </div>
+        </div>
+        <button type="button" class="ts-button ts-button--primary">Enregistrer</button>
+>>>>>>> origin/gestion-evenements
       </section>
     </section>
 
     <section *ngSwitchCase="'sante'" class="workspace-page">
+<<<<<<< HEAD
       <section class="stats-grid">
         <article class="stat-card tone-mint">
           <div class="stat-card__top">
@@ -1013,10 +1077,55 @@
             <select [(ngModel)]="changementsEnfantId" name="chgChild">
               <option [ngValue]="0">Tous</option>
               <option *ngFor="let e of enfants" [ngValue]="e.id">{{ e.prenom }} {{ e.nom }}</option>
+=======
+      <section id="allergies" class="table-card">
+        <h3>Allergies</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Lina Ben Salah</strong>
+            <p class="muted">Arachides &bull; Pollen</p>
+          </article>
+          <article class="stack-item">
+            <strong>Adam Ben Salah</strong>
+            <p class="muted">Aucune allergie severe signalee</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="traitements" class="table-card">
+        <h3>Traitements</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Sirop anti-allergique</strong>
+            <p class="muted">Lina &bull; 5 ml &bull; 12h00</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="incidents" class="table-card">
+        <h3>Incidents</h3>
+        <div class="stack-list">
+          <article class="stack-item">
+            <strong>Observation legere apres la recreation</strong>
+            <p class="muted">Suivi effectue et transmission faite aux parents.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="ajouter" class="table-card">
+        <h3>Ajouter une information sante</h3>
+        <div class="form-grid form-grid--two">
+          <div>
+            <label>Enfant</label>
+            <select>
+              <option>Lina Ben Salah</option>
+              <option>Adam Ben Salah</option>
+>>>>>>> origin/gestion-evenements
             </select>
           </div>
           <div>
             <label>Type</label>
+<<<<<<< HEAD
             <select [(ngModel)]="changementsType" name="chgType">
               <option value="">Tous</option>
               <option value="SANTE">Sante</option>
@@ -1165,6 +1274,24 @@
           <div class="calendar-day">7</div>
         </div>
       </section>
+=======
+            <select>
+              <option>Allergie</option>
+              <option>Traitement</option>
+              <option>Incident</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section *ngSwitchCase="'activites'" class="workspace-page">
+      <app-parent-activities></app-parent-activities>
+    </section>
+
+    <section *ngSwitchCase="'menus'" class="workspace-page">
+      <app-parent-menus></app-parent-menus>
+>>>>>>> origin/gestion-evenements
     </section>
 
     <section *ngSwitchCase="'messages'" class="workspace-page">
@@ -1212,11 +1339,19 @@
       <section id="mes-trajets" class="stack-list">
         <article class="trip-card">
           <strong>Lina Ben Salah</strong>
+<<<<<<< HEAD
           <p class="muted">Lac 1 vers TinySpring • 07h30 • En attente</p>
         </article>
         <article class="trip-card">
           <strong>Adam Ben Salah</strong>
           <p class="muted">Ennasr vers TinySpring • 08h00 • Confirme</p>
+=======
+          <p class="muted">Lac 1 vers TinySpring &bull; 07h30 &bull; En attente</p>
+        </article>
+        <article class="trip-card">
+          <strong>Adam Ben Salah</strong>
+          <p class="muted">Ennasr vers TinySpring &bull; 08h00 &bull; Confirme</p>
+>>>>>>> origin/gestion-evenements
         </article>
       </section>
 
@@ -1293,4 +1428,8 @@
       </section>
     </section>
   </ng-container>
+<<<<<<< HEAD
 </div>
+=======
+</div>
+>>>>>>> origin/gestion-evenements

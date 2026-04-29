@@ -24,7 +24,14 @@ export interface LoginApiResponse {
   nom: string;
   email: string;
   role: UserRole | string;
+<<<<<<< HEAD
   token: string;
   type?: string;
   expiresIn?: number;
 }
+=======
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+>>>>>>> origin/gestion-evenements

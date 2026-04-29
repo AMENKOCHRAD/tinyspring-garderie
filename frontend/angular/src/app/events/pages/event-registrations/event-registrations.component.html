@@ -1,0 +1,161 @@
+@if (vm$ | async; as vm) {
+  <section class="events-page">
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger" role="alert">
+        {{ vm.errorMessage }}
+      </div>
+    }
+
+    <app-events-module-switcher />
+
+    <div class="section-toolbar">
+      <div class="header-actions">
+        @if (vm.event) {
+          <button type="button" class="btn btn-outline-primary" (click)="goToDetails(vm.event.id)">
+            Voir l'événement
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-label">Total</span>
+        <strong class="stat-value">{{ vm.stats.total }}</strong>
+      </article>
+      <article class="stat-card accent-green">
+        <span class="stat-label">Confirmées</span>
+        <strong class="stat-value">{{ vm.stats.confirmed }}</strong>
+      </article>
+      <article class="stat-card accent-blue">
+        <span class="stat-label">Présents</span>
+        <strong class="stat-value">{{ vm.stats.attended }}</strong>
+      </article>
+      <article class="stat-card accent-rose">
+        <span class="stat-label">Absents</span>
+        <strong class="stat-value">{{ vm.stats.absent }}</strong>
+      </article>
+      <article class="stat-card accent-neutral">
+        <span class="stat-label">Annulées</span>
+        <strong class="stat-value">{{ vm.stats.cancelled }}</strong>
+      </article>
+    </div>
+
+    <app-card>
+      @if (vm.registrationsWarning) {
+        <div class="alert alert-warning" role="alert">
+          {{ vm.registrationsWarning }}
+        </div>
+      }
+
+      @if (vm.loading) {
+        <div class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="m-t-15 m-b-0">Chargement des participations...</p>
+        </div>
+      } @else if (!vm.registrations.length) {
+        <div class="state-container empty-state">
+          <p class="m-b-0">
+            @if (vm.isGlobalView) {
+              Aucune participation enregistrée pour le moment.
+            } @else {
+              Aucune participation trouvée pour cet événement.
+            }
+          </p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle registrations-table">
+            <thead>
+              <tr>
+                @if (vm.isGlobalView) {
+                  <th>Événement</th>
+                  <th>Type</th>
+                }
+                <th>ID</th>
+                <th>Enfant</th>
+                <th>Parent</th>
+                <th>Statut</th>
+                <th>Autorisation</th>
+                <th>Document</th>
+                <th>Notes</th>
+                <th>Inscrit le</th>
+                <th>Présence</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (registration of vm.registrations; track registration.id) {
+                <tr>
+                  @if (vm.isGlobalView) {
+                    <td>
+                      <button
+                        type="button"
+                        class="table-link-button"
+                        (click)="goToDetails(registration.eventId)"
+                      >
+                        {{ registration.eventTitle || ('Événement #' + registration.eventId) }}
+                      </button>
+                    </td>
+                    <td>{{ registration.eventType.replaceAll('_', ' ') }}</td>
+                  }
+                  <td>{{ registration.id }}</td>
+                  <td>{{ registration.childId }}</td>
+                  <td>{{ registration.parentId }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(registration.status)">
+                      <i [class]="getStatusIcon(registration.status)" aria-hidden="true"></i>
+                      <span>{{ formatStatus(registration.status) }}</span>
+                    </span>
+                  </td>
+                  <td>{{ registration.authorizationSigned ? 'Oui' : 'Non' }}</td>
+                  <td>
+                   @if (registration.authorizationDocUrl) {
+    <a
+      [href]="getFullDocUrl(registration.authorizationDocUrl)"
+      target="_blank"
+      rel="noopener noreferrer">
+      Ouvrir
+    </a>
+  } @else {
+                      -
+                    }
+                  </td>
+                  <td>{{ registration.notes || '-' }}</td>
+                  <td>{{ registration.registeredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="actions-column">
+                    @if (canMarkAttendance(registration, vm.isGlobalView, vm.event)) {
+                      <button
+                        type="button"
+                        class="attendance-action success"
+                        (click)="markAttended(registration)"
+                        [disabled]="actionRegistrationId === registration.id"
+                        title="Marquer présent"
+                        aria-label="Marquer présent"
+                      >
+                        <i class="feather icon-check-circle" aria-hidden="true"></i>
+                        <span>Présent</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="attendance-action danger"
+                        (click)="markAbsent(registration)"
+                        [disabled]="actionRegistrationId === registration.id"
+                        title="Marquer absent"
+                        aria-label="Marquer absent"
+                      >
+                        <i class="feather icon-x-circle" aria-hidden="true"></i>
+                        <span>Absent</span>
+                      </button>
+                    } @else {
+                      <span class="attendance-static">{{ formatStatus(registration.status) }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-card>
+  </section>
+}

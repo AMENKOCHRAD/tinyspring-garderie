@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+<<<<<<< HEAD
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -10,6 +11,9 @@ import { NotificationsService } from '../services/notifications.service';
 import { TraitementHistoryComponent } from '../components/traitement-history.component';
 import { AnimatriceDeclarerChangementComponent } from '../components/animatrice-declarer-changement.component';
 import { AnimatriceSanteAlertesComponent } from '../components/animatrice-sante-alertes.component';
+=======
+import { AuthService } from '../shared/auth.service';
+>>>>>>> origin/gestion-evenements
 
 type AnimatorPageKey =
   | 'tableau-de-bord'
@@ -67,6 +71,7 @@ const pageMetaMap: Record<AnimatorPageKey, PageMeta> = {
 @Component({
   selector: 'app-animator-workspace-page',
   standalone: true,
+<<<<<<< HEAD
   imports: [
     CommonModule,
     FormsModule,
@@ -74,12 +79,16 @@ const pageMetaMap: Record<AnimatorPageKey, PageMeta> = {
     AnimatriceDeclarerChangementComponent,
     AnimatriceSanteAlertesComponent
   ],
+=======
+  imports: [CommonModule],
+>>>>>>> origin/gestion-evenements
   templateUrl: './animator-workspace-page.component.html',
   styleUrl: './animator-workspace-page.component.css'
 })
 export class AnimatorWorkspacePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+<<<<<<< HEAD
   private readonly enfantService = inject(EnfantService);
   private readonly notificationsService = inject(NotificationsService);
   private readonly dayLabelFormatter = new Intl.DateTimeFormat('fr-FR', {
@@ -87,6 +96,8 @@ export class AnimatorWorkspacePageComponent {
     day: '2-digit',
     month: '2-digit'
   });
+=======
+>>>>>>> origin/gestion-evenements
 
   protected readonly page = signal<AnimatorPageKey>('tableau-de-bord');
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', {
@@ -101,6 +112,7 @@ export class AnimatorWorkspacePageComponent {
     return this.pageMeta().title.replace('{{name}}', firstName);
   });
 
+<<<<<<< HEAD
   errorMessage = '';
   successMessage = '';
   needsReauth = false;
@@ -1024,3 +1036,11 @@ interface PlanningEvent {
 }
 
 
+=======
+  public constructor() {
+    this.route.data.subscribe((data) => {
+      this.page.set(data['page'] as AnimatorPageKey);
+    });
+  }
+}
+>>>>>>> origin/gestion-evenements

@@ -1,0 +1,148 @@
+@if (vm$ | async; as vm) {
+  <section class="menus-page">
+    @if (toast$ | async; as toast) {
+      <div class="menu-toast" [ngClass]="toast.kind">
+        <span>{{ toast.text }}</span>
+        <button type="button" class="toast-close" (click)="dismissToast()">×</button>
+      </div>
+    }
+
+    <app-events-module-switcher />
+
+    <div class="section-toolbar">
+      <button type="button" class="btn btn-primary add-button" (click)="goToCreate()">
+        <i class="feather icon-plus" aria-hidden="true"></i>
+        <span>Creer un menu</span>
+      </button>
+    </div>
+
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger" role="alert">
+        {{ vm.errorMessage }}
+      </div>
+    }
+
+    <div class="menus-panel">
+      @if (vm.loading) {
+        <div class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="m-t-15 m-b-0">Chargement des menus...</p>
+        </div>
+      } @else if (!vm.menus.length) {
+        <div class="state-container empty-state">
+          <p class="m-b-15">Aucun menu hebdomadaire disponible.</p>
+          <button type="button" class="btn btn-outline-primary" (click)="goToCreate()">
+            Creer le premier menu
+          </button>
+        </div>
+      } @else {
+        <div class="menu-grid">
+          @for (menu of getCurrentMenus(vm.menus); track menu.id) {
+            <article class="menu-card" [class.template-card]="isTemplateMenu(menu)">
+              <div class="menu-card-top">
+                <span class="status-badge" [ngClass]="getStatusClass(menu)">
+                  {{ formatStatus(menu) }}
+                </span>
+
+                @if (isTemplateMenu(menu)) {
+                  <span class="template-flag">Template reutilisable</span>
+                }
+              </div>
+
+              <div class="menu-card-body">
+                <h3>{{ menu.title || 'Menu sans titre' }}</h3>
+                <p class="menu-range">
+                  {{ menu.weekStartDate | date: 'dd/MM/yyyy' }} → {{ menu.weekEndDate | date: 'dd/MM/yyyy' }}
+                </p>
+
+                <div class="menu-stats">
+                  <div class="stat-chip">
+                    <span class="stat-value">{{ menu.dailyMenus.length }}</span>
+                    <span class="stat-label">{{ getDaysLabel(menu) }}</span>
+                  </div>
+                  <div class="stat-chip">
+                    <span class="stat-value">{{ getDishCount(menu) }}</span>
+                    <span class="stat-label">{{ getDishLabel(menu) }}</span>
+                  </div>
+                </div>
+
+                @if (isTemplateMenu(menu)) {
+                  <p class="template-name">{{ getTemplateSubtitle(menu) }}</p>
+                }
+              </div>
+
+              <div class="menu-card-footer">
+                @if (!isTemplateMenu(menu) && menu.status === 'DRAFT') {
+                  <button
+                    type="button"
+                    class="icon-action publish"
+                    [disabled]="isPublishing(menu.id)"
+                    (click)="publishMenu(menu)"
+                    title="Publier le menu"
+                    aria-label="Publier le menu"
+                  >
+                    <i class="feather icon-upload-cloud" aria-hidden="true"></i>
+                  </button>
+                }
+
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="goToDetails(menu.id)"
+                  title="Voir le menu"
+                  aria-label="Voir le menu"
+                >
+                  <i class="feather icon-eye" aria-hidden="true"></i>
+                </button>
+
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="goToEdit(menu.id)"
+                  title="Modifier le menu"
+                  aria-label="Modifier le menu"
+                >
+                  <i class="feather icon-edit-2" aria-hidden="true"></i>
+                </button>
+
+                @if (!isTemplateMenu(menu)) {
+                  <button
+                    type="button"
+                    class="icon-action accent"
+                    (click)="markAsTemplate(menu)"
+                    title="Rendre ce menu reutilisable"
+                    aria-label="Rendre ce menu reutilisable"
+                  >
+                    <i class="feather icon-bookmark" aria-hidden="true"></i>
+                  </button>
+                }
+
+                @if (isTemplateMenu(menu)) {
+                  <button
+                    type="button"
+                    class="icon-action accent"
+                    (click)="duplicateMenu(menu)"
+                    title="Dupliquer le template"
+                    aria-label="Dupliquer le template"
+                  >
+                    <i class="feather icon-copy" aria-hidden="true"></i>
+                  </button>
+                }
+
+                <button
+                  type="button"
+                  class="icon-action danger"
+                  (click)="deleteMenu(menu)"
+                  title="Supprimer le menu"
+                  aria-label="Supprimer le menu"
+                >
+                  <i class="feather icon-trash-2" aria-hidden="true"></i>
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}

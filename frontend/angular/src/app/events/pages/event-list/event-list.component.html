@@ -1,0 +1,397 @@
+@if (vm$ | async; as vm) {
+  <section class="events-dashboard">
+    @if (vm.toast) {
+      <div class="event-toast" [ngClass]="vm.toast.kind">
+        <span>{{ vm.toast.text }}</span>
+        <button type="button" class="toast-close" (click)="dismissToast()">×</button>
+      </div>
+    }
+
+    <app-events-module-switcher />
+
+    <div class="section-toolbar">
+      <button
+        type="button"
+        class="btn btn-primary add-button icon-only-add"
+        (click)="goToNewEvent()"
+        title="Ajouter un événement"
+        aria-label="Ajouter un événement"
+      >
+        <i class="feather icon-plus" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-label">Total</span>
+        <strong class="stat-value">{{ vm.totalEvents }}</strong>
+        <small class="stat-hint">Tous les événements enregistrés</small>
+      </article>
+
+      <article class="stat-card accent-green">
+        <span class="stat-label">Publiés</span>
+        <strong class="stat-value">{{ vm.publishedEvents }}</strong>
+        <small class="stat-hint">Visibles pour les familles</small>
+      </article>
+
+      <article class="stat-card accent-blue">
+        <span class="stat-label">À venir</span>
+        <strong class="stat-value">{{ vm.upcomingEvents }}</strong>
+        <small class="stat-hint">Événements futurs planifiés</small>
+      </article>
+    </div>
+
+    @if (vm.errorMessage) {
+      <div class="alert alert-danger dashboard-alert" role="alert">
+        {{ vm.errorMessage }}
+      </div>
+    }
+
+    <div class="events-panel">
+      @if (vm.loading) {
+        <div class="state-container">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="m-t-15 m-b-0">Chargement des événements...</p>
+        </div>
+      } @else if (!vm.events.length) {
+        <div class="state-container empty-state">
+          <p class="m-b-15">Aucun événement disponible pour le moment.</p>
+          <button type="button" class="btn btn-outline-primary" (click)="goToNewEvent()">
+            Créer le premier événement
+          </button>
+        </div>
+      } @else {
+        <div class="filter-toolbar">
+          <div class="filter-search">
+            <i class="feather icon-search" aria-hidden="true"></i>
+            <input
+              type="text"
+              class="filter-input"
+              [ngModel]="searchTerm"
+              (ngModelChange)="updateSearchTerm($event)"
+              placeholder="Rechercher un événement..."
+              aria-label="Rechercher un événement"
+            />
+          </div>
+
+          <div class="filter-controls">
+            <label class="filter-field">
+              <span>Statut</span>
+              <select
+                class="filter-select"
+                [ngModel]="selectedStatus"
+                (ngModelChange)="updateStatusFilter($event)"
+              >
+                @for (option of statusOptions; track option.value) {
+                  <option [ngValue]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="filter-field">
+              <span>Type</span>
+              <select
+                class="filter-select"
+                [ngModel]="selectedType"
+                (ngModelChange)="updateTypeFilter($event)"
+              >
+                @for (option of vm.typeOptions; track option.value) {
+                  <option [ngValue]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="filter-field">
+              <span>Date</span>
+              <select
+                class="filter-select"
+                [ngModel]="selectedDateFilter"
+                (ngModelChange)="updateDateFilter($event)"
+              >
+                @for (option of dateOptions; track option.value) {
+                  <option [ngValue]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="filter-field">
+              <span>Tarif</span>
+              <select
+                class="filter-select"
+                [ngModel]="selectedPriceFilter"
+                (ngModelChange)="updatePriceFilter($event)"
+              >
+                @for (option of priceOptions; track option.value) {
+                  <option [ngValue]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+
+            <button
+              type="button"
+              class="btn btn-outline-secondary reset-button"
+              (click)="resetFilters()"
+              [disabled]="!vm.hasActiveFilters"
+            >
+              Réinitialiser
+            </button>
+          </div>
+        </div>
+
+        @if (!vm.filteredEvents.length) {
+          <div class="state-container empty-state filtered-empty-state">
+            <p class="m-b-10">Aucun événement ne correspond à votre recherche.</p>
+            <small class="m-b-15">Essayez de modifier ou de réinitialiser vos filtres.</small>
+            <button type="button" class="btn btn-outline-primary" (click)="resetFilters()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+        } @else {
+          <div class="event-card-grid">
+            @for (event of vm.paginatedEvents; track event.id) {
+              <article class="event-card">
+                <div class="event-card-media">
+                  @if (getEventPhotoUrl(event.photoEvent); as photoUrl) {
+                    <img class="event-card-image" [src]="photoUrl" alt="Photo de l'événement" />
+                  } @else {
+                    <div class="event-card-placeholder">Aucune photo</div>
+                  }
+
+                  <span
+                    class="status-badge event-status-overlay"
+                    [ngClass]="getStatusClass(getDisplayStatus(event))"
+                  >
+                    {{ formatStatus(getDisplayStatus(event)) }}
+                  </span>
+
+                  <button type="button" class="event-favorite-badge" aria-label="Événement mis en avant">
+                    ★
+                  </button>
+                </div>
+
+                <div class="event-card-body">
+                  <div class="event-card-top">
+                    <h3 class="event-card-title">{{ event.title || 'Événement sans titre' }}</h3>
+                    <span class="event-type-chip">{{ event.type.replaceAll('_', ' ') }}</span>
+                  </div>
+
+                  <div class="event-card-meta">
+                    <p class="event-meta-item">
+                      <span class="meta-icon">📍</span>
+                      {{ event.location || 'Lieu non renseigné' }}
+                    </p>
+
+                    <p class="event-meta-item price">
+                      <span class="meta-label">Tarif :</span>
+                      @if (event.eventPrice > 0) {
+                        {{ event.eventPrice | number: '1.0-2' }} DT
+                      } @else {
+                        Gratuit
+                      }
+                    </p>
+
+                    <div class="event-date-block">
+                      <strong>{{ event.startDatetime | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                      <span>Fin : {{ event.endDatetime | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="event-card-footer">
+                    <span class="event-card-id">#{{ event.id }}</span>
+                    <span class="event-capacity">Capacité : {{ event.maxCapacity }}</span>
+                  </div>
+
+                  <div class="event-rating" tabindex="0">
+                    <div class="stars">
+                      <ng-container *ngFor="let star of [1,2,3,4,5]">
+                        <span
+                          class="star"
+                          [class.filled]="star <= Math.round(event.averageRating ?? 0)"
+                        >
+                          ★
+                        </span>
+                      </ng-container>
+                    </div>
+
+                    <span class="rating-text">
+                      {{ (event.ratingCount ?? 0) > 0
+                        ? ((event.averageRating ?? 0) | number:'1.1-1') + ' (' + (event.ratingCount ?? 0) + ' avis)'
+                        : 'Pas encore noté' }}
+                    </span>
+                  </div>
+
+                  @if (getStatusActionHint(event); as statusHint) {
+                    <p class="event-status-hint">{{ statusHint }}</p>
+                  }
+
+                  <div class="event-actions">
+                    <button
+                      type="button"
+                      class="icon-button icon-only"
+                      (click)="goToDetails(event.id)"
+                      title="Voir l'événement"
+                      aria-label="Voir l'événement"
+                    >
+                      <i class="feather icon-eye" aria-hidden="true"></i>
+                    </button>
+
+                    @if (canEdit(event)) {
+                      <a
+                        class="icon-button icon-only"
+                        [routerLink]="['/events', event.id, 'edit']"
+                        title="Modifier l'événement"
+                        aria-label="Modifier l'événement"
+                      >
+                        <i class="feather icon-edit-2" aria-hidden="true"></i>
+                      </a>
+                    } @else {
+                      <span class="action-tooltip-wrapper" title="Un événement annulé ne peut pas être modifié">
+                        <button type="button" class="icon-button icon-only locked" disabled aria-label="Modifier l'événement indisponible">
+                          <i class="feather icon-edit-2" aria-hidden="true"></i>
+                        </button>
+                      </span>
+                    }
+
+                    @if (canPublish(event)) {
+                      <button
+                        type="button"
+                        class="icon-button icon-only success"
+                        (click)="publishEvent(event)"
+                        [disabled]="actionInProgressId === event.id"
+                        title="Publier l'événement"
+                        aria-label="Publier l'événement"
+                      >
+                        <i class="feather icon-upload-cloud" aria-hidden="true"></i>
+                      </button>
+                    } @else if (canRepublish(event)) {
+                      <button
+                        type="button"
+                        class="icon-button republish-button"
+                        (click)="goToRepublish(event.id)"
+                        title="Republier l'événement"
+                        aria-label="Republier l'événement"
+                      >
+                        <i class="feather icon-rotate-cw" aria-hidden="true"></i>
+                        <span>Republier</span>
+                      </button>
+                    } @else if (event.status === 'CANCELLED') {
+                      <span class="action-tooltip-wrapper" title="Un événement annulé ne peut pas être publié">
+                        <button type="button" class="icon-button icon-only locked" disabled aria-label="Publier l'événement indisponible">
+                          <i class="feather icon-upload-cloud" aria-hidden="true"></i>
+                        </button>
+                      </span>
+                    }
+
+                    @if (canCancel(event)) {
+                      <button
+                        type="button"
+                        class="icon-button icon-only warning"
+                        (click)="cancelEvent(event)"
+                        [disabled]="actionInProgressId === event.id"
+                        title="Annuler l'événement"
+                        aria-label="Annuler l'événement"
+                      >
+                        <i class="feather icon-slash" aria-hidden="true"></i>
+                      </button>
+                    }
+
+                    @if (canComplete(event)) {
+                      <button
+                        type="button"
+                        class="icon-button icon-only complete"
+                        (click)="completeEvent(event)"
+                        [disabled]="actionInProgressId === event.id"
+                        title="Marquer l'événement comme complété"
+                        aria-label="Marquer l'événement comme complété"
+                      >
+                        <i class="feather icon-check-circle" aria-hidden="true"></i>
+                      </button>
+                    }
+
+                    <button
+                      type="button"
+                      class="icon-button icon-only danger"
+                      (click)="deleteEvent(event)"
+                      [disabled]="actionInProgressId === event.id"
+                      title="Supprimer l'événement"
+                      aria-label="Supprimer l'événement"
+                    >
+                      <i class="feather icon-trash-2" aria-hidden="true"></i>
+                    </button>
+
+                    @if (canViewParticipations(event)) {
+                      <button
+                        type="button"
+                        class="icon-button icon-only"
+                        (click)="goToRegistrations(event.id)"
+                        title="Voir les participations"
+                        aria-label="Voir les participations"
+                      >
+                        <i class="feather icon-users" aria-hidden="true"></i>
+                      </button>
+                    } @else {
+                      <span
+                        class="action-tooltip-wrapper"
+                        title="Les participations sont indisponibles pour un événement annulé"
+                      >
+                        <button type="button" class="icon-button icon-only locked" disabled aria-label="Voir les participations indisponible">
+                          <i class="feather icon-users" aria-hidden="true"></i>
+                        </button>
+                      </span>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+
+         <div class="modern-pagination">
+  <button
+    type="button"
+    class="pagination-arrow"
+    (click)="previousPage()"
+    [disabled]="vm.currentPage <= 1"
+  >
+    ‹
+  </button>
+
+  @for (page of getPageNumbers(vm.totalPages); track page) {
+    <button
+      type="button"
+      class="pagination-page"
+      [class.active]="page === vm.currentPage"
+      (click)="goToPage(page)"
+    >
+      {{ page }}
+    </button>
+  }
+
+  <button
+    type="button"
+    class="pagination-arrow"
+    (click)="nextPage(vm.totalPages)"
+    [disabled]="vm.currentPage >= vm.totalPages"
+  >
+    ›
+  </button>
+</div>
+
+<div class="pagination-summary">
+  {{ vm.startIndex }}-{{ vm.endIndex }} sur {{ vm.totalFilteredEvents }} événements
+</div>
+
+          <div class="calendar-section">
+            <div class="calendar-section-header">
+              <h3>Calendrier des événements</h3>
+              <p>Vue mensuelle des événements avec leur statut.</p>
+            </div>
+
+            <div class="calendar-panel">
+              <full-calendar [options]="calendarOptions"></full-calendar>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </section>
+}

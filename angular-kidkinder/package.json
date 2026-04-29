@@ -3,8 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+<<<<<<< HEAD
     "start": "ng serve --proxy-config proxy.conf.json",
     "start:noproxy": "ng serve",
+=======
+    "start": "ng serve",
+>>>>>>> origin/gestion-evenements
     "build": "ng build"
   },
   "dependencies": {

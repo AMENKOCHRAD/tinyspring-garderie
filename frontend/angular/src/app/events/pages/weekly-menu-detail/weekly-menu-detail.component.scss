@@ -1,0 +1,271 @@
+.menu-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.state-card,
+.detail-shell,
+.day-card {
+  background: #fff;
+  border: 1px solid #dfe5ef;
+  border-radius: 16px;
+}
+
+.state-card {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.detail-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.detail-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.header-top {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.header-top h1 {
+  color: #1f2a44;
+  font-size: 1.9rem;
+  margin: 0;
+}
+
+.week-range {
+  color: #6b7280;
+  margin: 0.6rem 0 0;
+}
+
+.summary-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.summary-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 96px;
+  padding: 0.75rem 0.85rem;
+}
+
+.summary-value {
+  color: #1f2a44;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.summary-label {
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.status-badge,
+.visibility-badge,
+.allergen-badge {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-badge {
+  padding: 0.42rem 0.8rem;
+}
+
+.status-draft {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.status-published {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.status-template {
+  background: #eef4ff;
+  color: #2b63cc;
+}
+
+.day-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.day-card {
+  padding: 1rem;
+}
+
+.day-card-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.day-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.day-card-header h3 {
+  color: #1f2a44;
+  margin: 0 0 0.2rem;
+}
+
+.day-card-header p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.visibility-badge {
+  padding: 0.35rem 0.72rem;
+}
+
+.visibility-toggle {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d8e1ee;
+  border-radius: 10px;
+  color: #1f2a44;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.visibility-toggle:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.visibility-badge.visible {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.visibility-badge.hidden {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.meal-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.meal-group {
+  border-top: 1px solid #edf2f8;
+  padding-top: 0.9rem;
+}
+
+.meal-group:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.meal-group-header {
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.55rem;
+  text-transform: uppercase;
+}
+
+.dish-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.dish-row {
+  align-items: flex-start;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.8rem;
+}
+
+.dish-photo {
+  border-radius: 10px;
+  height: 64px;
+  object-fit: cover;
+  width: 64px;
+}
+
+.dish-body {
+  flex: 1;
+}
+
+.dish-title-row strong {
+  color: #1f2a44;
+}
+
+.dish-body p {
+  color: #6b7280;
+  margin: 0.3rem 0 0;
+}
+
+.allergen-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.allergen-badge {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #b45309;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.empty-meal {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 991.98px) {
+  .detail-header,
+  .header-actions {
+    flex-direction: column;
+  }
+
+  .day-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,9 +1,14 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 
+<<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
 // Layouts
 import { AdminComponent } from './theme/layout/admin/admin.component';
+=======
+import { adminAuthGuard, adminChildAuthGuard } from './guards/admin-auth.guard';
+>>>>>>> origin/gestion-evenements:frontend/angular/src/app/app-routing.module.ts
 import { GuestComponent } from './theme/layout/guest/guest.component';
+import { AdminComponent } from './theme/layout/admin/admin.component';
 
 // Pages
 import { DashboardProfilsEnfants } from './enfant/dashboard-profils-enfants/dashboard-profils-enfants';
@@ -17,9 +22,17 @@ import { StatistiquesEnfantsComponent } from './enfant/statistiques-enfants/stat
 const routes: Routes = [
   {
     path: '',
+    redirectTo: '/sign-in',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
     component: AdminComponent,
+    canActivate: [adminAuthGuard],
+    canActivateChild: [adminChildAuthGuard],
     children: [
       {
+<<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
         path: '',
 <<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
         redirectTo: 'analytics',
@@ -29,6 +42,8 @@ const routes: Routes = [
         pathMatch: 'full'
       },
       {
+=======
+>>>>>>> origin/gestion-evenements:frontend/angular/src/app/app-routing.module.ts
         path: 'analytics',
         loadComponent: () =>
           import('./demo/dashboard/dash-analytics.component').then(
@@ -36,6 +51,7 @@ const routes: Routes = [
           )
       },
       {
+<<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
 <<<<<<< HEAD:frontend/back-office/src/app/app-routing.module.ts
         path: 'gestion-enfants',
         component: GestionEnfantsComponent,
@@ -77,6 +93,85 @@ const routes: Routes = [
             (c) => c.TransportDashboardComponent
           )
 >>>>>>> origin/gestion-transports:frontend/angular/src/app/app-routing.module.ts
+=======
+        path: 'events',
+        loadComponent: () =>
+          import('./events/pages/event-list/event-list.component').then(
+            (c) => c.EventListComponent
+          )
+      },
+      {
+        path: 'events/new',
+        data: { mode: 'create' },
+        loadComponent: () =>
+          import('./events/pages/event-create/event-create.component').then(
+            (c) => c.EventCreateComponent
+          )
+      },
+      {
+        path: 'events/registrations',
+        loadComponent: () =>
+          import('./events/pages/event-registrations/event-registrations.component').then(
+            (c) => c.EventRegistrationsComponent
+          )
+      },
+      {
+        path: 'events/menus',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-list/weekly-menu-list.component').then(
+            (c) => c.WeeklyMenuListComponent
+          )
+      },
+      {
+        path: 'events/menus/create',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-form/weekly-menu-form.component').then(
+            (c) => c.WeeklyMenuFormComponent
+          )
+      },
+      {
+        path: 'events/menus/:id/edit',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-form/weekly-menu-form.component').then(
+            (c) => c.WeeklyMenuFormComponent
+          )
+      },
+      {
+        path: 'events/menus/:menuId/days/:dayId/edit',
+        loadComponent: () =>
+          import('./events/pages/daily-menu-form/daily-menu-form.component').then(
+            (c) => c.DailyMenuFormComponent
+          )
+      },
+      {
+        path: 'events/menus/:id',
+        loadComponent: () =>
+          import('./events/pages/weekly-menu-detail/weekly-menu-detail.component').then(
+            (c) => c.WeeklyMenuDetailComponent
+          )
+      },
+      {
+        path: 'events/:id/edit',
+        data: { mode: 'edit' },
+        loadComponent: () =>
+          import('./events/pages/event-create/event-create.component').then(
+            (c) => c.EventCreateComponent
+          )
+      },
+      {
+        path: 'events/:id/registrations',
+        loadComponent: () =>
+          import('./events/pages/event-registrations/event-registrations.component').then(
+            (c) => c.EventRegistrationsComponent
+          )
+      },
+      {
+        path: 'events/:id',
+        loadComponent: () =>
+          import('./events/pages/event-detail/event-detail.component').then(
+            (c) => c.EventDetailComponent
+          )
+>>>>>>> origin/gestion-evenements:frontend/angular/src/app/app-routing.module.ts
       },
       {
         path: 'component',
@@ -137,7 +232,7 @@ const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/login'
+    redirectTo: '/sign-in'
   }
 ];
 

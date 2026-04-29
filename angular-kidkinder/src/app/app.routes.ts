@@ -20,7 +20,10 @@ export const routes: Routes = [
       { path: 'tableau-de-bord', component: ParentWorkspacePageComponent, data: { page: 'tableau-de-bord' } },
       { path: 'enfants', component: ParentWorkspacePageComponent, data: { page: 'enfants' } },
       { path: 'sante', component: ParentWorkspacePageComponent, data: { page: 'sante' } },
+<<<<<<< HEAD
       { path: 'changements', component: ParentWorkspacePageComponent, data: { page: 'changements' } },
+=======
+>>>>>>> origin/gestion-evenements
       { path: 'activites', component: ParentWorkspacePageComponent, data: { page: 'activites' } },
       { path: 'menus', component: ParentWorkspacePageComponent, data: { page: 'menus' } },
       { path: 'messages', component: ParentWorkspacePageComponent, data: { page: 'messages' } },

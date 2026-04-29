@@ -273,7 +273,11 @@ e2e/auth.cy.ts                          → Test Cypress
 ```typescript
 describe('Authentication Flow', () => {
   it('should login successfully with PARENT role', () => {
+<<<<<<< HEAD
     cy.visit('http://localhost:4201/login');
+=======
+    cy.visit('http://localhost:4200/login');
+>>>>>>> origin/gestion-evenements
     cy.get('input[name="email"]').type('parent@garderie.com');
     cy.get('input[name="password"]').type('password');
     cy.get('button[type="submit"]').click();
@@ -286,7 +290,11 @@ describe('Authentication Flow', () => {
   });
 
   it('should show error for invalid password', () => {
+<<<<<<< HEAD
     cy.visit('http://localhost:4201/login');
+=======
+    cy.visit('http://localhost:4200/login');
+>>>>>>> origin/gestion-evenements
     cy.get('input[name="email"]').type('parent@garderie.com');
     cy.get('input[name="password"]').type('wrongpassword');
     cy.get('button[type="submit"]').click();

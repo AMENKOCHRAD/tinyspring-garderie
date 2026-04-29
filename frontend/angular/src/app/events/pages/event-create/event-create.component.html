@@ -1,0 +1,31 @@
+@if (vm$ | async; as vm) {
+  <section class="events-page">
+    @if (vm.pageErrorMessage) {
+      <div class="alert alert-danger" role="alert">
+        {{ vm.pageErrorMessage }}
+      </div>
+    } @else if (vm.loading) {
+      <div class="state-card">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="m-t-15 m-b-0">Chargement du formulaire...</p>
+      </div>
+    } @else {
+      <app-events-module-switcher />
+
+      <div class="section-toolbar">
+        <button type="button" class="btn btn-outline-secondary" (click)="goBack()">
+          Retour
+        </button>
+      </div>
+
+      <app-event-form
+        [submitting]="submitting"
+        [errorMessage]="errorMessage"
+        [submitLabel]="submitLabel"
+        [initialEvent]="vm.event"
+        (submitted)="saveEvent($event)"
+        (cancelled)="goBack()"
+      />
+    }
+  </section>
+}

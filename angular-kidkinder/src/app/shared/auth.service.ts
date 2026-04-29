@@ -36,7 +36,11 @@ export class AuthService {
             throw new Error('Le role selectionne ne correspond pas a votre compte.');
           }
 
+<<<<<<< HEAD
           if (!response.token) {
+=======
+          if (!response.accessToken) {
+>>>>>>> origin/gestion-evenements
             throw new Error('Le serveur n a pas retourne de token JWT valide.');
           }
 
@@ -63,11 +67,14 @@ export class AuthService {
     void this.router.navigate(['/connexion']);
   }
 
+<<<<<<< HEAD
   clearSession(): void {
     localStorage.removeItem(this.storageKey);
     this.currentUserSignal.set(null);
   }
 
+=======
+>>>>>>> origin/gestion-evenements
   hasRole(role: UserRole): boolean {
     return this.currentUserSignal()?.role === role;
   }
@@ -115,6 +122,7 @@ export class AuthService {
   }
 
   private buildSessionUser(response: LoginApiResponse, role: UserRole): AuthUser {
+<<<<<<< HEAD
   const nom = response.nom?.trim() || (role === 'PARENT' ? 'Parent TinySpring' : 'Animatrice TinySpring');
 
   return {
@@ -129,6 +137,22 @@ export class AuthService {
     isAuthenticated: true
   };
 }
+=======
+    const nom = response.nom?.trim() || (role === 'PARENT' ? 'Parent TinySpring' : 'Animatrice TinySpring');
+
+    return {
+      id: String(response.id ?? response.email).toLowerCase(),
+      nom,
+      email: response.email,
+      role,
+      initiales: this.getInitiales(nom),
+      token: response.accessToken,
+      tokenType: response.tokenType || 'Bearer',
+      expiresIn: response.expiresIn ?? 0,
+      isAuthenticated: true
+    };
+  }
+>>>>>>> origin/gestion-evenements
 
   private getInitiales(value: string): string {
     return value

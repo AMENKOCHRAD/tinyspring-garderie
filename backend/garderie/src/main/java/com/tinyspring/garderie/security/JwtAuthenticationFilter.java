@@ -13,7 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/gestion-evenements
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -29,6 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/gestion-evenements
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -42,7 +49,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (Exception exception) {
+<<<<<<< HEAD
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+=======
+            filterChain.doFilter(request, response);
+>>>>>>> origin/gestion-evenements
             return;
         }
 
@@ -57,12 +68,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+<<<<<<< HEAD
             } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
+=======
+>>>>>>> origin/gestion-evenements
             }
         }
 
         filterChain.doFilter(request, response);
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/gestion-evenements
 }

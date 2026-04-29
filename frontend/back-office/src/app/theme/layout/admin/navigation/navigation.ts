@@ -124,7 +124,7 @@ export const NavigationItems: NavigationItem[] = [
         id: 'evenements',
         title: 'Evenements & Menus',
         type: 'item',
-        url: '/evenements-menus',
+        url: '/events',
         classes: 'nav-item',
         icon: 'feather icon-calendar'
       },

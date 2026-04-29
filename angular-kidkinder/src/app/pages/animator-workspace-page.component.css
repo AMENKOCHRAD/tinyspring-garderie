@@ -1,6 +1,7 @@
 :host {
   display: block;
 }
+<<<<<<< HEAD
 
 .health-conditions-grid {
   margin-top: 12px;
@@ -293,3 +294,5 @@
     align-items: flex-start;
   }
 }
+=======
+>>>>>>> origin/gestion-evenements

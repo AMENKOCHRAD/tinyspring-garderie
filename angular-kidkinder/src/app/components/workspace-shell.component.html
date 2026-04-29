@@ -6,6 +6,7 @@
         <span>TinySpring</span>
       </a>
 
+<<<<<<< HEAD
       <nav class="workspace-main-nav">
         <a
           *ngFor="let item of navGroups()"
@@ -21,6 +22,118 @@
           N
           <span class="icon-chip__badge">{{ notificationCount() }}</span>
         </button>
+=======
+  <nav class="workspace-main-nav">
+  <div
+    *ngFor="let item of navGroups()"
+    class="workspace-main-nav__item"
+    [class.open]="openedNavKey() === item.key">
+
+    <a
+      [routerLink]="item.route"
+      [class.workspace-main-nav__link--active]="isGroupActive(item)"
+      class="workspace-main-nav__link"
+      (click)="item.children?.length ? toggleNavDropdown(item.key) : closeNavDropdown()">
+      {{ item.label }}
+      <span *ngIf="item.children?.length" class="nav-arrow">▾</span>
+    </a>
+
+    <div *ngIf="item.children?.length" class="workspace-dropdown">
+      <a
+        *ngFor="let child of item.children"
+        [routerLink]="child.route"
+        routerLinkActive="workspace-dropdown__link--active"
+        class="workspace-dropdown__link"
+        (click)="closeNavDropdown()">
+        {{ child.label }}
+      </a>
+    </div>
+  </div>
+</nav>
+
+      <div class="workspace-tools">
+     <div class="notification-wrapper" *ngIf="role() === 'PARENT'">
+
+  <button
+    type="button"
+    class="notification-trigger"
+    [class.has-alert]="notificationCount() > 0"
+    (click)="toggleNotifications()">
+    <span class="bell-icon">🔔</span>
+    <span *ngIf="notificationCount() > 0" class="notification-badge">
+      {{ notificationCount() }}
+    </span>
+  </button>
+
+  <div *ngIf="notificationPanelOpen()" class="notification-dropdown">
+
+    <div class="notif-header">
+      <div>
+        <strong>Notifications</strong>
+        <span>{{ notificationCount() }} non lues</span>
+      </div>
+
+      <div class="notif-header-actions">
+        <button type="button" (click)="markAllRead()">Tout marquer lu</button>
+        <button type="button" class="notif-close" (click)="toggleNotifications()">✕</button>
+      </div>
+    </div>
+
+    <div class="notif-tabs">
+      <button type="button" [class.active]="activeNotifTab() === 'all'" (click)="setNotifTab('all')">
+        Toutes
+      </button>
+      <button type="button" [class.active]="activeNotifTab() === 'ALLERGEN'" (click)="setNotifTab('ALLERGEN')">
+        Allergènes
+      </button>
+      <button type="button" [class.active]="activeNotifTab() === 'EVENT'" (click)="setNotifTab('EVENT')">
+        Activités
+      </button>
+      <button type="button" [class.active]="activeNotifTab() === 'MENU'" (click)="setNotifTab('MENU')">
+        Menus
+      </button>
+    </div>
+
+    <div class="notif-list">
+      <div
+        *ngFor="let n of filteredNotifications()"
+        class="notif-item"
+        [class.unread]="!n.seen"
+        [class.urgent]="n.priority === 'URGENT'"
+        (click)="onNotifClick(n)">
+
+        <div class="notif-dot" *ngIf="!n.seen"></div>
+
+        <div class="notif-icon">
+          {{ n.type.startsWith('ALLERGEN') ? '⚠️' : n.relatedEntityType === 'EVENT' ? '📅' : '🍽️' }}
+        </div>
+
+        <div class="notif-content">
+          <div class="notif-title">{{ n.title }}</div>
+          <div class="notif-message">{{ n.message }}</div>
+
+          <div class="notif-meta">
+            <span>{{ n.createdAt | date:'dd/MM à HH:mm' }}</span>
+            <span
+              class="notif-type-badge"
+              [class.urgent]="n.priority === 'URGENT'">
+              {{ n.priority === 'URGENT' ? 'Urgent' : n.relatedEntityType === 'EVENT' ? 'Activité' : 'Menu' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif-empty" *ngIf="filteredNotifications().length === 0">
+        Aucune notification
+      </div>
+    </div>
+
+    <div class="notif-footer">
+      Voir toutes les notifications
+    </div>
+  </div>
+</div>
+>>>>>>> origin/gestion-evenements
 
         <button type="button" class="profile-trigger" (click)="toggleMenu()">
           <span class="profile-trigger__avatar">{{ currentUser()?.initiales }}</span>
@@ -54,4 +167,34 @@
   <main class="workspace-main">
     <router-outlet></router-outlet>
   </main>
+<<<<<<< HEAD
 </div>
+=======
+
+<div
+  *ngIf="toastNotification() as toast"
+  class="notification-toast"
+  [class.urgent]="toast.priority === 'URGENT'">
+
+  <div class="toast-side"></div>
+
+  <div class="toast-icon">
+    {{ toast.type.startsWith('ALLERGEN') ? '⚠️' : toast.relatedEntityType === 'EVENT' ? '📅' : '🍽️' }}
+  </div>
+
+  <div class="toast-body">
+    <div class="toast-app">TinySpring · Espace parent</div>
+    <div class="toast-title">{{ toast.title }}</div>
+    <div class="toast-message">{{ toast.message }}</div>
+
+    <div class="toast-actions">
+      <button type="button" (click)="navigateFromToast(toast)">
+        {{ toast.relatedEntityType === 'EVENT' ? 'Voir l’événement' : 'Voir le menu' }}
+      </button>
+      <button type="button" class="secondary" (click)="closeToast()">Ignorer</button>
+    </div>
+  </div>
+
+  <button type="button" class="toast-close" (click)="closeToast()">✕</button>
+</div>
+>>>>>>> origin/gestion-evenements

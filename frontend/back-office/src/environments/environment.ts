@@ -8,6 +8,7 @@ export const environment = {
   appVersion: packageInfo.version,
   production: false,
 <<<<<<< HEAD:frontend/back-office/src/environments/environment.ts
+<<<<<<< HEAD:frontend/back-office/src/environments/environment.ts
   apiUrl: '/api'
 =======
   apiUrl: 'http://localhost:8081/api',
@@ -15,6 +16,9 @@ export const environment = {
   adminAppUrl: 'http://localhost:4200',
   userAppUrl: 'http://localhost:4201'
 >>>>>>> origin/gestion-transports:frontend/angular/src/environments/environment.ts
+=======
+  apiUrl: 'http://localhost:8081'
+>>>>>>> origin/gestion-evenements:frontend/angular/src/environments/environment.ts
 };
 
 /*

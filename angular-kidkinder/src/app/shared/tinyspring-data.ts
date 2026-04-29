@@ -105,8 +105,12 @@ export const workspaceNavByRole: Record<UserRole, WorkspaceNavGroup[]> = {
       route: '/parent/enfants',
       children: [
         { label: 'Enfants', route: '/parent/enfants' },
+<<<<<<< HEAD
         { label: 'Sante', route: '/parent/sante' },
         { label: 'Changements', route: '/parent/changements' }
+=======
+        { label: 'Sante', route: '/parent/sante' }
+>>>>>>> origin/gestion-evenements
       ]
     },
     {

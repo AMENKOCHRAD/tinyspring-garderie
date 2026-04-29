@@ -16,11 +16,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+<<<<<<< HEAD
 @CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"})
+=======
+>>>>>>> origin/gestion-evenements
 public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+<<<<<<< HEAD
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -32,6 +36,19 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
+=======
+    private final CustomUserDetailsService customUserDetailsService;
+    private final JwtService jwtService;
+
+    public AuthController(UserRepository userRepository,
+                          PasswordEncoder passwordEncoder,
+                          CustomUserDetailsService customUserDetailsService,
+                          JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.customUserDetailsService = customUserDetailsService;
+        this.jwtService = jwtService;
+>>>>>>> origin/gestion-evenements
     }
 
     @PostMapping("/login")
@@ -55,6 +72,7 @@ public class AuthController {
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
+<<<<<<< HEAD
 
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("role", user.getRole().getName().name());
@@ -73,4 +91,25 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+=======
+        String accessToken = jwtService.generateToken(userDetails, Map.of(
+                "role", user.getRole().getName().name(),
+                "userId", user.getId()
+        ));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("name", user.getNom());
+        response.put("nom", user.getNom());
+        response.put("message", "Login success");
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole().getName().name());
+        response.put("accessToken", accessToken);
+        response.put("tokenType", "Bearer");
+        response.put("expiresIn", jwtService.getExpirationTime());
+
+        return ResponseEntity.ok(response);
+    }
+
+>>>>>>> origin/gestion-evenements
 }

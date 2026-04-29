@@ -1,6 +1,7 @@
 :host {
   display: block;
 }
+<<<<<<< HEAD
 .alert {
   margin-bottom: 16px;
   padding: 12px 14px;
@@ -229,3 +230,5 @@
     grid-template-columns: 1fr;
   }
 }
+=======
+>>>>>>> origin/gestion-evenements

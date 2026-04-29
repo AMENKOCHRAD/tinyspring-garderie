@@ -1,0 +1,593 @@
+<app-card class="event-form-card">
+  @if (errorMessage()) {
+    <div class="alert alert-danger" role="alert">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (validationMessage) {
+    <div class="alert alert-warning" role="alert">
+      {{ validationMessage }}
+    </div>
+  }
+
+  <div class="form-shell">
+    <div class="form-shell__header">
+      <div>
+        <h2>{{ initialEvent() ? "Modifier l'événement" : "Créer un événement" }}</h2>
+        <p>Renseignez les informations, définissez les participants et les options avancées.</p>
+      </div>
+    </div>
+
+    <div class="stepper">
+      @for (stepItem of stepLabels; track stepItem.step) {
+        <button
+          type="button"
+          class="stepper__item"
+          [class.is-active]="currentStep === stepItem.step"
+          [class.is-complete]="currentStep > stepItem.step"
+          (click)="goToStep(stepItem.step)"
+        >
+          <span class="stepper__badge">{{ stepItem.step }}</span>
+          <span>{{ stepItem.label }}</span>
+        </button>
+      }
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (currentStep === 1) {
+        <section class="form-panel">
+          <div class="panel-heading">
+            <h3>Type d'événement</h3>
+            <p>Sélectionnez la catégorie qui correspond le mieux.</p>
+          </div>
+
+          <div class="type-grid">
+            @for (type of eventTypeOptions; track type.value) {
+              <button
+                type="button"
+                class="type-card"
+                [class.is-selected]="form.get('type')?.value === type.value"
+                (click)="selectEventType(type.value)"
+              >
+                <span class="type-card__emoji">{{ type.emoji }}</span>
+                <span class="type-card__label">{{ type.label }}</span>
+              </button>
+            }
+          </div>
+          @if (hasError('type', 'required')) {
+            <small class="text-danger">Le type d'événement est obligatoire.</small>
+          }
+        </section>
+
+        <section class="form-panel">
+          <div class="panel-heading">
+            <h3>Informations générales</h3>
+            <p>Titre, description, dates, lieu et photo de l'événement.</p>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label" for="title">Titre de l'événement *</label>
+                <input
+                  id="title"
+                  type="text"
+                  class="form-control"
+                  formControlName="title"
+                  maxlength="255"
+                  placeholder="ex: Sortie au musée des sciences"
+                />
+                @if (hasError('title', 'required')) {
+                  <small class="text-danger">Le titre est obligatoire.</small>
+                }
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea
+                  id="description"
+                  rows="4"
+                  class="form-control"
+                  formControlName="description"
+                  maxlength="5000"
+                  placeholder="Décrivez l'événement, le programme, les consignes pour les parents..."
+                ></textarea>
+                @if (hasError('description', 'maxlength')) {
+                  <small class="text-danger">La description est trop longue.</small>
+                }
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="startDatetime">Date et heure de début *</label>
+                <input
+                  id="startDatetime"
+                  type="datetime-local"
+                  class="form-control"
+                  formControlName="startDatetime"
+                />
+                @if (hasError('startDatetime', 'required')) {
+                  <small class="text-danger">La date de début est obligatoire.</small>
+                }
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="endDatetime">Date et heure de fin *</label>
+                <input
+                  id="endDatetime"
+                  type="datetime-local"
+                  class="form-control"
+                  formControlName="endDatetime"
+                />
+                @if (hasError('endDatetime', 'required')) {
+                  <small class="text-danger">La date de fin est obligatoire.</small>
+                }
+                @if (isDateRangeInvalid) {
+                  <small class="text-danger">La date de fin doit être postérieure à la date de début.</small>
+                }
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="location">Lieu / Adresse</label>
+                <input
+                  id="location"
+                  type="text"
+                  class="form-control"
+                  formControlName="location"
+                  maxlength="255"
+                  placeholder="ex: Musée des sciences, Tunis"
+                />
+                @if (hasError('location', 'maxlength')) {
+                  <small class="text-danger">Le lieu ne doit pas dépasser 255 caractères.</small>
+                }
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="status">Statut</label>
+                <select id="status" class="form-control" formControlName="status">
+                  @for (status of statusOptions; track status.value) {
+                    <option [value]="status.value">{{ status.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="eventPrice">Tarif</label>
+                <input
+                  id="eventPrice"
+                  type="number"
+                  class="form-control"
+                  formControlName="eventPrice"
+                  min="0"
+                  step="0.01"
+                />
+                @if (hasError('eventPrice', 'required') || hasError('eventPrice', 'min')) {
+                  <small class="text-danger">Le tarif doit être supérieur ou égal à 0.</small>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="media-map-grid">
+            <div class="media-map-grid__left">
+              <div class="form-group">
+                <label class="form-label">Image de l'événement</label>
+
+                <input
+                  #photoInput
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                />
+
+                <div class="event-image-field">
+                  <div class="upload-row">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      (click)="photoInput.click()"
+                      [disabled]="submitting()"
+                    >
+                      Choisir une image
+                    </button>
+
+                    @if (selectedPhotoFile) {
+                      <button
+                        type="button"
+                        class="btn btn-link btn-sm remove-file-button"
+                        (click)="removeSelectedPhoto(photoInput)"
+                        [disabled]="submitting()"
+                      >
+                        Retirer
+                      </button>
+                    }
+                  </div>
+
+                  @if (displayedFileName) {
+                    <span class="selected-file-name">{{ displayedFileName }}</span>
+                  } @else {
+                    <span class="selected-file-name muted">Aucun fichier sélectionné</span>
+                  }
+                </div>
+              </div>
+
+              <div class="photo-preview-card">
+                <div class="preview-header">
+                  <span class="preview-label">Aperçu photo</span>
+                  <small>Format recommandé : horizontal</small>
+                </div>
+
+                <div class="photo-preview-stage">
+                  @if (currentPhotoPreview) {
+                    <img class="photo-preview" [src]="currentPhotoPreview" alt="Aperçu de l'événement" />
+                  } @else {
+                    <div class="photo-placeholder">Aucune photo</div>
+                  }
+                </div>
+
+                <p class="preview-caption">
+                  {{ displayedFileName || "L'image s'affichera ici après sélection." }}
+                </p>
+              </div>
+            </div>
+
+            <div class="media-map-grid__right">
+              <div class="map-card">
+                <div class="preview-header">
+                  <span class="preview-label">Carte</span>
+                  <small>Cliquez sur la carte pour ajuster l'emplacement</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="locationSearch">Rechercher un lieu</label>
+
+                  <div class="location-search-row">
+                    <input
+                      id="locationSearch"
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="locationSearch"
+                      [ngModelOptions]="{ standalone: true }"
+                      placeholder="Ex: Tunis, Lac 1, Sousse..."
+                      (keyup.enter)="searchLocation()"
+                    />
+
+                    <button type="button" class="btn btn-outline-primary" (click)="searchLocation()">
+                      Rechercher
+                    </button>
+                  </div>
+
+                  @if (searching) {
+                    <small class="text-muted">Recherche en cours...</small>
+                  }
+
+                  @if (searchResults.length > 0) {
+                    <div class="location-search-results">
+                      @for (result of searchResults; track result.display_name) {
+                        <button
+                          type="button"
+                          class="location-search-result-item"
+                          (click)="selectSearchResult(result)"
+                        >
+                          {{ result.display_name }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div id="event-map" class="event-map"></div>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        <section class="form-panel ai-panel">
+<div class="ai-popup-launcher">
+  <button type="button" class="btn btn-outline-success" (click)="openAiPopup()">
+    🤖 Ouvrir les suggestions IA
+  </button>
+</div>
+@if (aiPopupOpen) {
+  <div class="ai-popup-backdrop" (click)="closeAiPopup()"></div>
+
+  <section class="ai-popup">
+    <header class="ai-popup__header">
+      <div>
+        <h3>Suggestions IA</h3>
+        <p>Configurez vos préférences et générez des événements recommandés.</p>
+      </div>
+
+      <button type="button" class="ai-popup__close" (click)="closeAiPopup()">×</button>
+    </header>
+
+    <div class="ai-popup__filters">
+      <label>
+        <span>Saison</span>
+        <select class="form-control" [(ngModel)]="selectedSeason" [ngModelOptions]="{ standalone: true }">
+          <option value="PRINTEMPS">Printemps</option>
+          <option value="ETE">Été</option>
+          <option value="AUTOMNE">Automne</option>
+          <option value="HIVER">Hiver</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Mois</span>
+        <select class="form-control" [(ngModel)]="selectedMonth" [ngModelOptions]="{ standalone: true }">
+          <option value="JANUARY">January</option>
+          <option value="FEBRUARY">February</option>
+          <option value="MARCH">March</option>
+          <option value="APRIL">April</option>
+          <option value="MAY">May</option>
+          <option value="JUNE">June</option>
+          <option value="JULY">July</option>
+          <option value="AUGUST">August</option>
+          <option value="SEPTEMBER">September</option>
+          <option value="OCTOBER">October</option>
+          <option value="NOVEMBER">November</option>
+          <option value="DECEMBER">December</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Âge</span>
+        <select class="form-control" [(ngModel)]="selectedAgeGroup" [ngModelOptions]="{ standalone: true }">
+          <option value="2-3 ans">2-3 ans</option>
+          <option value="4-5 ans">4-5 ans</option>
+          <option value="2-6 ans">2-6 ans</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Budget</span>
+        <select class="form-control" [(ngModel)]="selectedBudgetLevel" [ngModelOptions]="{ standalone: true }">
+          <option value="LOW">Faible</option>
+          <option value="MEDIUM">Moyen</option>
+          <option value="HIGH">Élevé</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Extérieur</span>
+        <select class="form-control" [(ngModel)]="selectedOutdoorPreferred" [ngModelOptions]="{ standalone: true }">
+          <option [ngValue]="true">Oui</option>
+          <option [ngValue]="false">Non</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Ville</span>
+        <input
+          class="form-control"
+          [(ngModel)]="selectedCityContext"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Ex: Tunis, Sousse"
+        />
+      </label>
+
+      <button
+        type="button"
+        class="btn btn-success ai-popup__recommend"
+        (click)="loadAiSuggestions()"
+        [disabled]="aiLoading">
+        <span *ngIf="aiLoading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ aiLoading ? 'Chargement...' : 'Recommander →' }}
+      </button>
+    </div>
+
+    <div class="ai-popup__empty" *ngIf="!showAiSuggestions || !aiSuggestions.length">
+      <div class="ai-popup__empty-icon">🎯</div>
+      <strong>Configurez vos préférences</strong>
+      <p>Sélectionnez vos critères, puis cliquez sur Recommander.</p>
+    </div>
+
+    <div *ngIf="showAiSuggestions && aiSuggestions.length > 0" class="ai-popup__results">
+      <article *ngFor="let suggestion of aiSuggestions" class="ai-suggestion-horizontal">
+        <div class="ai-suggestion-horizontal__content">
+          <div class="suggestion-card__badges">
+            <span class="suggestion-badge suggestion-badge--type">{{ suggestion.event_type }}</span>
+            <span class="suggestion-badge suggestion-badge--score">Score {{ suggestion.relevance_score }}</span>
+            <span class="suggestion-badge suggestion-badge--label">{{ suggestion.predicted_label }}</span>
+          </div>
+
+          <h5>{{ suggestion.title }}</h5>
+          <p>{{ suggestion.description }}</p>
+
+          <div class="ai-suggestion-horizontal__details">
+            <span>📍 {{ suggestion.suggested_location }}</span>
+            <span>🏛️ {{ suggestion.indoor_outdoor }}</span>
+            <span>📝 Autorisation : {{ suggestion.requires_authorization ? 'Oui' : 'Non' }}</span>
+            <span>💰 {{ suggestion.suggested_price }} DT</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="applyAiSuggestion(suggestion); closeAiPopup()">
+          Appliquer
+        </button>
+      </article>
+    </div>
+  </section>
+}
+
+    
+  </section>
+      }
+
+      @if (currentStep === 2) {
+        <section class="form-panel">
+          <div class="panel-heading">
+            <h3>Classes ciblées</h3>
+            <p>Sélectionnez les classes invitées à cet événement.</p>
+          </div>
+
+          @if (classesLoading) {
+            <div class="inline-state">
+              <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+              <span>Chargement des classes...</span>
+            </div>
+          } @else if (classroomLoadError) {
+            <div class="alert alert-danger" role="alert">
+              {{ classroomLoadError }}
+            </div>
+          } @else {
+            <div class="classroom-chip-grid">
+              @for (classroom of classrooms; track classroom.id) {
+                <button
+                  type="button"
+                  class="classroom-chip"
+                  [class.is-selected]="isClassroomSelected(classroom.id)"
+                  (click)="toggleClassroomSelection(classroom.id)"
+                >
+                  {{ classroom.niveau || classroom.nom }}
+                </button>
+              }
+            </div>
+          }
+
+          @if (hasError('targetClassroomIds', 'required')) {
+            <small class="text-danger">Veuillez sélectionner au moins une classe.</small>
+          }
+        </section>
+
+        <section class="form-panel">
+          <div class="panel-heading">
+            <h3>Participants et autorisation</h3>
+            <p>Définissez la capacité et l'autorisation parentale.</p>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="maxCapacity">Capacité maximale</label>
+                <input
+                  id="maxCapacity"
+                  type="number"
+                  class="form-control"
+                  formControlName="maxCapacity"
+                  min="1"
+                />
+                @if (hasError('maxCapacity', 'required') || hasError('maxCapacity', 'min')) {
+                  <small class="text-danger">La capacité maximale doit être supérieure à 0.</small>
+                }
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="option-highlight option-highlight--compact">
+                <div>
+                  <strong>Autorisation parentale requise</strong>
+                  <p>Activez cette option pour les sorties et activités hors établissement.</p>
+                </div>
+                <label class="switch">
+                  <input id="requiresAuthorization" type="checkbox" formControlName="requiresAuthorization" />
+                  <span class="switch__slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (currentStep === 3) {
+        <section class="form-panel">
+          <div class="panel-heading">
+            <h3>Récapitulatif</h3>
+            <p>Vérifiez avant d'enregistrer.</p>
+          </div>
+
+          <div class="summary-hero">
+            <div class="summary-hero__media">
+              @if (currentPhotoPreview) {
+                <img [src]="currentPhotoPreview" alt="Photo de l'événement" />
+              } @else {
+                <div class="summary-hero__placeholder">Aucune photo</div>
+              }
+            </div>
+
+            <div class="summary-hero__content">
+              <div class="summary-pill-row">
+                <span class="summary-pill">{{ currentTypeOption?.label || 'Type non défini' }}</span>
+                <span class="summary-pill summary-pill--muted">
+                  {{ form.get('status')?.value === 'PUBLISHED' ? 'Publié' : 'Brouillon' }}
+                </span>
+              </div>
+              <h3>{{ form.get('title')?.value || 'Titre non renseigné' }}</h3>
+              <p>{{ form.get('description')?.value || 'Aucune description fournie.' }}</p>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span>Début</span>
+              <strong>{{ formatDateTimeSummary(form.get('startDatetime')?.value) }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Fin</span>
+              <strong>{{ formatDateTimeSummary(form.get('endDatetime')?.value) }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Lieu</span>
+              <strong>{{ form.get('location')?.value || '—' }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Capacité</span>
+              <strong>{{ form.get('maxCapacity')?.value || '—' }} enfants</strong>
+            </div>
+            <div class="summary-item">
+              <span>Classes ciblées</span>
+              <strong>{{ selectedClassroomLabels.join(', ') || '—' }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Autorisation</span>
+              <strong>{{ form.get('requiresAuthorization')?.value ? 'Requise' : 'Non requise' }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Tarif</span>
+              <strong>{{ form.get('eventPrice')?.value ?? 0 }} DT</strong>
+            </div>
+          </div>
+        </section>
+      }
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="currentStep === 1 ? cancel() : previousStep()">
+          {{ currentStep === 1 ? 'Annuler' : '← Retour' }}
+        </button>
+
+        @if (currentStep < 3) {
+          <button type="button" class="btn btn-primary" (click)="nextStep()">
+            Continuer →
+          </button>
+        } @else {
+          <div class="action-group">
+            <button type="button" class="btn btn-outline-secondary" (click)="goToStep(1)">
+              Modifier
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+              @if (submitting()) {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              }
+              {{ submitLabel() }}
+            </button>
+          </div>
+        }
+      </div>
+    </form>
+  </div>
+</app-card>
