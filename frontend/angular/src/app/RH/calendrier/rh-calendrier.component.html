@@ -1,0 +1,50 @@
+<div class="page-wrapper">
+
+  <!-- ===== HEADER ===== -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="breadcrumb-nav">
+        <span>🏠</span>
+        <span class="sep">/</span>
+        <span>RH & Formations</span>
+        <span class="sep">/</span>
+        <span class="active">Calendrier</span>
+      </div>
+      <h2 class="page-title">Calendrier RH</h2>
+      <p class="page-subtitle">Vue consolidée des absences et formations</p>
+    </div>
+  </div>
+
+  <!-- ===== LÉGENDE ===== -->
+  <div class="legende-bar">
+    <span class="legende-label">Légende :</span>
+    <div class="legende-item">
+      <span class="legende-dot legende-dot--amber"></span>
+      <span>En attente</span>
+    </div>
+    <div class="legende-item">
+      <span class="legende-dot legende-dot--green"></span>
+      <span>Approuvée</span>
+    </div>
+    <div class="legende-item">
+      <span class="legende-dot legende-dot--red"></span>
+      <span>Refusée</span>
+    </div>
+    <div class="legende-item">
+      <span class="legende-dot legende-dot--indigo"></span>
+      <span>Formation</span>
+    </div>
+  </div>
+
+  <!-- ===== LOADING ===== -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Chargement du calendrier...</p>
+  </div>
+
+  <!-- ===== CALENDRIER ===== -->
+  <div class="calendar-card" *ngIf="!isLoading">
+    <full-calendar [options]="calendarOptions"></full-calendar>
+  </div>
+
+</div>

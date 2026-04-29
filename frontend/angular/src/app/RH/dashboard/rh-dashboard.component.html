@@ -1,0 +1,281 @@
+<div class="dashboard-wrapper">
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <p>Chargement du dashboard...</p>
+  </div>
+
+  <div *ngIf="!isLoading && stats">
+
+    <!-- ===== HEADER avec CLOCHE ===== -->
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Tableau de bord RH</h2>
+        <p class="dashboard-subtitle">Vue d'ensemble de la gestion des ressources humaines</p>
+      </div>
+      <div class="header-right">
+        <a routerLink="/rh/animatrices" class="btn-action blue">👥 Animatrices</a>
+        <a routerLink="/rh/absences-conges" class="btn-action orange">📋 Absences</a>
+        <a routerLink="/rh/formations" class="btn-action purple">📚 Formations</a>
+
+        <!-- 🔔 CLOCHE NOTIFICATIONS -->
+        <div class="notif-wrapper">
+          <button class="bell-btn" (click)="toggleNotif()">
+            🔔
+            <span class="badge-count" *ngIf="notifCount > 0">
+              {{ notifCount > 9 ? '9+' : notifCount }}
+            </span>
+          </button>
+
+          <!-- Dropdown notifications -->
+          <div class="notif-dropdown" *ngIf="notifOpen">
+            <div class="notif-header">
+              <span class="notif-title">🔔 Notifications</span>
+              <button class="btn-tout-lire" (click)="marquerToutLu()" *ngIf="notifCount > 0">
+                Tout lire
+              </button>
+            </div>
+
+            <div class="notif-list">
+              <div
+                *ngFor="let notif of notifications"
+                class="notif-item"
+                [class.non-lue]="!notif.read"
+                (click)="marquerLue(notif)">
+                <span class="notif-icon">{{ getNotifIcon(notif.type) }}</span>
+                <div class="notif-content">
+                  <p class="notif-message">{{ notif.message }}</p>
+                  <span class="notif-time">{{ getTemps(notif.createdAt) }}</span>
+                </div>
+                <button class="btn-suppr" (click)="supprimerNotif($event, notif.id)">✕</button>
+              </div>
+
+              <div class="notif-empty" *ngIf="notifications.length === 0">
+                Aucune notification 🎉
+              </div>
+            </div>
+          </div>
+
+          <!-- Overlay pour fermer -->
+          <div class="overlay" *ngIf="notifOpen" (click)="notifOpen = false"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATS ANIMATRICES ===== -->
+    <div class="stats-section">
+      <h3 class="section-label">Animatrices</h3>
+      <div class="stats-row">
+        <div class="stat-card indigo">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.totalAnimatrices }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.animatricesActives }}</span>
+            <span class="stat-label">Actives</span>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">⛔</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.animatricesInactives }}</span>
+            <span class="stat-label">Inactives</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATS ABSENCES ===== -->
+    <div class="stats-section">
+      <h3 class="section-label">Absences & Congés</h3>
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-icon">📊</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.totalAbsences }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.absencesEnAttente }}</span>
+            <span class="stat-label">En attente</span>
+          </div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.absencesApprouvees }}</span>
+            <span class="stat-label">Approuvées</span>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">❌</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.absencesRefusees }}</span>
+            <span class="stat-label">Refusées</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATS FORMATIONS ===== -->
+    <div class="stats-section">
+      <h3 class="section-label">Formations</h3>
+      <div class="stats-row">
+        <div class="stat-card purple">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.totalFormations }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📝</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.formationsInscrites }}</span>
+            <span class="stat-label">Inscrites</span>
+          </div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.formationsEnCours }}</span>
+            <span class="stat-label">En cours</span>
+          </div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ stats.formationsTerminees }}</span>
+            <span class="stat-label">Terminées</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHARTS ===== -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h4 class="chart-title">Absences par statut</h4>
+        <apx-chart
+          [series]="chartAbsencesStatut.series!"
+          [chart]="chartAbsencesStatut.chart!"
+          [labels]="chartAbsencesStatut.labels!"
+          [colors]="chartAbsencesStatut.colors!"
+          [legend]="chartAbsencesStatut.legend!"
+          [dataLabels]="chartAbsencesStatut.dataLabels!"
+          [plotOptions]="chartAbsencesStatut.plotOptions!"
+        ></apx-chart>
+      </div>
+      <div class="chart-card">
+        <h4 class="chart-title">Absences par type</h4>
+        <apx-chart
+          [series]="chartAbsencesType.series!"
+          [chart]="chartAbsencesType.chart!"
+          [labels]="chartAbsencesType.labels!"
+          [colors]="chartAbsencesType.colors!"
+          [legend]="chartAbsencesType.legend!"
+          [dataLabels]="chartAbsencesType.dataLabels!"
+        ></apx-chart>
+      </div>
+      <div class="chart-card">
+        <h4 class="chart-title">Animatrices</h4>
+        <apx-chart
+          [series]="chartAnimatrices.series!"
+          [chart]="chartAnimatrices.chart!"
+          [labels]="chartAnimatrices.labels!"
+          [colors]="chartAnimatrices.colors!"
+          [legend]="chartAnimatrices.legend!"
+          [dataLabels]="chartAnimatrices.dataLabels!"
+        ></apx-chart>
+      </div>
+      <div class="chart-card">
+        <h4 class="chart-title">Formations par statut</h4>
+        <apx-chart
+          [series]="chartFormations.series!"
+          [chart]="chartFormations.chart!"
+          [xaxis]="chartFormations.xaxis!"
+          [colors]="chartFormations.colors!"
+          [plotOptions]="chartFormations.plotOptions!"
+          [dataLabels]="chartFormations.dataLabels!"
+          [grid]="chartFormations.grid!"
+        ></apx-chart>
+      </div>
+    </div>
+
+    <!-- ===== TABLES ===== -->
+    <div class="tables-row">
+
+      <div class="table-card">
+        <div class="table-header">
+          <h4 class="table-title">⏳ Demandes en attente</h4>
+          <a routerLink="/rh/absences-conges" class="table-link">Voir tout →</a>
+        </div>
+        <table class="data-table" *ngIf="stats.dernieresDemandesEnAttente?.length > 0">
+          <thead>
+            <tr>
+              <th>Animatrice</th>
+              <th>Type</th>
+              <th>Du</th>
+              <th>Au</th>
+              <th>Jours</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let demande of stats.dernieresDemandesEnAttente">
+              <td>{{ demande.animatricePrenom }} {{ demande.animatriceNom }}</td>
+              <td><span class="type-badge">{{ getTypeLabel(demande.type) }}</span></td>
+              <td>{{ demande.dateDebut }}</td>
+              <td>{{ demande.dateFin }}</td>
+              <td><strong>{{ demande.nbJours }} j</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-table" *ngIf="!stats.dernieresDemandesEnAttente?.length">
+          Aucune demande en attente 🎉
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h4 class="table-title">👥 Animatrices récentes</h4>
+          <a routerLink="/rh/animatrices" class="table-link">Voir tout →</a>
+        </div>
+        <table class="data-table" *ngIf="stats.dernieresAnimatrices?.length > 0">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Spécialité</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let anim of stats.dernieresAnimatrices">
+              <td>{{ anim.prenom }} {{ anim.nom }}</td>
+              <td>{{ anim.email }}</td>
+              <td>{{ anim.specialite || '—' }}</td>
+              <td>
+                <span class="badge"
+                  [ngClass]="anim.statut === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
+                  {{ anim.statut }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-table" *ngIf="!stats.dernieresAnimatrices?.length">
+          Aucune animatrice
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

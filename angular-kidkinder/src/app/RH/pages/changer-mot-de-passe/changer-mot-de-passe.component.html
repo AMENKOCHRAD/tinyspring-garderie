@@ -1,0 +1,118 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header-card">
+    <div>
+      <span class="section-chip">🔒 Sécurité du compte</span>
+      <h1>Changement de mot de passe</h1>
+      <p class="muted">Pour votre sécurité, veuillez définir un nouveau mot de passe avant de continuer.</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert-success" *ngIf="successMessage()">
+    ✅ {{ successMessage() }}
+    <br><small>Redirection vers le tableau de bord...</small>
+  </div>
+  <div class="alert-error" *ngIf="errorMessage()">
+    ❌ {{ errorMessage() }}
+  </div>
+
+  <!-- Formulaire -->
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Ancien mot de passe -->
+      <div class="form-field">
+        <label>Mot de passe temporaire <span class="required">*</span></label>
+        <div class="input-wrapper">
+          <input
+            [type]="showAncien() ? 'text' : 'password'"
+            formControlName="ancienMotDePasse"
+            placeholder="Mot de passe reçu par email"
+            [class.input-error]="form.get('ancienMotDePasse')?.invalid && form.get('ancienMotDePasse')?.touched"
+            class="form-input"
+          />
+          <button type="button" class="toggle-eye" (click)="showAncien.set(!showAncien())">
+            {{ showAncien() ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <div class="field-error"
+             *ngIf="form.get('ancienMotDePasse')?.invalid && form.get('ancienMotDePasse')?.touched">
+          Le mot de passe temporaire est obligatoire.
+        </div>
+      </div>
+
+      <div class="form-grid">
+
+        <!-- Nouveau mot de passe -->
+        <div class="form-field">
+          <label>Nouveau mot de passe <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <input
+              [type]="showNouveau() ? 'text' : 'password'"
+              formControlName="nouveauMotDePasse"
+              placeholder="Minimum 6 caractères"
+              [class.input-error]="form.get('nouveauMotDePasse')?.invalid && form.get('nouveauMotDePasse')?.touched"
+              class="form-input"
+            />
+            <button type="button" class="toggle-eye" (click)="showNouveau.set(!showNouveau())">
+              {{ showNouveau() ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <div class="field-error"
+               *ngIf="form.get('nouveauMotDePasse')?.invalid && form.get('nouveauMotDePasse')?.touched">
+            <span *ngIf="form.get('nouveauMotDePasse')?.errors?.['required']">Obligatoire.</span>
+            <span *ngIf="form.get('nouveauMotDePasse')?.errors?.['minlength']">Minimum 6 caractères.</span>
+          </div>
+        </div>
+
+        <!-- Confirmer mot de passe -->
+        <div class="form-field">
+          <label>Confirmer le mot de passe <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <input
+              [type]="showConfirm() ? 'text' : 'password'"
+              formControlName="confirmerMotDePasse"
+              placeholder="Répétez le nouveau mot de passe"
+              [class.input-error]="form.get('confirmerMotDePasse')?.touched && form.errors?.['mismatch']"
+              class="form-input"
+            />
+            <button type="button" class="toggle-eye" (click)="showConfirm.set(!showConfirm())">
+              {{ showConfirm() ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <div class="field-error"
+               *ngIf="form.get('confirmerMotDePasse')?.touched && form.errors?.['mismatch']">
+            Les mots de passe ne correspondent pas.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Info -->
+      <div class="moteur-info">
+        <span>🛡️</span>
+        <div>
+          <strong>Conseils de sécurité</strong>
+          <p>Choisissez un mot de passe d'au moins 6 caractères, unique et difficile à deviner.</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-cancel"
+                (click)="router.navigate(['/animateur/tableau-de-bord'])">
+          Annuler
+        </button>
+        <button type="submit" class="btn-submit"
+                [disabled]="isSubmitting() || !!successMessage()">
+          <span *ngIf="!isSubmitting()">🔒 Changer mon mot de passe</span>
+          <span *ngIf="isSubmitting()">⏳ Enregistrement...</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

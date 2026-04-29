@@ -1,0 +1,286 @@
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">📚 Formations</h2>
+      <nav class="breadcrumb-nav">
+        <span>🏠</span><span class="sep">/</span>
+        <span>RH & Formations</span><span class="sep">/</span>
+        <span class="active">Formations</span>
+      </nav>
+    </div>
+    <button class="btn-primary" (click)="ouvrirModal()">+ Ajouter une formation</button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error" *ngIf="errorMessage && !modalDialog?.open">{{ errorMessage }}</div>
+
+  <!-- Stats -->
+  <div class="stats-row" *ngIf="stats">
+    <div class="stat-card stat-card--blue">
+      <span class="stat-icon">📚</span>
+      <div class="stat-info"><span class="stat-value">{{ stats.total }}</span><span class="stat-label">Total</span></div>
+    </div>
+    <div class="stat-card stat-card--indigo">
+      <span class="stat-icon">📝</span>
+      <div class="stat-info"><span class="stat-value">{{ stats.ouvertes }}</span><span class="stat-label">Ouvertes</span></div>
+    </div>
+    <div class="stat-card stat-card--orange">
+      <span class="stat-icon">⏳</span>
+      <div class="stat-info"><span class="stat-value">{{ stats.enCours }}</span><span class="stat-label">En cours</span></div>
+    </div>
+    <div class="stat-card stat-card--green">
+      <span class="stat-icon">✅</span>
+      <div class="stat-info"><span class="stat-value">{{ stats.terminees }}</span><span class="stat-label">Terminées</span></div>
+    </div>
+    <div class="stat-card stat-card--purple">
+      <span class="stat-icon">🎓</span>
+      <div class="stat-info"><span class="stat-value">{{ stats.certificatsGeneres }}</span><span class="stat-label">Certificats</span></div>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  <div class="alertes-banner" *ngIf="alertes && alertes.totalAlertes > 0">
+    <div class="alerte-item" *ngIf="alertes.sousInscrites?.length > 0">
+      ⚠️ {{ alertes.sousInscrites.length }} formation(s) sous-inscrite(s)
+    </div>
+    <div class="alerte-item alerte-item--red" *ngIf="alertes.expirees?.length > 0">
+      🔴 {{ alertes.expirees.length }} formation(s) expirée(s) chez des animatrices
+    </div>
+    <div class="alerte-item alerte-item--orange" *ngIf="alertes.bientotExpirees?.length > 0">
+      🟡 {{ alertes.bientotExpirees.length }} formation(s) expirent bientôt
+    </div>
+    <div class="alerte-item alerte-item--grey" *ngIf="alertes.sanFormationRecente?.length > 0">
+      💡 {{ alertes.sanFormationRecente.length }} animatrice(s) sans formation depuis 6 mois
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="filtrer()"
+             placeholder="Rechercher par titre, formateur..." class="search-input">
+    </div>
+    <div class="filter-chips">
+      <button *ngFor="let s of statuts" class="chip"
+              [class.chip--active]="statutFiltre === s"
+              [style.border-color]="statutFiltre === s ? getStatutColor(s) : ''"
+              (click)="statutFiltre = statutFiltre === s ? '' : s; filtrer()">
+        {{ getStatutIcon(s) }} {{ s }}
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div><p>Chargement...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && formationsFiltrees.length === 0">
+    <div class="empty-icon">📚</div>
+    <h3>Aucune formation trouvée</h3>
+    <button class="btn-primary" (click)="ouvrirModal()">+ Ajouter une formation</button>
+  </div>
+
+  <!-- Grid — ✅ getFormationsPaginees() -->
+  <div class="formations-grid" *ngIf="!isLoading && formationsFiltrees.length > 0">
+    <div *ngFor="let f of getFormationsPaginees()" class="formation-card"
+         [style.border-top]="'4px solid ' + getStatutColor(f.statut)">
+
+      <div class="formation-card__header">
+        <div class="type-badge" [style.background]="getTypeColor(f.type) + '20'"
+             [style.color]="getTypeColor(f.type)">
+          {{ getTypeIcon(f.type) }} {{ f.type }}
+        </div>
+        <div class="statut-badge" [style.background]="getStatutColor(f.statut) + '20'"
+             [style.color]="getStatutColor(f.statut)">
+          {{ getStatutIcon(f.statut) }} {{ f.statut }}
+        </div>
+      </div>
+
+      <div class="formation-card__body">
+        <h4 class="formation-titre" [routerLink]="['/rh/formations', f.id]">{{ f.titre }}</h4>
+        <p class="formation-desc" *ngIf="f.description">{{ f.description }}</p>
+
+        <div class="formation-meta">
+          <div class="meta-row"><span class="meta-icon">👨‍🏫</span><span>{{ f.formateur }}</span></div>
+          <div class="meta-row" *ngIf="f.lieu"><span class="meta-icon">📍</span><span>{{ f.lieu }}</span></div>
+          <div class="meta-row" *ngIf="f.dateFormation">
+            <span class="meta-icon">📅</span>
+            <span>{{ formatDate(f.dateFormation) }}</span>
+            <span *ngIf="f.heureDebut" class="horaire-badge">
+              🕐 {{ formatHeure(f.heureDebut) }} → {{ formatHeure(f.heureFin) }}
+            </span>
+          </div>
+          <div class="meta-row" *ngIf="f.dureeValiditeMois">
+            <span class="meta-icon">⏱️</span><span>Valide {{ f.dureeValiditeMois }} mois</span>
+          </div>
+          <div class="meta-row" *ngIf="f.obligatoire">
+            <span class="obligatoire-badge">⚠️ Obligatoire</span>
+          </div>
+          <div class="meta-row" *ngIf="f.heureDebut && f.statut === 'OUVERTE'">
+            <span class="auto-badge">🤖 Démarrage automatique à {{ formatHeure(f.heureDebut) }}</span>
+          </div>
+        </div>
+
+        <div class="places-section" *ngIf="f.placesMax">
+          <div class="places-header">
+            <span class="places-label">Places</span>
+            <span class="places-count">{{ f.nbInscrits || 0 }}/{{ f.placesMax }}</span>
+          </div>
+          <div class="places-bar">
+            <div class="places-fill"
+                 [style.width]="getRemplissagePct(f) + '%'"
+                 [class.places-fill--complet]="getRemplissagePct(f) >= 100"
+                 [class.places-fill--faible]="getRemplissagePct(f) < 50">
+            </div>
+          </div>
+          <span class="places-dispo" *ngIf="f.placesDisponibles !== undefined">
+            {{ f.placesDisponibles }} place(s) disponible(s)
+          </span>
+        </div>
+      </div>
+
+      <div class="formation-card__footer">
+        <div class="actions-left">
+          <button *ngIf="peutDemarrer(f)" class="btn-action btn-action--start"
+                  (click)="demarrer(f)">▶ Démarrer</button>
+          <button *ngIf="peutTerminer(f)" class="btn-action btn-action--finish"
+                  (click)="terminer(f)">✅ Terminer</button>
+        </div>
+        <div class="actions-right">
+          <button class="btn-icon btn-icon--view" [routerLink]="['/rh/formations', f.id]" title="Détail">👁️</button>
+          <button *ngIf="peutModifier(f)" class="btn-icon btn-icon--edit" (click)="ouvrirModal(f)">✏️</button>
+          <button *ngIf="peutAnnuler(f)" class="btn-icon btn-icon--cancel" (click)="ouvrirModalAnnuler(f)">🚫</button>
+          <button class="btn-icon btn-icon--delete" (click)="supprimer(f.id!)">🗑️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ PAGINATION -->
+  <div class="pagination-wrapper" *ngIf="totalPages > 1">
+    <div class="pagination-info">
+      {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
+      sur {{ formationsFiltrees.length }} formations
+    </div>
+    <div class="pagination">
+      <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
+              [disabled]="pageActuelle === 1">‹</button>
+      <button *ngFor="let p of pages" class="page-btn"
+              [class.page-btn--active]="p === pageActuelle"
+              (click)="goToPage(p)">{{ p }}</button>
+      <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
+              [disabled]="pageActuelle === totalPages">›</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODAL CRÉATION/ÉDITION ===== -->
+<dialog #modalDialog class="native-modal">
+  <div class="modal-header">
+    <h3>{{ isEditing ? '✏️ Modifier' : '➕ Nouvelle' }} formation</h3>
+    <button class="modal-close" (click)="fermerModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="form-group">
+      <label>Titre *</label>
+      <input type="text" [(ngModel)]="form.titre" class="form-input"
+             placeholder="Ex: Premiers secours enfants">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type *</label>
+        <select [(ngModel)]="form.type" class="form-input">
+          <option value="">Sélectionner...</option>
+          <option *ngFor="let t of types" [value]="t">{{ getTypeIcon(t) }} {{ t }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Formateur *</label>
+        <input type="text" [(ngModel)]="form.formateur" class="form-input"
+               placeholder="Nom du formateur">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="form.description" class="form-input" rows="2"
+                placeholder="Description de la formation..."></textarea>
+    </div>
+    <div class="form-section-title">📅 Date & Horaires</div>
+    <div class="form-row form-row--3">
+      <div class="form-group">
+        <label>Date de la formation</label>
+        <input type="date" [(ngModel)]="form.dateFormation" class="form-input">
+      </div>
+      <div class="form-group">
+        <label>🕐 Heure de début</label>
+        <input type="time" [(ngModel)]="form.heureDebut" class="form-input">
+      </div>
+      <div class="form-group">
+        <label>🕐 Heure de fin</label>
+        <input type="time" [(ngModel)]="form.heureFin" class="form-input">
+      </div>
+    </div>
+    <div class="auto-info" *ngIf="form.heureDebut && form.heureFin">
+      🤖 La formation démarrera automatiquement à <strong>{{ formatHeure(form.heureDebut) }}</strong>
+      et se terminera à <strong>{{ formatHeure(form.heureFin) }}</strong>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>📍 Salle / Lieu</label>
+        <select [(ngModel)]="form.lieu" class="form-input">
+          <option value="">Sélectionner une salle...</option>
+          <option *ngFor="let s of salles" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Places max</label>
+        <input type="number" [(ngModel)]="form.placesMax" class="form-input"
+               placeholder="Ex: 10" min="1">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Durée validité (mois) — vide = pas d'expiration</label>
+        <input type="number" [(ngModel)]="form.dureeValiditeMois" class="form-input"
+               placeholder="Ex: 24" min="1">
+      </div>
+      <div class="form-group form-group--checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.obligatoire">
+          <span>⚠️ Formation obligatoire</span>
+        </label>
+        <small>Si cochée, toutes les animatrices actives seront inscrites automatiquement</small>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" (click)="fermerModal()">Annuler</button>
+    <button class="btn-primary" (click)="sauvegarder()">
+      {{ isEditing ? 'Modifier' : 'Créer' }}
+    </button>
+  </div>
+</dialog>
+
+<!-- ===== MODAL ANNULATION ===== -->
+<dialog #modalAnnuler class="native-modal">
+  <div class="modal-header">
+    <h3>🚫 Annuler la formation</h3>
+    <button class="modal-close" (click)="modalAnnuler.close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="annuler-warning">Toutes les animatrices inscrites seront notifiées de l'annulation.</p>
+    <div class="form-group">
+      <label>Motif d'annulation *</label>
+      <textarea [(ngModel)]="motifAnnulation" class="form-input" rows="3"
+                placeholder="Ex: Formateur indisponible..."></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" (click)="modalAnnuler.close()">Retour</button>
+    <button class="btn-danger" (click)="confirmerAnnulation()">Confirmer l'annulation</button>
+  </div>
+</dialog>

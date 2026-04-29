@@ -1,0 +1,98 @@
+<div class="absences-wrapper">
+
+  <div class="section-header">
+    <div>
+      <h2 class="rh-title">Mes Absences & Congés</h2>
+      <p class="rh-subtitle">Consultez et gérez vos demandes</p>
+    </div>
+    <a routerLink="/animateur/rh/nouvelle-demande" class="btn-nouvelle-demande">
+      + Nouvelle demande
+    </a>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card orange">
+      <span class="stat-icon">⏳</span>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByStatut('EN_ATTENTE') }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <span class="stat-icon">✅</span>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByStatut('APPROUVE') }}</span>
+        <span class="stat-label">Approuvées</span>
+      </div>
+    </div>
+    <div class="stat-card red">
+      <span class="stat-icon">❌</span>
+      <div class="stat-info">
+        <span class="stat-number">{{ getCountByStatut('REFUSE') }}</span>
+        <span class="stat-label">Refusées</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <p>Chargement en cours...</p>
+  </div>
+
+  <div class="alert-error" *ngIf="errorMessage && !isLoading">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <div class="table-card" *ngIf="!isLoading">
+    <table class="absences-table" *ngIf="absences.length > 0">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Date début</th>
+          <th>Date fin</th>
+          <th>Nb jours</th>
+          <th>Motif</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ✅ getAbsencesPaginees() sans accent -->
+        <tr *ngFor="let absence of getAbsencesPaginees()">
+          <td><span class="type-badge">{{ getTypeLabel(absence.type) }}</span></td>
+          <td>{{ absence.dateDebut }}</td>
+          <td>{{ absence.dateFin }}</td>
+          <td><strong>{{ absence.nbJours }} j</strong></td>
+          <td>{{ absence.motif || '—' }}</td>
+          <td>
+            <span class="statut-badge" [ngClass]="getBadgeClass(absence.statut)">
+              {{ getStatutLabel(absence.statut) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="empty-state" *ngIf="absences.length === 0 && !errorMessage">
+      <p>Aucune demande pour le moment</p>
+      <a routerLink="/animateur/rh/nouvelle-demande" class="btn-nouvelle-demande">
+        Faire une première demande
+      </a>
+    </div>
+  </div>
+
+  <!-- ✅ PAGINATION -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="page-btn" (click)="goToPage(pageActuelle - 1)"
+            [disabled]="pageActuelle === 1">‹</button>
+    <button *ngFor="let p of pages" class="page-btn"
+            [class.page-btn--active]="p === pageActuelle"
+            (click)="goToPage(p)">{{ p }}</button>
+    <button class="page-btn" (click)="goToPage(pageActuelle + 1)"
+            [disabled]="pageActuelle === totalPages">›</button>
+  </div>
+
+  <div class="pagination-info" *ngIf="absences.length > parPage">
+    {{ (pageActuelle - 1) * parPage + 1 }}–{{ getLastItemIndex() }}
+    sur {{ absences.length }} demandes
+  </div>
+
+</div>

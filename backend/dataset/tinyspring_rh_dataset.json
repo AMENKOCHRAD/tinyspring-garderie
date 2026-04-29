@@ -1,0 +1,169 @@
+[ {
+  "instruction" : "Montre-moi le tableau de bord RH",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDCCA TABLEAU DE BORD RH — TINYSPRING GARDERIE\n\n\uD83D\uDC65 ANIMATRICES\n• Total : 10\n• ✅ Actives : 10\n• ⛔ Inactives : 0\n\n\uD83D\uDCCB ABSENCES & CONGÉS\n• Total demandes : 10\n• ✅ Approuvées : 8\n• ❌ Refusées : 2\n• ⏳ En attente : 0\n\n\uD83D\uDCCA PAR TYPE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\n\uD83D\uDCDA FORMATIONS\n• Total : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDEA8 URGENCES\n• ✅ Aucune urgence détectée\n"
+}, {
+  "instruction" : "Donne-moi un résumé rapide de la situation RH",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDCCA RÉSUMÉ RH — TINYSPRING GARDERIE\n\n\uD83D\uDC65 10 animatrices (10 actives)\n\uD83D\uDCCB 10 demandes d'absences au total\n⏳ 0 en attente de traitement\n\uD83D\uDCDA 2 formations\n\n✅ Taux d'approbation : 80%"
+}, {
+  "instruction" : "Quels sont les chiffres clés RH ?",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDD22 CHIFFRES CLÉS RH\n\nANIMATRICES\n• Total : 10\n• Actives : 10\n• Inactives : 0\n\nABSENCES\n• Total : 10\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\nFORMATIONS\n• Total : 2\n• En cours : 0\n• Terminées : 0"
+}, {
+  "instruction" : "Y a-t-il des urgences RH à traiter ?",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDEA8 URGENCES\n• ✅ Aucune urgence détectée\n"
+}, {
+  "instruction" : "Quel est le taux d'approbation des congés ?",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDCC8 TAUX D'APPROBATION DES CONGÉS\n\n• Total demandes : 10\n• Approuvées : 8\n• Refusées : 2\n• En attente : 0\n\n\uD83D\uDCCA Taux d'approbation : 80%\n\uD83D\uDCCA Taux de refus : 20%\n\n\uD83D\uDCA1 Recommandations :\n• Analyser les motifs de refus pour améliorer le processus"
+}, {
+  "instruction" : "Donne-moi la liste de toutes les animatrices",
+  "input" : "Animatrices TinySpring :\n• Sara Ben Ali | ACTIVE\n• Ines Trabelsi | ACTIVE\n• badiss test | ACTIVE\n• bbbb bbb | ACTIVE\n• hanen hanen | ACTIVE\n• badiss badiss | ACTIVE\n• test test  test test  | ACTIVE\n• Samira Magroun | ACTIVE\n• aaaaaa aa | ACTIVE\n• badiss badiss | ACTIVE\n",
+  "output" : "\uD83D\uDC65 LISTE DES ANIMATRICES\n\n• Sara Ben Ali — ACTIVE — Eveil artistique\n• Ines Trabelsi — ACTIVE — Eveil artistique\n• badiss test — ACTIVE — zz\n• bbbb bbb — ACTIVE — eded\n• hanen hanen — ACTIVE — Eveil Musical\n• badiss badiss — ACTIVE — Eveil Musical\n• test test  test test  — ACTIVE — Eveil Musical\n• Samira Magroun — ACTIVE — Eveil Musical\n• aaaaaa aa — ACTIVE — aa\n• badiss badiss — ACTIVE — zz\n"
+}, {
+  "instruction" : "Quel est l'état des animatrices actives et inactives ?",
+  "input" : "Animatrices TinySpring :\n• Sara Ben Ali | ACTIVE\n• Ines Trabelsi | ACTIVE\n• badiss test | ACTIVE\n• bbbb bbb | ACTIVE\n• hanen hanen | ACTIVE\n• badiss badiss | ACTIVE\n• test test  test test  | ACTIVE\n• Samira Magroun | ACTIVE\n• aaaaaa aa | ACTIVE\n• badiss badiss | ACTIVE\n",
+  "output" : "\uD83D\uDC65 ÉTAT DES ANIMATRICES\n\n\uD83D\uDCCA Statistiques :\n• Total : 10\n• ✅ Actives : 10\n• ⛔ Inactives : 0\n\n\uD83D\uDCC8 Taux d'activité : 100%\n\n\uD83D\uDCA1 Recommandations :\n• Maintenir un effectif minimum de 2 animatrices actives par groupe"
+}, {
+  "instruction" : "Quelles sont les animatrices récemment ajoutées ?",
+  "input" : "Animatrices TinySpring :\n• Sara Ben Ali | ACTIVE\n• Ines Trabelsi | ACTIVE\n• badiss test | ACTIVE\n• bbbb bbb | ACTIVE\n• hanen hanen | ACTIVE\n• badiss badiss | ACTIVE\n• test test  test test  | ACTIVE\n• Samira Magroun | ACTIVE\n• aaaaaa aa | ACTIVE\n• badiss badiss | ACTIVE\n",
+  "output" : "\uD83C\uDD95 ANIMATRICES RÉCENTES\n\n• badiss badiss — ACTIVE\n• aaaaaa aa — ACTIVE\n• Samira Magroun — ACTIVE\n• test test  test test  — ACTIVE\n• badiss badiss — ACTIVE\n"
+}, {
+  "instruction" : "Quel est le bilan de Sara Ben Ali ?",
+  "input" : "Animatrice : Sara Ben Ali | Statut : ACTIVE | Absences : 1",
+  "output" : "\uD83D\uDC64 BILAN ANIMATRICE — SARA BEN ALI\n\n\uD83D\uDCCB Informations :\n• Nom : Sara Ben Ali\n• Statut : ACTIVE\n• Spécialité : Eveil artistique\n• Date embauche : 15/01/2024\n\n\uD83D\uDCCA Absences :\n• Total demandes : 1\n• Approuvées : 1\n• Refusées : 0\n• Jours utilisés : 7\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller le quota restant"
+}, {
+  "instruction" : "Quel est le bilan de Ines Trabelsi ?",
+  "input" : "Animatrice : Ines Trabelsi | Statut : ACTIVE | Absences : 0",
+  "output" : "\uD83D\uDC64 BILAN ANIMATRICE — INES TRABELSI\n\n\uD83D\uDCCB Informations :\n• Nom : Ines Trabelsi\n• Statut : ACTIVE\n• Spécialité : Eveil artistique\n• Date embauche : 15/01/2024\n\n\uD83D\uDCCA Absences :\n• Total demandes : 0\n• Approuvées : 0\n• Refusées : 0\n• Jours utilisés : 0\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller le quota restant"
+}, {
+  "instruction" : "Quel est le bilan de badiss test ?",
+  "input" : "Animatrice : badiss test | Statut : ACTIVE | Absences : 0",
+  "output" : "\uD83D\uDC64 BILAN ANIMATRICE — BADISS TEST\n\n\uD83D\uDCCB Informations :\n• Nom : badiss test\n• Statut : ACTIVE\n• Spécialité : zz\n• Date embauche : 01/04/2026\n\n\uD83D\uDCCA Absences :\n• Total demandes : 0\n• Approuvées : 0\n• Refusées : 0\n• Jours utilisés : 0\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller le quota restant"
+}, {
+  "instruction" : "Quel est le bilan de bbbb bbb ?",
+  "input" : "Animatrice : bbbb bbb | Statut : ACTIVE | Absences : 0",
+  "output" : "\uD83D\uDC64 BILAN ANIMATRICE — BBBB BBB\n\n\uD83D\uDCCB Informations :\n• Nom : bbbb bbb\n• Statut : ACTIVE\n• Spécialité : eded\n• Date embauche : 01/04/2026\n\n\uD83D\uDCCA Absences :\n• Total demandes : 0\n• Approuvées : 0\n• Refusées : 0\n• Jours utilisés : 0\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller le quota restant"
+}, {
+  "instruction" : "Quel est le bilan de hanen hanen ?",
+  "input" : "Animatrice : hanen hanen | Statut : ACTIVE | Absences : 0",
+  "output" : "\uD83D\uDC64 BILAN ANIMATRICE — HANEN HANEN\n\n\uD83D\uDCCB Informations :\n• Nom : hanen hanen\n• Statut : ACTIVE\n• Spécialité : Eveil Musical\n• Date embauche : 02/04/2026\n\n\uD83D\uDCCA Absences :\n• Total demandes : 0\n• Approuvées : 0\n• Refusées : 0\n• Jours utilisés : 0\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller le quota restant"
+}, {
+  "instruction" : "Génère le rapport mensuel des absences",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCC5 RAPPORT MENSUEL — APRIL 2026\n\n\uD83D\uDCCA Absences ce mois : 8\n✅ Approuvées au total : 8\n❌ Refusées au total : 2\n⏳ En attente : 0\n\n\uD83D\uDCCA PAR TYPE D'ABSENCE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\n\uD83D\uDCA1 Recommandations :\n• Traiter les demandes en attente sous 24h\n• Vérifier l'effectif minimum sur les périodes critiques\n• Planifier les congés du mois prochain"
+}, {
+  "instruction" : "Liste toutes les demandes en attente avec recommandations",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "⏳ DEMANDES EN ATTENTE\n\n✅ Aucune demande en attente — Excellent !\n\n\uD83D\uDCA1 0 demande(s) nécessitent votre action."
+}, {
+  "instruction" : "Analyse les absences par type",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCCA PAR TYPE D'ABSENCE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1"
+}, {
+  "instruction" : "Quelles sont les absences approuvées ce mois ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "✅ ABSENCES APPROUVÉES — APRIL\n\n• Samira Magroun | CONGE ANNUEL | 25 jours [MANUEL]\n• Samira Magroun | CONGE MALADIE | 17 jours [MANUEL]\n• Samira Magroun | CONGE MATERNITE | 22 jours [MANUEL]\n• Samira Magroun | CONGE ANNUEL | 25 jours [MANUEL]\n• Samira Magroun | CONGE ANNUEL | 10 jours [MANUEL]\n• badiss badiss | CONGE ANNUEL | 18 jours [MANUEL]\n• badiss badiss | CONGE ANNUEL | 5 jours [AUTO]\n"
+}, {
+  "instruction" : "Quelles sont les absences refusées et pourquoi ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "❌ ABSENCES REFUSÉES\n\n• badiss badiss | CONGE ANNUEL | 5 jours\n  Motif : ❌ Délai de prévenance insuffisant. Pour un(e) Congé Annuel, vous devez soumettre\n• badiss badiss | ABSENCE | 13 jours\n  Motif : ❌ Quota annuel dépassé. Pour le type Absence, le maximum est de 10 jour(s)/an. V\n"
+}, {
+  "instruction" : "Combien de jours d'absence ont été accordés au total ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCC5 TOTAL JOURS D'ABSENCE ACCORDÉS\n\n• ABSENCE : 0 jours\n• CONGE ANNUEL : 90 jours\n• CONGE MALADIE : 17 jours\n• CONGE MATERNITE : 22 jours\n\n\uD83D\uDCA1 Note : seules les absences approuvées sont comptabilisées."
+}, {
+  "instruction" : "Génère un rapport d'alerte sur les absences critiques",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDEA8 ALERTES ABSENCES\n\n⚠️ Samira Magroun : 60/30j ❌ QUOTA DÉPASSÉ\n\n\uD83D\uDCA1 Actions recommandées :\n• Traiter les demandes urgentes\n• Vérifier les quotas des animatrices proches du maximum\n• S'assurer du maintien de l'effectif minimum"
+}, {
+  "instruction" : "Combien de absence ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCCB ANALYSE ABSENCE\n\n• Demandes totales : 1\n• Approuvées : 0\n• Refusées : 1\n• En attente : 0\n• Total jours accordés : 0\n• Moyenne : 0 jours/demande\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller les quotas pour ce type d'absence"
+}, {
+  "instruction" : "Combien de conge annuel ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCCB ANALYSE CONGE ANNUEL\n\n• Demandes totales : 7\n• Approuvées : 6\n• Refusées : 1\n• En attente : 0\n• Total jours accordés : 90\n• Moyenne : 12 jours/demande\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller les quotas pour ce type d'absence"
+}, {
+  "instruction" : "Combien de conge maladie ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCCB ANALYSE CONGE MALADIE\n\n• Demandes totales : 1\n• Approuvées : 1\n• Refusées : 0\n• En attente : 0\n• Total jours accordés : 17\n• Moyenne : 17 jours/demande\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller les quotas pour ce type d'absence"
+}, {
+  "instruction" : "Combien de conge maternite ont été demandés ?",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83D\uDCCB ANALYSE CONGE MATERNITE\n\n• Demandes totales : 1\n• Approuvées : 1\n• Refusées : 0\n• En attente : 0\n• Total jours accordés : 22\n• Moyenne : 22 jours/demande\n\n\uD83D\uDCA1 Recommandations :\n• Surveiller les quotas pour ce type d'absence"
+}, {
+  "instruction" : "Quel est l'état des formations ?",
+  "input" : "Formations TinySpring :\n• Premiers secours enfants | INSCRITE | INTERNE\n• Test | INSCRITE | EXTERNE\n",
+  "output" : "\uD83D\uDCDA ÉTAT DES FORMATIONS\n\n• Total : 2\n• Inscrites : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDCCB Liste :\n• Premiers secours enfants — INSCRITE — INTERNE\n• Test — INSCRITE — EXTERNE\n\n\uD83D\uDCA1 Recommandations :\n• Encourager les inscriptions aux formations disponibles\n• Planifier de nouvelles formations\n• Suivre les certifications"
+}, {
+  "instruction" : "Quelles formations sont en cours ?",
+  "input" : "Formations TinySpring :\n• Premiers secours enfants | INSCRITE | INTERNE\n• Test | INSCRITE | EXTERNE\n",
+  "output" : "\uD83D\uDCDA FORMATIONS EN COURS\n\n• Aucune formation en cours actuellement.\n"
+}, {
+  "instruction" : "Quelles formations sont disponibles pour inscription ?",
+  "input" : "Formations TinySpring :\n• Premiers secours enfants | INSCRITE | INTERNE\n• Test | INSCRITE | EXTERNE\n",
+  "output" : "\uD83D\uDCDA FORMATIONS DISPONIBLES\n\n• Premiers secours enfants — INTERNE — Croissant Rouge\n• Test — EXTERNE — test\n"
+}, {
+  "instruction" : "Quelles formations sont terminées ?",
+  "input" : "Formations TinySpring :\n• Premiers secours enfants | INSCRITE | INTERNE\n• Test | INSCRITE | EXTERNE\n",
+  "output" : "\uD83D\uDCDA FORMATIONS TERMINÉES\n\n• Aucune formation terminées actuellement.\n"
+}, {
+  "instruction" : "Génère un rapport complet sur les formations",
+  "input" : "Formations TinySpring :\n• Premiers secours enfants | INSCRITE | INTERNE\n• Test | INSCRITE | EXTERNE\n",
+  "output" : "\uD83D\uDCDA RAPPORT FORMATIONS — TINYSPRING GARDERIE\n\n\uD83D\uDCCA Vue d'ensemble :\n• Total formations : 2\n• Inscrites : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDCDA ÉTAT DES FORMATIONS\n\n• Total : 2\n• Inscrites : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDCCB Liste :\n• Premiers secours enfants — INSCRITE — INTERNE\n• Test — INSCRITE — EXTERNE\n\n\uD83D\uDCA1 Recommandations :\n• Encourager les inscriptions aux formations disponibles\n• Planifier de nouvelles formations\n• Suivre les certifications\n\n\uD83D\uDCA1 Recommandations :\n• Encourager les animatrices à s'inscrire aux formations disponibles\n• Planifier de nouvelles formations selon les besoins\n• Suivre les certifications obtenues"
+}, {
+  "instruction" : "Donne-moi les détails de la formation Premiers secours enfants",
+  "input" : "Formation : Premiers secours enfants | Statut : INSCRITE",
+  "output" : "\uD83D\uDCDA DÉTAIL FORMATION\n\n• Titre : Premiers secours enfants\n• Type : INTERNE\n• Formateur : Croissant Rouge\n• Statut : INSCRITE\n• Places max : 10\n• Inscrits : 1\n• Date début : 10/07/2024\n• Date fin : 11/07/2024"
+}, {
+  "instruction" : "Donne-moi les détails de la formation Test",
+  "input" : "Formation : Test | Statut : INSCRITE",
+  "output" : "\uD83D\uDCDA DÉTAIL FORMATION\n\n• Titre : Test\n• Type : EXTERNE\n• Formateur : test\n• Statut : INSCRITE\n• Places max : 14\n• Inscrits : 0\n• Date début : 08/04/2026\n• Date fin : 09/04/2026"
+}, {
+  "instruction" : "Quelles animatrices ont dépassé leur quota ?",
+  "input" : "Quotas TinySpring : Congé annuel 30j, Maladie 15j, Maternité 90j, Absence 10j",
+  "output" : "⚠️ Samira Magroun : 60/30j ❌ QUOTA DÉPASSÉ\n"
+}, {
+  "instruction" : "Génère un rapport d'alerte sur les quotas",
+  "input" : "Quotas TinySpring : Congé annuel 30j, Maladie 15j, Maternité 90j, Absence 10j",
+  "output" : "⚠️ RAPPORT ALERTES QUOTAS\n\n⚠️ Samira Magroun : 60/30j ❌ QUOTA DÉPASSÉ\n\n\uD83D\uDCA1 Actions recommandées :\n• Vérifier les quotas avant toute approbation\n• Informer les animatrices proches du quota\n• Planifier les congés pour éviter les dépassements"
+}, {
+  "instruction" : "Analyse les décisions automatiques du moteur de règles",
+  "input" : "Absences TinySpring — Total : 10\n• Sara Ben Ali | CONGE_ANNUEL | APPROUVE | 7j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_MALADIE | APPROUVE | 17j\n• Samira Magroun | CONGE_MATERNITE | APPROUVE | 22j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 25j\n• Samira Magroun | CONGE_ANNUEL | APPROUVE | 10j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 18j\n• badiss badiss | CONGE_ANNUEL | REFUSE | 5j\n• badiss badiss | ABSENCE | REFUSE | 13j\n• badiss badiss | CONGE_ANNUEL | APPROUVE | 5j\n",
+  "output" : "\uD83E\uDD16 ANALYSE MOTEUR DE RÈGLES\n\n\uD83D\uDCCA Décisions automatiques :\n• Auto-approuvées : 1\n• Auto-refusées : 2\n• Total automatiques : 3\n• Transmises admin : 0\n\n\uD83D\uDCC8 Taux d'automatisation : 30%\n\n\uD83D\uDCA1 Recommandations :\n• Activer l'auto-approbation pour réduire la charge admin\n• Configurer les quotas selon les besoins réels"
+}, {
+  "instruction" : "Comment fonctionne le moteur de règles ?",
+  "input" : "Moteur de règles TinySpring configuré",
+  "output" : "\uD83E\uDD16 MOTEUR DE RÈGLES — FONCTIONNEMENT\n\nLe moteur évalue automatiquement chaque demande selon 4 règles :\n\n1️⃣ DÉLAI DE PRÉVENANCE\n• Congé annuel : 7 jours minimum\n• Congé maladie : 0 jour (urgent)\n• Congé maternité : 30 jours\n• Absence : 1 jour\n\n2️⃣ QUOTA ANNUEL\n• Congé annuel : 30j/an\n• Congé maladie : 15j/an\n• Congé maternité : 90j/an\n• Absence : 10j/an\n\n3️⃣ CHEVAUCHEMENT\n• Pas de double absence sur les mêmes dates\n\n4️⃣ EFFECTIF MINIMUM\n• Minimum 2 animatrices présentes par période\n\n✅ Si toutes les règles passent → AUTO-APPROUVÉ\n❌ Si une règle échoue → AUTO-REFUSÉ avec explication\n⏳ Si auto-approbation désactivée → TRANSMIS ADMIN"
+}, {
+  "instruction" : "Génère un bilan RH complet",
+  "input" : "TinySpring Garderie — Animatrices: 10 | Absences: 10 | Approuvées: 8 | Refusées: 2 | EnAttente: 0 | Formations: 2",
+  "output" : "\uD83D\uDCCA BILAN RH COMPLET — TINYSPRING GARDERIE\n\n\uD83D\uDC65 EFFECTIF\n• Total animatrices : 10\n• Actives : 10\n• Inactives : 0\n\n\uD83D\uDCCB ABSENCES & CONGÉS\n• Total demandes : 10\n• ✅ Approuvées : 8\n• ❌ Refusées : 2\n• ⏳ En attente : 0\n• Taux approbation : 80%\n\n\uD83D\uDCCA PAR TYPE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\n\uD83D\uDCDA FORMATIONS\n• Total : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDCA1 RECOMMANDATIONS\n• Maintenir l'effectif minimum à 2 animatrices\n• Réviser les quotas annuellement\n• Planifier les formations du prochain trimestre"
+}, {
+  "instruction" : "Génère le rapport mensuel de APRIL",
+  "input" : "TinySpring Garderie — Animatrices: 10 | Absences: 10 | Approuvées: 8 | Refusées: 2 | EnAttente: 0 | Formations: 2",
+  "output" : "\uD83D\uDCC5 RAPPORT MENSUEL — APRIL 2026\n\n\uD83D\uDCCA Absences ce mois : 8\n✅ Approuvées au total : 8\n❌ Refusées au total : 2\n⏳ En attente : 0\n\n\uD83D\uDCCA PAR TYPE D'ABSENCE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\n\uD83D\uDCA1 Recommandations :\n• Traiter les demandes en attente sous 24h\n• Vérifier l'effectif minimum sur les périodes critiques\n• Planifier les congés du mois prochain"
+}, {
+  "instruction" : "Génère le rapport trimestriel RH",
+  "input" : "TinySpring Garderie — Animatrices: 10 | Absences: 10 | Approuvées: 8 | Refusées: 2 | EnAttente: 0 | Formations: 2",
+  "output" : "\uD83D\uDCCA RAPPORT TRIMESTRIEL RH — TINYSPRING GARDERIE\n\n\uD83D\uDCCA BILAN RH COMPLET — TINYSPRING GARDERIE\n\n\uD83D\uDC65 EFFECTIF\n• Total animatrices : 10\n• Actives : 10\n• Inactives : 0\n\n\uD83D\uDCCB ABSENCES & CONGÉS\n• Total demandes : 10\n• ✅ Approuvées : 8\n• ❌ Refusées : 2\n• ⏳ En attente : 0\n• Taux approbation : 80%\n\n\uD83D\uDCCA PAR TYPE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\n\uD83D\uDCDA FORMATIONS\n• Total : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDCA1 RECOMMANDATIONS\n• Maintenir l'effectif minimum à 2 animatrices\n• Réviser les quotas annuellement\n• Planifier les formations du prochain trimestre\n\n\uD83D\uDCC5 Période : Trimestre 2026"
+}, {
+  "instruction" : "Génère le rapport annuel RH",
+  "input" : "TinySpring Garderie — Animatrices: 10 | Absences: 10 | Approuvées: 8 | Refusées: 2 | EnAttente: 0 | Formations: 2",
+  "output" : "\uD83D\uDCC8 RAPPORT ANNUEL RH — TINYSPRING GARDERIE 2026\n\n\uD83D\uDCCA BILAN RH COMPLET — TINYSPRING GARDERIE\n\n\uD83D\uDC65 EFFECTIF\n• Total animatrices : 10\n• Actives : 10\n• Inactives : 0\n\n\uD83D\uDCCB ABSENCES & CONGÉS\n• Total demandes : 10\n• ✅ Approuvées : 8\n• ❌ Refusées : 2\n• ⏳ En attente : 0\n• Taux approbation : 80%\n\n\uD83D\uDCCA PAR TYPE\n• Congés annuels : 7\n• Congés maladie : 1\n• Congés maternité : 1\n• Absences : 1\n\n\uD83D\uDCDA FORMATIONS\n• Total : 2\n• En cours : 0\n• Terminées : 0\n\n\uD83D\uDCA1 RECOMMANDATIONS\n• Maintenir l'effectif minimum à 2 animatrices\n• Réviser les quotas annuellement\n• Planifier les formations du prochain trimestre\n\n\uD83D\uDCCA Bilan formations :\n• Total formations : 2\n• Terminées : 0\n\n\uD83C\uDFAF Objectifs 2027 :\n• Maintenir le taux d'approbation au-dessus de 80%\n• Organiser au moins 5 formations\n• Recruter si effectif < 5 animatrices actives"
+}, {
+  "instruction" : "Donne-moi des recommandations pour améliorer la gestion RH",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDCA1 RECOMMANDATIONS RH — TINYSPRING GARDERIE\n\n1. GESTION DES ABSENCES\n• Activer l'auto-approbation pour réduire la charge admin\n• Surveiller les quotas avant les périodes de vacances\n\n2. GESTION DES ANIMATRICES\n• Maintenir un effectif minimum de 2 par groupe\n\n3. FORMATIONS\n• Planifier des formations régulières\n• Encourager les inscriptions\n\n4. MOTEUR DE RÈGLES\n• Configurer les quotas selon les besoins\n• Activer l'auto-approbation pour les types de congés fiables"
+}, {
+  "instruction" : "Quel est l'état général de la garderie TinySpring ?",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83C\uDF38 ÉTAT GÉNÉRAL — TINYSPRING GARDERIE\n\n✅ POINTS POSITIFS\n• Bon effectif : 10 animatrices actives\n• Aucune demande en attente\n\n⚠️ POINTS D'ATTENTION\n\n\uD83D\uDCA1 ACTIONS PRIORITAIRES\n• Planifier les congés de l'équipe\n• Suivre les formations en cours"
+}, {
+  "instruction" : "Prépare un rapport pour une réunion de direction",
+  "input" : "Dashboard TinySpring :\nAnimatrices: total=10 actives=10 inactives=0\nAbsences: total=10 approuvées=8 refusées=2 enAttente=0\nTypes: congesAnnuels=7 maladie=1 maternite=1 absences=1\nFormations: total=2 enCours=0 terminées=0",
+  "output" : "\uD83D\uDCCB RAPPORT DIRECTION — TINYSPRING GARDERIE\n\nDate : 15/04/2026\n\n1. EFFECTIF\n   • 10 animatrices (10 actives, 0 inactives)\n\n2. ABSENCES & CONGÉS\n   • 10 demandes traitées\n   • Taux d'approbation : 80%\n   • En attente : 0\n\n3. FORMATIONS\n   • 2 formations organisées\n   • 0 terminées\n\n4. DÉCISIONS REQUISES\n   • Planification des formations à venir"
+} ]

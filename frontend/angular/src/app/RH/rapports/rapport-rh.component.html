@@ -1,0 +1,226 @@
+<div class="page-wrapper">
+
+  <!-- ===== ALERT ERROR ===== -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div class="rapport-layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="rapport-sidebar">
+
+      <!-- Carte question -->
+      <div class="input-card">
+        <div class="input-card__glow"></div>
+        <div class="input-card__header">
+          <span class="ai-badge">
+            <span class="ai-badge__dot"></span>
+            IA Locale
+          </span>
+          <span class="input-hint">Tapez votre question</span>
+        </div>
+
+        <textarea
+          [(ngModel)]="question"
+          (keydown)="onKeyDown($event)"
+          placeholder="Ex: Génère un bilan RH complet..."
+          class="question-input"
+          rows="3">
+        </textarea>
+
+        <button class="btn-generer"
+                (click)="genererRapport()"
+                [disabled]="isGenerating || !question.trim()">
+          <svg *ngIf="!isGenerating" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+          <span *ngIf="!isGenerating">Générer le rapport</span>
+          <span *ngIf="isGenerating" class="generating-dots">
+            <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Analyse en cours
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Suggestions -->
+      <div class="sidebar-card">
+        <h4 class="sidebar-card__title">
+          <span class="sidebar-card__emoji">💡</span>
+          Suggestions
+        </h4>
+        <div class="suggestions-list">
+          <button *ngFor="let s of suggestions.slice(0, 4)"
+                  class="suggestion-btn"
+                  (click)="utiliserSuggestion(s)">
+            <span class="suggestion-btn__text">{{ s }}</span>
+            <svg class="suggestion-btn__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Historique -->
+      <div class="sidebar-card" *ngIf="historiqueRapports.length > 0">
+        <h4 class="sidebar-card__title">
+          <span class="sidebar-card__emoji">🕐</span>
+          Rapports récents
+        </h4>
+        <div class="historique-list">
+          <div *ngFor="let r of historiqueRapports.slice(0, 4)"
+               class="historique-item"
+               [class.historique-item--active]="rapportActuel?.id === r.id"
+               (click)="voirRapport(r)">
+            <div class="historique-item__badge">
+              {{ getTypeIcon(r.typeRapport) }}
+            </div>
+            <div class="historique-item__info">
+              <span class="historique-item__question">{{ r.question | slice:0:35 }}...</span>
+              <span class="historique-item__date">{{ formatDate(r.dateGeneration) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ===== CONTENU ===== -->
+    <main class="rapport-content">
+
+      <!-- ÉTAT INITIAL -->
+      <div class="empty-state" *ngIf="!rapportActuel && !isGenerating">
+        <div class="empty-state__icon-wrapper">
+          <div class="empty-state__icon-ring"></div>
+          <div class="empty-state__icon">🤖</div>
+        </div>
+        <h3 class="empty-state__title">Assistant RH — Modèle IA Local</h3>
+        <p class="empty-state__desc">
+          Posez une question en langage naturel pour générer un rapport basé sur vos données en temps réel.
+        </p>
+
+        <div class="empty-state__examples">
+          <p class="examples-label">Exemples de questions :</p>
+          <div class="examples-grid">
+            <span class="example-pill">
+              <span class="example-pill__dot"></span>
+              Génère un bilan RH complet
+            </span>
+            <span class="example-pill">
+              <span class="example-pill__dot"></span>
+              Qui a dépassé son quota de congés ?
+            </span>
+            <span class="example-pill">
+              <span class="example-pill__dot"></span>
+              Analyse les décisions du moteur
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARGEMENT -->
+      <div class="loading-state" *ngIf="isGenerating">
+        <div class="loading-animation">
+          <div class="loading-circle"></div>
+          <div class="loading-circle-inner">🤖</div>
+        </div>
+        <h3 class="loading-state__title">Modèle IA en cours d'analyse...</h3>
+        <p class="loading-state__desc">Collecte des données RH et génération du rapport en local.</p>
+
+        <div class="loading-steps">
+          <div class="loading-step loading-step--done">
+            <span class="loading-step__check">✓</span>
+            Collecte des données DB
+          </div>
+          <div class="loading-step loading-step--active">
+            <span class="loading-step__spinner"></span>
+            Analyse par le modèle local
+          </div>
+          <div class="loading-step">
+            <span class="loading-step__pending"></span>
+            Génération du rapport
+          </div>
+        </div>
+      </div>
+
+      <!-- RAPPORT GÉNÉRÉ -->
+      <div class="rapport-display" *ngIf="rapportActuel && !isGenerating">
+
+        <div class="rapport-header">
+          <div class="rapport-header__meta">
+            <span class="rapport-type-badge">
+              <span class="rapport-type-badge__icon">📊</span>
+              {{ getTypeIcon(rapportActuel.typeRapport) }}
+            </span>
+            <span class="rapport-periode" *ngIf="rapportActuel.periode">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              {{ rapportActuel.periode }}
+            </span>
+            <span class="rapport-header__date">
+              {{ formatDate(rapportActuel.dateGeneration) }}
+            </span>
+          </div>
+
+          <div class="rapport-header__actions">
+            <button class="btn-nouveau" (click)="nouveauRapport()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Nouveau
+            </button>
+
+            <button class="btn-pdf"
+                    (click)="telechargerPDF()"
+                    [disabled]="isExportingPDF">
+              <svg *ngIf="!isExportingPDF" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <svg *ngIf="isExportingPDF" class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              <span *ngIf="!isExportingPDF">Télécharger PDF</span>
+              <span *ngIf="isExportingPDF">Export...</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rapport-question">
+          <div class="rapport-question__icon">💬</div>
+          <div class="rapport-question__content">
+            <span class="rapport-question__label">Votre question</span>
+            <span class="rapport-question__text">{{ rapportActuel.question }}</span>
+          </div>
+        </div>
+
+        <div class="rapport-body"
+             [innerHTML]="formatContenu(rapportActuel.contenu)">
+        </div>
+
+        <div class="rapport-footer">
+          <span class="rapport-footer__icon">🤖</span>
+          Généré par <strong>TinySpring-RH</strong> — Modèle IA local — Données temps réel
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</div>

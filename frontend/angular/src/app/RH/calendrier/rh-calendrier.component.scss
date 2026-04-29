@@ -1,0 +1,399 @@
+/* ===== PAGE WRAPPER ===== */
+.page-wrapper {
+  padding: 28px;
+  background: #f4f6f9;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.header-left { display: flex; flex-direction: column; gap: 4px; }
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+
+  .sep   { color: #cbd5e0; }
+  .active { color: #4680ff; font-weight: 500; }
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 4px 0 0;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ===== LÉGENDE ===== */
+.legende-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  flex-wrap: wrap;
+}
+
+.legende-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.legende-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s;
+
+  &:hover { border-color: #c7d2fe; background: #eef2ff; }
+}
+
+.legende-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--amber  { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+  &--green  { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+  &--red    { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+  &--indigo { background: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+}
+
+/* ===== LOADING ===== */
+.loading-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #64748b;
+  font-size: 14px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #f1f5f9;
+  border-top-color: #4680ff;
+  border-right-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== CALENDAR CARD ===== */
+.calendar-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+
+  ::ng-deep {
+
+    /* ---- Toolbar ---- */
+    .fc-toolbar {
+      margin-bottom: 20px !important;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .fc-toolbar-title {
+      font-size: 20px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      letter-spacing: -0.3px;
+    }
+
+    /* ---- Boutons prev/next ---- */
+    .fc-prev-button,
+    .fc-next-button {
+      background: white !important;
+      border: 1.5px solid #e2e8f0 !important;
+      color: #374151 !important;
+      border-radius: 8px !important;
+      width: 34px !important;
+      height: 34px !important;
+      padding: 0 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+      transition: all 0.2s !important;
+
+      .fc-icon { color: #374151 !important; font-size: 13px !important; }
+
+      &:hover {
+        background: #4680ff !important;
+        border-color: #4680ff !important;
+        .fc-icon { color: white !important; }
+      }
+
+      &:focus { box-shadow: none !important; outline: none !important; }
+    }
+
+    /* ---- Bouton Aujourd'hui ---- */
+    .fc-today-button {
+      background: white !important;
+      border: 1.5px solid #e2e8f0 !important;
+      color: #374151 !important;
+      border-radius: 8px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      padding: 6px 14px !important;
+      height: 34px !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+      transition: all 0.2s !important;
+      text-transform: none !important;
+
+      &:not(:disabled):hover {
+        background: #4680ff !important;
+        border-color: #4680ff !important;
+        color: white !important;
+      }
+
+      &:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
+      &:focus { box-shadow: none !important; outline: none !important; }
+    }
+
+    /* ---- Boutons Mois/Semaine/Liste ---- */
+    .fc-button-group {
+      background: #f1f5f9 !important;
+      border-radius: 10px !important;
+      padding: 3px !important;
+      border: none !important;
+      display: flex !important;
+      gap: 2px !important;
+    }
+
+    .fc-dayGridMonth-button,
+    .fc-timeGridWeek-button,
+    .fc-listMonth-button {
+      background: transparent !important;
+      border: none !important;
+      color: #64748b !important;
+      border-radius: 8px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      padding: 6px 14px !important;
+      transition: all 0.2s !important;
+      text-transform: none !important;
+
+      &:hover {
+        background: white !important;
+        color: #0f172a !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+      }
+
+      &:focus { box-shadow: none !important; outline: none !important; }
+    }
+
+    .fc-button-active {
+      background: #4680ff !important;
+      color: white !important;
+      box-shadow: 0 2px 6px rgba(70,128,255,0.35) !important;
+    }
+
+    /* ---- En-têtes des jours ---- */
+    .fc-col-header-cell {
+      background: #f8fafc !important;
+      padding: 10px 8px !important;
+      border-color: #f1f5f9 !important;
+
+      .fc-col-header-cell-cushion {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #94a3b8 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        text-decoration: none !important;
+      }
+    }
+
+    /* ---- Cellules des jours ---- */
+    .fc-daygrid-day {
+      border-color: #f1f5f9 !important;
+      transition: background 0.15s !important;
+    }
+
+    .fc-daygrid-day-number {
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: #374151 !important;
+      padding: 6px 8px !important;
+      text-decoration: none !important;
+      border-radius: 8px !important;
+      transition: all 0.15s !important;
+
+      &:hover {
+        background: #eef2ff !important;
+        color: #4680ff !important;
+      }
+    }
+
+    /* ---- Jour actuel ---- */
+    .fc-day-today {
+      background: rgba(70,128,255,0.04) !important;
+
+      .fc-daygrid-day-number {
+        background: #4680ff !important;
+        color: white !important;
+        font-weight: 700 !important;
+      }
+    }
+
+    /* ---- Jours hors mois ---- */
+    .fc-day-other {
+      background: #fcfcfd !important;
+      .fc-daygrid-day-number { color: #d1d5db !important; }
+    }
+
+    /* ---- Événements ---- */
+    .fc-event {
+      border: none !important;
+      border-radius: 5px !important;
+      font-size: 11.5px !important;
+      font-weight: 600 !important;
+      padding: 2px 7px !important;
+      cursor: pointer !important;
+      transition: all 0.15s !important;
+      margin-bottom: 2px !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
+
+      &:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+        filter: brightness(1.08) !important;
+      }
+
+      .fc-event-title {
+        font-weight: 600 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+    }
+
+    /* ---- Lien "+X more" ---- */
+    .fc-daygrid-more-link {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      color: #4680ff !important;
+      background: #eef2ff !important;
+      border-radius: 4px !important;
+      padding: 2px 6px !important;
+      text-decoration: none !important;
+      margin-top: 2px !important;
+      display: inline-block !important;
+
+      &:hover { background: #dbeafe !important; }
+    }
+
+    /* ---- Vue Liste ---- */
+    .fc-list-table { border: none !important; }
+
+    .fc-list-day-cushion {
+      background: linear-gradient(to right, #eef2ff, #f8fafc) !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #4680ff !important;
+      padding: 10px 16px !important;
+    }
+
+    .fc-list-event {
+      cursor: pointer !important;
+      transition: background 0.15s !important;
+
+      &:hover td { background: #f8fafc !important; }
+
+      td {
+        border-color: #f1f5f9 !important;
+        padding: 10px 16px !important;
+        font-size: 13px !important;
+        color: #374151 !important;
+      }
+    }
+
+    .fc-list-event-dot {
+      border-radius: 50% !important;
+      width: 10px !important;
+      height: 10px !important;
+    }
+
+    /* ---- Popover ---- */
+    .fc-popover {
+      border: none !important;
+      border-radius: 12px !important;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
+      overflow: hidden !important;
+    }
+
+    .fc-popover-header {
+      background: linear-gradient(135deg, #4680ff, #6366f1) !important;
+      color: white !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      padding: 10px 14px !important;
+      border: none !important;
+    }
+
+    .fc-popover-body {
+      padding: 10px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+    }
+
+    /* ---- Vue semaine ---- */
+    .fc-timegrid-slot {
+      height: 40px !important;
+      border-color: #f1f5f9 !important;
+    }
+
+    .fc-timegrid-slot-label {
+      font-size: 11px !important;
+      color: #94a3b8 !important;
+      font-weight: 600 !important;
+    }
+
+    /* ---- Bordures globales ---- */
+    .fc-scrollgrid {
+      border-color: #f1f5f9 !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+    }
+
+    .fc-scrollgrid-section > td { border-color: #f1f5f9 !important; }
+    td, th { border-color: #f1f5f9 !important; }
+  }
+}
