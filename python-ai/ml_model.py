@@ -24,7 +24,7 @@ class ActivityRecommender:
         for i in indices[0]:
             activity = self.df.iloc[i]
             # Formater la recommandation en texte clair sans markdown
-            text = f"✨ {activity['name']} ({activity['theme']})\n"
+            text = f"{activity['name']} ({activity['theme']})\n"
             text += f"• Âge adapté : {activity['min_age']} à {activity['max_age']} ans\n"
             text += f"• Capacité idéale : jusqu'à {activity['capacity_required']} enfants\n"
             text += f"• Description : {activity['description']}"
